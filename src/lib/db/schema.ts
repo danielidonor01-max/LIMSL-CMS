@@ -432,6 +432,46 @@ export const trainingRecords = sqliteTable("training_records", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Schematic Diagrams ──────────────────────────────────────────────────────
+export const schematicDiagrams = sqliteTable("schematic_diagrams", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  title: text("title").notNull(), // e.g. Main Control Panel Wiring
+  type: text("type").notNull(), // ELECTRICAL | HYDRAULIC | PNEUMATIC | ASSEMBLY
+  sheetNumber: text("sheet_number"),
+  fileUrl: text("file_url").notNull(),
+  uploadedAt: text("uploaded_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Component Registry (BOM) ────────────────────────────────────────────────
+export const componentRegistry = sqliteTable("component_registry", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  componentTag: text("component_tag").notNull(), // e.g. CB-12, SOL-3, PLC-IN-1
+  name: text("name").notNull(), // e.g. Circuit Breaker, Solenoid Valve
+  type: text("type").notNull(), // ELECTRICAL | HYDRAULIC | PNEUMATIC | CONTROL | MECHANICAL
+  location: text("location"), // e.g. Main Cabinet Panel A
+  schematicReference: text("schematic_reference"), // e.g. Sheet 4, Zone C2
+  manufacturer: text("manufacturer"),
+  modelNumber: text("model_number"),
+  technicalSpecs: text("technical_specs"), // JSON string
+  status: text("status").default("OPERATIONAL"), // OPERATIONAL | FAULTY | REPLACED
+});
+
+// ─── Diagnostic Guides & Hints ────────────────────────────────────────────────
+export const diagnosticGuides = sqliteTable("diagnostic_guides", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  symptom: text("symptom").notNull(), // e.g. X-Axis Overcurrent
+  errorCode: text("error_code"), // e.g. E-041
+  componentTag: text("component_tag"), // associated component
+  probableCause: text("probable_cause").notNull(),
+  diagnosticSteps: text("diagnostic_steps").notNull(), // JSON string array of steps
+  resolutionAction: text("resolution_action"),
+  successCount: integer("success_count").default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
@@ -443,3 +483,6 @@ export type WmsDocument = typeof wmsDocuments.$inferSelect;
 export type NonConformity = typeof nonConformities.$inferSelect;
 export type EquipmentDocument = typeof equipmentDocuments.$inferSelect;
 export type NewEquipmentDocument = typeof equipmentDocuments.$inferInsert;
+export type SchematicDiagram = typeof schematicDiagrams.$inferSelect;
+export type ComponentRegistry = typeof componentRegistry.$inferSelect;
+export type DiagnosticGuide = typeof diagnosticGuides.$inferSelect;

@@ -7,6 +7,8 @@ import {
   users,
   kpiRecords,
   riskRegister,
+  componentRegistry,
+  diagnosticGuides,
 } from "./schema";
 import { nanoid } from "nanoid";
 
@@ -66,17 +68,17 @@ export async function seedDatabase() {
   const seedEquipment = [
     // CNC Heavy Duty
     {
-      id: nanoid(), assetId: "LEE/PE/1904", name: "Stako CNC Machine", category: "CNC_HEAVY",
+      id: "eq-stako-1904", assetId: "LEE/PE/1904", name: "Stako CNC Machine", category: "CNC_HEAVY",
       location: "Workshop", oem: "STAKO", model: "STAKO", status: "BROKEN_DOWN",
       maintenanceFrequency: "QUARTERLY", criticality: "HIGH",
     },
     {
-      id: nanoid(), assetId: "LEE/PE/0399", name: "Metal Gennari Vertical Lathe Machine", category: "CNC_HEAVY",
+      id: "eq-gennari-0399", assetId: "LEE/PE/0399", name: "Metal Gennari Vertical Lathe Machine", category: "CNC_HEAVY",
       location: "Bay 3", oem: "METAL GENNARI", model: "METAL GENNARI", status: "OPERATIONAL",
       maintenanceFrequency: "QUARTERLY", criticality: "HIGH",
     },
     {
-      id: nanoid(), assetId: "LEE/PE/0587", name: "JOBS Milling and Boring Machine", category: "CNC_HEAVY",
+      id: "eq-jobs-0587", assetId: "LEE/PE/0587", name: "JOBS Milling and Boring Machine", category: "CNC_HEAVY",
       location: "Workshop", oem: "JOBS", model: "JOBS", status: "OPERATIONAL",
       maintenanceFrequency: "QUARTERLY", criticality: "HIGH",
     },
@@ -333,6 +335,75 @@ export async function seedDatabase() {
     // Insert historical KPI data
     await db.insert(kpiRecords).values(seedKPI).onConflictDoNothing();
     console.log(`✅ Inserted ${seedKPI.length} KPI records`);
+
+    // Insert components (BOM)
+    const seedComponents = [
+      {
+        id: nanoid(),
+        equipmentId: "eq-stako-1904",
+        componentTag: "CB-12",
+        name: "Main Axis Breaker (32A)",
+        type: "ELECTRICAL",
+        location: "Electrical Cabinet A, Top Row",
+        schematicReference: "Sheet 4, Zone C2",
+        manufacturer: "Siemens",
+        modelNumber: "3RV2011-1KA10",
+        technicalSpecs: JSON.stringify({ currentRating: "32A", voltage: "415V AC", poles: 3 }),
+        status: "OPERATIONAL",
+      },
+      {
+        id: nanoid(),
+        equipmentId: "eq-stako-1904",
+        componentTag: "SD-X1",
+        name: "Servo Drive Controller (X-Axis)",
+        type: "CONTROL",
+        location: "Drive Enclosure Panel B",
+        schematicReference: "Sheet 5, Zone A3",
+        manufacturer: "Yaskawa",
+        modelNumber: "SGD7S-120A00A",
+        technicalSpecs: JSON.stringify({ powerRating: "1.5kW", inputVoltage: "400V AC" }),
+        status: "OPERATIONAL",
+      },
+      {
+        id: nanoid(),
+        equipmentId: "eq-stako-1904",
+        componentTag: "LS-X1",
+        name: "Limit Switch NC (X-Axis Travel)",
+        type: "CONTROL",
+        location: "Right end travel stop frame",
+        schematicReference: "Sheet 6, Zone B2",
+        manufacturer: "Schneider",
+        modelNumber: "XCKJ161",
+        technicalSpecs: JSON.stringify({ contactType: "1NC + 1NO", IP_Rating: "IP66" }),
+        status: "OPERATIONAL",
+      },
+    ];
+
+    // Insert troubleshooting guides
+    const seedGuides = [
+      {
+        id: nanoid(),
+        equipmentId: "eq-stako-1904",
+        symptom: "No motion X axis",
+        errorCode: "E-041",
+        componentTag: "LS-X1",
+        probableCause: "Limit switch LS-X1 is stuck/open, wire harness broke, or drive overcurrent fault.",
+        diagnosticSteps: JSON.stringify([
+          "Inspect breaker CB-12 in main cabinet Panel A and verify it is set to ON.",
+          "Check Servo Drive SD-X1 display status panel; verify E-041 is actively showing.",
+          "Check limit switch LS-X1 plunger manually; ensure it is not mechanically jammed.",
+          "Measure resistance of Wire 104 and 105 at cabinet terminal block; expected value is < 5 ohms when switch is closed."
+        ]),
+        resolutionAction: "Reset circuit breaker CB-12, or replace limit switch LS-X1 contacts.",
+        successCount: 3,
+      }
+    ];
+
+    await db.insert(componentRegistry).values(seedComponents).onConflictDoNothing();
+    console.log(`✅ Inserted ${seedComponents.length} component records`);
+
+    await db.insert(diagnosticGuides).values(seedGuides).onConflictDoNothing();
+    console.log(`✅ Inserted ${seedGuides.length} diagnostic guides`);
 
     console.log("🎉 Database seeding complete!");
   } catch (error) {
