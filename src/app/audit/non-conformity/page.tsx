@@ -97,19 +97,19 @@ export default function NonConformityRegister() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all">
+          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
             <ShieldAlert className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Non-Conformity Registry</h1>
-            <p className="text-[10px] text-emerald-400 font-mono tracking-wider uppercase">ISO 9001 Compliance</p>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Non-Conformity Registry</h1>
+            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">ISO 9001 Compliance</p>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function NonConformityRegister() {
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-[#0f172a]/40 border border-slate-800 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-xs">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
               <input
@@ -134,7 +134,7 @@ export default function NonConformityRegister() {
                 placeholder="Search by code or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg py-2 pl-10 pr-4 text-xs placeholder-slate-500 focus:outline-none transition-all"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg py-2 pl-10 pr-4 text-xs placeholder-slate-500 focus:outline-none transition-all"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export default function NonConformityRegister() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs focus:outline-none text-slate-350"
+                className="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none text-slate-600"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="OPEN">Open NCs</option>
@@ -151,14 +151,14 @@ export default function NonConformityRegister() {
             </div>
           </div>
 
-          <div className="bg-[#0f172a]/20 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
             {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
                 <p className="text-xs font-mono">Loading compliance registry...</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800/40">
+              <div className="divide-y divide-slate-200">
                 {filteredNCs.length > 0 ? (
                   filteredNCs.map((nc) => {
                     const isOpen = nc.status === "OPEN";
@@ -166,25 +166,25 @@ export default function NonConformityRegister() {
                       <div
                         key={nc.id}
                         onClick={() => setActiveNc(nc)}
-                        className={`p-5 cursor-pointer hover:bg-slate-900/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                          activeNc?.id === nc.id ? "bg-slate-900/20 border-l-2 border-emerald-500" : ""
+                        className={`p-5 cursor-pointer hover:bg-slate-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                          activeNc?.id === nc.id ? "bg-slate-50 border-l-2 border-emerald-500" : ""
                         }`}
                       >
                         <div className="space-y-1.5 flex-1">
                           <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs text-emerald-400 font-semibold">{nc.ncNumber}</span>
+                            <span className="font-mono text-xs text-emerald-600 font-semibold">{nc.ncNumber}</span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
                                 !isOpen
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                  : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                  : "bg-rose-500/10 text-rose-600 border-rose-500/20"
                               }`}
                             >
                               {nc.status}
                             </span>
                             <span className="text-[10px] text-slate-500 font-mono">Detected: {nc.detectedDate}</span>
                           </div>
-                          <p className="text-slate-200 text-xs font-semibold leading-relaxed">{nc.description}</p>
+                          <p className="text-slate-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
                           <p className="text-[10px] text-slate-500 font-mono">Source: {nc.detectedBy}</p>
                         </div>
                       </div>
@@ -202,8 +202,8 @@ export default function NonConformityRegister() {
 
         {/* Right Side: NC Action Log & Resolution */}
         <div className="space-y-6">
-          <div className="p-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-6">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wide border-b border-slate-800 pb-3">
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-6">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-200 pb-3">
               Non-Conformity Action Center
             </h2>
 
@@ -211,41 +211,41 @@ export default function NonConformityRegister() {
               <div className="space-y-4">
                 <div className="space-y-1 text-xs">
                   <span className="text-[10px] text-slate-500 uppercase font-mono block">NC Description</span>
-                  <p className="bg-slate-900/60 p-3 rounded border border-slate-850 text-slate-350 leading-relaxed font-semibold">
+                  <p className="bg-slate-100 p-3 rounded border border-slate-200 text-slate-600 leading-relaxed font-semibold">
                     {activeNc.description}
                   </p>
                 </div>
 
                 {activeNc.status === "CLOSED" ? (
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg space-y-2">
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs rounded-lg space-y-2">
                     <div className="flex items-center gap-1.5 font-bold">
                       <FileCheck className="w-5 h-5 flex-shrink-0" />
                       <span>Non-Conformity Resolved</span>
                     </div>
-                    <p className="text-[11px] text-slate-400">**Root Cause Identified:** {activeNc.rootCause}</p>
-                    <p className="text-[11px] text-slate-400">**Corrective Action Implemented:** {activeNc.correctiveAction}</p>
+                    <p className="text-[11px] text-slate-500">**Root Cause Identified:** {activeNc.rootCause}</p>
+                    <p className="text-[11px] text-slate-500">**Corrective Action Implemented:** {activeNc.correctiveAction}</p>
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">Investigated Root Cause</span>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Investigated Root Cause</span>
                       <textarea
                         required
                         placeholder="Log why the non-conformity or missed PM schedule took place..."
                         value={rootCause}
                         onChange={(e) => setRootCause(e.target.value)}
-                        className="w-full h-16 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-200"
+                        className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-900"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-400 uppercase">Corrective / Preventive Action taken</span>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Corrective / Preventive Action taken</span>
                       <textarea
                         required
                         placeholder="Describe exact actions taken to resolve the NC and prevent recurrence..."
                         value={correctiveAction}
                         onChange={(e) => setCorrectiveAction(e.target.value)}
-                        className="w-full h-16 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-200"
+                        className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-900"
                       />
                     </div>
 

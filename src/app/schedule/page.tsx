@@ -115,28 +115,28 @@ export default function SchedulePage() {
   ) => (
     <div className={`p-4 rounded-xl border ${tone} backdrop-blur-sm`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
           {label}
         </span>
-        <div className="p-1.5 rounded-lg bg-slate-900/50">{icon}</div>
+        <div className="p-1.5 rounded-lg bg-slate-100">{icon}</div>
       </div>
-      <div className="mt-3 text-2xl font-bold text-white">{value}</div>
-      <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
+      <div className="mt-3 text-2xl font-bold text-slate-900">{value}</div>
+      <p className="text-[11px] text-slate-500 mt-1">{sub}</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-xl font-bold tracking-tight">Annual Maintenance Schedule</h2>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 font-mono">
                 LIMSL-MAIN-PLN-013 · {new Date().getFullYear()} plan
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function SchedulePage() {
           {stat(
             "PM Compliance",
             `${summary.compliance}%`,
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />,
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />,
             summary.compliance >= 95
               ? "bg-emerald-500/5 border-emerald-500/15"
               : summary.compliance >= 50
@@ -165,21 +165,21 @@ export default function SchedulePage() {
           {stat(
             "Overdue",
             String(summary.overdue),
-            <AlertTriangle className="w-4 h-4 text-rose-400" />,
+            <AlertTriangle className="w-4 h-4 text-rose-600" />,
             "bg-rose-500/5 border-rose-500/15",
             "Activities past their planned date",
           )}
           {stat(
             "Upcoming",
             String(summary.upcoming),
-            <Clock className="w-4 h-4 text-sky-400" />,
+            <Clock className="w-4 h-4 text-sky-600" />,
             "bg-sky-500/5 border-sky-500/15",
             "Scheduled activities still ahead",
           )}
           {stat(
             "Completed",
             String(summary.completed),
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
             "bg-emerald-500/5 border-emerald-500/15",
             "PM activities signed off this year",
           )}
@@ -187,15 +187,15 @@ export default function SchedulePage() {
 
         {/* Tabs + filters */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex gap-1 bg-slate-900/40 border border-slate-800 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
             {(["upcoming", "all"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                   tab === t
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-emerald-500/15 text-emerald-600"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {t === "upcoming" ? "Upcoming (60 days)" : "All Activities"}
@@ -210,7 +210,7 @@ export default function SchedulePage() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search equipment / tag…"
-                className="pl-8 pr-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-48"
+                className="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-48"
               />
             </div>
             <FilterSelect value={typeFilter} onChange={setTypeFilter} label="Type">
@@ -236,10 +236,10 @@ export default function SchedulePage() {
         </div>
 
         {/* Table */}
-        <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="py-16 flex justify-center items-center text-slate-400">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+            <div className="py-16 flex justify-center items-center text-slate-500">
+              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               <span className="text-xs ml-2 font-mono">Loading schedule…</span>
             </div>
           ) : filtered.length === 0 ? (
@@ -250,7 +250,7 @@ export default function SchedulePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
+                  <tr className="border-b border-slate-200 text-slate-500">
                     <th className="py-3 px-4 font-medium">Planned</th>
                     <th className="py-3 px-4 font-medium">Equipment</th>
                     <th className="py-3 px-4 font-medium">Activity</th>
@@ -260,17 +260,17 @@ export default function SchedulePage() {
                     <th className="py-3 px-4 font-medium text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-slate-200">
                   {filtered.map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-900/30">
+                    <tr key={r.id} className="hover:bg-slate-50">
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-mono text-slate-200">{formatDate(r.plannedDate)}</div>
+                        <div className="font-mono text-slate-900">{formatDate(r.plannedDate)}</div>
                         <div className="text-[10px] text-slate-500">
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-200 max-w-[220px] truncate">
+                        <div className="font-medium text-slate-900 max-w-[220px] truncate">
                           {r.equipmentName}
                         </div>
                         <div className="text-[10px] font-mono text-slate-500">
@@ -282,10 +282,10 @@ export default function SchedulePage() {
                           {r.activityType}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-slate-400">
+                      <td className="py-3 px-4 text-slate-500">
                         {r.maintenanceFrequency?.replace(/_/g, " ").toLowerCase() ?? "—"}
                       </td>
-                      <td className="py-3 px-4 text-slate-300">{r.responsiblePersonName ?? "—"}</td>
+                      <td className="py-3 px-4 text-slate-700">{r.responsiblePersonName ?? "—"}</td>
                       <td className="py-3 px-4">
                         <Badge className={SCHEDULE_STATUS_BADGE[r.status]}>
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
@@ -295,14 +295,14 @@ export default function SchedulePage() {
                         {r.workOrderId ? (
                           <Link
                             href={`/work-orders/${r.workOrderId}`}
-                            className="text-emerald-400 hover:underline"
+                            className="text-emerald-600 hover:underline"
                           >
                             View WO →
                           </Link>
                         ) : (
                           <Link
                             href={`/work-orders/new?scheduleId=${r.id}`}
-                            className="text-sky-400 hover:underline"
+                            className="text-sky-600 hover:underline"
                           >
                             Raise WO
                           </Link>
@@ -339,7 +339,7 @@ function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-2.5 py-1.5 bg-slate-900/50 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500/40"
+      className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
     >
       {children}
     </select>

@@ -173,26 +173,26 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-400 font-mono text-xs gap-2">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono text-xs gap-2">
         <Loader2 className="w-6 h-6 animate-spin text-rose-500" /> Loading report detail logs...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/corrective" className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all">
+          <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
             <AlertTriangle className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Work Order: {record.cmrfNumber}</h1>
-            <p className="text-[10px] text-rose-400 font-mono tracking-wider uppercase">Fault & RCA Lifecycle</p>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Work Order: {record.cmrfNumber}</h1>
+            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">Fault & RCA Lifecycle</p>
           </div>
         </div>
       </header>
@@ -202,36 +202,36 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-6">
           {/* Fault Specifications Card */}
-          <div className="p-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Breakdown Specifications</h2>
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Breakdown Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block mb-1">Equipment Name</span>
-                <span className="font-semibold text-slate-200">{equipment?.name || "Loading..."}</span>
+                <span className="font-semibold text-slate-900">{equipment?.name || "Loading..."}</span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block mb-1">Tag ID</span>
-                <span className="font-semibold text-slate-200 font-mono">{equipment?.assetId}</span>
+                <span className="font-semibold text-slate-900 font-mono">{equipment?.assetId}</span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block mb-1">Status at failure</span>
-                <span className="font-semibold text-slate-200 font-mono">{record.operatingStatusAtFailure}</span>
+                <span className="font-semibold text-slate-900 font-mono">{record.operatingStatusAtFailure}</span>
               </div>
             </div>
 
             <div className="text-xs space-y-1">
               <span className="text-[10px] text-slate-500 uppercase block">Reported Fault Description</span>
-              <p className="bg-slate-900/50 p-3 rounded border border-slate-800/40 text-slate-300 leading-relaxed">
+              <p className="bg-slate-100 p-3 rounded border border-slate-200 text-slate-700 leading-relaxed">
                 {record.faultDescription}
               </p>
             </div>
           </div>
 
           {/* Root Cause Analysis (RCA) Card */}
-          <div className="p-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-5">
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-5">
             <div className="flex justify-between items-center">
-              <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
-              <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-semibold text-slate-400">
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
+              <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-500">
                 {rcaTool.replace("_", " ")}
               </span>
             </div>
@@ -245,7 +245,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   value={why1}
                   onChange={(e) => setWhy1(e.target.value)}
                   placeholder="First level cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
               </div>
 
@@ -256,7 +256,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   value={why2}
                   onChange={(e) => setWhy2(e.target.value)}
                   placeholder="Second level cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   value={why3}
                   onChange={(e) => setWhy3(e.target.value)}
                   placeholder="Third level cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   value={why4}
                   onChange={(e) => setWhy4(e.target.value)}
                   placeholder="Fourth level cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
               </div>
 
@@ -289,18 +289,18 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   value={why5}
                   onChange={(e) => setWhy5(e.target.value)}
                   placeholder="Fifth level root cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase">Root Cause Category</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase">Root Cause Category</span>
                 <select
                   value={rootCauseCategory}
                   onChange={(e) => setRootCauseCategory(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
                 >
                   <option value="MECHANICAL">Mechanical Failure</option>
                   <option value="ELECTRICAL">Electrical Failure</option>
@@ -312,13 +312,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase">Verified Root Cause Statement</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase">Verified Root Cause Statement</span>
                 <input
                   type="text"
                   value={verifiedRootCause}
                   onChange={(e) => setVerifiedRootCause(e.target.value)}
                   placeholder="Detailed summary statement of root cause..."
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs focus:outline-none"
+                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
                 />
               </div>
             </div>
@@ -336,16 +336,16 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-6">
           {/* Corrective Actions Tracking Log (CATL) */}
-          <div className="p-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Corrective Action Log</h2>
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Corrective Action Log</h2>
 
             {/* Existing actions list */}
             <div className="space-y-2.5 max-h-56 overflow-y-auto">
               {actions.map((act, i) => (
-                <div key={i} className="p-3 bg-slate-900/50 rounded-lg border border-slate-800/40 text-xs space-y-1.5">
+                <div key={i} className="p-3 bg-slate-100 rounded-lg border border-slate-200 text-xs space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-slate-200">{act.action}</span>
-                    <button type="button" onClick={() => removeAction(i)} className="text-rose-400 hover:text-rose-350">
+                    <span className="font-semibold text-slate-900">{act.action}</span>
+                    <button type="button" onClick={() => removeAction(i)} className="text-rose-600 hover:text-rose-350">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -359,8 +359,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       onClick={() => toggleActionStatus(i)}
                       className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${
                         act.status === "COMPLETED"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-slate-800 text-slate-400 border-slate-750"
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          : "bg-slate-200 text-slate-500 border-slate-200"
                       }`}
                     >
                       {act.status}
@@ -371,13 +371,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Add action row */}
-            <div className="space-y-2 pt-2 border-t border-slate-800/40">
+            <div className="space-y-2 pt-2 border-t border-slate-200">
               <input
                 type="text"
                 placeholder="Corrective Action Description..."
                 value={newAction}
                 onChange={(e) => setNewAction(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -385,19 +385,19 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   placeholder="Responsible Person..."
                   value={newResp}
                   onChange={(e) => setNewResp(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none"
+                  className="bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
                 <input
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none text-slate-400"
+                  className="bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none text-slate-500"
                 />
               </div>
               <button
                 type="button"
                 onClick={addAction}
-                className="w-full flex items-center justify-center gap-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-semibold text-slate-200 transition-all"
+                className="w-full flex items-center justify-center gap-1 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 transition-all"
               >
                 <Plus className="w-4 h-4" /> Add Action Item
               </button>
@@ -405,26 +405,26 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Closeout & Approvals */}
-          <div className="p-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wide">Completion Sign-off</h2>
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Completion Sign-off</h2>
 
             {record.status === "CLOSED" ? (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-2">
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs rounded-lg flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 flex-shrink-0" />
                 <div>
                   <p className="font-bold">Record Closed Out Successfully</p>
-                  <p className="text-[10px] text-slate-400">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  <p className="text-[10px] text-slate-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase">Supervisor Comments</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase">Supervisor Comments</span>
                   <textarea
                     placeholder="Provide supervisor closeout recommendations or audit check notes..."
                     value={supervisorComments}
                     onChange={(e) => setSupervisorComments(e.target.value)}
-                    className="w-full h-16 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2 text-xs focus:outline-none resize-none"
+                    className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
                   />
                 </div>
 

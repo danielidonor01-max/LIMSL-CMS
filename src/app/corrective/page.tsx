@@ -38,19 +38,19 @@ export default function CorrectiveMaintenanceList() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all">
+          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
             <AlertTriangle className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Corrective Maintenance</h1>
-            <p className="text-[10px] text-rose-400 font-mono tracking-wider uppercase">CMRF & RCA Log</p>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Corrective Maintenance</h1>
+            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">CMRF & RCA Log</p>
           </div>
         </div>
 
@@ -67,63 +67,63 @@ export default function CorrectiveMaintenanceList() {
         {/* Statistics or Status Panel */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-rose-500/5 border border-rose-500/15 rounded-xl">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Breakdowns</p>
-            <h2 className="text-2xl font-bold text-rose-400 mt-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Breakdowns</p>
+            <h2 className="text-2xl font-bold text-rose-600 mt-2">
               {records.filter((r) => r.status === "OPEN" || r.status === "IN_PROGRESS" || r.status === "PENDING_RCA").length}
             </h2>
           </div>
           <div className="p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Supervisor Review</p>
-            <h2 className="text-2xl font-bold text-amber-400 mt-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Supervisor Review</p>
+            <h2 className="text-2xl font-bold text-amber-600 mt-2">
               {records.filter((r) => r.status === "PENDING_APPROVAL").length}
             </h2>
           </div>
           <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Closed Breakdowns (2026)</p>
-            <h2 className="text-2xl font-bold text-emerald-400 mt-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Closed Breakdowns (2026)</p>
+            <h2 className="text-2xl font-bold text-emerald-600 mt-2">
               {records.filter((r) => r.status === "CLOSED").length}
             </h2>
           </div>
         </div>
 
         {/* Breakdown Records List */}
-        <div className="bg-[#0f172a]/20 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
+            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
               <p className="text-xs font-mono">Loading Corrective Maintenance Database...</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/40">
+            <div className="divide-y divide-slate-200">
               {records.length > 0 ? (
                 records.map((rec) => {
                   const isOpen = rec.status === "OPEN";
                   const isClosed = rec.status === "CLOSED";
                   const isRcaPending = rec.status === "PENDING_RCA" || (isOpen && !rec.rcaTool);
                   return (
-                    <div key={rec.id} className="p-5 hover:bg-slate-900/10 flex items-center justify-between transition-colors">
+                    <div key={rec.id} className="p-5 hover:bg-slate-50 flex items-center justify-between transition-colors">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-rose-400 font-semibold">{rec.cmrfNumber}</span>
+                          <span className="font-mono text-xs text-rose-600 font-semibold">{rec.cmrfNumber}</span>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
                               isClosed
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                 : isRcaPending
-                                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                : "bg-rose-500/10 text-rose-600 border-rose-500/20"
                             }`}
                           >
                             {isClosed ? "Resolved" : isRcaPending ? "RCA Investigation" : "Open Breakdown"}
                           </span>
                           {rec.urgency === "CRITICAL" && (
-                            <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-900 text-[8px] font-black uppercase">
+                            <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-700 border border-rose-900 text-[8px] font-black uppercase">
                               Production Stop
                             </span>
                           )}
                         </div>
-                        <h3 className="text-sm font-bold text-slate-200">{rec.faultDescription || "Unnamed Fault"}</h3>
-                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-400 font-mono">
+                        <h3 className="text-sm font-bold text-slate-900">{rec.faultDescription || "Unnamed Fault"}</h3>
+                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500 font-mono">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-slate-500" /> Reported: {rec.reportedDate}
                           </div>
@@ -138,9 +138,9 @@ export default function CorrectiveMaintenanceList() {
 
                       <Link
                         href={`/corrective/${rec.id}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 rounded-lg text-xs font-semibold transition-all group"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition-all group"
                       >
-                        Action Log <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                        Action Log <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-900 transition-colors" />
                       </Link>
                     </div>
                   );
@@ -156,7 +156,7 @@ export default function CorrectiveMaintenanceList() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
+      <footer className="border-t border-slate-200 bg-white/90 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
         &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited. | Incident & Quality Standards.
       </footer>
     </div>

@@ -154,41 +154,41 @@ export default function KpiPage() {
     good: "border-emerald-500/20 bg-emerald-500/5",
     warning: "border-amber-500/20 bg-amber-500/5",
     danger: "border-rose-500/20 bg-rose-500/5",
-    neutral: "border-slate-800 bg-slate-900/30",
+    neutral: "border-slate-200 bg-slate-50",
   };
   const toneText: Record<Tone, string> = {
-    good: "text-emerald-400",
-    warning: "text-amber-400",
-    danger: "text-rose-400",
-    neutral: "text-slate-300",
+    good: "text-emerald-600",
+    warning: "text-amber-600",
+    danger: "text-rose-600",
+    neutral: "text-slate-700",
   };
 
   const trendIcon = (k: Kpi) => {
     if (!k.trend || k.trend === "flat") return <Minus className="w-3 h-3 text-slate-500" />;
     const isGood = k.trendGood ? k.trend === k.trendGood : k.trend === "up";
     const Icon = k.trend === "up" ? TrendingUp : TrendingDown;
-    return <Icon className={`w-3 h-3 ${isGood ? "text-emerald-400" : "text-rose-400"}`} />;
+    return <Icon className={`w-3 h-3 ${isGood ? "text-emerald-600" : "text-rose-600"}`} />;
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">KPI Dashboard</h2>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-slate-500 font-mono">
               22 KPIs · 5 categories · LIMSL-MAIN-REG-007–012
             </p>
           </div>
         </div>
 
         {loading || !data ? (
-          <div className="py-24 flex justify-center items-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+          <div className="py-24 flex justify-center items-center text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
             <span className="text-xs ml-2 font-mono">Loading KPIs…</span>
           </div>
         ) : (
@@ -198,14 +198,14 @@ export default function KpiPage() {
               const Icon = cat.icon;
               return (
                 <section key={cat.name} className="space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-emerald-400" /> {cat.name}
+                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-emerald-600" /> {cat.name}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                     {cat.items.map((k) => (
                       <div key={k.label} className={`p-4 rounded-xl border ${toneCls[k.tone]}`}>
                         <div className="flex items-start justify-between gap-1">
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-tight">
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider leading-tight">
                             {k.label}
                           </span>
                           {trendIcon(k)}
@@ -226,18 +226,18 @@ export default function KpiPage() {
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="av" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#34d399" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#059669" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#059669" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                     <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Area type="monotone" dataKey="availability" name="Availability" stroke="#34d399" fill="url(#av)" strokeWidth={2} />
-                    <Line type="monotone" dataKey="pm" name="PM Compliance" stroke="#38bdf8" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="inspection" name="Inspection" stroke="#a78bfa" strokeWidth={2} dot={false} />
+                    <Area type="monotone" dataKey="availability" name="Availability" stroke="#059669" fill="url(#av)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="pm" name="PM Compliance" stroke="#0284c7" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="inspection" name="Inspection" stroke="#7c3aed" strokeWidth={2} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -245,14 +245,14 @@ export default function KpiPage() {
               <ChartCard title="MTBF (hrs) vs MTTR (hrs)">
                 <ResponsiveContainer width="100%" height={240}>
                   <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                     <YAxis yAxisId="l" stroke="#64748b" fontSize={11} />
                     <YAxis yAxisId="r" orientation="right" stroke="#64748b" fontSize={11} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar yAxisId="l" dataKey="mtbf" name="MTBF" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                    <Line yAxisId="r" type="monotone" dataKey="mttr" name="MTTR" stroke="#fb7185" strokeWidth={2} />
+                    <Bar yAxisId="l" dataKey="mtbf" name="MTBF" fill="#059669" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                    <Line yAxisId="r" type="monotone" dataKey="mttr" name="MTTR" stroke="#e11d48" strokeWidth={2} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -260,13 +260,13 @@ export default function KpiPage() {
               <ChartCard title="Maintenance & Downtime Cost (₦M)">
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                     <YAxis stroke="#64748b" fontSize={11} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="maintCost" name="Maintenance" fill="#38bdf8" radius={[3, 3, 0, 0]} maxBarSize={20} />
-                    <Bar dataKey="downtimeCost" name="Downtime" fill="#fb7185" radius={[3, 3, 0, 0]} maxBarSize={20} />
+                    <Bar dataKey="maintCost" name="Maintenance" fill="#0284c7" radius={[3, 3, 0, 0]} maxBarSize={20} />
+                    <Bar dataKey="downtimeCost" name="Downtime" fill="#e11d48" radius={[3, 3, 0, 0]} maxBarSize={20} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -274,11 +274,11 @@ export default function KpiPage() {
               <ChartCard title="Production Revenue (₦M)">
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                     <YAxis stroke="#64748b" fontSize={11} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#34d399" strokeWidth={2.5} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -286,14 +286,14 @@ export default function KpiPage() {
 
             {/* Per-equipment drill-down */}
             {data.perEquipment.length > 0 && (
-              <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-slate-800">
-                  <h3 className="text-sm font-semibold text-slate-200">Per-Equipment Drill-Down (latest)</h3>
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-slate-200">
+                  <h3 className="text-sm font-semibold text-slate-900">Per-Equipment Drill-Down (latest)</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400">
+                      <tr className="border-b border-slate-200 text-slate-500">
                         <th className="py-2.5 px-5 font-medium">Equipment</th>
                         <th className="py-2.5 px-4 font-medium">Availability</th>
                         <th className="py-2.5 px-4 font-medium">MTBF</th>
@@ -303,16 +303,16 @@ export default function KpiPage() {
                         <th className="py-2.5 px-4 font-medium">Remark</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/50">
+                    <tbody className="divide-y divide-slate-200">
                       {data.perEquipment.map((r) => (
-                        <tr key={r.id} className="hover:bg-slate-900/30">
-                          <td className="py-2.5 px-5 font-medium text-slate-200">{r.equipmentName}</td>
+                        <tr key={r.id} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-5 font-medium text-slate-900">{r.equipmentName}</td>
                           <td className="py-2.5 px-4">{pct(r.availability)}</td>
-                          <td className="py-2.5 px-4 text-slate-300">{r.mtbf} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-300">{r.mttr} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-300">{r.downtimeHours} hrs</td>
-                          <td className="py-2.5 px-4 font-mono text-slate-300">{formatCurrency(r.maintenanceCost)}</td>
-                          <td className="py-2.5 px-4 text-slate-400">{r.remark}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf} hrs</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mttr} hrs</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.downtimeHours} hrs</td>
+                          <td className="py-2.5 px-4 font-mono text-slate-700">{formatCurrency(r.maintenanceCost)}</td>
+                          <td className="py-2.5 px-4 text-slate-500">{r.remark}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -328,17 +328,17 @@ export default function KpiPage() {
 }
 
 const tooltipStyle = {
-  backgroundColor: "#0f172a",
-  border: "1px solid #1e293b",
+  backgroundColor: "#ffffff",
+  border: "1px solid #e2e8f0",
   borderRadius: 8,
   fontSize: 12,
-  color: "#e2e8f0",
+  color: "#0f172a",
 };
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-slate-200 mb-4">{title}</h3>
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-slate-900 mb-4">{title}</h3>
       {children}
     </div>
   );

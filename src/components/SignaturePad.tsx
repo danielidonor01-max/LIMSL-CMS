@@ -101,19 +101,19 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{label}</span>
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</span>
         {hasDrawing && (
           <button
             type="button"
             onClick={clear}
-            className="text-[10px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all"
+            className="text-[10px] text-rose-600 hover:text-rose-700 flex items-center gap-1 transition-all"
           >
             <Trash2 className="w-3.5 h-3.5" /> Clear Signature
           </button>
         )}
       </div>
 
-      <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-900/80 relative">
+      <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-100 relative">
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}

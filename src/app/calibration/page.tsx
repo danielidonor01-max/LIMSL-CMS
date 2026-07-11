@@ -22,10 +22,10 @@ type Cal = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  CURRENT: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  DUE_SOON: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  OVERDUE: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  OUT_OF_SERVICE: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  CURRENT: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  DUE_SOON: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  OVERDUE: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  OUT_OF_SERVICE: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 const STATUS_LABEL: Record<string, string> = {
   CURRENT: "Current",
@@ -55,46 +55,46 @@ export default function CalibrationPage() {
   }, [rows]);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             <Gauge className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">Calibration Management</h2>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-slate-500 font-mono">
               Measuring instrument register · semi-annual / annual cycle
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="py-24 flex justify-center items-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+          <div className="py-24 flex justify-center items-center text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
             <span className="text-xs ml-2 font-mono">Loading calibration register…</span>
           </div>
         ) : (
           <>
             {summary.OVERDUE > 0 && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-300 text-xs">
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-700 text-xs">
                 <AlertTriangle className="w-4 h-4 animate-pulse" />
                 {summary.OVERDUE} instrument{summary.OVERDUE > 1 ? "s are" : " is"} overdue for calibration — raise a non-conformity and schedule immediately.
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-4">
-              <Stat icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />} label="Current" value={summary.CURRENT ?? 0} tone="border-emerald-500/15 bg-emerald-500/5" />
-              <Stat icon={<Clock className="w-4 h-4 text-amber-400" />} label="Due Soon" value={summary.DUE_SOON ?? 0} tone="border-amber-500/15 bg-amber-500/5" />
-              <Stat icon={<AlertTriangle className="w-4 h-4 text-rose-400" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-rose-500/15 bg-rose-500/5" />
+              <Stat icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="Current" value={summary.CURRENT ?? 0} tone="border-emerald-500/15 bg-emerald-500/5" />
+              <Stat icon={<Clock className="w-4 h-4 text-amber-600" />} label="Due Soon" value={summary.DUE_SOON ?? 0} tone="border-amber-500/15 bg-amber-500/5" />
+              <Stat icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-rose-500/15 bg-rose-500/5" />
             </div>
 
-            <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400">
+                    <tr className="border-b border-slate-200 text-slate-500">
                       <th className="py-3 px-5 font-medium">Instrument</th>
                       <th className="py-3 px-4 font-medium">Make / Model</th>
                       <th className="py-3 px-4 font-medium">Last Cal.</th>
@@ -104,31 +104,31 @@ export default function CalibrationPage() {
                       <th className="py-3 px-4 font-medium">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/50">
+                  <tbody className="divide-y divide-slate-200">
                     {rows.map((r) => {
                       const d = daysUntil(r.nextCalibrationDate);
                       return (
-                        <tr key={r.id} className="hover:bg-slate-900/30">
+                        <tr key={r.id} className="hover:bg-slate-50">
                           <td className="py-3 px-5">
-                            <div className="font-medium text-slate-200">{r.instrumentName}</div>
+                            <div className="font-medium text-slate-900">{r.instrumentName}</div>
                             {r.serialNumber && (
                               <div className="text-[10px] font-mono text-slate-500">S/N {r.serialNumber}</div>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-slate-300">
+                          <td className="py-3 px-4 text-slate-700">
                             {r.make} {r.model}
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-400">{formatDate(r.lastCalibrationDate)}</td>
-                          <td className="py-3 px-4 font-mono text-slate-300">
+                          <td className="py-3 px-4 font-mono text-slate-500">{formatDate(r.lastCalibrationDate)}</td>
+                          <td className="py-3 px-4 font-mono text-slate-700">
                             {formatDate(r.nextCalibrationDate)}
                             {d !== null && (
-                              <span className={`ml-1 ${d < 0 ? "text-rose-400" : d < 30 ? "text-amber-400" : "text-slate-500"}`}>
+                              <span className={`ml-1 ${d < 0 ? "text-rose-600" : d < 30 ? "text-amber-600" : "text-slate-500"}`}>
                                 ({d < 0 ? `${-d}d ago` : `${d}d`})
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-slate-400">{r.calibrationInterval ?? "—"} d</td>
-                          <td className="py-3 px-4 font-mono text-slate-400">{r.certificateNumber ?? "—"}</td>
+                          <td className="py-3 px-4 text-slate-500">{r.calibrationInterval ?? "—"} d</td>
+                          <td className="py-3 px-4 font-mono text-slate-500">{r.certificateNumber ?? "—"}</td>
                           <td className="py-3 px-4">
                             <Badge className={STATUS_BADGE[r.status ?? "CURRENT"]}>
                               {STATUS_LABEL[r.status ?? "CURRENT"]}
@@ -152,10 +152,10 @@ function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
-      <div className="text-2xl font-bold mt-2 text-white">{value}</div>
+      <div className="text-2xl font-bold mt-2 text-slate-900">{value}</div>
     </div>
   );
 }

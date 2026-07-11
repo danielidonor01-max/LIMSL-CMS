@@ -90,42 +90,42 @@ export default function NewCorrectiveRequest() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/corrective" className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all">
+          <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
             <AlertTriangle className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Log Fault (CMRF)</h1>
-            <p className="text-[10px] text-rose-400 font-mono tracking-wider uppercase">LIMSL-MAIN-015</p>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Log Fault (CMRF)</h1>
+            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">LIMSL-MAIN-015</p>
           </div>
         </div>
       </header>
 
       {/* Form Content */}
       <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
-        <form onSubmit={handleSubmit} className="p-6 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-6">
-          <h2 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3 uppercase tracking-wide">
+        <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
+          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Corrective Maintenance Request Form
           </h2>
 
           {/* Machine Selection */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Select Broken Equipment</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Select Broken Equipment</label>
             {loadingEq ? (
               <div className="flex items-center text-xs text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin text-rose-400 mr-2" /> Loading equipment list...
+                <Loader2 className="w-4 h-4 animate-spin text-rose-600 mr-2" /> Loading equipment list...
               </div>
             ) : (
               <select
                 value={equipmentId}
                 onChange={(e) => setEquipmentId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
                 required
               >
                 {equipmentList.map((eq) => (
@@ -140,11 +140,11 @@ export default function NewCorrectiveRequest() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Fault Nature */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Nature of Fault</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Nature of Fault</label>
               <select
                 value={faultType}
                 onChange={(e) => setFaultType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
               >
                 {faultTypes.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -156,11 +156,11 @@ export default function NewCorrectiveRequest() {
 
             {/* Urgency */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Urgency Level</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Urgency Level</label>
               <select
                 value={urgency}
                 onChange={(e) => setUrgency(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
               >
                 {urgencies.map((u) => (
                   <option key={u.value} value={u.value}>
@@ -173,12 +173,12 @@ export default function NewCorrectiveRequest() {
 
           {/* Fault Description */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Fault Description / Observed Symptom</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Fault Description / Observed Symptom</label>
             <textarea
               placeholder="Describe the noise, vibration, failed startup sequence, burnt smell, or error codes observed..."
               value={faultDescription}
               onChange={(e) => setFaultDescription(e.target.value)}
-              className="w-full h-24 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none resize-none"
+              className="w-full h-24 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
               required
             />
           </div>
@@ -186,11 +186,11 @@ export default function NewCorrectiveRequest() {
           {/* Additional details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Operating Status at Failure</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Operating Status at Failure</label>
               <select
                 value={operatingStatusAtFailure}
                 onChange={(e) => setOperatingStatusAtFailure(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
               >
                 <option value="RUNNING">Running</option>
                 <option value="IDLE">Idle</option>
@@ -200,25 +200,25 @@ export default function NewCorrectiveRequest() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Error Codes (if any)</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Error Codes (if any)</label>
               <input
                 type="text"
                 placeholder="e.g. E-041, Spindle Overload"
                 value={errorCodes}
                 onChange={(e) => setErrorCodes(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Environmental / Load Conditions</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Environmental / Load Conditions</label>
             <input
               type="text"
               placeholder="e.g. 35°C Room Temp, 80% Max Machine Load"
               value={environmentalCondition}
               onChange={(e) => setEnvironmentalCondition(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
             />
           </div>
 
@@ -226,7 +226,7 @@ export default function NewCorrectiveRequest() {
           <div className="flex gap-3 justify-end pt-3">
             <Link
               href="/corrective"
-              className="px-4 py-2 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-lg text-xs font-semibold transition-all"
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
             >
               Cancel
             </Link>

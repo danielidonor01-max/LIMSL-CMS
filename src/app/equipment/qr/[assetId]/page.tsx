@@ -51,13 +51,13 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans print:bg-white print:text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans print:bg-white print:text-black">
       {/* Header - Hidden on Print */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between print:hidden">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between print:hidden">
         <div className="flex items-center gap-3">
           <Link
             href={`/equipment/${assetIdKey}`}
-            className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all"
+            className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -65,8 +65,8 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             <QrCode className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Asset QR Label</h1>
-            <p className="text-[10px] text-emerald-400 font-mono tracking-wider uppercase">
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Asset QR Label</h1>
+            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">
               Printable Equipment Tag
             </p>
           </div>
@@ -83,11 +83,11 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       {/* Label Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
         {/* Printable Card */}
-        <div className="bg-white text-slate-900 p-8 rounded-2xl border-4 border-slate-900 shadow-2xl flex flex-col items-center text-center space-y-6 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
+        <div className="bg-white text-slate-900 p-8 rounded-2xl border-4 border-slate-300 shadow-2xl flex flex-col items-center text-center space-y-6 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
           {/* Logo Header */}
-          <div className="flex items-center gap-2 border-b-2 border-slate-900 pb-3 w-full justify-center">
-            <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-2 border-b-2 border-slate-300 pb-3 w-full justify-center">
+            <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-slate-900" />
             </div>
             <div>
               <h2 className="text-sm font-black tracking-tight text-slate-900 leading-none">LEE INTERNATIONAL</h2>
@@ -101,7 +101,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           {qrUrl ? (
             <img src={qrUrl} alt={`QR Code for ${machineName}`} className="w-64 h-64 border-2 border-slate-100 p-1" />
           ) : (
-            <div className="w-64 h-64 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
+            <div className="w-64 h-64 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
               Generating...
             </div>
           )}

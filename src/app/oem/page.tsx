@@ -74,31 +74,31 @@ export default function OemPage() {
   }, [vendors]);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">OEM & Warranty Management</h2>
-            <p className="text-xs text-slate-400 font-mono">Vendors · warranty · spare-part lead times</p>
+            <p className="text-xs text-slate-500 font-mono">Vendors · warranty · spare-part lead times</p>
           </div>
         </div>
 
         {loading ? (
-          <div className="py-24 flex justify-center items-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+          <div className="py-24 flex justify-center items-center text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
             <span className="text-xs ml-2 font-mono">Loading OEM data…</span>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat label="Vendors" value={String(summary.total)} tone="border-slate-800 bg-slate-900/30" text="text-slate-200" />
-              <Stat label="Active Warranty" value={String(summary.active)} tone="border-emerald-500/15 bg-emerald-500/5" text="text-emerald-400" />
-              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-amber-500/15 bg-amber-500/5" text="text-amber-400" />
-              <Stat label="Expired" value={String(summary.expired)} tone="border-rose-500/15 bg-rose-500/5" text="text-rose-400" />
+              <Stat label="Vendors" value={String(summary.total)} tone="border-slate-200 bg-slate-50" text="text-slate-900" />
+              <Stat label="Active Warranty" value={String(summary.active)} tone="border-emerald-500/15 bg-emerald-500/5" text="text-emerald-600" />
+              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-amber-500/15 bg-amber-500/5" text="text-amber-600" />
+              <Stat label="Expired" value={String(summary.expired)} tone="border-rose-500/15 bg-rose-500/5" text="text-rose-600" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -106,35 +106,35 @@ export default function OemPage() {
                 const days = daysUntil(v.warrantyEnd);
                 const active = !!v.warrantyActive && (v.warrantyEnd ?? "") >= TODAY;
                 return (
-                  <div key={v.id} className="bg-[#0f172a]/40 border border-slate-800 rounded-xl p-5 space-y-3">
+                  <div key={v.id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-100">{v.vendorName}</h3>
+                        <h3 className="text-sm font-semibold text-slate-900">{v.vendorName}</h3>
                         <p className="text-[11px] font-mono text-slate-500 mt-0.5">
                           {v.equipmentName} · {v.assetId}
                         </p>
                       </div>
                       {active ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                           <ShieldCheck className="w-3 h-3 mr-1" /> In Warranty
                         </Badge>
                       ) : (
-                        <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20">
+                        <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20">
                           <ShieldX className="w-3 h-3 mr-1" /> Out of Warranty
                         </Badge>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {v.phone ?? "—"}</span>
                       <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {v.email ?? "—"}</span>
                       <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {v.avgResponseTimeHrs ?? "—"} hr response</span>
                       <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {v.avgSpareLeadTimeDays ?? "—"} d lead</span>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px]">
                       <span className="text-slate-500">{v.warrantyScope}</span>
-                      <span className={active ? "text-emerald-400" : "text-rose-400"}>
+                      <span className={active ? "text-emerald-600" : "text-rose-600"}>
                         {active && days !== null
                           ? `${days}d left · ${formatDate(v.warrantyEnd)}`
                           : `Expired ${formatDate(v.warrantyEnd)}`}
@@ -146,10 +146,10 @@ export default function OemPage() {
             </div>
 
             {/* Interventions */}
-            <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-semibold text-slate-200">OEM Intervention Log</h3>
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h3 className="text-sm font-semibold text-slate-900">OEM Intervention Log</h3>
               </div>
               {interventions.length === 0 ? (
                 <div className="py-10 text-center text-slate-500 text-sm">No OEM interventions logged.</div>
@@ -157,7 +157,7 @@ export default function OemPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400">
+                      <tr className="border-b border-slate-200 text-slate-500">
                         <th className="py-2.5 px-5 font-medium">Date</th>
                         <th className="py-2.5 px-4 font-medium">Problem</th>
                         <th className="py-2.5 px-4 font-medium">Warranty</th>
@@ -166,20 +166,20 @@ export default function OemPage() {
                         <th className="py-2.5 px-4 font-medium">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/50">
+                    <tbody className="divide-y divide-slate-200">
                       {interventions.map((it) => (
-                        <tr key={it.id} className="hover:bg-slate-900/30">
-                          <td className="py-2.5 px-5 font-mono text-slate-400">{formatDate(it.interventionDate)}</td>
-                          <td className="py-2.5 px-4 text-slate-300 max-w-xs">{it.problemDescription}</td>
+                        <tr key={it.id} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-5 font-mono text-slate-500">{formatDate(it.interventionDate)}</td>
+                          <td className="py-2.5 px-4 text-slate-700 max-w-xs">{it.problemDescription}</td>
                           <td className="py-2.5 px-4">
-                            <Badge className={it.warrantyStatus === "IN" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-slate-500/10 text-slate-400 border-slate-500/20"}>
+                            <Badge className={it.warrantyStatus === "IN" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20"}>
                               {it.warrantyStatus ?? "—"}
                             </Badge>
                           </td>
-                          <td className="py-2.5 px-4 text-slate-300">{it.responseTimeHrs ?? "—"} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-400 max-w-xs">{it.resolutionSummary}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{it.responseTimeHrs ?? "—"} hrs</td>
+                          <td className="py-2.5 px-4 text-slate-500 max-w-xs">{it.resolutionSummary}</td>
                           <td className="py-2.5 px-4">
-                            <Badge className={it.closed ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"}>
+                            <Badge className={it.closed ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"}>
                               {it.closed ? "Closed" : "Open"}
                             </Badge>
                           </td>
@@ -200,7 +200,7 @@ export default function OemPage() {
 function Stat({ label, value, tone, text }: { label: string; value: string; tone: string; text: string }) {
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );

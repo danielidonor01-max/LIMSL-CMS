@@ -127,38 +127,38 @@ function NewWorkOrderForm() {
     }
   };
 
-  const field = "w-full px-3 py-2 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40";
-  const labelCls = "block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5";
+  const field = "w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40";
+  const labelCls = "block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
-        <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200">
+        <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             <ClipboardList className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">New Work Order</h2>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-slate-500 font-mono">
               {scheduleId ? "Raised from a scheduled activity" : "Manual work order"}
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="py-16 flex justify-center items-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+          <div className="py-16 flex justify-center items-center text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
             <span className="text-xs ml-2 font-mono">Loading…</span>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 bg-[#0f172a]/40 border border-slate-800 rounded-xl p-6">
+          <form onSubmit={submit} className="space-y-5 bg-white border border-slate-200 rounded-xl p-6">
             {error && (
-              <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+              <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs">
                 {error}
               </div>
             )}
@@ -261,7 +261,7 @@ function NewWorkOrderForm() {
             <div className="flex justify-end gap-3 pt-2">
               <Link
                 href="/work-orders"
-                className="px-4 py-2 text-xs font-semibold text-slate-300 border border-slate-800 rounded-lg hover:bg-slate-800/50"
+                className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-100"
               >
                 Cancel
               </Link>
@@ -285,8 +285,8 @@ export default function NewWorkOrderPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-400">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
         </div>
       }
     >

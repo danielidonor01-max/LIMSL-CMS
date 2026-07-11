@@ -62,19 +62,19 @@ export default function WorkOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-slate-400">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
+        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   if (!wo || wo.error) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] text-slate-100 font-sans">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
         <AppHeader />
-        <div className="p-16 text-center text-slate-400">
+        <div className="p-16 text-center text-slate-500">
           Work order not found.{" "}
-          <Link href="/work-orders" className="text-emerald-400 hover:underline">
+          <Link href="/work-orders" className="text-emerald-600 hover:underline">
             Back to list
           </Link>
         </div>
@@ -97,19 +97,19 @@ export default function WorkOrderDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
-        <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200">
+        <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
         </Link>
 
         {/* Header card */}
-        <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl p-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-lg font-bold text-emerald-400">
+                <span className="font-mono text-lg font-bold text-emerald-600">
                   {wo.workOrderNumber}
                 </span>
                 <Badge className={WO_TYPE_BADGE[wo.type]}>{WO_TYPE_LABELS[wo.type] ?? wo.type}</Badge>
@@ -121,7 +121,7 @@ export default function WorkOrderDetailPage() {
                 </Badge>
               </div>
               <h2 className="text-xl font-bold tracking-tight mt-2">{wo.title}</h2>
-              {wo.description && <p className="text-sm text-slate-400 mt-1">{wo.description}</p>}
+              {wo.description && <p className="text-sm text-slate-500 mt-1">{wo.description}</p>}
             </div>
 
             {/* Actions */}
@@ -147,7 +147,7 @@ export default function WorkOrderDetailPage() {
                 <button
                   onClick={() => patch({ status: "CANCELLED" })}
                   disabled={acting}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-700 text-slate-300 hover:bg-slate-800/50 rounded-lg text-xs font-semibold disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold disabled:opacity-60"
                 >
                   <XCircle className="w-4 h-4" /> Cancel WO
                 </button>
@@ -155,7 +155,7 @@ export default function WorkOrderDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-800">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-200">
             <Meta icon={<Calendar className="w-3.5 h-3.5" />} label="Planned" value={formatDate(wo.plannedDate)} />
             <Meta icon={<Calendar className="w-3.5 h-3.5" />} label="Completed" value={formatDate(wo.completionDate)} />
             <Meta icon={<User className="w-3.5 h-3.5" />} label="Technician" value={wo.technicianName ?? "—"} />
@@ -169,13 +169,13 @@ export default function WorkOrderDetailPage() {
 
         {/* Equipment card */}
         {eq && (
-          <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-              <Wrench className="w-4 h-4 text-emerald-400" /> Equipment
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-emerald-600" /> Equipment
             </h3>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <Link href={`/equipment/${eq.assetId}`} className="font-medium text-slate-100 hover:text-emerald-400">
+                <Link href={`/equipment/${eq.assetId}`} className="font-medium text-slate-900 hover:text-emerald-600">
                   {eq.name}
                 </Link>
                 <p className="text-[11px] font-mono text-slate-500 mt-0.5">
@@ -191,9 +191,9 @@ export default function WorkOrderDetailPage() {
 
         {/* Completed checklist view */}
         {checklist && (
-          <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl p-6 space-y-5">
-            <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> PM Checklist — Signed Off
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> PM Checklist — Signed Off
             </h3>
 
             <div className="flex flex-wrap gap-2">
@@ -212,14 +212,14 @@ export default function WorkOrderDetailPage() {
 
             {checklist.observations && (
               <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Findings
                 </p>
-                <p className="text-sm text-slate-300">{checklist.observations}</p>
+                <p className="text-sm text-slate-700">{checklist.observations}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200">
               <SignatureView label="Technician" name={checklist.technicianName} sig={checklist.technicianSignature} />
               <SignatureView label="Supervisor" name={checklist.supervisorName} sig={checklist.supervisorSignature} />
             </div>
@@ -239,7 +239,7 @@ function Meta({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase tracking-wider font-semibold">
         {icon} {label}
       </div>
-      <p className="text-sm text-slate-200 mt-1">{value}</p>
+      <p className="text-sm text-slate-900 mt-1">{value}</p>
     </div>
   );
 }
@@ -249,8 +249,8 @@ function SafetyChip({ ok, label }: { ok: boolean; label: string }) {
     <span
       className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold border ${
         ok
-          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-          : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+          : "bg-slate-500/10 text-slate-500 border-slate-500/20"
       }`}
     >
       {ok ? "✓" : "✕"} {label}
@@ -262,18 +262,18 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{title}</p>
+      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{title}</p>
       <ul className="space-y-1">
         {items.map((it, i) => (
           <li key={i} className="flex items-center justify-between text-xs">
-            <span className="text-slate-300">{it.item}</span>
+            <span className="text-slate-700">{it.item}</span>
             <span
               className={
                 it.status === "OK" || it.status === "PASS"
-                  ? "text-emerald-400"
+                  ? "text-emerald-600"
                   : it.status === "NA"
                     ? "text-slate-500"
-                    : "text-rose-400"
+                    : "text-rose-600"
               }
             >
               {it.status}
@@ -288,13 +288,13 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
 function SignatureView({ label, name, sig }: { label: string; name: string | null; sig: string | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{label}</p>
       {sig ? (
-        <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-slate-900/40 rounded border border-slate-800" unoptimized />
+        <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-slate-100 rounded border border-slate-200" unoptimized />
       ) : (
         <div className="h-14 flex items-center text-xs text-slate-500 italic">No signature</div>
       )}
-      <p className="text-sm text-slate-200 mt-1">{name ?? "—"}</p>
+      <p className="text-sm text-slate-900 mt-1">{name ?? "—"}</p>
     </div>
   );
 }

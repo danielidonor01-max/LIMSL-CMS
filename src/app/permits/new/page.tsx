@@ -90,42 +90,42 @@ export default function NewPermit() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all">
+          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
             <ShieldCheck className="w-4.5 h-4.5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Raise Permit-to-Work</h1>
-            <p className="text-[10px] text-emerald-400 font-mono tracking-wider uppercase">PTW Generator</p>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Raise Permit-to-Work</h1>
+            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">PTW Generator</p>
           </div>
         </div>
       </header>
 
       {/* Form Content */}
       <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
-        <form onSubmit={handleSubmit} className="p-6 bg-[#0f172a]/40 border border-slate-800 rounded-xl space-y-6">
-          <h2 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3 uppercase tracking-wide">
+        <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
+          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Permit-to-Work Safe Isolation Request
           </h2>
 
           {/* Machine Selection */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Select Target Machinery</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Select Target Machinery</label>
             {loadingEq ? (
               <div className="flex items-center text-xs text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400 mr-2" /> Loading equipment list...
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-600 mr-2" /> Loading equipment list...
               </div>
             ) : (
               <select
                 value={equipmentId}
                 onChange={(e) => setEquipmentId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
                 required
               >
                 {equipmentList.map((eq) => (
@@ -139,49 +139,49 @@ export default function NewPermit() {
 
           {/* Work Description */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Detailed Work Scope Description</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Detailed Work Scope Description</label>
             <textarea
               required
               placeholder="Describe what parts will be isolated, what technical procedures will be performed..."
               value={workDescription}
               onChange={(e) => setWorkDescription(e.target.value)}
-              className="w-full h-24 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none resize-none"
+              className="w-full h-24 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
             />
           </div>
 
           {/* Hazards & Control */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Identified Hazards</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Identified Hazards</label>
               <textarea
                 placeholder="e.g. Electrical shocks, high voltage terminal exposure, heavy components falls..."
                 value={hazardsIdentified}
                 onChange={(e) => setHazardsIdentified(e.target.value)}
-                className="w-full h-20 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none resize-none"
+                className="w-full h-20 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase">Hazard Control Measures</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Hazard Control Measures</label>
               <textarea
                 placeholder="e.g. Double barrier block isolations, current test verification, safety harnesses..."
                 value={controlMeasures}
                 onChange={(e) => setControlMeasures(e.target.value)}
-                className="w-full h-20 bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none resize-none"
+                className="w-full h-20 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
               />
             </div>
           </div>
 
           {/* PPE Checklist */}
           <div className="space-y-2.5">
-            <label className="text-xs font-semibold text-slate-400 uppercase block">Required Personal Protective Equipment (PPE)</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-slate-900/40 rounded border border-slate-800/80">
+            <label className="text-xs font-semibold text-slate-500 uppercase block">Required Personal Protective Equipment (PPE)</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-slate-100 rounded border border-slate-200">
               {Object.entries(ppeChecked).map(([key, checked]) => (
-                <label key={key} className="flex items-center gap-2 text-xs text-slate-350 cursor-pointer select-none">
+                <label key={key} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => handlePpeChange(key)}
-                    className="rounded border-slate-800 bg-slate-900 text-emerald-500 focus:ring-0 w-3.5 h-3.5"
+                    className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-3.5 h-3.5"
                   />
                   <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
                 </label>
@@ -191,28 +191,28 @@ export default function NewPermit() {
 
           {/* Safety Confirmations checkboxes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-800 bg-slate-900/30 cursor-pointer select-none">
+            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={lotoApplied}
                 onChange={() => setLotoApplied(!lotoApplied)}
-                className="rounded border-slate-800 bg-slate-900 text-emerald-500 focus:ring-0 w-4 h-4"
+                className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-4 h-4"
               />
               <div className="text-xs">
-                <p className="font-bold text-slate-200">Isolation & LOTO Applied</p>
+                <p className="font-bold text-slate-900">Isolation & LOTO Applied</p>
                 <p className="text-[10px] text-slate-500">Lock-out Tag-out locks and isolation labels are securely placed</p>
               </div>
             </label>
 
-            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-800 bg-slate-900/30 cursor-pointer select-none">
+            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={areaBarricaded}
                 onChange={() => setAreaBarricaded(!areaBarricaded)}
-                className="rounded border-slate-800 bg-slate-900 text-emerald-500 focus:ring-0 w-4 h-4"
+                className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-4 h-4"
               />
               <div className="text-xs">
-                <p className="font-bold text-slate-200">Area Safety Barricaded</p>
+                <p className="font-bold text-slate-900">Area Safety Barricaded</p>
                 <p className="text-[10px] text-slate-500">Safety warning signs placed and physical boundaries are established</p>
               </div>
             </label>
@@ -220,12 +220,12 @@ export default function NewPermit() {
 
           {/* Issued To */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase">Work Party Lead Name</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase">Work Party Lead Name</label>
             <input
               type="text"
               value={issuedToName}
               onChange={(e) => setIssuedToName(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 focus:border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
             />
           </div>
 
@@ -233,7 +233,7 @@ export default function NewPermit() {
           <div className="flex gap-3 justify-end pt-3">
             <Link
               href="/"
-              className="px-4 py-2 border border-slate-800 hover:bg-slate-900 text-slate-350 rounded-lg text-xs font-semibold transition-all"
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all"
             >
               Cancel
             </Link>

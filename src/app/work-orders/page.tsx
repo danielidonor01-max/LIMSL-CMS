@@ -70,17 +70,17 @@ export default function WorkOrdersPage() {
   }, [rows, statusFilter, typeFilter, q]);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
               <ClipboardList className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-xl font-bold tracking-tight">Work Orders</h2>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 font-mono">
                 {counts.OPEN ?? 0} open · {counts.IN_PROGRESS ?? 0} in progress ·{" "}
                 {counts.COMPLETED ?? 0} completed
               </p>
@@ -101,14 +101,14 @@ export default function WorkOrdersPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search WO # / equipment…"
-              className="pl-8 pr-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-56"
+              className="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-56"
             />
           </div>
           <select
             aria-label="Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-2.5 py-1.5 bg-slate-900/50 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500/40"
+            className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
           >
             <option value="ALL">All statuses</option>
             {Object.entries(WO_STATUS_LABELS).map(([k, v]) => (
@@ -119,7 +119,7 @@ export default function WorkOrdersPage() {
             aria-label="Type"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-2.5 py-1.5 bg-slate-900/50 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500/40"
+            className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
           >
             <option value="ALL">All types</option>
             {Object.entries(WO_TYPE_LABELS).map(([k, v]) => (
@@ -128,10 +128,10 @@ export default function WorkOrdersPage() {
           </select>
         </div>
 
-        <div className="bg-[#0f172a]/40 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="py-16 flex justify-center items-center text-slate-400">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+            <div className="py-16 flex justify-center items-center text-slate-500">
+              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               <span className="text-xs ml-2 font-mono">Loading work orders…</span>
             </div>
           ) : filtered.length === 0 ? (
@@ -142,7 +142,7 @@ export default function WorkOrdersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
+                  <tr className="border-b border-slate-200 text-slate-500">
                     <th className="py-3 px-4 font-medium">WO #</th>
                     <th className="py-3 px-4 font-medium">Equipment</th>
                     <th className="py-3 px-4 font-medium">Type</th>
@@ -152,17 +152,17 @@ export default function WorkOrdersPage() {
                     <th className="py-3 px-4 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-slate-200">
                   {filtered.map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-900/30 cursor-pointer">
+                    <tr key={r.id} className="hover:bg-slate-50 cursor-pointer">
                       <td className="py-3 px-4">
-                        <Link href={`/work-orders/${r.id}`} className="font-mono text-emerald-400 hover:underline">
+                        <Link href={`/work-orders/${r.id}`} className="font-mono text-emerald-600 hover:underline">
                           {r.workOrderNumber}
                         </Link>
                       </td>
                       <td className="py-3 px-4">
                         <Link href={`/work-orders/${r.id}`} className="block">
-                          <div className="font-medium text-slate-200 max-w-[220px] truncate">
+                          <div className="font-medium text-slate-900 max-w-[220px] truncate">
                             {r.equipmentName}
                           </div>
                           <div className="text-[10px] font-mono text-slate-500">{r.assetId}</div>
@@ -176,8 +176,8 @@ export default function WorkOrdersPage() {
                           {PRIORITY_LABELS[r.priority] ?? r.priority}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-400">{formatDate(r.plannedDate)}</td>
-                      <td className="py-3 px-4 text-slate-300">{r.technicianName ?? "—"}</td>
+                      <td className="py-3 px-4 font-mono text-slate-500">{formatDate(r.plannedDate)}</td>
+                      <td className="py-3 px-4 text-slate-700">{r.technicianName ?? "—"}</td>
                       <td className="py-3 px-4">
                         <Badge className={WO_STATUS_BADGE[r.status]}>
                           {WO_STATUS_LABELS[r.status] ?? r.status}

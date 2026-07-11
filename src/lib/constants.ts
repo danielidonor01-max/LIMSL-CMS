@@ -26,11 +26,11 @@ export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const EQUIPMENT_STATUS_BADGE: Record<string, string> = {
-  OPERATIONAL: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  UNDER_MAINTENANCE: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  BROKEN_DOWN: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  AWAITING_PARTS: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  DECOMMISSIONED: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  OPERATIONAL: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  UNDER_MAINTENANCE: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  BROKEN_DOWN: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  AWAITING_PARTS: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  DECOMMISSIONED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
 // ─── Maintenance schedule ───────────────────────────────────────────────────
@@ -42,10 +42,10 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ACTIVITY_TYPE_BADGE: Record<string, string> = {
-  PM: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  INS: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  CM: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  PRS: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  PM: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  INS: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  CM: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  PRS: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
 export const SCHEDULE_STATUS_LABELS: Record<string, string> = {
@@ -57,11 +57,11 @@ export const SCHEDULE_STATUS_LABELS: Record<string, string> = {
 };
 
 export const SCHEDULE_STATUS_BADGE: Record<string, string> = {
-  SCHEDULED: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  COMPLETED: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  OVERDUE: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  MISSED: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  RESCHEDULED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  SCHEDULED: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  COMPLETED: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  OVERDUE: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  MISSED: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  RESCHEDULED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
 // ─── Work orders ────────────────────────────────────────────────────────────
@@ -74,11 +74,11 @@ export const WO_TYPE_LABELS: Record<string, string> = {
 };
 
 export const WO_TYPE_BADGE: Record<string, string> = {
-  PREVENTIVE: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  CORRECTIVE: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  INSPECTION: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  EMERGENCY: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  CALIBRATION: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  PREVENTIVE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  CORRECTIVE: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  INSPECTION: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  EMERGENCY: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  CALIBRATION: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
 export const WO_STATUS_LABELS: Record<string, string> = {
@@ -90,11 +90,11 @@ export const WO_STATUS_LABELS: Record<string, string> = {
 };
 
 export const WO_STATUS_BADGE: Record<string, string> = {
-  OPEN: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  IN_PROGRESS: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  PENDING_APPROVAL: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  COMPLETED: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  CANCELLED: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  OPEN: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  IN_PROGRESS: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  PENDING_APPROVAL: "bg-violet-500/10 text-violet-700 border-violet-500/20",
+  COMPLETED: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  CANCELLED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
 export const PRIORITY_LABELS: Record<string, string> = {
@@ -105,10 +105,10 @@ export const PRIORITY_LABELS: Record<string, string> = {
 };
 
 export const PRIORITY_BADGE: Record<string, string> = {
-  LOW: "bg-slate-500/10 text-slate-400 border-slate-500/20",
-  MEDIUM: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  HIGH: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  CRITICAL: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+  LOW: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  MEDIUM: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  HIGH: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  CRITICAL: "bg-rose-500/10 text-rose-600 border-rose-500/20",
 };
 
 // Option lists for <select> inputs
