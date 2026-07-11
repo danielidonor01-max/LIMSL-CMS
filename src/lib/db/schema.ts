@@ -436,6 +436,26 @@ export const trainingRecords = sqliteTable("training_records", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Competency Matrix ────────────────────────────────────────────────────────
+// Maps a person to a skill area with an assessed proficiency level and an
+// optional re-certification (expiry) date. Drives the training gap analysis.
+export const competencyMatrix = sqliteTable("competency_matrix", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id),
+  employeeName: text("employee_name").notNull(),
+  role: text("role"), // snapshot of role at assessment
+  skillArea: text("skill_area").notNull(), // e.g. Electrical Fault Diagnosis, Hydraulics, LOTO/PTW
+  category: text("category"), // TECHNICAL | HSE | QA_QC | OEM
+  level: integer("level").notNull().default(0), // 0 None · 1 Aware · 2 Competent · 3 Proficient · 4 Expert
+  requiredLevel: integer("required_level").default(2),
+  assessedBy: text("assessed_by"),
+  assessedDate: text("assessed_date"),
+  expiryDate: text("expiry_date"), // recertification due date, if any
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Schematic Diagrams ──────────────────────────────────────────────────────
 export const schematicDiagrams = sqliteTable("schematic_diagrams", {
   id: text("id").primaryKey(),
@@ -558,3 +578,7 @@ export type NewProcedureRevision = typeof procedureRevisions.$inferInsert;
 export type SchematicDiagram = typeof schematicDiagrams.$inferSelect;
 export type ComponentRegistry = typeof componentRegistry.$inferSelect;
 export type DiagnosticGuide = typeof diagnosticGuides.$inferSelect;
+export type TrainingRecord = typeof trainingRecords.$inferSelect;
+export type NewTrainingRecord = typeof trainingRecords.$inferInsert;
+export type CompetencyMatrix = typeof competencyMatrix.$inferSelect;
+export type NewCompetencyMatrix = typeof competencyMatrix.$inferInsert;
