@@ -64,8 +64,9 @@ const isRecertDue = (c: Competency) =>
 
 export default function TrainingPage() {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
-  const canWrite = TRAINING_WRITE_ROLES.includes(role ?? "");
+  const canWrite = mounted && TRAINING_WRITE_ROLES.includes(role ?? "");
 
   const [competencies, setCompetencies] = useState<Competency[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -88,6 +89,7 @@ export default function TrainingPage() {
   }
 
   useEffect(() => {
+    setMounted(true);
     loadData();
   }, []);
 

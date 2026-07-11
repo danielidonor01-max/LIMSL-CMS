@@ -47,8 +47,9 @@ const daysUntil = (d: string | null) =>
 
 export default function CalibrationPage() {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
-  const canWrite = MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
 
   const [rows, setRows] = useState<Cal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,7 @@ export default function CalibrationPage() {
   }
 
   useEffect(() => {
+    setMounted(true);
     loadData();
   }, []);
 

@@ -63,8 +63,10 @@ const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
 
 export default function OemPage() {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const role = (session?.user as { role?: string })?.role;
-  const canWrite = MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [interventions, setInterventions] = useState<Intervention[]>([]);

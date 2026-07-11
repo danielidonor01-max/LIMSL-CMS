@@ -36,7 +36,9 @@
       "Skill(claude-api)",
       "Skill(claude-api:*)",
       "Bash(git commit -q -m 'Unify shell, enforce role-based access control, and complete Permits \\(PTW\\) module *)",
-      "Bash(git commit -q -m 'Make OEM & Calibration modules actionable *)"
+      "Bash(git commit -q -m 'Make OEM & Calibration modules actionable *)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"ignored-exit=$?\")"
     ]
   }
 }

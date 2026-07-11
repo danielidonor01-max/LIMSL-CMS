@@ -1,6 +1,7 @@
 // src/components/Sidebar.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -50,7 +51,13 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
-  const role = (user as { role?: string })?.role;
+
+  // The session only resolves on the client, so the role is unknown during SSR
+  // and the first client paint. Defer role-based filtering until after mount so
+  // the initial render matches the server HTML (avoids a hydration mismatch).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const role = mounted ? (user as { role?: string })?.role : undefined;
 
   // Restricted roles (QA/QC, HSE, Viewer) see a scoped menu; everyone else sees all.
   const base = NAV.filter((i) => canAccessPath(role, i.href));
@@ -103,7 +110,7 @@ export default function Sidebar() {
             <User className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-900 truncate">{user?.name ?? "Guest"}</p>
+            <p className="text-xs font-semibold text-slate-900 truncate">{(mounted && user?.name) || "Guest"}</p>
             <p className="text-[9px] font-mono text-emerald-600 uppercase tracking-wider truncate">
               {ROLE_LABELS[role ?? ""] ?? role ?? "—"}
             </p>
