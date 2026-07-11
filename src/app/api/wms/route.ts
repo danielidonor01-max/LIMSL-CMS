@@ -1,14 +1,30 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments } from "@/lib/db/schema";
+import { wmsDocuments, equipment } from "@/lib/db/schema";
 import { count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 export async function GET() {
   try {
     const list = await db.select().from(wmsDocuments);
-    return NextResponse.json(list);
+    const eqList = await db.select().from(equipment);
+    const byId = new Map(eqList.map((e) => [e.id, e]));
+    const enriched = list.map((w) => {
+      // Resolve equipment names from either the scope JSON or the equipmentIds JSON
+      let names: string[] = [];
+      try {
+        if (w.machinesScope) names = JSON.parse(w.machinesScope);
+      } catch {}
+      if (names.length === 0 && w.equipmentIds) {
+        try {
+          const ids: string[] = JSON.parse(w.equipmentIds);
+          names = ids.map((id) => byId.get(id)?.name).filter(Boolean) as string[];
+        } catch {}
+      }
+      return { ...w, equipmentName: names.join(", ") || null };
+    });
+    return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch WMS list:", error);
     return NextResponse.json({ error: "Failed to fetch WMS list", details: error.message }, { status: 500 });

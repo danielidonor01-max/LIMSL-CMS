@@ -13,8 +13,8 @@ import {
   Plus,
   Search,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { Badge } from "@/components/Badge";
+import ScheduleCalendar from "@/components/ScheduleCalendar";
 import { formatDate } from "@/lib/utils";
 import {
   ACTIVITY_TYPE_BADGE,
@@ -24,6 +24,7 @@ import {
   EQUIPMENT_CATEGORY_LABELS,
   MONTH_NAMES,
 } from "@/lib/constants";
+import { CalendarDays, List } from "lucide-react";
 
 type ScheduleRow = {
   id: string;
@@ -52,6 +53,7 @@ export default function SchedulePage() {
   const [rows, setRows] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"upcoming" | "all">("upcoming");
+  const [view, setView] = useState<"list" | "calendar">("list");
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -127,7 +129,6 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -141,12 +142,32 @@ export default function SchedulePage() {
               </p>
             </div>
           </div>
-          <Link
-            href="/work-orders/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
-          >
-            <Plus className="w-4 h-4" /> New Work Order
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
+              <button
+                onClick={() => setView("list")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  view === "list" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" /> List
+              </button>
+              <button
+                onClick={() => setView("calendar")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  view === "calendar" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" /> Calendar
+              </button>
+            </div>
+            <Link
+              href="/work-orders/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
+            >
+              <Plus className="w-4 h-4" /> New Work Order
+            </Link>
+          </div>
         </div>
 
         {/* Summary */}
@@ -185,6 +206,10 @@ export default function SchedulePage() {
           )}
         </div>
 
+        {view === "calendar" && <ScheduleCalendar rows={rows} />}
+
+        {view === "list" && (
+        <>
         {/* Tabs + filters */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
@@ -318,6 +343,8 @@ export default function SchedulePage() {
         <p className="text-[11px] text-slate-500">
           Showing {filtered.length} of {rows.length} scheduled activities.
         </p>
+        </>
+        )}
       </main>
     </div>
   );

@@ -26,6 +26,7 @@ import {
   UserCheck,
   FileCheck,
 } from "lucide-react";
+import EquipmentDocuments from "@/components/EquipmentDocuments";
 
 // Mock Detailed Equipment profiles
 const mockEquipmentDetails: Record<string, any> = {
@@ -341,6 +342,9 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             </div>
           </div>
         </div>
+
+        {/* Per-machine document register (live) */}
+        <EquipmentDocuments assetId={assetIdKey} />
       </main>
 
       {/* Footer */}

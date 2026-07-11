@@ -3,7 +3,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Gauge, Loader2, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 
@@ -56,7 +55,6 @@ export default function CalibrationPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">

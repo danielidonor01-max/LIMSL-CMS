@@ -39,15 +39,21 @@ export async function PATCH(
     const assetIdOriginal = assetIdKey.replace(/-/g, "/");
     const body = await request.json();
 
+    // Only update fields that were actually provided.
+    const editable = [
+      "name", "category", "location", "bay", "oem", "model", "serialNumber",
+      "commissioningDate", "warrantyExpiry", "status", "criticality",
+      "maintenanceFrequency", "lastMaintenanceDate", "lastUsedDate",
+      "nextMaintenanceDate", "notes", "requiresCalibration", "requiresPremob",
+    ] as const;
+    const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+    for (const key of editable) {
+      if (body[key] !== undefined) updates[key] = body[key];
+    }
+
     const updated = await db
       .update(equipment)
-      .set({
-        status: body.status,
-        lastMaintenanceDate: body.lastMaintenanceDate,
-        lastUsedDate: body.lastUsedDate,
-        nextMaintenanceDate: body.nextMaintenanceDate,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(updates)
       .where(eq(equipment.assetId, assetIdOriginal))
       .returning();
 

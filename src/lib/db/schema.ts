@@ -32,6 +32,27 @@ export const equipment = sqliteTable("equipment", {
   photoUrl: text("photo_url"),
   notes: text("notes"),
   criticality: text("criticality").default("MEDIUM"), // LOW | MEDIUM | HIGH | CRITICAL
+  requiresCalibration: integer("requires_calibration", { mode: "boolean" }).default(false),
+  requiresPremob: integer("requires_premob", { mode: "boolean" }).default(false),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Equipment Documents ─────────────────────────────────────────────────────
+// Per-machine document register: electrical schematics, operational manuals,
+// SOPs, calibration reports, pre-mobilization (premob) reports, etc.
+export const equipmentDocuments = sqliteTable("equipment_documents", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  docType: text("doc_type").notNull(), // ELECTRICAL_SCHEMATIC | OPERATIONAL_MANUAL | SOP | CALIBRATION_REPORT | PREMOB_REPORT | DATASHEET | WARRANTY | OTHER
+  title: text("title").notNull(),
+  fileUrl: text("file_url"),
+  status: text("status").notNull().default("REQUIRED"), // REQUIRED | AVAILABLE | EXPIRED
+  issuedDate: text("issued_date"),
+  expiryDate: text("expiry_date"),
+  revision: text("revision"),
+  notes: text("notes"),
+  uploadedBy: text("uploaded_by"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -420,3 +441,5 @@ export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
 export type NonConformity = typeof nonConformities.$inferSelect;
+export type EquipmentDocument = typeof equipmentDocuments.$inferSelect;
+export type NewEquipmentDocument = typeof equipmentDocuments.$inferInsert;

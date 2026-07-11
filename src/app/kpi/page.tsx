@@ -28,7 +28,6 @@ import {
   ShieldCheck,
   Gauge,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { formatCurrency } from "@/lib/utils";
 import { MONTH_NAMES } from "@/lib/constants";
 
@@ -172,7 +171,6 @@ export default function KpiPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">

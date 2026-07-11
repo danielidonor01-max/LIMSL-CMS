@@ -16,7 +16,6 @@ import {
   User,
   ShieldCheck,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 import {
@@ -71,7 +70,6 @@ export default function WorkOrderDetailPage() {
   if (!wo || wo.error) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <AppHeader />
         <div className="p-16 text-center text-slate-500">
           Work order not found.{" "}
           <Link href="/work-orders" className="text-emerald-600 hover:underline">
@@ -98,7 +96,7 @@ export default function WorkOrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
+      
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders

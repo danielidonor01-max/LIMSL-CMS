@@ -8,7 +8,13 @@ import { nanoid } from "nanoid";
 export async function GET() {
   try {
     const list = await db.select().from(correctiveMaintenance);
-    return NextResponse.json(list);
+    const eqList = await db.select().from(equipment);
+    const byId = new Map(eqList.map((e) => [e.id, e]));
+    const enriched = list.map((r) => {
+      const e = byId.get(r.equipmentId);
+      return { ...r, equipmentName: e?.name ?? null, assetId: e?.assetId ?? null };
+    });
+    return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch corrective list:", error);
     return NextResponse.json({ error: "Failed to fetch corrective list", details: error.message }, { status: 500 });
