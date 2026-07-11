@@ -121,10 +121,27 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // Parse arrays
-  const procedureSteps = wms.workProcedureSteps ? JSON.parse(wms.workProcedureSteps) : [];
-  const tools = wms.equipmentAndTools ? JSON.parse(wms.equipmentAndTools) : [];
-  const materials = wms.materials ? JSON.parse(wms.materials) : [];
+  // Parse arrays. Items may be plain strings or {step, description}/{name} objects
+  // depending on how the WMS was created — normalise to text for rendering.
+  const asText = (v: unknown): string =>
+    typeof v === "string"
+      ? v
+      : (v as { description?: string; name?: string; step?: string })?.description ??
+        (v as { name?: string })?.name ??
+        (v as { step?: string })?.step ??
+        (v == null ? "" : JSON.stringify(v));
+  const safeParse = (s: string | null): unknown[] => {
+    if (!s) return [];
+    try {
+      const p = JSON.parse(s);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  };
+  const procedureSteps = safeParse(wms.workProcedureSteps);
+  const tools = safeParse(wms.equipmentAndTools);
+  const materials = safeParse(wms.materials);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -175,16 +192,16 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">3. Equipment & Tools</h3>
                 <ul className="list-disc pl-4 text-xs text-slate-600 space-y-1">
-                  {tools.map((t: string, i: number) => (
-                    <li key={i}>{t}</li>
+                  {tools.map((t: unknown, i: number) => (
+                    <li key={i}>{asText(t)}</li>
                   ))}
                 </ul>
               </div>
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">4. Materials Required</h3>
                 <ul className="list-disc pl-4 text-xs text-slate-600 space-y-1">
-                  {materials.map((m: string, i: number) => (
-                    <li key={i}>{m}</li>
+                  {materials.map((m: unknown, i: number) => (
+                    <li key={i}>{asText(m)}</li>
                   ))}
                 </ul>
               </div>
@@ -194,12 +211,12 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             <div className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">5. Detailed Work Procedure</h3>
               <div className="space-y-3">
-                {procedureSteps.map((step: string, i: number) => (
+                {procedureSteps.map((step: unknown, i: number) => (
                   <div key={i} className="flex gap-3 text-xs leading-relaxed">
                     <span className="w-5 h-5 rounded bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center font-bold font-mono">
-                      {String.fromCharCode(65 + i)}
+                      {(step as { step?: string })?.step ?? String.fromCharCode(65 + i)}
                     </span>
-                    <p className="text-slate-700 flex-1">{step}</p>
+                    <p className="text-slate-700 flex-1">{asText(step)}</p>
                   </div>
                 ))}
               </div>
