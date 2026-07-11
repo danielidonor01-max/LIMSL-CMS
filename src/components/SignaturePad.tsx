@@ -1,81 +1,136 @@
 // src/components/SignaturePad.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
-import SignaturePadLib from "signature_pad";
-import { Eraser } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { Trash2 } from "lucide-react";
 
-// Canvas-based drawn signature. Emits a PNG data URL on every stroke end,
-// and null when cleared.
-export default function SignaturePad({
-  label,
-  onChange,
-}: {
+// Unified canvas-based drawn signature used across every sign-off flow.
+// Supports both call conventions so all modules share one component:
+//   • Phase 3/4 (WMS, corrective):  <SignaturePad onSave={setSig} savedData={sig} />
+//   • Phase 2 (PM checklist):        <SignaturePad onChange={setSig} />
+// On every completed stroke it emits the PNG data URL through whichever
+// callback(s) are provided; clearing emits "" (onSave) and null (onChange).
+interface SignaturePadProps {
   label: string;
-  onChange: (dataUrl: string | null) => void;
-}) {
+  onSave?: (base64Data: string) => void;
+  onChange?: (dataUrl: string | null) => void;
+  savedData?: string;
+}
+
+export default function SignaturePad({ label, onSave, onChange, savedData }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const padRef = useRef<SignaturePadLib | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawing, setHasDrawing] = useState(false);
+
+  const emit = (data: string) => {
+    onSave?.(data);
+    onChange?.(data === "" ? null : data);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resize = () => {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * ratio;
-      canvas.height = rect.height * ratio;
-      const ctx = canvas.getContext("2d");
-      ctx?.scale(ratio, ratio);
-      padRef.current?.clear();
-    };
+    canvas.width = canvas.parentElement?.clientWidth || 300;
+    canvas.height = 120;
 
-    const pad = new SignaturePadLib(canvas, {
-      penColor: "#f1f5f9",
-      backgroundColor: "rgba(0,0,0,0)",
-      minWidth: 0.7,
-      maxWidth: 2.2,
-    });
-    padRef.current = pad;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    pad.addEventListener("endStroke", () => {
-      onChange(pad.isEmpty() ? null : pad.toDataURL("image/png"));
-    });
+    ctx.strokeStyle = "#10b981"; // Emerald line
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
 
-    resize();
-    window.addEventListener("resize", resize);
-    return () => {
-      window.removeEventListener("resize", resize);
-      pad.off();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Render a pre-existing signature if supplied (edit/review flows)
+    if (savedData) {
+      const img = new Image();
+      img.src = savedData;
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+        setHasDrawing(true);
+      };
+    }
+  }, [savedData]);
+
+  const coords = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement,
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const { x, y } = coords(e, canvas);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const { x, y } = coords(e, canvas);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasDrawing(true);
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    const canvas = canvasRef.current;
+    if (canvas && hasDrawing) emit(canvas.toDataURL("image/png"));
+  };
 
   const clear = () => {
-    padRef.current?.clear();
-    onChange(null);
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawing(false);
+    emit("");
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-          {label}
-        </span>
-        <button
-          type="button"
-          onClick={clear}
-          className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-rose-400"
-        >
-          <Eraser className="w-3 h-3" /> Clear
-        </button>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{label}</span>
+        {hasDrawing && (
+          <button
+            type="button"
+            onClick={clear}
+            className="text-[10px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Clear Signature
+          </button>
+        )}
       </div>
-      <canvas
-        ref={canvasRef}
-        className="w-full h-32 bg-slate-900/60 border border-slate-700 rounded-lg touch-none cursor-crosshair"
-      />
-      <p className="text-[10px] text-slate-500 mt-1">Sign above with mouse or finger</p>
+
+      <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-900/80 relative">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          className="cursor-crosshair w-full block h-[120px] touch-none"
+        />
+        {!hasDrawing && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-500 text-[10px] uppercase font-mono tracking-widest">
+            Sign here
+          </div>
+        )}
+      </div>
     </div>
   );
 }

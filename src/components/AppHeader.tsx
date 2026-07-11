@@ -9,9 +9,12 @@ import {
   Layers,
   Calendar,
   ClipboardList,
+  AlertTriangle,
+  FileText,
   TrendingUp,
   Building2,
   Gauge,
+  ShieldAlert,
   FileBarChart,
   User,
 } from "lucide-react";
@@ -21,9 +24,12 @@ const NAV = [
   { href: "/equipment", label: "Equipment", icon: Layers },
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
+  { href: "/corrective", label: "Corrective", icon: AlertTriangle },
+  { href: "/wms", label: "WMS", icon: FileText },
   { href: "/kpi", label: "KPIs", icon: TrendingUp },
   { href: "/oem", label: "OEM", icon: Building2 },
   { href: "/calibration", label: "Calibration", icon: Gauge },
+  { href: "/audit/non-conformity", label: "Audit", icon: ShieldAlert },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
 
