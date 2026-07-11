@@ -9,6 +9,8 @@ import {
 } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
@@ -64,6 +66,9 @@ async function nextWorkOrderNumber(): Promise<string> {
 // Create a new work order.
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
 
     if (!body.equipmentId || !body.type || !body.title) {

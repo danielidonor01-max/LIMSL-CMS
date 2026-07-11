@@ -16,14 +16,16 @@ import {
   Building2,
   Gauge,
   ShieldAlert,
+  ShieldCheck,
   FileBarChart,
   FolderOpen,
   BookText,
+  GraduationCap,
   Users,
   LogOut,
   User,
 } from "lucide-react";
-import { ROLE_LABELS, isSuperAdmin } from "@/lib/roles";
+import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -34,20 +36,15 @@ const NAV = [
   { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
   { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
   { href: "/wms", label: "WMS", icon: FileText },
+  { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
   { href: "/kpi", label: "KPI Dashboard", icon: TrendingUp },
   { href: "/oem", label: "OEM & Warranty", icon: Building2 },
   { href: "/calibration", label: "Calibration", icon: Gauge },
+  { href: "/training", label: "Training & Competency", icon: GraduationCap },
   { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
 
-// Role-scoped navigation. Roles not listed here (maintenance team + management +
-// super admin) see the full menu. Everyone can see the Procedure.
-const ROLE_NAV: Record<string, string[]> = {
-  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit/non-conformity", "/kpi", "/reports"],
-  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit/non-conformity", "/calibration"],
-  VIEWER: ["/", "/equipment", "/procedure", "/reports"],
-};
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -56,8 +53,7 @@ export default function Sidebar() {
   const role = (user as { role?: string })?.role;
 
   // Restricted roles (QA/QC, HSE, Viewer) see a scoped menu; everyone else sees all.
-  const allowed = role ? ROLE_NAV[role] : undefined;
-  const base = allowed ? NAV.filter((i) => allowed.includes(i.href)) : NAV;
+  const base = NAV.filter((i) => canAccessPath(role, i.href));
   // Super Admins get the user-management entry.
   const nav = isSuperAdmin(role)
     ? [...base, { href: "/settings/users", label: "Users (Admin)", icon: Users }]

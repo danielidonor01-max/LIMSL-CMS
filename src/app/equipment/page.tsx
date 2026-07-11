@@ -97,8 +97,12 @@ export default function EquipmentList() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -117,10 +121,7 @@ export default function EquipmentList() {
         >
           + Add New Equipment
         </Link>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        </div>
         {/* Filters Panel */}
         <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:max-w-xs">
@@ -267,9 +268,7 @@ export default function EquipmentList() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white/90 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
-        &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited. | Digital Twins Database.
-      </footer>
+
     </div>
   );
 }

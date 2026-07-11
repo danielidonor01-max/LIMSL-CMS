@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx drizzle-kit *)",
+      "Bash(npm run *)",
+      "Bash(npx tsx *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "PowerShell($wt = \"C:\\\\Users\\\\Daniel Idonor\\\\LIMSL CMS\\\\limsl-cms-phase2\"; $item = Get-Item \"$wt\\\\node_modules\" -Force; if \\($item.LinkType\\) { cmd /c rmdir \"$wt\\\\node_modules\"; \"Removed junction \\($\\($item.LinkType\\)\\)\" } else { \"Not a link: $\\($item.LinkType\\)\" }; \"node_modules exists now: $\\(Test-Path \"$wt\\\\node_modules\"\\)\")",
+      "Bash(npm ci *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -m 10 http://localhost:3021/api/kpi)",
+      "Bash(taskkill //PID 8540 //F)",
+      "Bash(git commit *)",
+      "Bash(git ls-remote *)",
+      "Bash(curl -s -m 30 -X POST \"http://localhost:3031/api/audit/auto-detect\")",
+      "Bash(curl -s -m 20 \"http://localhost:3031/api/non-conformities\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(j.length+' NCs'\\);if\\(j[0]\\)console.log\\('sample:',JSON.stringify\\(j[0]\\).slice\\(0,200\\)\\)}catch\\(e\\){console.log\\('ERR',d.slice\\(0,120\\)\\)}}\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -m 30 http://localhost:3031/)",
+      "Bash(curl -s -m 30 http://localhost:3031/)",
+      "Bash(curl -s -m 20 http://localhost:3031/api/corrective)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\('corrective:',j.length,j[0]?.cmrfNumber||''\\)}\\)\")",
+      "Bash(curl -s -m 20 http://localhost:3031/api/wms)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\('wms:',j.length,j.map\\(x=>x.status\\).join\\(','\\)\\)}\\)\")",
+      "Bash(curl -s -m 20 http://localhost:3031/api/dashboard/stats)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\('stats:',j.map\\(s=>s.title+'='+s.value\\).join\\(' | '\\)\\)}\\)\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\(j.map\\(s=>s.title+'='+s.value\\).join\\(' | '\\)\\)}\\)\")",
+      "Bash(git commit -q -m ' *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(node -e ' *)",
+      "Bash(git fetch *)",
+      "Bash(awk '/^ *)",
+      "Bash(git show *)",
+      "Bash(node -e *)",
+      "Bash(grep -rn *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(git commit -q -m 'Unify shell, enforce role-based access control, and complete Permits \\(PTW\\) module *)"
+    ]
+  }
+}

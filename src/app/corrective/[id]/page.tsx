@@ -184,8 +184,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Main Grid */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -197,10 +201,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">Fault & RCA Lifecycle</p>
           </div>
         </div>
-      </header>
-
-      {/* Main Grid */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        </div>
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-6">
           {/* Fault Specifications Card */}

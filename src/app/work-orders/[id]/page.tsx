@@ -142,6 +142,14 @@ export default function WorkOrderDetailPage() {
                   <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
                 </Link>
               )}
+              {eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
+                <Link
+                  href={`/permits/new?equipmentId=${eq.id}&workOrderId=${id}`}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-semibold"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Raise PTW
+                </Link>
+              )}
               {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
                 <button
                   onClick={() => patch({ status: "CANCELLED" })}

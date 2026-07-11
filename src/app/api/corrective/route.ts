@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET() {
   try {
@@ -23,8 +25,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
-    
+
     // Auto-generate CMRF number e.g. CMRF-2026-0001
     const countResult = await db.select({ value: count() }).from(correctiveMaintenance);
     const totalCount = countResult[0]?.value || 0;

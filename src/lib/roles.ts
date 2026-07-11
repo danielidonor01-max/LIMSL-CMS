@@ -82,3 +82,50 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
   if (userRole === stepRole) return true;
   return (ROLE_RANK[userRole] ?? 0) > (ROLE_RANK[stepRole] ?? 0);
 }
+
+// ── Path-based access control ─────────────────────────────────────────────────
+// Roles listed here see only the allowed path prefixes. Roles NOT listed
+// (SUPER_ADMIN + management + maintenance team) have full access. Drives both the
+// sidebar nav and the page-level guard so they never disagree.
+export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
+  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit", "/kpi", "/reports", "/training"],
+  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit", "/calibration", "/permits", "/training"],
+  VIEWER: ["/", "/equipment", "/procedure", "/reports"],
+};
+
+export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
+  if (!role) return true; // unauthenticated is handled by middleware
+  if (pathname === "/login") return true;
+  const allowed = ROLE_ALLOWED_PATHS[role];
+  if (!allowed) return true; // full-access roles
+  return allowed.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)));
+}
+
+// Roles permitted to create/modify maintenance work (WOs, equipment, PM
+// checklists, corrective records). QA/QC and HSE participate via sign-off, not
+// direct maintenance writes.
+export const MAINTENANCE_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "TECHNICIAN",
+];
+
+// Roles permitted to issue / close a Permit-to-Work. Safety documents are owned
+// by HSE together with the maintenance supervisory chain.
+export const PERMIT_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "HSE",
+];
+
+// Roles permitted to manage the training & competency records.
+export const TRAINING_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "QA_QC",
+];

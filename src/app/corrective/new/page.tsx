@@ -92,8 +92,12 @@ export default function NewCorrectiveRequest() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Form Content */}
+      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -105,10 +109,7 @@ export default function NewCorrectiveRequest() {
             <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">LIMSL-MAIN-015</p>
           </div>
         </div>
-      </header>
-
-      {/* Form Content */}
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
+        </div>
         <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Corrective Maintenance Request Form

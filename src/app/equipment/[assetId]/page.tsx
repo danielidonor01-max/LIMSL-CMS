@@ -98,8 +98,11 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+      {/* Main Grid */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/equipment" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -120,10 +123,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             <QrCode className="w-4 h-4" /> Print QR
           </Link>
         </div>
-      </header>
-
-      {/* Main Grid */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        </div>
         {/* Status Highlight Banner */}
         <div
           className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
@@ -412,9 +412,6 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         <EquipmentDocuments assetId={assetIdKey} />
       </main>
 
-      <footer className="border-t border-slate-200 bg-white/90 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
-        &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited. | Digital Twins Database.
-      </footer>
     </div>
   );
 }

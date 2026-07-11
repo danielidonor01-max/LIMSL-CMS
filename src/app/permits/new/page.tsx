@@ -1,13 +1,17 @@
 // src/app/permits/new/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-export default function NewPermit() {
+function NewPermitForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefillEquipmentId = searchParams.get("equipmentId") || "";
+  const workOrderId = searchParams.get("workOrderId") || "";
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [loadingEq, setLoadingEq] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,7 +42,11 @@ export default function NewPermit() {
         if (res.ok) {
           const data = await res.json();
           setEquipmentList(data);
-          if (data.length > 0) setEquipmentId(data[0].id);
+          if (prefillEquipmentId && data.some((e: any) => e.id === prefillEquipmentId)) {
+            setEquipmentId(prefillEquipmentId);
+          } else if (data.length > 0) {
+            setEquipmentId(data[0].id);
+          }
         }
       } catch (err) {
         console.error("Failed to load machinery list:", err);
@@ -47,7 +55,7 @@ export default function NewPermit() {
       }
     }
     loadEquipment();
-  }, []);
+  }, [prefillEquipmentId]);
 
   const handlePpeChange = (key: string) => {
     setPpeChecked({ ...ppeChecked, [key]: !ppeChecked[key] });
@@ -68,6 +76,7 @@ export default function NewPermit() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           equipmentId,
+          workOrderId: workOrderId || null,
           workDescription,
           hazardsIdentified,
           controlMeasures,
@@ -79,11 +88,15 @@ export default function NewPermit() {
       });
 
       if (res.ok) {
-        // Redirect back to home dashboard or permits page
-        router.push("/");
+        toast.success("Permit-to-Work issued.");
+        router.push("/permits");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || "Failed to issue Permit-to-Work.");
       }
     } catch (err) {
       console.error("Failed to raise PTW:", err);
+      toast.error("Failed to issue Permit-to-Work.");
     } finally {
       setSaving(false);
     }
@@ -92,8 +105,12 @@ export default function NewPermit() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Form Content */}
+      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -105,10 +122,7 @@ export default function NewPermit() {
             <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">PTW Generator</p>
           </div>
         </div>
-      </header>
-
-      {/* Form Content */}
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
+        </div>
         <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Permit-to-Work Safe Isolation Request
@@ -248,5 +262,19 @@ export default function NewPermit() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function NewPermit() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-slate-500">
+          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        </div>
+      }
+    >
+      <NewPermitForm />
+    </Suspense>
   );
 }

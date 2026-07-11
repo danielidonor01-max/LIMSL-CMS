@@ -10,6 +10,8 @@ import {
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -18,6 +20,9 @@ import { nanoid } from "nanoid";
 //  4. roll the equipment's last/next maintenance dates forward
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
 
     if (!body.workOrderId || !body.equipmentId) {
