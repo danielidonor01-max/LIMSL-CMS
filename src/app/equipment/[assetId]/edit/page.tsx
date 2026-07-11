@@ -44,7 +44,9 @@ export default function EquipmentEditPage() {
       setError("Failed to save changes.");
       return;
     }
-    router.push(`/equipment/${assetId}`);
+    // Asset ID may have changed — navigate to its (possibly new) URL key.
+    const newKey = String(form.assetId || "").replace(/\//g, "-");
+    router.push(`/equipment/${newKey}`);
     router.refresh();
   };
 
@@ -87,6 +89,17 @@ export default function EquipmentEditPage() {
         {error && (
           <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs">{error}</div>
         )}
+
+        <div>
+          <label className={label}>Asset ID (editable)</label>
+          <input
+            value={form.assetId ?? ""}
+            onChange={(e) => set("assetId", e.target.value)}
+            className={`${field} font-mono`}
+            placeholder="LEE/PE/0000"
+          />
+          <p className="text-[10px] text-slate-400 mt-1">Changing the code re-keys this asset across the registry.</p>
+        </div>
 
         <div>
           <label className={label}>Name</label>

@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Loader2,
@@ -53,7 +54,7 @@ export default function NonConformityRegister() {
       const res = await fetch("/api/audit/auto-detect", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
-        alert(`System audit scan complete! New non-conformities raised: ${data.newNonConformitiesRaised}`);
+        toast.success(`Audit scan complete — ${data.newNonConformitiesRaised} new non-conformities raised.`);
         loadNCs();
       }
     } catch (err) {

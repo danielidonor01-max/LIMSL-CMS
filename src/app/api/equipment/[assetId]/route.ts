@@ -41,6 +41,7 @@ export async function PATCH(
 
     // Only update fields that were actually provided.
     const editable = [
+      "assetId",
       "name", "category", "location", "bay", "oem", "model", "serialNumber",
       "commissioningDate", "warrantyExpiry", "status", "criticality",
       "maintenanceFrequency", "lastMaintenanceDate", "lastUsedDate",
