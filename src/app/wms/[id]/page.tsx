@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import SignoffChain from "@/components/SignoffChain";
 import { toast } from "sonner";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -357,6 +358,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* WMS authorisation: Foreman → Maintenance Manager → HSE → Factory Manager (final) */}
+          <div className="lg:col-span-3">
+            <SignoffChain
+              entityType="WMS"
+              entityId={wmsId}
+              title="WMS Authorisation (Foreman → Maintenance Manager → HSE → Factory Manager)"
+            />
           </div>
         </div>
       </main>

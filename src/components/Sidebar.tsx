@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   FileBarChart,
   FolderOpen,
+  BookText,
   Users,
   LogOut,
   User,
@@ -28,6 +29,7 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/equipment", label: "Equipment", icon: Layers },
   { href: "/documents", label: "Documents", icon: FolderOpen },
+  { href: "/procedure", label: "Maint. Procedure", icon: BookText },
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
   { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
@@ -39,16 +41,27 @@ const NAV = [
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
 
+// Role-scoped navigation. Roles not listed here (maintenance team + management +
+// super admin) see the full menu. Everyone can see the Procedure.
+const ROLE_NAV: Record<string, string[]> = {
+  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit/non-conformity", "/kpi", "/reports"],
+  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit/non-conformity", "/calibration"],
+  VIEWER: ["/", "/equipment", "/procedure", "/reports"],
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
   const role = (user as { role?: string })?.role;
 
+  // Restricted roles (QA/QC, HSE, Viewer) see a scoped menu; everyone else sees all.
+  const allowed = role ? ROLE_NAV[role] : undefined;
+  const base = allowed ? NAV.filter((i) => allowed.includes(i.href)) : NAV;
   // Super Admins get the user-management entry.
   const nav = isSuperAdmin(role)
-    ? [...NAV, { href: "/settings/users", label: "Users (Admin)", icon: Users }]
-    : NAV;
+    ? [...base, { href: "/settings/users", label: "Users (Admin)", icon: Users }]
+    : base;
 
   const isActive = (item: { href: string; exact?: boolean }) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);

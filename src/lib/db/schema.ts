@@ -518,6 +518,26 @@ export const schematicIngestionJobs = sqliteTable("schematic_ingestion_jobs", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Equipment Maintenance Procedure (controlled document + revisions) ────────
+// The ISO-9001 controlled procedure. Every change is a new revision that must be
+// authorised by QA/QC and signed off by Maintenance Manager, Factory Manager and
+// COO before it becomes the effective (APPROVED) revision. History is retained.
+export const procedureRevisions = sqliteTable("procedure_revisions", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().default("LIMSL-MAIN-PROC-001"),
+  title: text("title").notNull(),
+  revision: integer("revision").notNull(), // 1, 2, 3 …
+  contentMarkdown: text("content_markdown").notNull(),
+  changeSummary: text("change_summary"),
+  status: text("status").notNull().default("DRAFT"), // DRAFT | PENDING_APPROVAL | APPROVED | SUPERSEDED | REJECTED
+  preparedById: text("prepared_by_id").references(() => users.id),
+  preparedByName: text("prepared_by_name"),
+  effectiveDate: text("effective_date"),
+  approvedAt: text("approved_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
@@ -533,6 +553,8 @@ export type Signoff = typeof signoffs.$inferSelect;
 export type NewSignoff = typeof signoffs.$inferInsert;
 export type SchematicIngestionJob = typeof schematicIngestionJobs.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type ProcedureRevision = typeof procedureRevisions.$inferSelect;
+export type NewProcedureRevision = typeof procedureRevisions.$inferInsert;
 export type SchematicDiagram = typeof schematicDiagrams.$inferSelect;
 export type ComponentRegistry = typeof componentRegistry.$inferSelect;
 export type DiagnosticGuide = typeof diagnosticGuides.$inferSelect;

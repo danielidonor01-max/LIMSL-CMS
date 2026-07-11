@@ -31,17 +31,31 @@ export const CM_CHAIN: ChainStep[] = [
 ];
 
 // Work Method Statement authorisation:
-//   Prepared (Technician/Foreman) → Reviewed (Maintenance Manager) → Approved (COO)
+//   Prepared (Foreman) → Reviewed (Maintenance Manager) → HSE safety sign-off →
+//   Factory Manager final approval. HSE signs, then it pushes to the Factory
+//   Manager for the final sign-off.
 export const WMS_CHAIN: ChainStep[] = [
-  { role: "FOREMAN", roleLabel: "Prepared by", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by", required: true },
-  { role: "COO", roleLabel: "Approved by", required: true },
+  { role: "FOREMAN", roleLabel: "Prepared by (Foreman)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
+  { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Final approval (Factory Manager)", required: true },
+];
+
+// Equipment Maintenance Procedure revision control:
+//   QA/QC authorises the change (document control) → Maintenance Manager →
+//   Factory Manager → COO sign off before the revision becomes effective.
+export const PROCEDURE_CHAIN: ChainStep[] = [
+  { role: "QA_QC", roleLabel: "Authorised by (QA/QC — document control)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Signed off (Maintenance Manager)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Signed off (Factory Manager)", required: true },
+  { role: "COO", roleLabel: "Approved (COO)", required: true },
 ];
 
 export const CHAINS: Record<string, ChainStep[]> = {
   PM_CHECKLIST: PM_CHAIN,
   CORRECTIVE: CM_CHAIN,
   WMS: WMS_CHAIN,
+  PROCEDURE: PROCEDURE_CHAIN,
 };
 
 export function chainFor(entityType: string): ChainStep[] {
