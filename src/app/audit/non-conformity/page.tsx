@@ -16,6 +16,7 @@ import {
   Filter,
   UserCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function NonConformityRegister() {
   const [ncList, setNcList] = useState<any[]>([]);
@@ -53,7 +54,7 @@ export default function NonConformityRegister() {
       const res = await fetch("/api/audit/auto-detect", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
-        alert(`System audit scan complete! New non-conformities raised: ${data.newNonConformitiesRaised}`);
+        toast.success(`System audit scan complete! New non-conformities raised: ${data.newNonConformitiesRaised}`);
         loadNCs();
       }
     } catch (err) {

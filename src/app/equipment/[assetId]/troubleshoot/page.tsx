@@ -14,6 +14,7 @@ import {
   Play,
   FileCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function TroubleshootingWizard({ params }: { params: Promise<{ assetId: string }> }) {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function TroubleshootingWizard({ params }: { params: Promise<{ as
   const handleFinish = async () => {
     setSaving(true);
     // Simple success count increment
-    alert("Troubleshooting sequence finished. Resolution outcome saved. Maintenance logs updated.");
+    toast.success("Troubleshooting sequence finished. Resolution outcome saved. Maintenance logs updated.");
     router.push(`/equipment/${assetIdKey}`);
   };
 

@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import { toast } from "sonner";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   const handleReview = async () => {
     if (!reviewSign) {
-      alert("Reviewer signature is required.");
+      toast.error("Reviewer signature is required.");
       return;
     }
     setSaving(true);
@@ -67,7 +68,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       if (res.ok) {
         const data = await res.json();
         setWms(data);
-        alert("WMS marked as reviewed and sent for management approval.");
+        toast.success("WMS marked as reviewed and sent for management approval.");
       }
     } catch (err) {
       console.error(err);
@@ -78,11 +79,11 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   const handleApprove = async (approve: boolean) => {
     if (approve && !approveSign) {
-      alert("Approver signature is required.");
+      toast.error("Approver signature is required.");
       return;
     }
     if (!approve && !rejectionReason) {
-      alert("Please provide a rejection reason.");
+      toast.error("Please provide a rejection reason.");
       return;
     }
 
@@ -102,7 +103,11 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       if (res.ok) {
         const data = await res.json();
         setWms(data);
-        alert(approve ? "WMS Approved!" : "WMS Rejected.");
+        if (approve) {
+          toast.success("WMS Approved!");
+        } else {
+          toast.warning("WMS Rejected.");
+        }
       }
     } catch (err) {
       console.error(err);

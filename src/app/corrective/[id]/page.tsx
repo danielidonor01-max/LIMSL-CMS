@@ -18,6 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import { toast } from "sonner";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -130,7 +131,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         }),
       });
       if (res.ok) {
-        alert("RCA and Corrective Actions saved successfully!");
+        toast.success("RCA and Corrective Actions saved successfully!");
       }
     } catch (err) {
       console.error(err);
@@ -141,7 +142,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   const handleCloseOut = async () => {
     if (!techSign || !superSign) {
-      alert("Both technician and supervisor signatures are required to close out the request.");
+      toast.error("Both technician and supervisor signatures are required to close out the request.");
       return;
     }
 
