@@ -18,9 +18,11 @@ import {
   ShieldAlert,
   FileBarChart,
   FolderOpen,
+  Users,
   LogOut,
   User,
 } from "lucide-react";
+import { ROLE_LABELS, isSuperAdmin } from "@/lib/roles";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -41,8 +43,14 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
+  const role = (user as { role?: string })?.role;
 
-  const isActive = (item: (typeof NAV)[number]) =>
+  // Super Admins get the user-management entry.
+  const nav = isSuperAdmin(role)
+    ? [...NAV, { href: "/settings/users", label: "Users (Admin)", icon: Users }]
+    : NAV;
+
+  const isActive = (item: { href: string; exact?: boolean }) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
@@ -60,7 +68,7 @@ export default function Sidebar() {
       </Link>
 
       <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const Icon = item.icon;
           const active = isActive(item);
           return (
@@ -88,7 +96,7 @@ export default function Sidebar() {
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-slate-900 truncate">{user?.name ?? "Guest"}</p>
             <p className="text-[9px] font-mono text-emerald-600 uppercase tracking-wider truncate">
-              {(user as { role?: string })?.role ?? "—"}
+              {ROLE_LABELS[role ?? ""] ?? role ?? "—"}
             </p>
           </div>
           <button

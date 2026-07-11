@@ -18,6 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import SignoffChain from "@/components/SignoffChain";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -442,6 +443,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Multi-level corrective sign-off chain */}
+          <div className="lg:col-span-3">
+            <SignoffChain
+              entityType="CORRECTIVE"
+              entityId={recordId}
+              title="Corrective Maintenance Sign-off (Technician → Foreman → HSE → Maint. Manager → Factory Manager)"
+            />
           </div>
         </div>
       </main>

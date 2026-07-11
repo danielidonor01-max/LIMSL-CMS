@@ -51,6 +51,7 @@ export const equipmentDocuments = sqliteTable("equipment_documents", {
   issuedDate: text("issued_date"),
   expiryDate: text("expiry_date"),
   revision: text("revision"),
+  pdfKind: text("pdf_kind").default("UNKNOWN"), // TEXT_SELECTABLE | IMAGE_ONLY | UNKNOWN — used by the (future) schematic ingestion engine
   notes: text("notes"),
   uploadedBy: text("uploaded_by"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
@@ -63,11 +64,14 @@ export const users = sqliteTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash"),
-  role: text("role").notNull().default("TECHNICIAN"), // ADMIN | SUPERVISOR | TECHNICIAN | MANAGEMENT | QA_QC | VIEWER
-  department: text("department"),
+  role: text("role").notNull().default("TECHNICIAN"), // SUPER_ADMIN | COO | FACTORY_MANAGER | MAINTENANCE_MANAGER | FOREMAN | QA_QC | HSE | TECHNICIAN | VIEWER
+  jobTitle: text("job_title"),
+  department: text("department"), // MAINTENANCE | QA_QC | HSE | FACTORY | MANAGEMENT
   phone: text("phone"),
   whatsapp: text("whatsapp"),
   isActive: integer("is_active", { mode: "boolean" }).default(true),
+  mustChangePassword: integer("must_change_password", { mode: "boolean" }).default(false),
+  createdBy: text("created_by"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
@@ -472,6 +476,48 @@ export const diagnosticGuides = sqliteTable("diagnostic_guides", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Multi-level Sign-offs ───────────────────────────────────────────────────
+// A configurable approval chain attached to any signable entity (PM checklist,
+// corrective maintenance, WMS…). Each row is one step in the chain for one role.
+export const signoffs = sqliteTable("signoffs", {
+  id: text("id").primaryKey(),
+  entityType: text("entity_type").notNull(), // PM_CHECKLIST | CORRECTIVE | WMS | WORK_ORDER
+  entityId: text("entity_id").notNull(),
+  stepOrder: integer("step_order").notNull(), // 1-based position in the chain
+  role: text("role").notNull(), // required role for this step
+  roleLabel: text("role_label").notNull(), // e.g. "Performed by", "Verified by", "Approved by"
+  required: integer("required", { mode: "boolean" }).notNull().default(true),
+  status: text("status").notNull().default("PENDING"), // PENDING | SIGNED | REJECTED
+  signedById: text("signed_by_id").references(() => users.id),
+  signedByName: text("signed_by_name"),
+  signedByRole: text("signed_by_role"),
+  signatureData: text("signature_data"), // base64 drawn signature
+  comments: text("comments"),
+  signedAt: text("signed_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Schematic Ingestion Jobs (engine scaffolding — disabled until configured) ─
+// Queue of schematic PDFs awaiting AI extraction of components / nets / zones.
+// Runs only when SCHEMATIC_INGESTION_ENABLED and a provider (e.g. Anthropic) is
+// configured; otherwise jobs sit in PENDING for future processing.
+export const schematicIngestionJobs = sqliteTable("schematic_ingestion_jobs", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  documentId: text("document_id").references(() => equipmentDocuments.id),
+  fileUrl: text("file_url"),
+  pdfKind: text("pdf_kind").default("UNKNOWN"), // TEXT_SELECTABLE | IMAGE_ONLY | UNKNOWN
+  provider: text("provider").default("NONE"), // NONE | ANTHROPIC | DOCUMENT_AI | MANUAL
+  status: text("status").notNull().default("PENDING"), // PENDING | QUEUED | PROCESSING | NEEDS_REVIEW | CONFIRMED | FAILED | SKIPPED
+  attempts: integer("attempts").default(0),
+  extractedData: text("extracted_data"), // JSON: {components:[{tag,type,sheet,zone,connectsTo[]}], nets:[]}
+  reviewedById: text("reviewed_by_id").references(() => users.id),
+  error: text("error"),
+  requestedById: text("requested_by_id").references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
@@ -483,6 +529,10 @@ export type WmsDocument = typeof wmsDocuments.$inferSelect;
 export type NonConformity = typeof nonConformities.$inferSelect;
 export type EquipmentDocument = typeof equipmentDocuments.$inferSelect;
 export type NewEquipmentDocument = typeof equipmentDocuments.$inferInsert;
+export type Signoff = typeof signoffs.$inferSelect;
+export type NewSignoff = typeof signoffs.$inferInsert;
+export type SchematicIngestionJob = typeof schematicIngestionJobs.$inferSelect;
+export type User = typeof users.$inferSelect;
 export type SchematicDiagram = typeof schematicDiagrams.$inferSelect;
 export type ComponentRegistry = typeof componentRegistry.$inferSelect;
 export type DiagnosticGuide = typeof diagnosticGuides.$inferSelect;

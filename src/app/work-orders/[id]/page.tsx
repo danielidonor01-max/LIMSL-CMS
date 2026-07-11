@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import SignoffChain from "@/components/SignoffChain";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -225,6 +226,15 @@ export default function WorkOrderDetailPage() {
               Signed {formatDate(checklist.signedAt)} · Next PM {formatDate(checklist.nextPMDate)}
             </p>
           </div>
+        )}
+
+        {/* Multi-level PM sign-off chain */}
+        {checklist && (
+          <SignoffChain
+            entityType="PM_CHECKLIST"
+            entityId={checklist.id}
+            title="PM Approval & Sign-off"
+          />
         )}
       </main>
     </div>
