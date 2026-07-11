@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "npx tsx src/lib/db/migrate-and-seed.ts"
+    "db:migrate": "npx tsx src/lib/db/migrate-and-seed.ts",
+    "db:seed-schedule": "npx tsx src/lib/db/seed-schedule.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -44,12 +45,18 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
+    "@types/papaparse": "^5.5.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }

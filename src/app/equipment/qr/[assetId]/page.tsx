@@ -99,7 +99,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
 
           {/* QR Code */}
           {qrUrl ? (
-            <img src={qrUrl} alt={`QR Code for ${eq.name}`} className="w-64 h-64 border-2 border-slate-100 p-1" />
+            <img src={qrUrl} alt={`QR Code for ${machineName}`} className="w-64 h-64 border-2 border-slate-100 p-1" />
           ) : (
             <div className="w-64 h-64 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
               Generating...
