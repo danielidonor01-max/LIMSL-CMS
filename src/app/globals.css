@@ -16,3 +16,17 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, Arial, Helvetica, sans-serif;
 }
+
+/* Print: drop app chrome (sidebar + top bar + marked controls), print content only. */
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+  main {
+    padding: 0 !important;
+  }
+}

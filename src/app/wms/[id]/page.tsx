@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import SignoffChain from "@/components/SignoffChain";
 import { toast } from "sonner";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -68,7 +69,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       if (res.ok) {
         const data = await res.json();
         setWms(data);
-        toast.success("WMS marked as reviewed and sent for management approval.");
+        toast.success("WMS reviewed and sent for management approval.");
       }
     } catch (err) {
       console.error(err);
@@ -103,11 +104,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       if (res.ok) {
         const data = await res.json();
         setWms(data);
-        if (approve) {
-          toast.success("WMS Approved!");
-        } else {
-          toast.warning("WMS Rejected.");
-        }
+        toast.success(approve ? "WMS approved." : "WMS rejected.");
       }
     } catch (err) {
       console.error(err);
@@ -124,16 +121,37 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // Parse arrays
-  const procedureSteps = wms.workProcedureSteps ? JSON.parse(wms.workProcedureSteps) : [];
-  const tools = wms.equipmentAndTools ? JSON.parse(wms.equipmentAndTools) : [];
-  const materials = wms.materials ? JSON.parse(wms.materials) : [];
+  // Parse arrays. Items may be plain strings or {step, description}/{name} objects
+  // depending on how the WMS was created — normalise to text for rendering.
+  const asText = (v: unknown): string =>
+    typeof v === "string"
+      ? v
+      : (v as { description?: string; name?: string; step?: string })?.description ??
+        (v as { name?: string })?.name ??
+        (v as { step?: string })?.step ??
+        (v == null ? "" : JSON.stringify(v));
+  const safeParse = (s: string | null): unknown[] => {
+    if (!s) return [];
+    try {
+      const p = JSON.parse(s);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  };
+  const procedureSteps = safeParse(wms.workProcedureSteps);
+  const tools = safeParse(wms.equipmentAndTools);
+  const materials = safeParse(wms.materials);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Main Grid */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/wms" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -145,10 +163,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">Method Statement & Quality Plan</p>
           </div>
         </div>
-      </header>
-
-      {/* Main Grid */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        </div>
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-6">
           {/* Main Document Details */}
@@ -178,16 +193,16 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">3. Equipment & Tools</h3>
                 <ul className="list-disc pl-4 text-xs text-slate-600 space-y-1">
-                  {tools.map((t: string, i: number) => (
-                    <li key={i}>{t}</li>
+                  {tools.map((t: unknown, i: number) => (
+                    <li key={i}>{asText(t)}</li>
                   ))}
                 </ul>
               </div>
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">4. Materials Required</h3>
                 <ul className="list-disc pl-4 text-xs text-slate-600 space-y-1">
-                  {materials.map((m: string, i: number) => (
-                    <li key={i}>{m}</li>
+                  {materials.map((m: unknown, i: number) => (
+                    <li key={i}>{asText(m)}</li>
                   ))}
                 </ul>
               </div>
@@ -197,12 +212,12 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             <div className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600">5. Detailed Work Procedure</h3>
               <div className="space-y-3">
-                {procedureSteps.map((step: string, i: number) => (
+                {procedureSteps.map((step: unknown, i: number) => (
                   <div key={i} className="flex gap-3 text-xs leading-relaxed">
                     <span className="w-5 h-5 rounded bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center font-bold font-mono">
-                      {String.fromCharCode(65 + i)}
+                      {(step as { step?: string })?.step ?? String.fromCharCode(65 + i)}
                     </span>
-                    <p className="text-slate-700 flex-1">{step}</p>
+                    <p className="text-slate-700 flex-1">{asText(step)}</p>
                   </div>
                 ))}
               </div>
@@ -361,6 +376,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* WMS authorisation: Foreman → Maintenance Manager → HSE → Factory Manager (final) */}
+          <div className="lg:col-span-3">
+            <SignoffChain
+              entityType="WMS"
+              entityId={wmsId}
+              title="WMS Authorisation (Foreman → Maintenance Manager → HSE → Factory Manager)"
+            />
           </div>
         </div>
       </main>

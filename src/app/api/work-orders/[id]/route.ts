@@ -10,6 +10,8 @@ import {
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
 export async function GET(
@@ -68,6 +70,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const { id } = await params;
     const body = await request.json();
 

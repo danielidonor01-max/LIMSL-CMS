@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   Building2,
   Loader2,
@@ -12,13 +13,19 @@ import {
   Clock,
   Package,
   AlertTriangle,
+  Plus,
+  Wrench,
+  CheckCircle2,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
+import Modal from "@/components/Modal";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { toast } from "sonner";
 
 type Vendor = {
   id: string;
+  equipmentId?: string | null;
   vendorName: string;
   contactPerson: string | null;
   phone: string | null;
@@ -44,23 +51,51 @@ type Intervention = {
   closed: boolean | null;
 };
 
+type Equip = { id: string; name: string; assetId: string; location?: string };
+
 const TODAY = new Date().toISOString().slice(0, 10);
 const daysUntil = (d: string | null) =>
   d ? Math.round((new Date(d).getTime() - Date.now()) / 864e5) : null;
 
+const inputCls =
+  "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none";
+const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
+
 export default function OemPage() {
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const role = (session?.user as { role?: string })?.role;
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [interventions, setInterventions] = useState<Intervention[]>([]);
+  const [equipmentList, setEquipmentList] = useState<Equip[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/oem")
-      .then((r) => r.json())
-      .then((d) => {
+  const [showVendor, setShowVendor] = useState(false);
+  const [showIntervention, setShowIntervention] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function loadData() {
+    try {
+      const res = await fetch("/api/oem");
+      if (res.ok) {
+        const d = await res.json();
         setVendors(d.vendors ?? []);
         setInterventions(d.interventions ?? []);
-      })
-      .finally(() => setLoading(false));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+    fetch("/api/equipment")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setEquipmentList(Array.isArray(d) ? d : []))
+      .catch(() => {});
   }, []);
 
   const summary = useMemo(() => {
@@ -73,18 +108,116 @@ export default function OemPage() {
     return { active, expiringSoon, expired, total: vendors.length };
   }, [vendors]);
 
+  async function submitVendor(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    setSaving(true);
+    try {
+      const res = await fetch("/api/oem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          equipmentId: fd.get("equipmentId"),
+          vendorName: fd.get("vendorName"),
+          contactPerson: fd.get("contactPerson"),
+          phone: fd.get("phone"),
+          email: fd.get("email"),
+          country: fd.get("country"),
+          warrantyStart: fd.get("warrantyStart") || null,
+          warrantyEnd: fd.get("warrantyEnd") || null,
+          warrantyScope: fd.get("warrantyScope"),
+          avgResponseTimeHrs: fd.get("avgResponseTimeHrs") ? Number(fd.get("avgResponseTimeHrs")) : null,
+          avgSpareLeadTimeDays: fd.get("avgSpareLeadTimeDays") ? Number(fd.get("avgSpareLeadTimeDays")) : null,
+        }),
+      });
+      if (res.ok) {
+        toast.success("Vendor registered.");
+        setShowVendor(false);
+        await loadData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || "Failed to register vendor.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitIntervention(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    setSaving(true);
+    try {
+      const res = await fetch("/api/oem/interventions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          oemId: fd.get("oemId") || null,
+          equipmentId: fd.get("equipmentId") || null,
+          interventionDate: fd.get("interventionDate") || null,
+          problemDescription: fd.get("problemDescription"),
+          warrantyStatus: fd.get("warrantyStatus"),
+          responseTimeHrs: fd.get("responseTimeHrs") ? Number(fd.get("responseTimeHrs")) : null,
+          resolutionSummary: fd.get("resolutionSummary"),
+          closed: fd.get("closed") === "on",
+        }),
+      });
+      if (res.ok) {
+        toast.success("Intervention logged.");
+        setShowIntervention(false);
+        await loadData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || "Failed to log intervention.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function closeIntervention(id: string) {
+    const res = await fetch("/api/oem/interventions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, closed: true }),
+    });
+    if (res.ok) {
+      toast.success("Intervention closed.");
+      await loadData();
+    } else {
+      toast.error("Failed to close intervention.");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-            <Building2 className="w-5 h-5" />
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">OEM & Warranty Management</h2>
+              <p className="text-xs text-slate-500 font-mono">Vendors · warranty · spare-part lead times</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">OEM & Warranty Management</h2>
-            <p className="text-xs text-slate-500 font-mono">Vendors · warranty · spare-part lead times</p>
-          </div>
+          {canWrite && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowIntervention(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
+              >
+                <Wrench className="w-4 h-4" /> Log Intervention
+              </button>
+              <button
+                onClick={() => setShowVendor(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+              >
+                <Plus className="w-4 h-4" /> Add Vendor
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -102,6 +235,11 @@ export default function OemPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {vendors.length === 0 && (
+                <div className="lg:col-span-2 py-10 text-center text-slate-500 text-sm bg-white border border-slate-200 rounded-xl">
+                  No vendors registered yet.
+                </div>
+              )}
               {vendors.map((v) => {
                 const days = daysUntil(v.warrantyEnd);
                 const active = !!v.warrantyActive && (v.warrantyEnd ?? "") >= TODAY;
@@ -179,9 +317,18 @@ export default function OemPage() {
                           <td className="py-2.5 px-4 text-slate-700">{it.responseTimeHrs ?? "—"} hrs</td>
                           <td className="py-2.5 px-4 text-slate-500 max-w-xs">{it.resolutionSummary}</td>
                           <td className="py-2.5 px-4">
-                            <Badge className={it.closed ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"}>
-                              {it.closed ? "Closed" : "Open"}
-                            </Badge>
+                            {it.closed ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Closed</Badge>
+                            ) : canWrite ? (
+                              <button
+                                onClick={() => closeIntervention(it.id)}
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Close
+                              </button>
+                            ) : (
+                              <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Open</Badge>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -193,6 +340,130 @@ export default function OemPage() {
           </>
         )}
       </main>
+
+      {/* Add Vendor modal */}
+      <Modal open={showVendor} onClose={() => setShowVendor(false)} title="Register OEM / Vendor" subtitle="Warranty & support terms">
+        <form onSubmit={submitVendor} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className={labelCls}>Equipment</label>
+            <select name="equipmentId" required className={inputCls} defaultValue="">
+              <option value="" disabled>Select equipment…</option>
+              {equipmentList.map((e) => (
+                <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Vendor / OEM Name</label>
+            <input name="vendorName" required className={inputCls} placeholder="e.g. Amada, Trumpf, Lincoln Electric" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className={labelCls}>Contact Person</label>
+              <input name="contactPerson" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Country</label>
+              <input name="country" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Phone</label>
+              <input name="phone" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Email</label>
+              <input name="email" type="email" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Warranty Start</label>
+              <input name="warrantyStart" type="date" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Warranty End</label>
+              <input name="warrantyEnd" type="date" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Avg Response (hrs)</label>
+              <input name="avgResponseTimeHrs" type="number" step="0.5" className={inputCls} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Spare Lead (days)</label>
+              <input name="avgSpareLeadTimeDays" type="number" step="1" className={inputCls} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Warranty Scope</label>
+            <input name="warrantyScope" className={inputCls} placeholder="e.g. Parts & labour, on-site" />
+          </div>
+          <SubmitRow saving={saving} onCancel={() => setShowVendor(false)} label="Register Vendor" />
+        </form>
+      </Modal>
+
+      {/* Log Intervention modal */}
+      <Modal open={showIntervention} onClose={() => setShowIntervention(false)} title="Log OEM Intervention" subtitle="Vendor call-out / warranty claim">
+        <form onSubmit={submitIntervention} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className={labelCls}>Vendor (optional)</label>
+            <select name="oemId" className={inputCls} defaultValue="">
+              <option value="">— No linked vendor —</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>{v.vendorName} ({v.assetId})</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Equipment (if no vendor)</label>
+            <select name="equipmentId" className={inputCls} defaultValue="">
+              <option value="">— Select equipment —</option>
+              {equipmentList.map((e) => (
+                <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className={labelCls}>Intervention Date</label>
+              <input name="interventionDate" type="date" className={inputCls} defaultValue={TODAY} />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Warranty Status</label>
+              <select name="warrantyStatus" className={inputCls} defaultValue="OUT">
+                <option value="IN">In Warranty</option>
+                <option value="OUT">Out of Warranty</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Response Time (hrs)</label>
+              <input name="responseTimeHrs" type="number" step="0.5" className={inputCls} />
+            </div>
+            <label className="flex items-center gap-2 text-xs text-slate-600 self-end pb-2">
+              <input name="closed" type="checkbox" className="rounded border-slate-300 text-emerald-500" /> Already resolved
+            </label>
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Problem Description</label>
+            <textarea name="problemDescription" required className={`${inputCls} h-20 resize-none`} />
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Resolution Summary</label>
+            <textarea name="resolutionSummary" className={`${inputCls} h-16 resize-none`} />
+          </div>
+          <SubmitRow saving={saving} onCancel={() => setShowIntervention(false)} label="Log Intervention" />
+        </form>
+      </Modal>
+    </div>
+  );
+}
+
+function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () => void; label: string }) {
+  return (
+    <div className="flex gap-3 justify-end pt-2">
+      <button type="button" onClick={onCancel} className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all">
+        Cancel
+      </button>
+      <button type="submit" disabled={saving} className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-60">
+        {saving && <Loader2 className="w-4 h-4 animate-spin" />} {label}
+      </button>
     </div>
   );
 }

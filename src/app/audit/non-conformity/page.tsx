@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Loader2,
@@ -16,7 +17,6 @@ import {
   Filter,
   UserCheck,
 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function NonConformityRegister() {
   const [ncList, setNcList] = useState<any[]>([]);
@@ -54,7 +54,7 @@ export default function NonConformityRegister() {
       const res = await fetch("/api/audit/auto-detect", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`System audit scan complete! New non-conformities raised: ${data.newNonConformitiesRaised}`);
+        toast.success(`Audit scan complete — ${data.newNonConformitiesRaised} new non-conformities raised.`);
         loadNCs();
       }
     } catch (err) {
@@ -100,8 +100,12 @@ export default function NonConformityRegister() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Main Grid */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -121,10 +125,7 @@ export default function NonConformityRegister() {
         >
           {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} Trigger Compliance Audit Scan
         </button>
-      </header>
-
-      {/* Main Grid */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        </div>
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">

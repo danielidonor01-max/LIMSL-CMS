@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET(
   request: Request,
@@ -34,20 +36,30 @@ export async function PATCH(
   { params }: { params: Promise<{ assetId: string }> }
 ) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const resolvedParams = await params;
     const assetIdKey = resolvedParams.assetId;
     const assetIdOriginal = assetIdKey.replace(/-/g, "/");
     const body = await request.json();
 
+    // Only update fields that were actually provided.
+    const editable = [
+      "assetId",
+      "name", "category", "location", "bay", "oem", "model", "serialNumber",
+      "commissioningDate", "warrantyExpiry", "status", "criticality",
+      "maintenanceFrequency", "lastMaintenanceDate", "lastUsedDate",
+      "nextMaintenanceDate", "notes", "requiresCalibration", "requiresPremob",
+    ] as const;
+    const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+    for (const key of editable) {
+      if (body[key] !== undefined) updates[key] = body[key];
+    }
+
     const updated = await db
       .update(equipment)
-      .set({
-        status: body.status,
-        lastMaintenanceDate: body.lastMaintenanceDate,
-        lastUsedDate: body.lastUsedDate,
-        nextMaintenanceDate: body.nextMaintenanceDate,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(updates)
       .where(eq(equipment.assetId, assetIdOriginal))
       .returning();
 

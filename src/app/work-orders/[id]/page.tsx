@@ -16,8 +16,8 @@ import {
   User,
   ShieldCheck,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { Badge } from "@/components/Badge";
+import SignoffChain from "@/components/SignoffChain";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -71,7 +71,6 @@ export default function WorkOrderDetailPage() {
   if (!wo || wo.error) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <AppHeader />
         <div className="p-16 text-center text-slate-500">
           Work order not found.{" "}
           <Link href="/work-orders" className="text-emerald-600 hover:underline">
@@ -98,7 +97,7 @@ export default function WorkOrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
+      
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
@@ -141,6 +140,14 @@ export default function WorkOrderDetailPage() {
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold"
                 >
                   <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
+                </Link>
+              )}
+              {eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
+                <Link
+                  href={`/permits/new?equipmentId=${eq.id}&workOrderId=${id}`}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-semibold"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Raise PTW
                 </Link>
               )}
               {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
@@ -227,6 +234,15 @@ export default function WorkOrderDetailPage() {
               Signed {formatDate(checklist.signedAt)} · Next PM {formatDate(checklist.nextPMDate)}
             </p>
           </div>
+        )}
+
+        {/* Multi-level PM sign-off chain */}
+        {checklist && (
+          <SignoffChain
+            entityType="PM_CHECKLIST"
+            entityId={checklist.id}
+            title="PM Approval & Sign-off"
+          />
         )}
       </main>
     </div>

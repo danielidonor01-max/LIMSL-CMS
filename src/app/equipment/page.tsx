@@ -7,11 +7,14 @@ import {
   Layers,
   Search,
   ArrowUpDown,
-  MapPin,
   ArrowLeft,
   QrCode,
+  Eye,
+  History,
+  Pencil,
   Loader2,
 } from "lucide-react";
+import KebabMenu from "@/components/KebabMenu";
 
 export default function EquipmentList() {
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
@@ -94,8 +97,12 @@ export default function EquipmentList() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <div className="flex items-center gap-3">
           <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -114,10 +121,7 @@ export default function EquipmentList() {
         >
           + Add New Equipment
         </Link>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        </div>
         {/* Filters Panel */}
         <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:max-w-xs">
@@ -206,9 +210,7 @@ export default function EquipmentList() {
                           <td className="py-3.5 px-4 font-mono text-slate-500">{eq.assetId}</td>
                           <td className="py-3.5 px-4 text-[10px] uppercase font-mono">{eq.category.replace("_", " ")}</td>
                           <td className="py-3.5 px-4">{eq.oem || "N/A"}</td>
-                          <td className="py-3.5 px-4 flex items-center gap-1 text-slate-500">
-                            <MapPin className="w-3 h-3 text-emerald-500" /> {eq.location || "Workshop"}
-                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "Workshop"}</td>
                           <td className="py-3.5 px-4">
                             <span
                               className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
@@ -236,20 +238,16 @@ export default function EquipmentList() {
                             </span>
                           </td>
                           <td className="py-3.5 px-4 text-right">
-                            <div className="flex gap-2 justify-end">
-                              <Link
-                                href={`/equipment/${urlParam}`}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 rounded transition-all text-[11px]"
-                              >
-                                Digital Twin
-                              </Link>
-                              <Link
-                                href={`/equipment/qr/${urlParam}`}
-                                className="p-1.5 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded border border-slate-200 hover:border-slate-200 transition-all"
-                                title="Print QR Code"
-                              >
-                                <QrCode className="w-4 h-4" />
-                              </Link>
+                            <div className="flex justify-end">
+                              <KebabMenu
+                                ariaLabel={`Actions for ${eq.name}`}
+                                items={[
+                                  { label: "Digital Twin", icon: Eye, href: `/equipment/${urlParam}` },
+                                  { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
+                                  { label: "Edit", icon: Pencil, href: `/equipment/${urlParam}/edit` },
+                                  { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${urlParam}` },
+                                ]}
+                              />
                             </div>
                           </td>
                         </tr>
@@ -270,9 +268,7 @@ export default function EquipmentList() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white/90 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
-        &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited. | Digital Twins Database.
-      </footer>
+
     </div>
   );
 }

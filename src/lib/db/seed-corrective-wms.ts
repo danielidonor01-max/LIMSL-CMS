@@ -52,6 +52,118 @@ export async function seedCorrectiveWms() {
     console.log("✅ Corrective case CMRF-2026-0001 (Stako, no motion X axis)");
   }
 
+  // ── Historical CLOSED corrective cases with full RCA — the knowledge base the
+  //    diagnostic engine learns from. ─────────────────────────────────────────
+  const ca = (actions: { action: string; responsible: string; status: string }[]) =>
+    JSON.stringify(actions);
+
+  type HistCase = {
+    needle: string;
+    seq: number;
+    daysAgo: number;
+    faultType: string;
+    observedFault: string;
+    errorCodes?: string;
+    faultDescription: string;
+    rcaTool: string;
+    rootCauseCategory: string;
+    verifiedRootCause: string;
+    correctiveActions: string;
+    partsReplaced?: string;
+    preventiveActions?: string;
+  };
+
+  const history: HistCase[] = [
+    {
+      needle: "stako", seq: 9001, daysAgo: 130, faultType: "CONTROL",
+      observedFault: "No motion X axis", errorCodes: "E-041",
+      faultDescription: "X axis failed to home; drive flagged E-041 overcurrent on start.",
+      rcaTool: "FIVE_WHYS", rootCauseCategory: "MECHANICAL",
+      verifiedRootCause: "Limit switch LS-X1 contacts oxidised and intermittently open, tripping the X servo drive.",
+      correctiveActions: ca([{ action: "Cleaned & replaced LS-X1 contacts, reseated wires 104/105", responsible: "Marcel Imadojiemu", status: "COMPLETED" }]),
+      partsReplaced: "Limit switch Schneider XCKJ161",
+      preventiveActions: "Added LS-X1 contact inspection to quarterly PM.",
+    },
+    {
+      needle: "stako", seq: 9002, daysAgo: 240, faultType: "ELECTRICAL",
+      observedFault: "X axis drive overcurrent", errorCodes: "E-041",
+      faultDescription: "Repeated X axis overcurrent under load; drive tripped mid-cut.",
+      rcaTool: "FISHBONE", rootCauseCategory: "MECHANICAL",
+      verifiedRootCause: "Worn X-axis ball-screw bearing increased friction, drawing excess servo current.",
+      correctiveActions: ca([{ action: "Replaced ball-screw bearing and retuned servo drive SD-X1", responsible: "Godspower Michael", status: "COMPLETED" }]),
+      partsReplaced: "Ball-screw support bearing",
+    },
+    {
+      needle: "kone 12t overhead crane #1", seq: 9003, daysAgo: 95, faultType: "ELECTRICAL",
+      observedFault: "Hoist will not lower",
+      faultDescription: "Crane hoist raises but will not lower; contactor not energising.",
+      rcaTool: "FIVE_WHYS", rootCauseCategory: "ELECTRICAL",
+      verifiedRootCause: "Lower-limit switch stuck open, inhibiting the lower contactor.",
+      correctiveActions: ca([{ action: "Replaced lower-limit switch and tested lower interlock", responsible: "Marcel Imadojiemu", status: "COMPLETED" }]),
+      partsReplaced: "Lower limit switch",
+    },
+    {
+      needle: "esab column boom", seq: 9004, daysAgo: 160, faultType: "MECHANICAL",
+      observedFault: "Wire feed intermittent",
+      faultDescription: "SAW wire feed stutters, causing weld defects.",
+      rcaTool: "FIVE_WHYS", rootCauseCategory: "MECHANICAL",
+      verifiedRootCause: "Worn drive rolls and a blocked wire liner interrupted feed.",
+      correctiveActions: ca([{ action: "Replaced drive rolls and wire liner; set roll tension", responsible: "Marcel Imadojiemu", status: "COMPLETED" }]),
+      partsReplaced: "Drive rolls, wire liner",
+    },
+    {
+      needle: "sertom plate rolling", seq: 9005, daysAgo: 210, faultType: "HYDRAULIC",
+      observedFault: "Rollers lose pressure",
+      faultDescription: "Top roller will not hold set pressure; plate springs back.",
+      rcaTool: "FISHBONE", rootCauseCategory: "MECHANICAL",
+      verifiedRootCause: "Hydraulic pressure-relief valve stuck partially open due to contaminated oil.",
+      correctiveActions: ca([{ action: "Overhauled relief valve, replaced seals, flushed hydraulic oil", responsible: "Godspower Michael", status: "COMPLETED" }]),
+      partsReplaced: "Relief valve seal kit; hydraulic oil",
+    },
+    {
+      needle: "vertical lathe", seq: 9006, daysAgo: 300, faultType: "MECHANICAL",
+      observedFault: "Spindle overheating",
+      faultDescription: "Vertical lathe spindle overheats after ~30 min of cutting.",
+      rcaTool: "FIVE_WHYS", rootCauseCategory: "MECHANICAL",
+      verifiedRootCause: "Degraded spindle bearing and low lubricant flow caused overheating.",
+      correctiveActions: ca([{ action: "Replaced spindle bearing and restored lubrication flow", responsible: "Godspower Michael", status: "COMPLETED" }]),
+      partsReplaced: "Spindle bearing",
+    },
+  ];
+
+  const histRows = history
+    .map((h) => {
+      const machine = h.needle === "stako" ? stako : find(h.needle);
+      if (!machine) return null;
+      return {
+        id: nanoid(),
+        cmrfNumber: `CMRF-2025-${String(h.seq).padStart(4, "0")}`,
+        breakdownId: `BD-${h.seq}`,
+        equipmentId: machine.id,
+        reportedByName: "Maintenance Team",
+        reportedDate: iso(-h.daysAgo),
+        faultType: h.faultType,
+        urgency: "HIGH",
+        faultDescription: h.faultDescription,
+        observedFault: h.observedFault,
+        errorCodes: h.errorCodes ?? null,
+        operatingStatusAtFailure: "RUNNING",
+        rcaTool: h.rcaTool,
+        rootCauseCategory: h.rootCauseCategory,
+        verifiedRootCause: h.verifiedRootCause,
+        correctiveActions: h.correctiveActions,
+        preventiveActions: h.preventiveActions ?? null,
+        partsReplaced: h.partsReplaced ?? null,
+        repairStatus: "FULLY_RESTORED",
+        closeOutDate: iso(-h.daysAgo + 2),
+        status: "CLOSED",
+      };
+    })
+    .filter(Boolean) as (typeof correctiveMaintenance.$inferInsert)[];
+
+  if (histRows.length) await db.insert(correctiveMaintenance).values(histRows);
+  console.log(`✅ ${histRows.length} historical closed RCA cases (engine knowledge base)`);
+
   const proc = (steps: string[]) => JSON.stringify(steps.map((s, i) => ({ step: String.fromCharCode(65 + i), description: s })));
 
   await db.insert(wmsDocuments).values([

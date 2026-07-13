@@ -12,7 +12,6 @@ import {
   DollarSign,
   Layers,
 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import { downloadCSV } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
@@ -106,7 +105,6 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <AppHeader />
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">

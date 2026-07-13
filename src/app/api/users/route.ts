@@ -1,19 +1,102 @@
 // src/app/api/users/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { auth } from "@/auth";
+import { canManageUsers, ROLES, ROLE_DEPARTMENT } from "@/lib/roles";
+import { hashPassword } from "@/lib/password";
 
-export async function GET() {
+// Safe columns — never return the password hash.
+const safeColumns = {
+  id: users.id,
+  name: users.name,
+  email: users.email,
+  role: users.role,
+  jobTitle: users.jobTitle,
+  department: users.department,
+  phone: users.phone,
+  whatsapp: users.whatsapp,
+  isActive: users.isActive,
+  mustChangePassword: users.mustChangePassword,
+  createdAt: users.createdAt,
+};
+
+export async function GET(request: Request) {
   try {
-    const list = await db.select().from(users).where(eq(users.isActive, true));
-    return NextResponse.json(list);
+    const includeInactive = new URL(request.url).searchParams.get("includeInactive") === "1";
+    const list = await db.select(safeColumns).from(users);
+    const filtered = includeInactive ? list : list.filter((u) => u.isActive !== false);
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    return NextResponse.json(filtered);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch users:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch users", details: message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch users", details: message }, { status: 500 });
+  }
+}
+
+// POST /api/users — create a user. Super Admin only.
+export async function POST(request: Request) {
+  try {
+    const session = await auth();
+    const actor = session?.user as { id?: string; name?: string; role?: string } | undefined;
+    if (!canManageUsers(actor?.role)) {
+      return NextResponse.json({ error: "Only a Super Admin can create users." }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const email = String(body.email || "").trim().toLowerCase();
+    const name = String(body.name || "").trim();
+    const role = String(body.role || "TECHNICIAN");
+
+    if (!email || !name) {
+      return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
+    }
+    if (!ROLES.includes(role as (typeof ROLES)[number])) {
+      return NextResponse.json({ error: "Invalid role." }, { status: 400 });
+    }
+    const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+    if (existing) {
+      return NextResponse.json({ error: "A user with that email already exists." }, { status: 409 });
+    }
+
+    const tempPassword = body.password && String(body.password).length >= 6
+      ? String(body.password)
+      : `limsl-${nanoid(6).toLowerCase()}`;
+
+    const id = nanoid();
+    await db.insert(users).values({
+      id,
+      name,
+      email,
+      role,
+      jobTitle: body.jobTitle || null,
+      department: body.department || ROLE_DEPARTMENT[role] || null,
+      phone: body.phone || null,
+      whatsapp: body.whatsapp || null,
+      passwordHash: hashPassword(tempPassword),
+      isActive: true,
+      mustChangePassword: true,
+      createdBy: actor?.id ?? null,
+    });
+
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: actor?.id ?? null,
+      userName: actor?.name ?? "Super Admin",
+      action: "CREATE",
+      entityType: "user",
+      entityId: id,
+      entityDescription: `Created ${name} (${role})`,
+    });
+
+    // Return the temp password ONCE so the admin can hand it to the new user.
+    return NextResponse.json({ id, name, email, role, tempPassword }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Failed to create user:", error);
+    return NextResponse.json({ error: "Failed to create user", details: message }, { status: 500 });
   }
 }

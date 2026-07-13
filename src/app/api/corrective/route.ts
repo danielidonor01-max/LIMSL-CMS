@@ -4,11 +4,19 @@ import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET() {
   try {
     const list = await db.select().from(correctiveMaintenance);
-    return NextResponse.json(list);
+    const eqList = await db.select().from(equipment);
+    const byId = new Map(eqList.map((e) => [e.id, e]));
+    const enriched = list.map((r) => {
+      const e = byId.get(r.equipmentId);
+      return { ...r, equipmentName: e?.name ?? null, assetId: e?.assetId ?? null };
+    });
+    return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch corrective list:", error);
     return NextResponse.json({ error: "Failed to fetch corrective list", details: error.message }, { status: 500 });
@@ -17,8 +25,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
-    
+
     // Auto-generate CMRF number e.g. CMRF-2026-0001
     const countResult = await db.select({ value: count() }).from(correctiveMaintenance);
     const totalCount = countResult[0]?.value || 0;
