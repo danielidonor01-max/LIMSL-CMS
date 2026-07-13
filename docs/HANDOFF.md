@@ -7,33 +7,33 @@ This document is the *state of the world*: what exists, what's half-done, what's
 
 ---
 
-## 1. Branch state — READ THIS BEFORE YOU CODE
+## 1. Branch state
 
-| Branch | Owner | Contains |
+**RECONCILED as of 2026-07-13.** `phase-2` was merged into `main` (`ade7366`).
+`main` is now the single source of truth and contains everything.
+
+| Branch | Owner | State |
 |---|---|---|
-| `main` | Gemini | Phases 1–9 baseline + 1 commit (`3e00b56`, alert→toast) |
-| `phase-2` | Claude | Everything in `main` **plus 11 commits** of newer work |
+| `main` | Gemini | ✅ Everything. Start here. |
+| `phase-2` | Claude | Same content; Claude's working branch. |
 
-`phase-2` is **11 commits ahead** of `main`. `main` has **1 commit** `phase-2` lacks.
+The merge had 5 conflicts, all from Gemini's alert→toast commit (`3e00b56`)
+landing on files Claude had also re-themed. All were resolved by taking the
+`phase-2` side, which was a strict superset:
 
-**The two branches have diverged and do not merge cleanly.** A dry-run merge
-conflicts in 5 files — all of them Gemini's alert→toast commit landing on files
-Claude also re-themed/restructured:
+| File | Why phase-2 won |
+|---|---|
+| `layout.tsx` | main was still **dark theme** and had no `Providers`/`AppShell` — would break auth, sidebar, every new module |
+| `equipment/[assetId]/troubleshoot/page.tsx` | main's was a **stub** (fake success counter); phase-2 has the real diagnostic engine |
+| `wms/[id]/page.tsx` | phase-2 adds `SignoffChain` + the crash-safe JSON rendering |
+| `corrective/[id]/page.tsx` | phase-2 adds `SignoffChain` |
+| `audit/non-conformity/page.tsx` | toast wording only |
 
-```
-src/app/audit/non-conformity/page.tsx
-src/app/corrective/[id]/page.tsx
-src/app/equipment/[assetId]/troubleshoot/page.tsx
-src/app/layout.tsx
-src/app/wms/[id]/page.tsx
-```
+Nothing of Gemini's was lost — his toast conversion already existed in `phase-2`
+in equivalent form.
 
-These are **duplicate-intent conflicts** — both sides replaced `alert()` with
-toasts. Resolution is low-risk: take the `phase-2` side (it already contains the
-toast conversion *plus* the unified shell), then re-check the 5 files render.
-
-**Until the branches are reconciled, do not start new feature work on `main` —
-you would be building on a 11-commit-stale base.** Reconcile first.
+**Going forward:** merge before you diverge. If both agents touch the same files
+again this will recur.
 
 ---
 
@@ -100,11 +100,10 @@ works: it ranks causes from guides + history + RCA, and learns from outcomes.
 
 ## 4. Next tasks (agreed with Daniel, in order)
 
-1. **Reconcile `main` and `phase-2`** (see §1). Nothing else should start first.
-2. **Password lifecycle** — explicitly deferred to last by Daniel. Needs:
-   enforce `mustChangePassword` at login, plus a self-service change-password
-   page. The `users` table already has the column.
-3. Dark theme (light is default and was an explicit requirement; dark is later).
+1. **Password lifecycle** — explicitly deferred to last by Daniel, so this is next
+   up. Needs: enforce `mustChangePassword` at login, plus a self-service
+   change-password page. The `users` table already has the column.
+2. Dark theme (light is default and was an explicit requirement; dark is later).
 
 ### Known rough edges, not yet addressed
 - The dashboard is not yet role-aware (every role sees the same tiles).
@@ -133,11 +132,45 @@ works: it ranks causes from guides + history + RCA, and learns from outcomes.
 
 ## 6. Running it
 
+### First-run bootstrap (do this or auth returns 500)
+
+Two files the repo **cannot** give you — both gitignored, so a fresh worktree has
+neither. This is the #1 onboarding trap:
+
+1. **`.env.local`** — without it NextAuth throws `MissingSecret` and every login
+   500s, which cascades into every route 307-redirecting to `/login`. It needs at
+   minimum `AUTH_SECRET` and `AUTH_TRUST_HOST`. Copy it from a worktree that has
+   one, or generate: `npx auth secret`.
+
+2. **`limsl-cms.db`** — the SQLite file is gitignored *and so is `drizzle/`*.
+   That means `migrate-only.ts` alone is **not enough**: your migration folder can
+   be stale and it will happily print "✅ Pending migrations applied" while
+   creating nothing. Always regenerate from `schema.ts` first:
+
 ```bash
 npm install
-npx tsx src/lib/db/migrate-only.ts   # apply pending migrations
+npx drizzle-kit generate             # regenerate migrations from schema.ts
+npx tsx src/lib/db/migrate-only.ts   # apply them (additive)
+
+# then seed (idempotent, order matters):
+npx tsx src/lib/db/seed-roles-signoff.ts   # role model + QA/QC, HSE, Foreman users
+npx tsx src/lib/db/seed-auth.ts            # passwords -> limsl2026
+npx tsx src/lib/db/seed-procedure.ts       # Equipment Maintenance Procedure Rev 3
+npx tsx src/lib/db/seed-training.ts        # competency matrix + training records
+
 npm run dev                          # or: npx next dev -p <port>
 ```
+
+**Verify, don't assume** — confirm the tables actually landed:
+
+```bash
+node -e "const D=require('better-sqlite3');const db=new D('limsl-cms.db');
+console.log(db.prepare(\"SELECT name FROM sqlite_master WHERE type='table'\").all().map(r=>r.name).join(' '));"
+```
+
+You should see `competency_matrix`, `signoffs`, `procedure_revisions`, `permits`,
+`training_records`. If any are missing, your `drizzle/` folder was stale — rerun
+`drizzle-kit generate`.
 
 Ports 3000–3002 are often already taken by the other agent's servers — pick a
 free port rather than killing processes.
