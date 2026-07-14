@@ -37,7 +37,7 @@ again this will recur.
 
 ---
 
-## 2. What is built (all on `phase-2`)
+## 2. What is built
 
 ### Core
 - **Equipment / asset register** — auto-generated `LEE/PE/XXXX` IDs (editable),
@@ -98,22 +98,42 @@ works: it ranks causes from guides + history + RCA, and learns from outcomes.
 
 ---
 
-## 4. Next tasks (agreed with Daniel, in order)
+## 4. Password lifecycle & policy — DONE
 
-1. **Password lifecycle** — explicitly deferred to last by Daniel, so this is next
-   up. Needs: enforce `mustChangePassword` at login, plus a self-service
-   change-password page. The `users` table already has the column.
-2. Dark theme (light is default and was an explicit requirement; dark is later).
+Enforcement lives in the **proxy** (`auth.config.ts` → `authorized`), so it covers
+API routes as well as pages: a flagged user cannot call `/api/*` to work around the
+lock. Only `/change-password` and `/api/users/change-password` are reachable.
 
-### Known rough edges, not yet addressed
-- The dashboard is not yet role-aware (every role sees the same tiles).
-- Permits have no sign-off chain — they're issue/close only. If PTW needs
-  HSE→Factory Manager authorisation like WMS, add a chain to `chains.ts`.
-- `/permits/new` has no PPE "other" free-text field.
+- **Policy is one source of truth:** `src/lib/password-policy.ts`
+  (min 8 chars + letter + number + symbol). The API and the form both call
+  `validatePassword()` — never re-implement the rule anywhere else. It is kept
+  separate from `password.ts` because that module imports `node:crypto` and cannot
+  be pulled into a client bundle.
+- **Every seeded account is flagged `mustChangePassword`.** The bootstrap password
+  (`limsl2026`) is committed to this repo, so it is a secret in name only — each
+  real user must set their own on first login. Admin-created users are flagged too,
+  and an admin-supplied password must itself satisfy the policy.
+- **Dev tip:** to skip the forced-change screen while testing, clear the flag for
+  one account rather than weakening the seed:
+  `UPDATE users SET must_change_password = 0 WHERE email = '<you>@limsl.com';`
+
+Known minor behaviour: the guard reads the JWT, and the JWT only learns the flag was
+cleared when the client calls `update()` (the change-password page does this). If
+that call is missed, the user stays on `/change-password` until they sign out and
+back in. It fails *closed*, never open.
+
+## 5. Next tasks
+
+1. **Role-aware dashboard** — every role currently sees identical tiles.
+2. **PTW sign-off chain** — permits are issue/close only. Needs a product decision:
+   does a Permit-to-Work require a counter-signature (HSE → Factory Manager, like
+   the WMS chain) before work starts, or is issuing it enough?
+3. Dark theme (light is default and was an explicit requirement; dark is later).
+4. Minor: `/permits/new` has no PPE "other" free-text field.
 
 ---
 
-## 5. Traps that already caused bugs — don't re-introduce them
+## 6. Traps that already caused bugs — don't re-introduce them
 
 1. **Hydration mismatch.** The session resolves client-side only. Anything
    role-dependent rendered during SSR mismatches. Use the `mounted` guard
@@ -130,7 +150,7 @@ works: it ranks causes from guides + history + RCA, and learns from outcomes.
 
 ---
 
-## 6. Running it
+## 7. Running it
 
 ### First-run bootstrap (do this or auth returns 500)
 

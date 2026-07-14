@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canManageUsers, ROLES, ROLE_DEPARTMENT } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
+import { validatePassword } from "@/lib/password-policy";
 
 // Safe columns — never return the password hash.
 const safeColumns = {
@@ -62,9 +63,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A user with that email already exists." }, { status: 409 });
     }
 
-    const tempPassword = body.password && String(body.password).length >= 6
+    // An admin-supplied password is a live credential until the user's first
+    // login, so hold it to the same policy as a self-chosen one. The generated
+    // fallback is built to satisfy the policy by construction.
+    if (body.password) {
+      const policyError = validatePassword(String(body.password));
+      if (policyError) {
+        return NextResponse.json({ error: policyError }, { status: 400 });
+      }
+    }
+    const tempPassword = body.password
       ? String(body.password)
-      : `limsl-${nanoid(6).toLowerCase()}`;
+      : `Limsl-${nanoid(8)}9!`;
 
     const id = nanoid();
     await db.insert(users).values({

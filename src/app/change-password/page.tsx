@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { KeyRound, Loader2, LogOut, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { validatePassword, PASSWORD_RULE_TEXT } from "@/lib/password-policy";
 
 export default function ChangePasswordPage() {
   const { data: session, status, update } = useSession();
@@ -28,8 +29,9 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("New password must be at least 6 characters long.");
+    const policyError = validatePassword(newPassword);
+    if (policyError) {
+      setError(policyError);
       return;
     }
 
@@ -137,7 +139,7 @@ export default function ChangePasswordPage() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimum 6 characters"
+                placeholder={PASSWORD_RULE_TEXT}
                 className={inputClass}
                 required
               />

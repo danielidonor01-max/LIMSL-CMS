@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { verifyPassword, hashPassword } from "@/lib/password";
+import { validatePassword } from "@/lib/password-policy";
 
 export async function POST(request: Request) {
   try {
@@ -29,11 +30,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json(
-        { error: "New password must be at least 6 characters long." },
-        { status: 400 },
-      );
+    const policyError = validatePassword(newPassword);
+    if (policyError) {
+      return NextResponse.json({ error: policyError }, { status: 400 });
     }
 
     // Retrieve user record to verify current password
