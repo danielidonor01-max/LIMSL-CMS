@@ -6,12 +6,14 @@ import {
   equipment,
   maintenanceSchedule,
   pmChecklists,
+  permits,
   auditLog,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { reconcilePermits } from "@/app/api/permits/route";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
 export async function GET(
@@ -75,6 +77,25 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+
+    // Work may not begin under an unapproved permit. If a PTW has been raised for
+    // this work order, it must be fully signed (ACTIVE) before the job starts.
+    // Work orders with no permit at all are unaffected — not every job needs one.
+    if (body.status === "IN_PROGRESS") {
+      await reconcilePermits();
+      const linked = await db.select().from(permits).where(eq(permits.workOrderId, id));
+      if (linked.length > 0 && !linked.some((p) => p.status === "ACTIVE")) {
+        const blocking = linked[0];
+        return NextResponse.json(
+          {
+            error:
+              `Permit ${blocking.permitNumber} is ${blocking.status.replace("_", " ").toLowerCase()} — ` +
+              `work cannot begin until the Permit-to-Work is signed and approved.`,
+          },
+          { status: 409 },
+        );
+      }
+    }
 
     const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
     if (body.status) updates.status = body.status;

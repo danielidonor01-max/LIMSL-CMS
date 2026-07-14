@@ -51,11 +51,32 @@ export const PROCEDURE_CHAIN: ChainStep[] = [
   { role: "COO", roleLabel: "Approved (COO)", required: true },
 ];
 
+// Permit-to-Work authorisation. A permit is raised against a named permit holder
+// and must be fully signed BEFORE any work begins — a permit sits in
+// PENDING_APPROVAL and only becomes ACTIVE when every step below is signed.
+export const PTW_CHAIN: ChainStep[] = [
+  { role: "FOREMAN", roleLabel: "Requested by (Foreman)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
+  { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Final approval (Factory Manager)", required: true },
+];
+
+// Permit-to-Work close-out. Raised once the permit is ACTIVE and the job is done:
+// the work party confirms the area is clear, then HSE confirms the isolation is
+// removed and the equipment is safe to re-energise. A permit cannot reach CLOSED
+// without both.
+export const PTW_CLOSEOUT_CHAIN: ChainStep[] = [
+  { role: "FOREMAN", roleLabel: "Work complete, area clear (Foreman)", required: true },
+  { role: "HSE", roleLabel: "Isolation removed, safe to re-energise (HSE)", required: true },
+];
+
 export const CHAINS: Record<string, ChainStep[]> = {
   PM_CHECKLIST: PM_CHAIN,
   CORRECTIVE: CM_CHAIN,
   WMS: WMS_CHAIN,
   PROCEDURE: PROCEDURE_CHAIN,
+  PERMIT: PTW_CHAIN,
+  PERMIT_CLOSEOUT: PTW_CLOSEOUT_CHAIN,
 };
 
 export function chainFor(entityType: string): ChainStep[] {

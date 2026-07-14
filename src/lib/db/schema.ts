@@ -206,11 +206,22 @@ export const permits = sqliteTable("permits", {
   ppeRequired: text("ppe_required"), // JSON array
   areaBarricaded: integer("area_barricaded", { mode: "boolean" }).default(false),
   issuedById: text("issued_by_id").references(() => users.id),
+  // The permit holder: the named, accountable person the permit is issued to. A
+  // permit is not valid without one — "Maintenance Team" is not accountable to an
+  // auditor, a person is. (issuedToId/issuedToName are the legacy free-text
+  // fields, superseded by these; kept only so the migration stays additive.)
+  permitHolderId: text("permit_holder_id").references(() => users.id),
+  permitHolderName: text("permit_holder_name"),
   issuedToId: text("issued_to_id").references(() => users.id),
   issuedToName: text("issued_to_name"),
   issuedDate: text("issued_date"),
   expiryDate: text("expiry_date"),
-  status: text("status").notNull().default("ACTIVE"), // ACTIVE | EXPIRED | CANCELLED | CLOSED
+  // PENDING_APPROVAL → ACTIVE → CLOSED, or CANCELLED / EXPIRED.
+  // A permit is raised as PENDING_APPROVAL and only becomes ACTIVE (i.e. work may
+  // begin) once the full PTW sign-off chain is signed. It only reaches CLOSED once
+  // the close-out chain is signed. Neither transition is a manual button.
+  status: text("status").notNull().default("PENDING_APPROVAL"),
+  approvedAt: text("approved_at"),
   closedAt: text("closed_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });

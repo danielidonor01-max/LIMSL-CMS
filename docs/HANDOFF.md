@@ -64,9 +64,11 @@ again this will recur.
 - **Super Admin user management** (`/settings/users`).
 
 ### Newest work (the last 4 commits — verify these first if something looks off)
-- **Permits / PTW** (`/permits`) — issue, close out, cancel. Deep-linked from a
-  work order ("Raise PTW" prefills equipment + WO). HSE can issue permits but
-  *cannot* write work orders — that split is intentional.
+- **Permits / PTW** (`/permits`) — signature-controlled, see §5. Raised against a
+  named permit holder; four signatures required before work may begin; close-out
+  needs two more. Deep-linked from a work order ("Raise PTW" prefills equipment +
+  WO). HSE can issue permits but *cannot* write work orders — that split is
+  intentional.
 - **OEM & Warranty** (`/oem`) — register vendor, log/close interventions;
   warranty expiry mirrors onto the equipment record.
 - **Calibration** (`/calibration`) — "Record Calibration" auto-computes the next
@@ -122,18 +124,39 @@ cleared when the client calls `update()` (the change-password page does this). I
 that call is missed, the user stays on `/change-password` until they sign out and
 back in. It fails *closed*, never open.
 
-## 5. Next tasks
+## 5. Permit-to-Work — signature-controlled
+
+A PTW is a controlled safety document, not a status field. **Its status is driven
+by signatures, never by a button.**
+
+- **Permit holder is mandatory.** A permit names an accountable person
+  (`permitHolderId` → `users`). The API refuses to raise a permit without one —
+  "Maintenance Team" is not accountable to an auditor, a person is.
+- **Authorisation chain** (`PTW_CHAIN`), all four required:
+  Foreman → Maintenance Manager → HSE → Factory Manager.
+- **Work cannot begin until approved.** A permit is raised `PENDING_APPROVAL` and
+  only becomes `ACTIVE` when the chain is fully signed. Starting a work order that
+  has a permit attached is **refused with 409** unless that permit is `ACTIVE`.
+  (Work orders with no permit are unaffected — not every job needs one.)
+- **Close-out chain** (`PTW_CLOSEOUT_CHAIN`), opened automatically on approval:
+  Foreman (work complete, area clear) → HSE (isolation removed, safe to
+  re-energise). A permit only reaches `CLOSED` when both are signed.
+- `PATCH /api/permits/[id]` accepts **cancellation only**. Approval and closure
+  cannot be forced through the API.
+
+Status flow: `PENDING_APPROVAL → ACTIVE → CLOSED`, or `CANCELLED` / `EXPIRED`.
+Promotion happens in `reconcilePermits()` (same reconcile-on-read pattern as the
+Procedure module). To change who signs, edit `chains.ts` — nothing else.
+
+## 6. Next tasks
 
 1. **Role-aware dashboard** — every role currently sees identical tiles.
-2. **PTW sign-off chain** — permits are issue/close only. Needs a product decision:
-   does a Permit-to-Work require a counter-signature (HSE → Factory Manager, like
-   the WMS chain) before work starts, or is issuing it enough?
-3. Dark theme (light is default and was an explicit requirement; dark is later).
-4. Minor: `/permits/new` has no PPE "other" free-text field.
+2. Dark theme (light is default and was an explicit requirement; dark is later).
+3. Minor: `/permits/new` has no PPE "other" free-text field.
 
 ---
 
-## 6. Traps that already caused bugs — don't re-introduce them
+## 7. Traps that already caused bugs — don't re-introduce them
 
 1. **Hydration mismatch.** The session resolves client-side only. Anything
    role-dependent rendered during SSR mismatches. Use the `mounted` guard
@@ -147,10 +170,17 @@ back in. It fails *closed*, never open.
    intentional `text-white` on solid buttons in 8 files.
 5. **`drizzle/` is gitignored** — migration SQL is not committed. After pulling a
    `schema.ts` change, regenerate and apply it yourself.
+6. **drizzle-kit generates a broken table-rebuild when you add a column AND change
+   a column default in the same migration.** SQLite can't `ALTER` a default, so it
+   rebuilds the table — but the generated `INSERT … SELECT` copies the *new* columns
+   from the *old* table, which doesn't have them, and the migration dies with
+   `no such column`. Fix: hand-edit the generated `.sql` and select `NULL` for the
+   new columns. Hit this adding `permit_holder_id` + changing the `permits.status`
+   default. **Always read the generated SQL before applying it.**
 
 ---
 
-## 7. Running it
+## 8. Running it
 
 ### First-run bootstrap (do this or auth returns 500)
 

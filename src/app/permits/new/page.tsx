@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ROLE_LABELS } from "@/lib/roles";
 
 function NewPermitForm() {
   const router = useRouter();
@@ -13,6 +14,7 @@ function NewPermitForm() {
   const prefillEquipmentId = searchParams.get("equipmentId") || "";
   const workOrderId = searchParams.get("workOrderId") || "";
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
+  const [userList, setUserList] = useState<any[]>([]);
   const [loadingEq, setLoadingEq] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -23,7 +25,8 @@ function NewPermitForm() {
   const [controlMeasures, setControlMeasures] = useState("");
   const [lotoApplied, setLotoApplied] = useState(false);
   const [areaBarricaded, setAreaBarricaded] = useState(false);
-  const [issuedToName, setIssuedToName] = useState("Maintenance Team");
+  const [permitHolderId, setPermitHolderId] = useState("");
+  const [validHours, setValidHours] = useState(24);
 
   // PPE checklist
   const [ppeChecked, setPpeChecked] = useState<Record<string, boolean>>({
@@ -55,6 +58,12 @@ function NewPermitForm() {
       }
     }
     loadEquipment();
+
+    // The permit holder must be a real, accountable person — load the user list.
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setUserList(Array.isArray(d) ? d : []))
+      .catch(() => {});
   }, [prefillEquipmentId]);
 
   const handlePpeChange = (key: string) => {
@@ -64,6 +73,10 @@ function NewPermitForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!equipmentId) return;
+    if (!permitHolderId) {
+      toast.error("Assign a permit holder — a permit needs a named, accountable person.");
+      return;
+    }
 
     setSaving(true);
     const ppeArray = Object.entries(ppeChecked)
@@ -82,14 +95,16 @@ function NewPermitForm() {
           controlMeasures,
           lotoApplied,
           areaBarricaded,
-          issuedToName,
+          permitHolderId,
+          validHours,
           ppeRequired: ppeArray,
         }),
       });
 
       if (res.ok) {
-        toast.success("Permit-to-Work issued.");
-        router.push("/permits");
+        const p = await res.json();
+        toast.success(`${p.permitNumber} raised — awaiting sign-off. Work may not begin until approved.`);
+        router.push(`/permits/${p.id}`);
       } else {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error || "Failed to issue Permit-to-Work.");
@@ -232,15 +247,51 @@ function NewPermitForm() {
             </label>
           </div>
 
-          {/* Issued To */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Work Party Lead Name</label>
-            <input
-              type="text"
-              value={issuedToName}
-              onChange={(e) => setIssuedToName(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
-            />
+          {/* Permit Holder + validity */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-500 uppercase">
+                Permit Holder <span className="text-rose-600">*</span>
+              </label>
+              <select
+                required
+                value={permitHolderId}
+                onChange={(e) => setPermitHolderId(e.target.value)}
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+              >
+                <option value="" disabled>
+                  Select the accountable person…
+                </option>
+                {userList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} — {ROLE_LABELS[u.role] ?? u.role}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-slate-500">
+                Holds the permit and is accountable for the work party.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-500 uppercase">Valid For (hours)</label>
+              <input
+                type="number"
+                min={1}
+                max={168}
+                value={validHours}
+                onChange={(e) => setValidHours(Number(e.target.value))}
+                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+              />
+              <p className="text-[10px] text-slate-500">Permit expires automatically after this window.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
+            <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              Raising this permit does <strong>not</strong> authorise work. It must be signed by the Foreman,
+              Maintenance Manager, HSE and Factory Manager before work may begin.
+            </span>
           </div>
 
           {/* Actions */}
