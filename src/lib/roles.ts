@@ -95,7 +95,7 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
 
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
-  if (pathname === "/login") return true;
+  if (pathname === "/login" || pathname === "/change-password") return true;
   const allowed = ROLE_ALLOWED_PATHS[role];
   if (!allowed) return true; // full-access roles
   return allowed.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)));

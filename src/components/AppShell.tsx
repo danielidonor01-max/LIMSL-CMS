@@ -15,7 +15,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const role = (session?.user as { role?: string })?.role;
-  const bare = pathname === "/login";
+  const mustChange = (session?.user as { mustChangePassword?: boolean })?.mustChangePassword;
+  const bare = pathname === "/login" || (status === "authenticated" && mustChange && pathname === "/change-password");
 
   if (bare) return <>{children}</>;
 

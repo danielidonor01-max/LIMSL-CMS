@@ -18,12 +18,26 @@ export const authConfig = {
         (p) => pathname === p || pathname.startsWith(`${p}/`),
       );
       if (isPublic) return true;
-      return !!auth?.user;
+      if (!auth?.user) return false;
+
+      const user = auth.user as { mustChangePassword?: boolean };
+      if (user.mustChangePassword) {
+        if (pathname !== "/change-password" && pathname !== "/api/users/change-password") {
+          return Response.redirect(new URL("/change-password", request.nextUrl));
+        }
+      }
+      return true;
     },
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = (user as { role?: string }).role;
         token.uid = (user as { id?: string }).id;
+        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword;
+      }
+      if (trigger === "update" && session) {
+        if (typeof session.mustChangePassword === "boolean") {
+          token.mustChangePassword = session.mustChangePassword;
+        }
       }
       return token;
     },
@@ -31,6 +45,7 @@ export const authConfig = {
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { id?: string }).id = token.uid as string;
+        (session.user as { mustChangePassword?: boolean }).mustChangePassword = !!token.mustChangePassword;
       }
       return session;
     },

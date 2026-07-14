@@ -25,6 +25,7 @@ import {
   Users,
   LogOut,
   User,
+  KeyRound,
 } from "lucide-react";
 import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
 
@@ -115,6 +116,13 @@ export default function Sidebar() {
               {ROLE_LABELS[role ?? ""] ?? role ?? "—"}
             </p>
           </div>
+          <Link
+            href="/change-password"
+            title="Change Password"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+          >
+            <KeyRound className="w-4 h-4" />
+          </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             title="Sign out"
