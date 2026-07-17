@@ -104,12 +104,19 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   const isBroken = eq.status === "BROKEN_DOWN";
 
-  // Mock safety specifications
+  // Safety guidance derived from the machine's real attributes — no fabricated,
+  // machine-specific isolation points (those live in the machine's WMS / PTW).
   const safetyMeasures = [
-    "Permit-to-Work (PTW) required for all electrical/mechanical interventions.",
-    "LOTO applied at Feeder Panel DB-CNC3.",
-    "PPE required: Steel toe boots, safety glasses, ear protection, flame retardant suit.",
-  ];
+    "Permit-to-Work (PTW) required before any electrical or mechanical intervention.",
+    "Apply LOTO and confirm isolation before work begins — isolation points are defined in the machine's Work Method Statement.",
+    (eq.criticality === "CRITICAL" || eq.criticality === "HIGH")
+      ? "High-criticality asset — Maintenance Manager sign-off required on close-out."
+      : null,
+    eq.requiresCalibration
+      ? "Calibration required — verify the current certificate before returning to service."
+      : null,
+    "PPE as specified on the active Permit-to-Work.",
+  ].filter(Boolean) as string[];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -225,21 +232,21 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
                 <h3 className="text-sm font-bold tracking-wide text-slate-900">Equipment Specifications</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  {eq.notes || "Multi-axis heavy duty cutting and machining center used for flange profiling and precision parts shaping."}
+                  {eq.notes || "No description recorded for this asset."}
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Manufacturer</span>
-                    <span className="font-semibold text-slate-900">{eq.oem || "STAKO"}</span>
+                    <span className="font-semibold text-slate-900">{eq.oem || "—"}</span>
                   </div>
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Model</span>
-                    <span className="font-semibold text-slate-900">{eq.model || "STAKO v4"}</span>
+                    <span className="font-semibold text-slate-900">{eq.model || "—"}</span>
                   </div>
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Serial Number</span>
-                    <span className="font-semibold text-slate-900 font-mono">{eq.serialNumber || "STK-2025-098"}</span>
+                    <span className="font-semibold text-slate-900 font-mono">{eq.serialNumber || "—"}</span>
                   </div>
                 </div>
               </div>
@@ -254,7 +261,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Last Completed PM</p>
-                      <p className="font-bold text-slate-900">{eq.lastMaintenanceDate || "2025-11-15"}</p>
+                      <p className="font-bold text-slate-900">{eq.lastMaintenanceDate || "—"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -263,7 +270,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Next Scheduled PM</p>
-                      <p className={`font-bold ${isBroken ? "text-rose-600" : "text-slate-900"}`}>{eq.nextMaintenanceDate || "2026-02-15"}</p>
+                      <p className={`font-bold ${isBroken ? "text-rose-600" : "text-slate-900"}`}>{eq.nextMaintenanceDate || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -277,15 +284,15 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Bay Location</span>
-                    <span className="font-semibold text-slate-900">{eq.location || "Workshop"}</span>
+                    <span className="font-semibold text-slate-900">{eq.location || "—"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Criticality</span>
-                    <span className="font-semibold text-slate-900">{eq.criticality || "HIGH"}</span>
+                    <span className="font-semibold text-slate-900">{eq.criticality || "—"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Frequency</span>
-                    <span className="font-semibold text-slate-900">{eq.maintenanceFrequency || "QUARTERLY"}</span>
+                    <span className="font-semibold text-slate-900">{eq.maintenanceFrequency || "—"}</span>
                   </div>
                 </div>
               </div>
@@ -410,13 +417,20 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <h3 className="text-sm font-bold tracking-wide text-slate-900">Warranty Coverage</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Scope</span>
-                    <span className="font-semibold text-slate-900">Full parts & labor</span>
+                    <span className="text-slate-500">Status</span>
+                    <span className={`font-semibold ${
+                      eq.warrantyExpiry && new Date(eq.warrantyExpiry) >= new Date() ? "text-emerald-600" : "text-slate-500"
+                    }`}>
+                      {eq.warrantyExpiry
+                        ? (new Date(eq.warrantyExpiry) >= new Date() ? "In warranty" : "Expired")
+                        : "Not recorded"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Expiry</span>
-                    <span className="font-semibold text-emerald-600">{eq.warrantyExpiry || "Active"}</span>
+                    <span className="font-semibold text-slate-900">{eq.warrantyExpiry || "—"}</span>
                   </div>
+                  <p className="text-[10px] text-slate-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
                 </div>
               </div>
             </div>

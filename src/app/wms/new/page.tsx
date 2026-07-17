@@ -87,7 +87,7 @@ export default function NewWms() {
           emergencyRequirements: emergencyRequirements,
           equipmentIds: selectedEquipments,
           machinesScope: scopeNames,
-          preparedByName: "Daniel Idonor",
+          // preparer is stamped from the session server-side
         }),
       });
 

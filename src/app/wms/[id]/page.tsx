@@ -8,29 +8,16 @@ import {
   ArrowLeft,
   FileText,
   Loader2,
-  CheckCircle2,
-  Clock,
   ShieldCheck,
-  UserCheck,
-  XCircle,
 } from "lucide-react";
-import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
-import { toast } from "sonner";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
   const resolvedParams = use(params);
   const wmsId = resolvedParams.id;
 
   const [wms, setWms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  // Signatures for approval stages
-  const [reviewSign, setReviewSign] = useState("");
-  const [approveSign, setApproveSign] = useState("");
-  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     async function loadWms() {
@@ -48,70 +35,6 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     }
     loadWms();
   }, [wmsId]);
-
-  const handleReview = async () => {
-    if (!reviewSign) {
-      toast.error("Reviewer signature is required.");
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/wms/${wmsId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "UNDER_REVIEW",
-          reviewedByName: "Kenneth Aloziem",
-          reviewedBySignature: reviewSign,
-          reviewedDate: new Date().toISOString().split("T")[0],
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setWms(data);
-        toast.success("WMS reviewed and sent for management approval.");
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleApprove = async (approve: boolean) => {
-    if (approve && !approveSign) {
-      toast.error("Approver signature is required.");
-      return;
-    }
-    if (!approve && !rejectionReason) {
-      toast.error("Please provide a rejection reason.");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/wms/${wmsId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: approve ? "APPROVED" : "REJECTED",
-          approvedByName: "Osaghale Ikpea",
-          approvedBySignature: approve ? approveSign : null,
-          approvedDate: new Date().toISOString().split("T")[0],
-          rejectionReason: approve ? null : rejectionReason,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setWms(data);
-        toast.success(approve ? "WMS approved." : "WMS rejected.");
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -246,14 +169,13 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {/* Right Side: 3-Stage Approval workflow panel */}
+        {/* Right Side: authorisation status + sign-off chain */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-6">
+          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-200 pb-3">
-              WMS Document Approval State
+              WMS Document Status
             </h2>
 
-            {/* Approval status badge */}
             <div className="flex justify-between items-center bg-slate-100 border border-slate-200 p-3 rounded-lg text-xs">
               <span className="text-slate-500 font-mono">Document Status</span>
               <span
@@ -262,6 +184,8 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                     : wms.status === "UNDER_REVIEW"
                     ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    : wms.status === "REJECTED"
+                    ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
                     : "bg-slate-200 text-slate-500 border-slate-200"
                 }`}
               >
@@ -269,121 +193,12 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               </span>
             </div>
 
-            {/* 3 stages tracker list */}
-            <div className="space-y-6 pt-2">
-              {/* Stage 1: Prepared */}
-              <div className="flex gap-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center font-bold">
-                    1
-                  </div>
-                  <div className="w-0.5 h-12 bg-slate-100" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900">Prepared by Technician</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Author: {wms.preparedByName}</p>
-                  <p className="text-[10px] text-emerald-600 font-mono mt-1">✓ SIGNED ON {wms.preparedDate}</p>
-                </div>
-              </div>
-
-              {/* Stage 2: Reviewed */}
-              <div className="flex gap-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center font-bold border ${
-                      wms.reviewedDate
-                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                        : "bg-slate-100 text-slate-400 border-slate-200"
-                    }`}
-                  >
-                    2
-                  </div>
-                  <div className="w-0.5 h-12 bg-slate-100" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">Reviewed by Factory Coordinator</p>
-                  {wms.reviewedDate ? (
-                    <>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Reviewed by: {wms.reviewedByName}</p>
-                      <p className="text-[10px] text-emerald-600 font-mono mt-1">✓ VERIFIED ON {wms.reviewedDate}</p>
-                    </>
-                  ) : wms.status === "DRAFT" ? (
-                    <div className="mt-3 space-y-3">
-                      <SignaturePad label="Draw signature to verify" onSave={setReviewSign} />
-                      <button
-                        type="button"
-                        onClick={handleReview}
-                        disabled={saving}
-                        className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-                      >
-                        Submit Verification Review
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-slate-500 mt-0.5">Awaiting preparation steps...</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Stage 3: Approved */}
-              <div className="flex gap-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center font-bold border ${
-                      wms.status === "APPROVED"
-                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                        : "bg-slate-100 text-slate-400 border-slate-200"
-                    }`}
-                  >
-                    3
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">Management Approval (COO)</p>
-                  {wms.status === "APPROVED" ? (
-                    <>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Approved by: {wms.approvedByName}</p>
-                      <p className="text-[10px] text-emerald-600 font-mono mt-1">✓ APPROVED ON {wms.approvedDate}</p>
-                    </>
-                  ) : wms.status === "UNDER_REVIEW" ? (
-                    <div className="mt-3 space-y-3">
-                      <SignaturePad label="Draw signature to approve" onSave={setApproveSign} />
-                      
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">Rejection Reason (If rejecting)</span>
-                        <input
-                          type="text"
-                          value={rejectionReason}
-                          onChange={(e) => setRejectionReason(e.target.value)}
-                          placeholder="Provide details if document is rejected..."
-                          className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(false)}
-                          disabled={saving}
-                          className="py-2 bg-rose-950 hover:bg-rose-900 border border-rose-900/40 text-rose-700 rounded-lg text-xs font-semibold transition-all"
-                        >
-                          Reject
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(true)}
-                          disabled={saving}
-                          className="py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-                        >
-                          Approve WMS
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-slate-500 mt-0.5">Awaiting WMS review stage...</p>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-start gap-2 text-[11px] text-slate-500">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" />
+              <span>
+                Status is set by the sign-off chain below — it becomes <strong>APPROVED</strong> only when all four
+                signatures are captured. Prepared by {wms.preparedByName ?? "—"}.
+              </span>
             </div>
           </div>
 

@@ -14,26 +14,24 @@ Phases are ordered by value-per-effort. Each is independently shippable.
 
 ---
 
-## Phase A — Finish data integrity (small, high value)
+## Phase A — Finish data integrity ✅ DONE (2026-07-14)
 
-Close the remaining trust gaps from the audit. No new infrastructure needed.
+All trust gaps from the audit are closed:
 
-1. **WMS approval → sign-off chain.** WMS approval is currently written by a
-   PATCH body (now role-gated, but still not signature-backed). Migrate it to the
-   existing `WMS_CHAIN` via `<SignoffChain />`, exactly like permits and procedure,
-   so a WMS cannot be marked APPROVED without real signatures. *(This is the last
-   module where approval is a field rather than a chain.)*
-2. **QR labels** (`equipment/qr/[assetId]`) — replace the hardcoded 7-machine
-   `nameMap` with a fetch of the real equipment name; every asset outside the map
-   currently prints a generic label.
-3. **Equipment "Safety & OEM" tab** (`equipment/[assetId]`) — remove the hardcoded
-   safety text, warranty, and fabricated spec fallbacks (`eq.oem || "STAKO"`, etc.);
-   bind to real fields and show "—" when empty.
-4. **Client attribution cleanup** — new-WO and new-WMS forms still *send*
-   `"Daniel Idonor"`; the server now ignores it (stamps the session user), so this
-   is cosmetic, but remove the dead hardcodes to avoid confusion.
-5. **Housekeeping** — add the built-but-orphaned `/audit/risks` page to the sidebar
-   nav; delete the dead `AppHeader.tsx` component.
+1. ✅ **WMS approval → sign-off chain.** WMS status is now DERIVED from the
+   `WMS_CHAIN` (`reconcileWmsStatus`): DRAFT → UNDER_REVIEW → APPROVED/REJECTED. The
+   fabricated review/approve panel (hardcoded "Kenneth Aloziem" / "Osaghale Ikpea")
+   is gone; approval can no longer be forced via PATCH. Approver name comes from the
+   real final signature. Verified: forcing `status=APPROVED` is ignored; signing the
+   four steps flips it to APPROVED attributed to the real Factory Manager.
+2. ✅ **QR labels** — now fetch the real equipment name for every asset.
+3. ✅ **Equipment Safety/OEM tab** — safety guidance derives from real attributes
+   (criticality, calibration); fabricated spec fallbacks replaced with "—"; warranty
+   status computed from `warrantyExpiry`.
+4. ✅ **Client attribution cleanup** — removed the hardcoded `"Daniel Idonor"` from
+   the new-WO and new-WMS forms (server already stamps the session user).
+5. ✅ **Housekeeping** — `/audit/risks` added to the sidebar (Risk Register); dead
+   `AppHeader.tsx` deleted.
 
 ## Phase B — Documents & evidence (needs a storage decision)
 

@@ -18,6 +18,7 @@ import {
   Gauge,
   ShieldAlert,
   ShieldCheck,
+  AlertOctagon,
   FileBarChart,
   FolderOpen,
   BookText,
@@ -44,6 +45,7 @@ const NAV = [
   { href: "/calibration", label: "Calibration", icon: Gauge },
   { href: "/training", label: "Training & Competency", icon: GraduationCap },
   { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
+  { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
 

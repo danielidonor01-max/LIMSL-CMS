@@ -14,20 +14,14 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
   const [machineName, setMachineName] = useState("");
 
   useEffect(() => {
-    // Determine machine name based on mock or fetch
-    const nameMap: Record<string, string> = {
-      "LEE/PE/1904": "Stako CNC Machine",
-      "LEE/PE/0399": "Metal Gennari Vertical Lathe",
-      "LEE/PE/0587": "JOBS Milling & Boring Machine",
-      "LEE/PE/0350": "Colgar Shearing Machine",
-      "LEE/PE/0348": "Sertom Plate Rolling Machine",
-      "LEE/PE/0159": "Kone 12T Overhead Crane #1",
-      "LEE/PE/0160": "Kone 24T Overhead Crane #1",
-    };
-    setMachineName(nameMap[assetIdOriginal] || "LIMSL Production Asset");
+    // Fetch the real machine name so the label is correct for every asset, not
+    // just a hardcoded handful.
+    fetch(`/api/equipment/${assetIdKey}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setMachineName(d?.name || "LIMSL Production Asset"))
+      .catch(() => setMachineName("LIMSL Production Asset"));
 
-    // In production, the QR code points to the public access URL of the asset twin
-    // e.g. https://limsl-cms.company.com/equipment/LEE-PE-1904
+    // The QR code points to the asset's page, e.g. /equipment/LEE-PE-1904
     const scanUrl = `${window.location.origin}/equipment/${assetIdKey}`;
 
     QRCode.toDataURL(

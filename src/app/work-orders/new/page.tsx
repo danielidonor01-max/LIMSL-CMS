@@ -111,7 +111,7 @@ function NewWorkOrderForm() {
         body: JSON.stringify({
           ...form,
           technicianName: tech?.name || null,
-          createdByName: "Daniel Idonor",
+          // creator is stamped from the session server-side
         }),
       });
       if (!res.ok) {

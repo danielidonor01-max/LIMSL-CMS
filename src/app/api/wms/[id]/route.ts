@@ -5,6 +5,7 @@ import { wmsDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { WMS_WRITE_ROLES } from "@/lib/roles";
+import { reconcileWmsStatus } from "../route";
 
 export async function GET(
   request: Request,
@@ -12,6 +13,7 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params;
+    await reconcileWmsStatus(resolvedParams.id);
     const records = await db
       .select()
       .from(wmsDocuments)
@@ -50,6 +52,9 @@ export async function PATCH(
 
     const wms = currentRecords[0];
 
+    // Content edits only. Approval/status is DERIVED from the sign-off chain
+    // (see reconcileWmsStatus) — it can never be forced through the API, so the
+    // status and reviewed/approved fields are deliberately NOT writable here.
     const updateFields: any = {
       title: body.title ?? wms.title,
       revision: body.revision ?? wms.revision,
@@ -67,25 +72,6 @@ export async function PATCH(
       qualityControlRequirements: body.qualityControlRequirements ?? wms.qualityControlRequirements,
       emergencyRequirements: body.emergencyRequirements ?? wms.emergencyRequirements,
       references: body.references ? JSON.stringify(body.references) : wms.references,
-      
-      // Approval flow
-      status: body.status ?? wms.status,
-      preparedById: body.preparedById ?? wms.preparedById,
-      preparedByName: body.preparedByName ?? wms.preparedByName,
-      preparedBySignature: body.preparedBySignature ?? wms.preparedBySignature,
-      preparedDate: body.preparedDate ?? wms.preparedDate,
-      
-      reviewedById: body.reviewedById ?? wms.reviewedById,
-      reviewedByName: body.reviewedByName ?? wms.reviewedByName,
-      reviewedBySignature: body.reviewedBySignature ?? wms.reviewedBySignature,
-      reviewedDate: body.reviewedDate ?? wms.reviewedDate,
-      
-      approvedById: body.approvedById ?? wms.approvedById,
-      approvedByName: body.approvedByName ?? wms.approvedByName,
-      approvedBySignature: body.approvedBySignature ?? wms.approvedBySignature,
-      approvedDate: body.approvedDate ?? wms.approvedDate,
-      
-      rejectionReason: body.rejectionReason ?? wms.rejectionReason,
       updatedAt: new Date().toISOString(),
     };
 

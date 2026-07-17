@@ -2,13 +2,50 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wmsDocuments, equipment } from "@/lib/db/schema";
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { WMS_WRITE_ROLES } from "@/lib/roles";
+import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
+import { chainSummary } from "@/lib/signoff/chains";
+
+// A WMS document's status is DERIVED from its sign-off chain (WMS_CHAIN:
+// Foreman → Maintenance Manager → HSE → Factory Manager), never set by a button.
+//   no signatures          → DRAFT
+//   some, not all           → UNDER_REVIEW
+//   any required rejected   → REJECTED
+//   all required signed     → APPROVED (+ approver = final signer)
+// Same reconcile-on-read pattern as permits and the procedure module.
+export async function reconcileWmsStatus(wmsId: string) {
+  await ensureSignoffChain("WMS", wmsId);
+  const chain = await getSignoffChain("WMS", wmsId);
+  if (chain.length === 0) return;
+
+  const rejected = chain.some((s) => s.required && s.status === "REJECTED");
+  const summary = chainSummary(chain);
+  const signedCount = chain.filter((s) => s.status === "SIGNED").length;
+
+  let status: string;
+  if (rejected) status = "REJECTED";
+  else if (summary.complete) status = "APPROVED";
+  else if (signedCount > 0) status = "UNDER_REVIEW";
+  else status = "DRAFT";
+
+  // Attribution comes from the signatures themselves.
+  const finalStep = [...chain].reverse().find((s) => s.status === "SIGNED");
+  const set: Record<string, unknown> = { status };
+  if (status === "APPROVED" && finalStep) {
+    set.approvedByName = finalStep.signedByName;
+    set.approvedById = finalStep.signedById;
+    set.approvedDate = (finalStep.signedAt ?? new Date().toISOString()).slice(0, 10);
+  }
+  await db.update(wmsDocuments).set(set).where(eq(wmsDocuments.id, wmsId));
+}
 
 export async function GET() {
   try {
+    const raw = await db.select().from(wmsDocuments);
+    for (const w of raw) await reconcileWmsStatus(w.id);
     const list = await db.select().from(wmsDocuments);
     const eqList = await db.select().from(equipment);
     const byId = new Map(eqList.map((e) => [e.id, e]));
@@ -71,6 +108,8 @@ export async function POST(request: Request) {
     };
 
     await db.insert(wmsDocuments).values(newWms);
+    // Open the authorisation chain and notify the first signer (Foreman).
+    await ensureSignoffChain("WMS", newWms.id, newWms.wmsNumber);
     return NextResponse.json(newWms, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create WMS document:", error);
