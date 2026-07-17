@@ -7,14 +7,19 @@ import {
   Layers,
   Search,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   ArrowLeft,
   QrCode,
   Eye,
   History,
   Pencil,
   Loader2,
+  Plus,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
+import Button from "@/components/Button";
+import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
 export default function EquipmentList() {
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
@@ -75,15 +80,13 @@ export default function EquipmentList() {
     }
   };
 
+  // Derive the category filter from the categories actually present, so it always
+  // covers the real data (the old hardcoded list missed several categories).
   const categories = [
     "ALL",
-    "CNC_HEAVY",
-    "PRESS_ROLL_SHEAR",
-    "WELDING",
-    "CRANE",
-    "CNC_LIGHT",
-    "MEASURING",
-    "OTHER",
+    ...Array.from(new Set(equipmentList.map((e) => e.category).filter(Boolean))).sort((a, b) =>
+      (EQUIPMENT_CATEGORY_LABELS[a] ?? a).localeCompare(EQUIPMENT_CATEGORY_LABELS[b] ?? b),
+    ),
   ];
   const statuses = [
     "ALL",
@@ -93,6 +96,16 @@ export default function EquipmentList() {
     "AWAITING_PARTS",
     "DECOMMISSIONED",
   ];
+  const catLabel = (c: string) => (c === "ALL" ? "All categories" : EQUIPMENT_CATEGORY_LABELS[c] ?? c.replaceAll("_", " "));
+  const statusLabel = (s: string) => (s === "ALL" ? "All statuses" : EQUIPMENT_STATUS_LABELS[s] ?? s.replaceAll("_", " "));
+  const SortIcon = ({ field }: { field: string }) =>
+    sortField !== field ? (
+      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+    ) : sortDirection === "asc" ? (
+      <ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+    );
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -115,12 +128,9 @@ export default function EquipmentList() {
           </div>
         </div>
 
-        <Link
-          href="/equipment/new"
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-        >
-          + Add New Equipment
-        </Link>
+        <Button href="/equipment/new" icon={Plus}>
+          Add New Equipment
+        </Button>
         </div>
         {/* Filters Panel */}
         <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -145,7 +155,7 @@ export default function EquipmentList() {
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat.replace("_", " ")}
+                    {catLabel(cat)}
                   </option>
                 ))}
               </select>
@@ -160,7 +170,7 @@ export default function EquipmentList() {
               >
                 {statuses.map((stat) => (
                   <option key={stat} value={stat}>
-                    {stat.replace("_", " ")}
+                    {statusLabel(stat)}
                   </option>
                 ))}
               </select>
@@ -180,14 +190,14 @@ export default function EquipmentList() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold select-none">
-                    <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("name")}>
+                    <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900 select-none" onClick={() => handleSort("name")}>
                       <div className="flex items-center gap-1">
-                        Equipment Name <ArrowUpDown className="w-3.5 h-3.5" />
+                        Equipment Name <SortIcon field="name" />
                       </div>
                     </th>
-                    <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("assetId")}>
+                    <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900 select-none" onClick={() => handleSort("assetId")}>
                       <div className="flex items-center gap-1">
-                        Asset Tag ID <ArrowUpDown className="w-3.5 h-3.5" />
+                        Asset Tag ID <SortIcon field="assetId" />
                       </div>
                     </th>
                     <th className="py-3.5 px-4">Category</th>
@@ -208,9 +218,9 @@ export default function EquipmentList() {
                         <tr key={eq.id} className="hover:bg-slate-50 text-slate-600 transition-colors">
                           <td className="py-3.5 px-4 font-semibold text-slate-900">{eq.name}</td>
                           <td className="py-3.5 px-4 font-mono text-slate-500">{eq.assetId}</td>
-                          <td className="py-3.5 px-4 text-[10px] uppercase font-mono">{eq.category.replace("_", " ")}</td>
-                          <td className="py-3.5 px-4">{eq.oem || "N/A"}</td>
-                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "Workshop"}</td>
+                          <td className="py-3.5 px-4 text-[10px] uppercase font-mono">{EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}</td>
+                          <td className="py-3.5 px-4">{eq.oem || "—"}</td>
+                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "—"}</td>
                           <td className="py-3.5 px-4">
                             <span
                               className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
