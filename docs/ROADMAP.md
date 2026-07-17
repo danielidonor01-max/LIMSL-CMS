@@ -86,14 +86,21 @@ Remaining in this area:
 Later (optional): per-role KPI/summary tiles (e.g. HSE incident count, QA/QC open
 NCs). The sign-off queue was the high-value piece and is done.
 
-## Phase E — Reporting & audit-readiness (medium)
+## Phase E — Reporting & audit-readiness ✅ DONE (2026-07-14)
 
-Turn the data into ISO evidence packs.
+Five branded, printable ISO evidence registers at `/reports/print/<type>` —
+**Permit-to-Work register, PM completion, calibration status, competency matrix,
+non-conformity log**. Each has a LEE International letterhead, a generated-by/date
+stamp, the data table, and an auditor sign-off block (Prepared / Reviewed / Approved).
+Print to paper or Save-as-PDF from the browser (app chrome is hidden on print); each
+also exports to **CSV**. Surfaced from the Reports page ("ISO Evidence Reports"),
+config-driven via `PrintableReport` + a per-type definition.
 
-- Printable, branded compliance reports: PM completion, PTW register, calibration
-  status, competency matrix, non-conformity log. `src/lib/export.ts` exists as a
-  starting point.
-- PDF / Excel export.
+Verified: all five routes render; PM (150 rows) and competency (26 rows) populate
+from live data; empty registers show cleanly.
+
+Later (optional): true XLSX (currently CSV, which Excel opens natively); scheduled
+email/WhatsApp of a monthly compliance pack.
 
 ## Phase F — Platform & later (ongoing)
 

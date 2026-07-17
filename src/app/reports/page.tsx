@@ -12,9 +12,18 @@ import {
   DollarSign,
   Layers,
 } from "lucide-react";
+import Link from "next/link";
 import { downloadCSV } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
+
+const EVIDENCE_REPORTS = [
+  { type: "ptw-register", label: "Permit-to-Work Register", desc: "PTW status, holders & sign-off" },
+  { type: "pm-completion", label: "PM Completion", desc: "Preventive maintenance compliance" },
+  { type: "calibration", label: "Calibration Status", desc: "Instrument calibration register" },
+  { type: "competency", label: "Competency Matrix", desc: "Skills, gaps & recertification" },
+  { type: "non-conformity", label: "Non-Conformity Log", desc: "NCs by type, severity & status" },
+];
 
 export default function ReportsPage() {
   const [equipment, setEquipment] = useState<any[]>([]);
@@ -164,6 +173,33 @@ export default function ReportsPage() {
                       <Row key={cat} label={EQUIPMENT_CATEGORY_LABELS[cat] ?? cat} count={count} total={equipment.length} />
                     ))}
                 </div>
+              </div>
+            </div>
+
+            {/* ISO evidence reports (printable) */}
+            <div className={reportCard}>
+              <h3 className="text-sm font-semibold text-slate-900 mb-1 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> ISO Evidence Reports
+              </h3>
+              <p className="text-[11px] text-slate-500 mb-4">
+                Branded, printable compliance registers for the audit file — print to paper or save as PDF; each also exports to CSV.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {EVIDENCE_REPORTS.map((r) => (
+                  <Link
+                    key={r.type}
+                    href={`/reports/print/${r.type}`}
+                    className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all group"
+                  >
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
+                      <Printer className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-900 group-hover:text-emerald-700">{r.label}</p>
+                      <p className="text-[10px] text-slate-500">{r.desc}</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
 
