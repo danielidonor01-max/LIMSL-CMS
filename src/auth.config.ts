@@ -43,7 +43,11 @@ export const authConfig = {
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
+        // Normalise the legacy "ADMIN" role (from the original seed) to the
+        // canonical SUPER_ADMIN here, at the one boundary roles enter the app —
+        // so an older/stale session is never half-broken without a re-login.
+        const raw = token.role as string;
+        (session.user as { role?: string }).role = raw === "ADMIN" ? "SUPER_ADMIN" : raw;
         (session.user as { id?: string }).id = token.uid as string;
         (session.user as { mustChangePassword?: boolean }).mustChangePassword = !!token.mustChangePassword;
       }
