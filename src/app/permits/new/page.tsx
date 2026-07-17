@@ -244,50 +244,61 @@ function NewPermitForm() {
               <button
                 type="button"
                 onClick={addJhaRow}
-                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-md px-2 py-1 transition-colors focus:outline-none"
               >
                 + Add task step
               </button>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {jha.map((row, i) => (
-                <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto_auto] gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-2">
-                  <input
-                    placeholder={`Task step ${i + 1}`}
+                <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step {i + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={row.residualRisk}
+                        onChange={(e) => updateJha(i, "residualRisk", e.target.value)}
+                        className="bg-white border border-slate-200 rounded p-1.5 text-[11px] focus:outline-none"
+                        title="Residual risk"
+                      >
+                        <option value="LOW">Residual: Low</option>
+                        <option value="MEDIUM">Residual: Medium</option>
+                        <option value="HIGH">Residual: High</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeJhaRow(i)}
+                        disabled={jha.length === 1}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 disabled:opacity-30 focus:outline-none"
+                        title="Remove step"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    placeholder="Task / work step — what is being done"
                     value={row.task}
                     onChange={(e) => updateJha(i, "task", e.target.value)}
-                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
+                    rows={2}
+                    className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
                   />
-                  <input
-                    placeholder="Hazards"
-                    value={row.hazards}
-                    onChange={(e) => updateJha(i, "hazards", e.target.value)}
-                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
-                  />
-                  <input
-                    placeholder="Controls"
-                    value={row.controls}
-                    onChange={(e) => updateJha(i, "controls", e.target.value)}
-                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
-                  />
-                  <select
-                    value={row.residualRisk}
-                    onChange={(e) => updateJha(i, "residualRisk", e.target.value)}
-                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => removeJhaRow(i)}
-                    disabled={jha.length === 1}
-                    className="p-2 text-slate-400 hover:text-rose-600 disabled:opacity-30"
-                    title="Remove step"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <textarea
+                      placeholder="Hazards"
+                      value={row.hazards}
+                      onChange={(e) => updateJha(i, "hazards", e.target.value)}
+                      rows={2}
+                      className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
+                    />
+                    <textarea
+                      placeholder="Controls"
+                      value={row.controls}
+                      onChange={(e) => updateJha(i, "controls", e.target.value)}
+                      rows={2}
+                      className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
