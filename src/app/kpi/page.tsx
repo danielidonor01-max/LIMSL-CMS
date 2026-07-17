@@ -28,7 +28,6 @@ import {
   ShieldCheck,
   Gauge,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
 import { MONTH_NAMES } from "@/lib/constants";
 
 type Monthly = {
@@ -43,6 +42,7 @@ type Monthly = {
   productionRevenue: number | null;
   utilizationRate: number | null;
   breakdownFrequency: number | null;
+  downtimeHours: number | null;
 };
 
 type KpiData = {
@@ -84,11 +84,10 @@ export default function KpiPage() {
         availability: m.availability ? +(m.availability * 100).toFixed(1) : 0,
         pm: m.pmCompliance ? +(m.pmCompliance * 100).toFixed(1) : 0,
         inspection: m.inspectionCompliance ? +(m.inspectionCompliance * 100).toFixed(1) : 0,
-        mtbf: m.mtbf ?? 0,
-        mttr: m.mttr ?? 0,
-        maintCost: m.maintenanceCost ? +(m.maintenanceCost / 1_000_000).toFixed(2) : 0,
-        downtimeCost: m.downtimeCost ? +(m.downtimeCost / 1_000_000).toFixed(2) : 0,
-        revenue: m.productionRevenue ? +(m.productionRevenue / 1_000_000).toFixed(1) : 0,
+        mtbf: m.mtbf ? +m.mtbf.toFixed(0) : 0,
+        mttr: m.mttr ? +m.mttr.toFixed(1) : 0,
+        breakdowns: m.breakdownFrequency ?? 0,
+        downtime: m.downtimeHours ? +m.downtimeHours.toFixed(1) : 0,
       })),
     [data],
   );
@@ -105,49 +104,49 @@ export default function KpiPage() {
       const b = (m[m.length - 1][key] as number) ?? 0;
       return b > a ? "up" : b < a ? "down" : "flat";
     };
-    const perAsset = l.maintenanceCost && l.totalAssets ? l.maintenanceCost / l.totalAssets : 0;
-    const costIndex = l.maintenanceCost && l.productionRevenue ? l.maintenanceCost / l.productionRevenue : 0;
+    const lastMo = m[m.length - 1]?.breakdownFrequency ?? 0;
+    const downtimeWindow = m.reduce((a, x) => a + (x.downtimeHours ?? 0), 0);
 
     const reliability: Kpi[] = [
-      { label: "MTBF", value: `${Math.round(l.mtbf ?? 0)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
+      { label: "MTBF", value: l.mtbf == null ? "—" : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
       { label: "Equipment Availability", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
-      { label: "Breakdown Frequency", value: `${m[m.length - 1]?.breakdownFrequency ?? 0}/mo`, target: "≤ 2/mo", tone: (m[m.length - 1]?.breakdownFrequency ?? 0) <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
-      { label: "Failure Rate", value: `${((data.perEquipment.length && 0) || 0.1).toFixed(2)}`, target: "declining", tone: "good" },
+      { label: "Breakdown Frequency", value: `${lastMo}/mo`, target: "≤ 2/mo", tone: lastMo <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
+      { label: "Failure Rate", value: `${(l.failureRate ?? 0).toFixed(2)}/asset·mo`, target: "declining", tone: (l.failureRate ?? 0) <= 0.2 ? "good" : "warning" },
       { label: "Active Breakdowns", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
     ];
     const maintenance: Kpi[] = [
-      { label: "MTTR", value: `${(l.mttr ?? 0).toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 99) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
-      { label: "PM Compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: l.pmCompliance >= 0.95 ? "good" : l.pmCompliance >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
-      { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: l.inspectionCompliance >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
-      { label: "Maintenance Backlog", value: `${l.maintenanceBacklog ?? 0} MH`, target: "≤ 8 MH", tone: (l.maintenanceBacklog ?? 0) <= 8 ? "good" : "warning" },
+      { label: "MTTR", value: l.mttr == null ? "—" : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
+      { label: "PM Compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: (l.pmCompliance ?? 0) >= 0.95 ? "good" : (l.pmCompliance ?? 0) >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
+      { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
+      { label: "Maintenance Backlog", value: `${l.maintenanceBacklog ?? 0} MH`, target: "≤ 40 MH", tone: (l.maintenanceBacklog ?? 0) <= 40 ? "good" : "warning" },
       { label: "Open Work Orders", value: String(l.openWos), target: "monitor", tone: "neutral" },
     ];
-    const cost: Kpi[] = [
-      { label: "Maint. Cost / Asset", value: formatCurrency(perAsset), target: "control", tone: "neutral" },
-      { label: "Cost Index", value: pct(costIndex), target: "≤ 5%", tone: costIndex <= 0.05 ? "good" : "warning", trendGood: "down" },
-      { label: "Downtime Cost", value: formatCurrency(l.downtimeCost), target: "declining", tone: "warning", trend: trendOf("downtimeCost"), trendGood: "down" },
-      { label: "Budget Adherence", value: "92%", target: "≤ 100%", tone: "good" },
-      { label: "Revenue / Machine", value: formatCurrency(l.productionRevenue && l.totalAssets ? l.productionRevenue / l.totalAssets : 0), target: "grow", tone: "good" },
+    const throughput: Kpi[] = [
+      { label: "WO Completion Rate", value: pct(l.woCompletionRate), target: "≥ 90%", tone: (l.woCompletionRate ?? 0) >= 0.9 ? "good" : "warning" },
+      { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
+      { label: "Downtime (6 mo)", value: `${downtimeWindow.toFixed(0)} hrs`, target: "declining", tone: "neutral" },
+      { label: "Breakdowns (6 mo)", value: String(l.breakdownsWindow ?? 0), target: "declining", tone: "neutral" },
+      { label: "Maint. Cost", value: "Not tracked", target: "—", tone: "neutral" },
     ];
     const safety: Kpi[] = [
-      { label: "Electrical Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: l.inspectionCompliance >= 0.98 ? "good" : "warning" },
-      { label: "Crane Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: l.inspectionCompliance >= 0.98 ? "good" : "warning" },
-      { label: "PTW Compliance", value: "98%", target: "≥ 98%", tone: "good" },
-      { label: "Equipment Incidents", value: "0", target: "0", tone: "good" },
+      { label: "PTW Compliance", value: pct(l.ptwCompliance), target: "≥ 98%", tone: l.ptwCompliance == null ? "neutral" : l.ptwCompliance >= 0.98 ? "good" : "warning" },
+      { label: "Safety Incidents", value: String(l.safetyIncidents ?? 0), target: "0", tone: (l.safetyIncidents ?? 0) === 0 ? "good" : "danger" },
+      { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning" },
+      { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
     ];
-    const utilization: Kpi[] = [
-      { label: "Utilization Rate", value: pct(l.utilizationRate), target: "≥ 75%", tone: (l.utilizationRate ?? 0) >= 0.75 ? "good" : "warning", trend: trendOf("utilizationRate"), trendGood: "up" },
-      { label: "Remaining Useful Life", value: "6.2 yrs", target: "monitor", tone: "neutral" },
-      { label: "Asset Replacement Flag", value: String(l.brokenDown + (l.underMaint ?? 0)), target: "review", tone: l.brokenDown > 0 ? "warning" : "good" },
-      { label: "Total Assets Tracked", value: String(l.totalAssets), target: "10 categories", tone: "good" },
+    const assets: Kpi[] = [
+      { label: "Total Assets", value: String(l.totalAssets), target: "tracked", tone: "neutral" },
+      { label: "Operational", value: String(l.operational ?? 0), target: "max", tone: "good" },
+      { label: "Under Maintenance", value: String(l.underMaint ?? 0), target: "monitor", tone: (l.underMaint ?? 0) === 0 ? "good" : "warning" },
+      { label: "Broken Down", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
     ];
 
     return [
       { name: "Reliability", icon: Activity, items: reliability },
       { name: "Maintenance", icon: Wrench, items: maintenance },
-      { name: "Cost", icon: DollarSign, items: cost },
+      { name: "Throughput", icon: Gauge, items: throughput },
       { name: "Safety & Compliance", icon: ShieldCheck, items: safety },
-      { name: "Utilization", icon: Gauge, items: utilization },
+      { name: "Asset Status", icon: DollarSign, items: assets },
     ];
   }, [data]);
 
@@ -181,7 +180,7 @@ export default function KpiPage() {
           <div>
             <h2 className="text-xl font-bold tracking-tight">KPI Dashboard</h2>
             <p className="text-xs text-slate-500 font-mono">
-              22 KPIs · 5 categories · LIMSL-MAIN-REG-007–012
+              Computed live from work orders, breakdowns, PM &amp; permits · last 6 months
             </p>
           </div>
         </div>
@@ -257,29 +256,30 @@ export default function KpiPage() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Maintenance & Downtime Cost (₦M)">
+              <ChartCard title="Breakdowns & Downtime (hrs)">
+                <ResponsiveContainer width="100%" height={240}>
+                  <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                    <YAxis yAxisId="l" stroke="#64748b" fontSize={11} allowDecimals={false} />
+                    <YAxis yAxisId="r" orientation="right" stroke="#64748b" fontSize={11} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar yAxisId="l" dataKey="breakdowns" name="Breakdowns" fill="#e11d48" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                    <Line yAxisId="r" type="monotone" dataKey="downtime" name="Downtime (hrs)" stroke="#d97706" strokeWidth={2} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="PM Compliance (%)">
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                    <YAxis stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="maintCost" name="Maintenance" fill="#0284c7" radius={[3, 3, 0, 0]} maxBarSize={20} />
-                    <Bar dataKey="downtimeCost" name="Downtime" fill="#e11d48" radius={[3, 3, 0, 0]} maxBarSize={20} />
+                    <Bar dataKey="pm" name="PM Compliance" fill="#059669" radius={[3, 3, 0, 0]} maxBarSize={28} />
                   </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="Production Revenue (₦M)">
-                <ResponsiveContainer width="100%" height={240}>
-                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                    <YAxis stroke="#64748b" fontSize={11} />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} />
-                  </LineChart>
                 </ResponsiveContainer>
               </ChartCard>
             </div>
@@ -295,11 +295,11 @@ export default function KpiPage() {
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-500">
                         <th className="py-2.5 px-5 font-medium">Equipment</th>
+                        <th className="py-2.5 px-4 font-medium">Breakdowns</th>
                         <th className="py-2.5 px-4 font-medium">Availability</th>
                         <th className="py-2.5 px-4 font-medium">MTBF</th>
                         <th className="py-2.5 px-4 font-medium">MTTR</th>
                         <th className="py-2.5 px-4 font-medium">Downtime</th>
-                        <th className="py-2.5 px-4 font-medium">Maint. Cost</th>
                         <th className="py-2.5 px-4 font-medium">Remark</th>
                       </tr>
                     </thead>
@@ -307,11 +307,11 @@ export default function KpiPage() {
                       {data.perEquipment.map((r) => (
                         <tr key={r.id} className="hover:bg-slate-50">
                           <td className="py-2.5 px-5 font-medium text-slate-900">{r.equipmentName}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.breakdowns}</td>
                           <td className="py-2.5 px-4">{pct(r.availability)}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mttr} hrs</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf == null ? "—" : `${r.mtbf} hrs`}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mttr == null ? "—" : `${r.mttr} hrs`}</td>
                           <td className="py-2.5 px-4 text-slate-700">{r.downtimeHours} hrs</td>
-                          <td className="py-2.5 px-4 font-mono text-slate-700">{formatCurrency(r.maintenanceCost)}</td>
                           <td className="py-2.5 px-4 text-slate-500">{r.remark}</td>
                         </tr>
                       ))}

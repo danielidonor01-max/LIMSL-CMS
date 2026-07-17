@@ -9,13 +9,12 @@ import {
   Printer,
   ShieldCheck,
   Clock,
-  DollarSign,
+  AlertTriangle,
   Layers,
 } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/Button";
 import { downloadCSV } from "@/lib/export";
-import { formatCurrency } from "@/lib/utils";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
 const EVIDENCE_REPORTS = [
@@ -55,7 +54,7 @@ export default function ReportsPage() {
   const pmCompliance = pmDue.length ? Math.round((pmDone / pmDue.length) * 100) : 0;
   const overdue = schedule.filter((s) => s.status === "OVERDUE").length;
   const totalDowntime = (kpi?.monthly ?? []).reduce((a: number, m: any) => a + (m.downtimeHours ?? 0), 0);
-  const totalCost = (kpi?.monthly ?? []).reduce((a: number, m: any) => a + (m.maintenanceCost ?? 0), 0);
+  const totalBreakdowns = (kpi?.monthly ?? []).reduce((a: number, m: any) => a + (m.breakdownFrequency ?? 0), 0);
 
   // Status breakdown
   const statusCounts: Record<string, number> = {};
@@ -144,8 +143,8 @@ export default function ReportsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Head icon={<ShieldCheck className="w-4 h-4 text-emerald-600" />} label="PM Compliance" value={`${pmCompliance}%`} sub={`${pmDone}/${pmDue.length} due PM done`} />
               <Head icon={<Clock className="w-4 h-4 text-rose-600" />} label="Overdue Activities" value={String(overdue)} sub="Across all schedules" />
-              <Head icon={<Clock className="w-4 h-4 text-amber-600" />} label="YTD Downtime" value={`${totalDowntime} hrs`} sub="Jan–Jun 2026" />
-              <Head icon={<DollarSign className="w-4 h-4 text-sky-600" />} label="YTD Maint. Cost" value={formatCurrency(totalCost)} sub="Jan–Jun 2026" />
+              <Head icon={<Clock className="w-4 h-4 text-amber-600" />} label="Downtime (6 mo)" value={`${totalDowntime.toFixed(0)} hrs`} sub="Rolling last 6 months" />
+              <Head icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="Breakdowns (6 mo)" value={String(totalBreakdowns)} sub="Rolling last 6 months" />
             </div>
 
             {/* Equipment status + category */}
