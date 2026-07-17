@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
   FileText,
@@ -15,13 +16,28 @@ import {
   Building2,
   Gauge,
   Loader2,
+  PenLine,
+  ChevronRight,
+  GraduationCap,
+  BookText,
+  ShieldAlert,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
+import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
 import {
   EQUIPMENT_STATUS_BADGE,
   EQUIPMENT_STATUS_LABELS,
 } from "@/lib/constants";
+
+type SignoffItem = {
+  stepId: string;
+  entityType: string;
+  typeLabel: string;
+  reference: string;
+  roleLabel: string;
+  link: string;
+};
 
 type Stat = { title: string; value: string; target: string; status: string; desc: string; code: string };
 type Equip = {
@@ -50,36 +66,54 @@ const iconMap: Record<string, React.ElementType> = {
   OPEN_WOS: ClipboardList,
 };
 
+// Full set — filtered per role by canAccessPath so each user sees only what they
+// can actually open.
 const QUICK_LINKS = [
-  { href: "/equipment", label: "Digital Twin", icon: Layers },
+  { href: "/equipment", label: "Equipment", icon: Layers },
   { href: "/schedule", label: "Annual Plan", icon: Calendar },
   { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
-  { href: "/wms", label: "WMS & Sign-Off", icon: FileText },
+  { href: "/wms", label: "WMS", icon: FileText },
+  { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
   { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
+  { href: "/procedure", label: "Procedure", icon: BookText },
   { href: "/kpi", label: "KPI Dashboard", icon: TrendingUp },
   { href: "/oem", label: "OEM & Warranty", icon: Building2 },
   { href: "/calibration", label: "Calibration", icon: Gauge },
+  { href: "/training", label: "Training", icon: GraduationCap },
+  { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
 ];
 
 export default function Home() {
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  const role = (session?.user as { role?: string })?.role;
+  const firstName = ((session?.user?.name as string) ?? "").split(" ")[0];
+
   const [stats, setStats] = useState<Stat[]>([]);
   const [equipment, setEquipment] = useState<Equip[]>([]);
   const [activity, setActivity] = useState<Audit[]>([]);
+  const [signoffs, setSignoffs] = useState<SignoffItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setMounted(true);
     Promise.all([
       fetch("/api/dashboard/stats").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/equipment").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/audit").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/signoffs/mine").then((r) => (r.ok ? r.json() : { items: [] })),
     ])
-      .then(([s, e, a]) => {
+      .then(([s, e, a, m]) => {
         setStats(Array.isArray(s) ? s : []);
         setEquipment(Array.isArray(e) ? e : []);
         setActivity(Array.isArray(a) ? a : []);
+        setSignoffs(Array.isArray(m?.items) ? m.items : []);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Only show quick links this role can actually open.
+  const quickLinks = QUICK_LINKS.filter((q) => canAccessPath(mounted ? role : undefined, q.href));
 
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
   const critical = equipment
@@ -91,6 +125,51 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
 
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        {/* Role-aware greeting */}
+        {mounted && session?.user && (
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                {firstName ? `Welcome, ${firstName}` : "Welcome"}
+              </h1>
+              <p className="text-xs text-slate-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
+            </div>
+          </div>
+        )}
+
+        {/* My sign-offs — what's awaiting THIS user's signature, across every module */}
+        {signoffs.length > 0 && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
+            <div className="px-5 py-3 border-b border-emerald-200 flex items-center gap-2">
+              <PenLine className="w-4 h-4 text-emerald-700" />
+              <h3 className="text-sm font-bold text-emerald-900">Awaiting your sign-off</h3>
+              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
+                {signoffs.length}
+              </span>
+            </div>
+            <div className="divide-y divide-emerald-100">
+              {signoffs.map((s) => (
+                <Link
+                  key={s.stepId}
+                  href={s.link}
+                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-emerald-100/40 transition-colors group"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {s.typeLabel}
+                      {s.reference ? <span className="font-mono text-slate-500"> · {s.reference}</span> : null}
+                    </p>
+                    <p className="text-xs text-slate-500">Your step: {s.roleLabel}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 shrink-0">
+                    Review &amp; sign <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Breakdown alert (only when something is actually down) */}
         {brokenDown.map((eq) => (
           <div
@@ -158,9 +237,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Module quick links */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {QUICK_LINKS.map((q) => {
+        {/* Module quick links (role-aware) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {quickLinks.map((q) => {
             const Icon = q.icon;
             return (
               <Link

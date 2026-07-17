@@ -70,16 +70,21 @@ Remaining in this area:
 - **Scheduled alerts** — PM/calibration overdue and competency recert-due are event-
   less; wire them into the audit auto-detect scan or a cron.
 
-## Phase D — Role-aware experience (small–medium)
+## Phase D — Role-aware experience ✅ DONE (2026-07-14)
 
-Make the app fit each role's day.
+- ✅ **"My sign-offs" queue** — the dashboard now leads with *"Awaiting your
+  sign-off"*: everything that is the current user's step (by exact role) across
+  permits, WMS, procedure, PM and corrective, each deep-linked. Backed by
+  `GET /api/signoffs/mine`. The senior-override capability still lives on the entity
+  page — the queue is a personal to-do list, so it shows only your own
+  responsibilities, not every junior step you *could* cover. Verified: a permit
+  awaiting the Foreman shows only for the Foreman; on signing it moves to the
+  Maintenance Manager; the Technician sees the seeded PM steps; others are clear.
+- ✅ **Role-aware dashboard** — a greeting with the user's role, and the quick-link
+  grid filtered by `canAccessPath` so each role only sees modules it can open.
 
-- **Role-aware dashboard** — every role sees identical tiles today. HSE → permits &
-  incidents; QA/QC → audit log, procedure, NCs; Maintenance → their work orders &
-  overdue PM; management → KPI rollup.
-- **"My sign-offs" queue** — one place showing everything awaiting *my* signature
-  across permits, WMS, PM, corrective and procedure. High daily value; the sign-off
-  engine already has the data.
+Later (optional): per-role KPI/summary tiles (e.g. HSE incident count, QA/QC open
+NCs). The sign-off queue was the high-value piece and is done.
 
 ## Phase E — Reporting & audit-readiness (medium)
 
