@@ -6,6 +6,7 @@ import { eq, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { notify } from "@/lib/notifications";
 
 export async function GET() {
   try {
@@ -65,6 +66,25 @@ export async function POST(request: Request) {
     }
 
     await db.insert(correctiveMaintenance).values(newCorrective);
+
+    // Alert the maintenance leadership + HSE that a breakdown was logged.
+    // Best-effort — never let a notification failure fail the record.
+    try {
+      const [eqRow] = await db.select().from(equipment).where(eq(equipment.id, body.equipmentId)).limit(1);
+      const machine = eqRow ? `${eqRow.assetId} — ${eqRow.name}` : "a machine";
+      await notify({
+        event: "BREAKDOWN",
+        title: `Breakdown logged: ${machine}`,
+        body: `${newCorrective.cmrfNumber} (${newCorrective.urgency}) — ${newCorrective.faultDescription || "fault reported"}. Reported by ${newCorrective.reportedByName}.`,
+        linkPath: `/corrective/${newCorrective.id}`,
+        relatedEntityType: "corrective_maintenance",
+        relatedEntityId: newCorrective.id,
+        roles: ["MAINTENANCE_MANAGER", "FOREMAN", "HSE"],
+      });
+    } catch (err) {
+      console.warn("corrective: breakdown notify failed", err);
+    }
+
     return NextResponse.json(newCorrective, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create corrective record:", error);

@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canSignStep } from "@/lib/roles";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
+import { notifyNextSigner } from "@/lib/notifications";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
 // Enforces: authenticated, role matches the step (or senior/super-admin), and
@@ -72,6 +73,16 @@ export async function POST(
       entityId: step.entityId,
       entityDescription: `${step.roleLabel} ${action === "reject" ? "rejected" : "signed"}`,
     });
+
+    // After a signature, notify whoever must sign next. Best-effort.
+    if (action === "sign") {
+      try {
+        const fresh = await getSignoffChain(step.entityType, step.entityId);
+        await notifyNextSigner(step.entityType, step.entityId, fresh);
+      } catch (err) {
+        console.warn("signoff: notify next signer failed", err);
+      }
+    }
 
     const [updated] = await db.select().from(signoffs).where(eq(signoffs.id, id)).limit(1);
     return NextResponse.json(updated);

@@ -78,6 +78,10 @@ again this will recur.
   `level < requiredLevel`, and recertification flags.
 - **Unified shell** — `AppShell` + `Sidebar` + `PageHeader`; per-page `<header>`
   bars removed across 12 pages.
+- **Notifications** (`/notifications` + top-bar bell) — outbox + in-app inbox;
+  alerts recorded per-recipient (role → WhatsApp number) and delivered over WhatsApp
+  when configured (`whatsappReady()`), else `QUEUED`, never faked. Triggers:
+  sign-off next-signer (all modules) + breakdown. See `docs/NOTIFICATIONS.md`.
 
 ### Deliberately disabled
 **Schematic ingestion engine.** All scaffolding is in place

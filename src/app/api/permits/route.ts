@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     };
 
     await db.insert(permits).values(newPermit);
-    await ensureSignoffChain("PERMIT", newPermit.id);
+    await ensureSignoffChain("PERMIT", newPermit.id, newPermit.permitNumber);
 
     return NextResponse.json(newPermit, { status: 201 });
   } catch (error: any) {

@@ -4,11 +4,13 @@ import { signoffs } from "@/lib/db/schema";
 import { and, eq, asc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { chainFor, isStepUnlocked } from "./chains";
+import { notifyNextSigner } from "@/lib/notifications";
 
 export { isStepUnlocked };
 
 // Create the sign-off chain rows for an entity if they don't already exist.
-export async function ensureSignoffChain(entityType: string, entityId: string) {
+// On first creation, notify whoever must sign the first step.
+export async function ensureSignoffChain(entityType: string, entityId: string, reference?: string) {
   const existing = await db
     .select()
     .from(signoffs)
@@ -29,6 +31,14 @@ export async function ensureSignoffChain(entityType: string, entityId: string) {
     status: "PENDING" as const,
   }));
   await db.insert(signoffs).values(rows);
+
+  // Best-effort — never let a notification failure abort chain creation.
+  try {
+    await notifyNextSigner(entityType, entityId, rows, reference);
+  } catch (err) {
+    console.warn("ensureSignoffChain: notify failed", err);
+  }
+
   return rows;
 }
 

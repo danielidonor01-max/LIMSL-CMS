@@ -93,9 +93,12 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
   VIEWER: ["/", "/equipment", "/procedure", "/reports"],
 };
 
+// Paths every authenticated role may reach, regardless of scope.
+const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications"];
+
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
-  if (pathname === "/login" || pathname === "/change-password") return true;
+  if (UNIVERSAL_PATHS.includes(pathname)) return true;
   const allowed = ROLE_ALLOWED_PATHS[role];
   if (!allowed) return true; // full-access roles
   return allowed.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)));

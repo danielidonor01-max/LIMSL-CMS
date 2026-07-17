@@ -48,16 +48,22 @@ training certificates and signed permit PDFs.
   attachments, calibration certificates, training certificates.
 - Printable/exportable permit and PM records (PDF) for the audit file.
 
-## Phase C — Notifications (needs provider credentials)
+## Phase C — Notifications ✅ WhatsApp built (delivery needs credentials)
 
-The infrastructure exists (`src/lib/notifications/`) but is a stub and unwired —
-`triggerBreakdownNotification` / `triggerWmsApprovalNotification` are never called,
-and the WhatsApp sender just `console.log`s success.
+**Done.** Replaced the old stub with a real outbox + in-app inbox. Every event is
+recorded per-recipient (resolved from roles → the user's WhatsApp number) and shown
+in-app immediately via the top-bar bell → `/notifications`. WhatsApp delivery is
+built (Meta Cloud API + Twilio adapters) and gated by `whatsappReady()`: until
+credentials are set, alerts stay `QUEUED` and in-app still works — never faked.
+Triggers wired: **sign-off next-signer** (covers PTW/WMS/procedure/PM/corrective in
+one hook) and **breakdown logged**. See `docs/NOTIFICATIONS.md`.
 
-- Wire triggers into the flows: **PTW awaiting sign-off**, **WMS awaiting approval**,
-  **breakdown raised**, **PM/calibration overdue**, **competency recert due**.
-- Email via SMTP (nodemailer) — needs credentials. WhatsApp via a real provider
-  (Twilio / WhatsApp Business API) or defer WhatsApp and ship email first.
+Remaining in this area:
+- **Provision WhatsApp** — set the Meta env vars and, crucially, get a message
+  **template approved** (Meta blocks proactive free-text). Steps in NOTIFICATIONS.md.
+- **Email** — deferred (Daniel: WhatsApp first). Add an EMAIL channel adapter later.
+- **Scheduled alerts** — PM/calibration overdue and competency recert-due are event-
+  less; wire them into the audit auto-detect scan or a cron.
 
 ## Phase D — Role-aware experience (small–medium)
 

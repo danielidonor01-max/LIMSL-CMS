@@ -467,6 +467,31 @@ export const competencyMatrix = sqliteTable("competency_matrix", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Notifications (outbox + in-app inbox) ────────────────────────────────────
+// One row per person per notifiable event. It is BOTH the in-app inbox (shown to
+// `userId`) and the delivery outbox (WhatsApp). Recorded regardless of whether an
+// external channel is configured, so alerts are never silently lost and there is
+// an audit trail. deliveryStatus is honest — QUEUED until actually sent.
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id), // recipient (in-app inbox)
+  event: text("event").notNull(), // PTW_SIGN_REQUEST | WMS_SIGN_REQUEST | BREAKDOWN | PROCEDURE_SIGN_REQUEST | PM_SIGN_REQUEST | GENERAL
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  linkPath: text("link_path"), // in-app deep link, e.g. /permits/<id>
+  relatedEntityType: text("related_entity_type"),
+  relatedEntityId: text("related_entity_id"),
+  readAt: text("read_at"), // null = unread in the in-app inbox
+  // WhatsApp delivery
+  channel: text("channel").notNull().default("WHATSAPP"), // WHATSAPP | EMAIL | INAPP
+  recipientContact: text("recipient_contact"), // the resolved WhatsApp number
+  deliveryStatus: text("delivery_status").notNull().default("QUEUED"), // QUEUED | SENT | FAILED | SKIPPED
+  providerMessageId: text("provider_message_id"),
+  deliveryError: text("delivery_error"),
+  sentAt: text("sent_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Schematic Diagrams ──────────────────────────────────────────────────────
 export const schematicDiagrams = sqliteTable("schematic_diagrams", {
   id: text("id").primaryKey(),
@@ -593,3 +618,5 @@ export type TrainingRecord = typeof trainingRecords.$inferSelect;
 export type NewTrainingRecord = typeof trainingRecords.$inferInsert;
 export type CompetencyMatrix = typeof competencyMatrix.$inferSelect;
 export type NewCompetencyMatrix = typeof competencyMatrix.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
