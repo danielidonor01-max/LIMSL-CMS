@@ -30,23 +30,48 @@ import {
 } from "lucide-react";
 import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
 
-const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/equipment", label: "Equipment", icon: Layers },
-  { href: "/documents", label: "Documents", icon: FolderOpen },
-  { href: "/procedure", label: "Maint. Procedure", icon: BookText },
-  { href: "/schedule", label: "Schedule", icon: Calendar },
-  { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
-  { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
-  { href: "/wms", label: "WMS", icon: FileText },
-  { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
-  { href: "/kpi", label: "KPI Dashboard", icon: TrendingUp },
-  { href: "/oem", label: "OEM & Warranty", icon: Building2 },
-  { href: "/calibration", label: "Calibration", icon: Gauge },
-  { href: "/training", label: "Training & Competency", icon: GraduationCap },
-  { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
-  { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },
-  { href: "/reports", label: "Reports", icon: FileBarChart },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavSection = { section: string | null; items: NavItem[] };
+
+// Grouped navigation — related modules under a labelled section for clearer
+// information hierarchy instead of one long flat list.
+const NAV_SECTIONS: NavSection[] = [
+  { section: null, items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true }] },
+  {
+    section: "Assets",
+    items: [
+      { href: "/equipment", label: "Equipment", icon: Layers },
+      { href: "/documents", label: "Documents", icon: FolderOpen },
+      { href: "/procedure", label: "Maint. Procedure", icon: BookText },
+    ],
+  },
+  {
+    section: "Maintenance",
+    items: [
+      { href: "/schedule", label: "Schedule", icon: Calendar },
+      { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
+      { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
+    ],
+  },
+  {
+    section: "Safety & Compliance",
+    items: [
+      { href: "/wms", label: "WMS", icon: FileText },
+      { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
+      { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
+      { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },
+    ],
+  },
+  {
+    section: "Performance & Resources",
+    items: [
+      { href: "/kpi", label: "KPI Dashboard", icon: TrendingUp },
+      { href: "/oem", label: "OEM & Warranty", icon: Building2 },
+      { href: "/calibration", label: "Calibration", icon: Gauge },
+      { href: "/training", label: "Training & Competency", icon: GraduationCap },
+      { href: "/reports", label: "Reports", icon: FileBarChart },
+    ],
+  },
 ];
 
 
@@ -62,12 +87,14 @@ export default function Sidebar() {
   useEffect(() => setMounted(true), []);
   const role = mounted ? (user as { role?: string })?.role : undefined;
 
-  // Restricted roles (QA/QC, HSE, Viewer) see a scoped menu; everyone else sees all.
-  const base = NAV.filter((i) => canAccessPath(role, i.href));
-  // Super Admins get the user-management entry.
-  const nav = isSuperAdmin(role)
-    ? [...base, { href: "/settings/users", label: "Users (Admin)", icon: Users }]
-    : base;
+  // Filter each section by role, drop empty sections, and append an Admin section
+  // for Super Admins.
+  const sections: NavSection[] = NAV_SECTIONS
+    .map((s) => ({ ...s, items: s.items.filter((i) => canAccessPath(role, i.href)) }))
+    .filter((s) => s.items.length > 0);
+  if (isSuperAdmin(role)) {
+    sections.push({ section: "Administration", items: [{ href: "/settings/users", label: "Users", icon: Users }] });
+  }
 
   const isActive = (item: { href: string; exact?: boolean }) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
@@ -86,25 +113,34 @@ export default function Sidebar() {
         </div>
       </Link>
 
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        {nav.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
-                active
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${active ? "text-emerald-600" : "text-slate-400"}`} />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
+        {sections.map((s, si) => (
+          <div key={s.section ?? `s-${si}`} className="space-y-0.5">
+            {s.section && (
+              <p className="px-3 pt-1 pb-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                {s.section}
+              </p>
+            )}
+            {s.items.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
+                    active
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-emerald-600" : "text-slate-400"}`} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-slate-200 p-3 shrink-0">

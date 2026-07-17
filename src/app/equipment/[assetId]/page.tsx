@@ -130,7 +130,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <Wrench className="w-4.5 h-4.5 text-white" />
+            <Wrench className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">{eq.name}</h1>
@@ -257,7 +257,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                      <Clock className="w-4.5 h-4.5" />
+                      <Clock className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Last Completed PM</p>
@@ -266,7 +266,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                      <Calendar className="w-4.5 h-4.5" />
+                      <Calendar className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Next Scheduled PM</p>
@@ -401,7 +401,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             <div className="lg:col-span-2 space-y-6">
               <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-3">
                 <div className="flex items-center gap-2 text-emerald-600">
-                  <ShieldCheck className="w-4.5 h-4.5" />
+                  <ShieldCheck className="w-5 h-5" />
                   <h3 className="text-sm font-bold tracking-wide">Safety & Compliance</h3>
                 </div>
                 <ul className="list-disc pl-4 text-xs text-slate-600 space-y-2 leading-relaxed">

@@ -79,7 +79,7 @@ export default function RiskRegister() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <ShieldCheck className="w-4.5 h-4.5 text-white" />
+            <ShieldCheck className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">Maintenance Risk Log</h1>

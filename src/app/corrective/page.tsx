@@ -50,7 +50,7 @@ export default function CorrectiveMaintenanceList() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
-            <AlertTriangle className="w-4.5 h-4.5 text-white" />
+            <AlertTriangle className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">Corrective Maintenance</h1>
@@ -62,7 +62,7 @@ export default function CorrectiveMaintenanceList() {
           href="/corrective/new"
           className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-rose-950/20"
         >
-          <PlusCircle className="w-4.5 h-4.5" /> Report Machinery Fault
+          <PlusCircle className="w-5 h-5" /> Report Machinery Fault
         </Link>
         </div>
         {/* Statistics or Status Panel */}

@@ -58,7 +58,7 @@ export default function Button(props: AsButton | AsLink) {
   } = props as CommonProps & Record<string, unknown>;
 
   const cls = `${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${fullWidth ? "w-full" : ""} ${className}`;
-  const iconSize = size === "lg" ? "w-4.5 h-4.5" : "w-4 h-4";
+  const iconSize = size === "lg" ? "w-5 h-5" : "w-4 h-4";
 
   const inner = (
     <>

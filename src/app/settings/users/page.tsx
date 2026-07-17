@@ -13,6 +13,7 @@ import {
   Copy,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import Dropdown from "@/components/Dropdown";
 import { ROLES, ROLE_LABELS, ROLE_BADGE, canManageUsers } from "@/lib/roles";
 
 type User = {
@@ -225,13 +226,13 @@ export default function UsersAdminPage() {
                       </td>
                       <td className="py-3 px-4 font-mono text-slate-500">{u.email}</td>
                       <td className="py-3 px-4">
-                        <select
+                        <Dropdown
                           value={u.role}
-                          onChange={(e) => changeRole(u.id, e.target.value)}
-                          className={`px-2 py-1 rounded border text-[10px] font-semibold ${ROLE_BADGE[u.role] ?? "bg-slate-100 border-slate-200"}`}
-                        >
-                          {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-                        </select>
+                          onChange={(r) => changeRole(u.id, r)}
+                          ariaLabel={`Change role for ${u.name}`}
+                          options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+                          triggerClassName={`px-2 py-1 rounded-full border text-[10px] font-semibold ${ROLE_BADGE[u.role] ?? "bg-slate-100 border-slate-200"}`}
+                        />
                       </td>
                       <td className="py-3 px-4">
                         <Badge className={u.isActive !== false ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20"}>

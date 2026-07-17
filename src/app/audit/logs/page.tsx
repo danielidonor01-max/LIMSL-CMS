@@ -39,7 +39,7 @@ export default function AuditTrailLogs() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <Shield className="w-4.5 h-4.5 text-white" />
+            <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">System Audit Log</h1>
@@ -64,7 +64,7 @@ export default function AuditTrailLogs() {
                 logs.map((log) => (
                   <div key={log.id} className="p-4 flex gap-4 text-xs">
                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500 h-8 w-8 flex items-center justify-center">
-                      <Clock className="w-4.5 h-4.5" />
+                      <Clock className="w-5 h-5" />
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex justify-between items-center">
