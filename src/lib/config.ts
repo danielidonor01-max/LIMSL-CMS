@@ -33,7 +33,32 @@ export const config = {
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || "",
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
   twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM || "", // e.g. whatsapp:+14155238886
+
+  // ── File storage ────────────────────────────────────────────────────────
+  // LOCAL (default) writes to a gitignored folder on the server — right for a
+  // single self-hosted workshop machine. SUPABASE stores in cloud object
+  // storage — right for a hosted/multi-site deploy. Same interface either way.
+  storageProvider: (process.env.STORAGE_PROVIDER || "LOCAL").toUpperCase(), // LOCAL | SUPABASE
+  storageLocalDir: process.env.STORAGE_LOCAL_DIR || "storage/uploads",
+  storageMaxBytes: Number(process.env.STORAGE_MAX_BYTES || 26_214_400), // 25 MB
+  // Supabase Storage (cloud) — REST, no SDK needed.
+  supabaseUrl: process.env.SUPABASE_URL || "",
+  supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || "",
+  supabaseBucket: process.env.SUPABASE_BUCKET || "limsl-documents",
 };
+
+// Whether the selected cloud storage provider is fully configured. LOCAL is
+// always ready. When a cloud provider is selected but not configured, uploads
+// fail loudly rather than silently dropping files.
+export function storageReady(): { ready: boolean; reason?: string } {
+  if (config.storageProvider === "LOCAL") return { ready: true };
+  if (config.storageProvider === "SUPABASE") {
+    if (!config.supabaseUrl || !config.supabaseServiceKey)
+      return { ready: false, reason: "SUPABASE_URL / SUPABASE_SERVICE_KEY not set" };
+    return { ready: true };
+  }
+  return { ready: false, reason: `Unknown STORAGE_PROVIDER "${config.storageProvider}"` };
+}
 
 export function ingestionReady(): { ready: boolean; reason?: string } {
   if (!config.schematicIngestionEnabled) return { ready: false, reason: "SCHEMATIC_INGESTION_ENABLED is not set to true" };

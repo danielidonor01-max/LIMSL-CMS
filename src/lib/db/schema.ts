@@ -46,7 +46,12 @@ export const equipmentDocuments = sqliteTable("equipment_documents", {
   equipmentId: text("equipment_id").notNull().references(() => equipment.id),
   docType: text("doc_type").notNull(), // ELECTRICAL_SCHEMATIC | OPERATIONAL_MANUAL | SOP | CALIBRATION_REPORT | PREMOB_REPORT | DATASHEET | WARRANTY | OTHER
   title: text("title").notNull(),
-  fileUrl: text("file_url"),
+  fileUrl: text("file_url"), // external URL, OR the auth-gated serving path for an uploaded file
+  // Uploaded-file metadata (via the storage layer — local disk or cloud).
+  fileKey: text("file_key"), // opaque storage key
+  fileName: text("file_name"), // original filename
+  mimeType: text("mime_type"),
+  fileSize: integer("file_size"), // bytes
   status: text("status").notNull().default("REQUIRED"), // REQUIRED | AVAILABLE | EXPIRED
   issuedDate: text("issued_date"),
   expiryDate: text("expiry_date"),

@@ -47,3 +47,6 @@ next-env.d.ts
 *.db-wal
 drizzle/
 
+
+# Uploaded files (local storage provider)
+storage/

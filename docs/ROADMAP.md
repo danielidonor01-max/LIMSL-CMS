@@ -33,18 +33,25 @@ All trust gaps from the audit are closed:
 5. ✅ **Housekeeping** — `/audit/risks` added to the sidebar (Risk Register); dead
    `AppHeader.tsx` deleted.
 
-## Phase B — Documents & evidence (needs a storage decision)
+## Phase B — Documents & evidence ✅ DONE (2026-07-14)
 
-The Documents module's "Open" links point at placeholder `#/docs/...` URLs — no
-file ever opens. This blocks real schematics, manuals, calibration certificates,
-training certificates and signed permit PDFs.
+Built a provider-agnostic storage layer with **both** options live behind one
+interface (Daniel: keep local and cloud in mind): `LOCAL` (filesystem, default,
+for a self-hosted site) and `SUPABASE` (cloud object storage, REST, no SDK). Files
+are served only through the **auth-gated** `/api/files/<key>` route (local streamed,
+cloud via a 5-min signed URL) — compliance docs are never public. Real upload +
+viewer wired into the equipment Documents panel; path traversal blocked; type/size
+validated. See `docs/STORAGE.md`.
 
-- **Decision required:** where do uploaded files live? For a single-site workshop,
-  simplest is local disk served under a protected route; cloud (S3 / Supabase
-  Storage) if off-site access is wanted. *Ask Daniel.*
-- Then: real upload endpoint + viewer, wired into equipment documents, WMS
-  attachments, calibration certificates, training certificates.
-- Printable/exportable permit and PM records (PDF) for the audit file.
+Verified: byte-identical upload→serve round-trip, unauth blocked, `.exe` rejected
+(415), traversal 404, document recorded with the real uploader.
+
+Remaining (optional, later):
+- Reuse the same storage for **calibration certificates** and **training
+  certificates** (both have a `certificateUrl` field ready).
+- Re-point or clear the old seed documents whose `fileUrl` is a `#/docs/...`
+  placeholder (cosmetic — real uploads work).
+- Printable/exportable permit & PM records — see Phase E.
 
 ## Phase C — Notifications ✅ WhatsApp built (delivery needs credentials)
 

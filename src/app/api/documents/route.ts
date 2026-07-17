@@ -64,18 +64,25 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    // An uploaded file (fileKey) is served through the auth-gated /api/files
+    // route; fileUrl may alternatively hold an external link.
+    const hasFile = !!body.fileKey || !!body.fileUrl;
     const doc = {
       id: nanoid(),
       equipmentId: body.equipmentId,
       docType: body.docType,
       title: body.title,
-      fileUrl: body.fileUrl || null,
-      status: body.status || (body.fileUrl ? "AVAILABLE" : "REQUIRED"),
+      fileUrl: body.fileKey ? `/api/files/${body.fileKey}` : body.fileUrl || null,
+      fileKey: body.fileKey || null,
+      fileName: body.fileName || null,
+      mimeType: body.mimeType || null,
+      fileSize: body.fileSize ?? null,
+      status: body.status || (hasFile ? "AVAILABLE" : "REQUIRED"),
       issuedDate: body.issuedDate || null,
       expiryDate: body.expiryDate || null,
       revision: body.revision || null,
       notes: body.notes || null,
-      uploadedBy: body.uploadedBy || null,
+      uploadedBy: gate.actor?.name || null,
     };
     await db.insert(equipmentDocuments).values(doc);
     return NextResponse.json(doc, { status: 201 });
