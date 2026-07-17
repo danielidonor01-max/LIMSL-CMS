@@ -133,6 +133,8 @@ export async function POST(request: Request) {
       workDescription: body.workDescription,
       hazardsIdentified: body.hazardsIdentified || "",
       controlMeasures: body.controlMeasures || "",
+      wmsId: body.wmsId || null,
+      jha: Array.isArray(body.jha) && body.jha.length ? JSON.stringify(body.jha) : null,
       lotoApplied: body.lotoApplied || false,
       ppeRequired: body.ppeRequired ? JSON.stringify(body.ppeRequired) : "[]",
       areaBarricaded: body.areaBarricaded || false,

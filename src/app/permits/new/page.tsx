@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ROLE_LABELS } from "@/lib/roles";
 
@@ -15,6 +15,7 @@ function NewPermitForm() {
   const workOrderId = searchParams.get("workOrderId") || "";
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [userList, setUserList] = useState<any[]>([]);
+  const [wmsList, setWmsList] = useState<any[]>([]);
   const [loadingEq, setLoadingEq] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +27,11 @@ function NewPermitForm() {
   const [lotoApplied, setLotoApplied] = useState(false);
   const [areaBarricaded, setAreaBarricaded] = useState(false);
   const [permitHolderId, setPermitHolderId] = useState("");
+  const [wmsId, setWmsId] = useState("");
+  // Structured JHA: task step → hazards → controls → residual risk.
+  const [jha, setJha] = useState<{ task: string; hazards: string; controls: string; residualRisk: string }[]>([
+    { task: "", hazards: "", controls: "", residualRisk: "LOW" },
+  ]);
 
   // PPE checklist
   const [ppeChecked, setPpeChecked] = useState<Record<string, boolean>>({
@@ -63,11 +69,22 @@ function NewPermitForm() {
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setUserList(Array.isArray(d) ? d : []))
       .catch(() => {});
+
+    // Only APPROVED WMS documents may be attached as a supporting document.
+    fetch("/api/wms")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setWmsList(Array.isArray(d) ? d.filter((w: any) => w.status === "APPROVED") : []))
+      .catch(() => {});
   }, [prefillEquipmentId]);
 
   const handlePpeChange = (key: string) => {
     setPpeChecked({ ...ppeChecked, [key]: !ppeChecked[key] });
   };
+
+  const addJhaRow = () => setJha((rows) => [...rows, { task: "", hazards: "", controls: "", residualRisk: "LOW" }]);
+  const removeJhaRow = (i: number) => setJha((rows) => rows.filter((_, idx) => idx !== i));
+  const updateJha = (i: number, field: string, value: string) =>
+    setJha((rows) => rows.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +109,8 @@ function NewPermitForm() {
           workDescription,
           hazardsIdentified,
           controlMeasures,
+          wmsId: wmsId || null,
+          jha: jha.filter((r) => r.task.trim() || r.hazards.trim()),
           lotoApplied,
           areaBarricaded,
           permitHolderId,
@@ -196,6 +215,83 @@ function NewPermitForm() {
                 className="w-full h-20 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
               />
             </div>
+          </div>
+
+          {/* Supporting WMS */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase">Work Method Statement (supporting document)</label>
+            <select
+              value={wmsId}
+              onChange={(e) => setWmsId(e.target.value)}
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+            >
+              <option value="">— No WMS linked —</option>
+              {wmsList.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.wmsNumber} — {w.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-500">
+              Only <strong>approved</strong> WMS documents can be attached. Shown to every signer.
+            </p>
+          </div>
+
+          {/* Job Hazard Analysis (JHA) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-500 uppercase">Job Hazard Analysis (JHA)</label>
+              <button
+                type="button"
+                onClick={addJhaRow}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+              >
+                + Add task step
+              </button>
+            </div>
+            <div className="space-y-2">
+              {jha.map((row, i) => (
+                <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto_auto] gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-2">
+                  <input
+                    placeholder={`Task step ${i + 1}`}
+                    value={row.task}
+                    onChange={(e) => updateJha(i, "task", e.target.value)}
+                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
+                  />
+                  <input
+                    placeholder="Hazards"
+                    value={row.hazards}
+                    onChange={(e) => updateJha(i, "hazards", e.target.value)}
+                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
+                  />
+                  <input
+                    placeholder="Controls"
+                    value={row.controls}
+                    onChange={(e) => updateJha(i, "controls", e.target.value)}
+                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
+                  />
+                  <select
+                    value={row.residualRisk}
+                    onChange={(e) => updateJha(i, "residualRisk", e.target.value)}
+                    className="bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeJhaRow(i)}
+                    disabled={jha.length === 1}
+                    className="p-2 text-slate-400 hover:text-rose-600 disabled:opacity-30"
+                    title="Remove step"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-500">Task step → hazards → controls → residual risk. Reviewed by every signer before approval.</p>
           </div>
 
           {/* PPE Checklist */}

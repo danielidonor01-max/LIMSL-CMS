@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Printer,
+  FileText,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import SignoffChain from "@/components/SignoffChain";
@@ -38,9 +39,13 @@ type Permit = {
   expiryDate: string | null;
   approvedAt: string | null;
   status: string;
+  jha: string | null;
   equipment: { name: string; assetId: string; location: string | null } | null;
+  wms: { id: string; wmsNumber: string; title: string; status: string } | null;
   closeout: { total: number; signed: number; complete: boolean } | null;
 };
+
+type JhaRow = { task: string; hazards: string; controls: string; residualRisk: string };
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
@@ -113,6 +118,13 @@ export default function PermitDetail() {
   }
 
   const ppe = safeParse(permit.ppeRequired);
+  let jhaRows: JhaRow[] = [];
+  try {
+    const p = permit.jha ? JSON.parse(permit.jha) : [];
+    if (Array.isArray(p)) jhaRows = p;
+  } catch {
+    jhaRows = [];
+  }
   const isActive = permit.status === "ACTIVE";
   const isPending = permit.status === "PENDING_APPROVAL";
   const isDead = permit.status === "CLOSED" || permit.status === "CANCELLED" || permit.status === "EXPIRED";
@@ -225,6 +237,62 @@ export default function PermitDetail() {
               </div>
             </div>
           )}
+
+          {/* Supporting documents: linked WMS + JHA (shown to every signer) */}
+          <div className="pt-4 border-t border-slate-200 space-y-4">
+            <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Supporting Documents</h3>
+            <div>
+              <p className="text-[11px] text-slate-500 mb-1">Work Method Statement</p>
+              {permit.wms ? (
+                <Link
+                  href={`/wms/${permit.wms.id}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100"
+                >
+                  <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber} — {permit.wms.title}
+                  <span className="text-[9px] font-bold uppercase">{permit.wms.status}</span>
+                </Link>
+              ) : (
+                <p className="text-xs text-slate-400">No WMS linked.</p>
+              )}
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 mb-1">Job Hazard Analysis (JHA)</p>
+              {jhaRows.length === 0 ? (
+                <p className="text-xs text-slate-400">No JHA recorded.</p>
+              ) : (
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-left text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                        <th className="py-1.5 px-2 font-medium">Task Step</th>
+                        <th className="py-1.5 px-2 font-medium">Hazards</th>
+                        <th className="py-1.5 px-2 font-medium">Controls</th>
+                        <th className="py-1.5 px-2 font-medium">Residual</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {jhaRows.map((r, i) => (
+                        <tr key={i} className="text-slate-700">
+                          <td className="py-1.5 px-2 align-top">{r.task || "—"}</td>
+                          <td className="py-1.5 px-2 align-top">{r.hazards || "—"}</td>
+                          <td className="py-1.5 px-2 align-top">{r.controls || "—"}</td>
+                          <td className="py-1.5 px-2 align-top">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                              r.residualRisk === "HIGH" ? "bg-rose-500/10 text-rose-600"
+                              : r.residualRisk === "MEDIUM" ? "bg-amber-500/10 text-amber-700"
+                              : "bg-emerald-500/10 text-emerald-700"
+                            }`}>
+                              {r.residualRisk || "LOW"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Authorisation chain — must be complete before work begins */}

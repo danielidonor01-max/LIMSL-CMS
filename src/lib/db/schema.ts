@@ -207,6 +207,12 @@ export const permits = sqliteTable("permits", {
   workDescription: text("work_description").notNull(),
   hazardsIdentified: text("hazards_identified"),
   controlMeasures: text("control_measures"),
+  // Supporting documents/flow for the permit (shown to every signer):
+  //  • an APPROVED Work Method Statement, and
+  //  • a structured Job Hazard Analysis — JSON array of
+  //    { task, hazards, controls, residualRisk }.
+  wmsId: text("wms_id").references(() => wmsDocuments.id),
+  jha: text("jha"), // JSON array of JHA rows
   lotoApplied: integer("loto_applied", { mode: "boolean" }).default(false),
   ppeRequired: text("ppe_required"), // JSON array
   areaBarricaded: integer("area_barricaded", { mode: "boolean" }).default(false),

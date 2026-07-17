@@ -9,9 +9,11 @@ import {
   Loader2,
   ClipboardCheck,
   ShieldAlert,
+  ShieldCheck,
   Save,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
+import Modal from "@/components/Modal";
 import { formatDate } from "@/lib/utils";
 
 type Item = { item: string; status: string; remarks: string };
@@ -80,6 +82,8 @@ export default function PMChecklistPage() {
   const [supervisorName, setSupervisorName] = useState("");
   const [technicianSignature, setTechnicianSignature] = useState<string | null>(null);
   const [supervisorSignature, setSupervisorSignature] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [attested, setAttested] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -109,7 +113,9 @@ export default function PMChecklistPage() {
     patch: Partial<Item>,
   ) => setter(list.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
 
-  const submit = async () => {
+  // Validate, then open the attestation modal — the technician must confirm the
+  // PTW and safety controls were actually signed and true before we submit.
+  const requestSubmit = () => {
     setError(null);
     if (!allSafetyOk) {
       setError("All safety pre-checks (PTW, LOTO, PPE, Area Safe) must be confirmed before completing PM.");
@@ -119,6 +125,13 @@ export default function PMChecklistPage() {
       setError("Technician name and signature are required.");
       return;
     }
+    setAttested(false);
+    setShowConfirm(true);
+  };
+
+  const submit = async () => {
+    setError(null);
+    setShowConfirm(false);
     setSaving(true);
     try {
       const res = await fetch("/api/pm-checklists", {
@@ -343,7 +356,7 @@ export default function PMChecklistPage() {
             Cancel
           </Link>
           <button
-            onClick={submit}
+            onClick={requestSubmit}
             disabled={saving}
             className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-all"
           >
@@ -352,6 +365,65 @@ export default function PMChecklistPage() {
           </button>
         </div>
       </main>
+
+      {/* Safety attestation — confirm PTW & controls were actually signed and true */}
+      <Modal
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title="Confirm safety sign-off"
+        subtitle="Attestation before PM completion"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
+            <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              You are completing PM for <strong>{wo?.workOrderNumber}</strong>. If a Permit-to-Work is attached to
+              this job, it must already be <strong>signed off and active</strong> — the server will reject this
+              submission otherwise.
+            </span>
+          </div>
+          <ul className="space-y-2 text-xs">
+            {[
+              ["Permit-to-Work (PTW) issued and signed", safety.ptwIssued],
+              ["Lock-out / Tag-out (LOTO) applied", safety.lotoApplied],
+              ["PPE worn as required", safety.ppeWorn],
+              ["Work area safe & barricaded", safety.areaSafe],
+            ].map(([label, ok]) => (
+              <li key={label as string} className="flex items-center gap-2">
+                <ShieldCheck className={`w-4 h-4 ${ok ? "text-emerald-600" : "text-slate-300"}`} />
+                <span className={ok ? "text-slate-800" : "text-slate-400"}>{label as string}</span>
+              </li>
+            ))}
+          </ul>
+          <label className="flex items-start gap-2 text-xs text-slate-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={attested}
+              onChange={(e) => setAttested(e.target.checked)}
+              className="mt-0.5 rounded border-slate-300 text-emerald-500"
+            />
+            <span>
+              I confirm the above safety controls were <strong>actually carried out and signed off</strong>, and this
+              PM record is true and complete.
+            </span>
+          </label>
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold"
+            >
+              Back
+            </button>
+            <button
+              onClick={submit}
+              disabled={!attested || saving}
+              className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />} Confirm &amp; Submit
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

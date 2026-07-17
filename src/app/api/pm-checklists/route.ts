@@ -6,12 +6,14 @@ import {
   workOrders,
   maintenanceSchedule,
   equipment,
+  permits,
   auditLog,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { reconcilePermits } from "@/app/api/permits/route";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -29,6 +31,24 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "workOrderId and equipmentId are required" },
         { status: 400 },
+      );
+    }
+
+    // Enforce PTW: if a Permit-to-Work is attached to this work order, it must be
+    // signed off (ACTIVE) before the PM can be completed. This is the server-side
+    // audit backing the technician's checklist attestation — a self-declared
+    // "PTW issued" checkbox can't stand in for a real, signed permit.
+    await reconcilePermits();
+    const linkedPermits = await db.select().from(permits).where(eq(permits.workOrderId, body.workOrderId));
+    if (linkedPermits.length > 0 && !linkedPermits.some((p) => p.status === "ACTIVE")) {
+      const p = linkedPermits[0];
+      return NextResponse.json(
+        {
+          error:
+            `Permit ${p.permitNumber} is ${p.status.replace("_", " ").toLowerCase()} — the Permit-to-Work must be ` +
+            `signed off (ACTIVE) before this PM checklist can be submitted.`,
+        },
+        { status: 409 },
       );
     }
 

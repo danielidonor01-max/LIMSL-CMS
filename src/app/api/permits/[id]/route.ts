@@ -1,7 +1,7 @@
 // src/app/api/permits/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, auditLog } from "@/lib/db/schema";
+import { permits, equipment, auditLog, wmsDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -32,9 +32,17 @@ export async function GET(
     const approvalChain = await getSignoffChain("PERMIT", id);
     const closeoutChain = await getSignoffChain("PERMIT_CLOSEOUT", id);
 
+    // Supporting documents: the linked WMS (if any).
+    let wms = null;
+    if (permit.wmsId) {
+      const [w] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, permit.wmsId)).limit(1);
+      wms = w ? { id: w.id, wmsNumber: w.wmsNumber, title: w.title, status: w.status } : null;
+    }
+
     return NextResponse.json({
       ...permit,
       equipment: eq1 ?? null,
+      wms,
       approval: chainSummary(approvalChain),
       closeout: closeoutChain.length ? chainSummary(closeoutChain) : null,
     });
