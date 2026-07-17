@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { ArrowLeft, Printer, Download, Wrench } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
+import Button from "@/components/Button";
 
 export type Column = { key: string; label: string };
 
@@ -37,18 +38,12 @@ export default function PrintableReport({
           <ArrowLeft className="w-4 h-4" /> Reports
         </Link>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => downloadCSV(csvName, rows, columns.map((c) => c.key))}
-            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold"
-          >
-            <Download className="w-4 h-4" /> CSV
-          </button>
-          <button
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold"
-          >
-            <Printer className="w-4 h-4" /> Print / Save PDF
-          </button>
+          <Button variant="secondary" icon={Download} onClick={() => downloadCSV(csvName, rows, columns.map((c) => c.key))}>
+            CSV
+          </Button>
+          <Button icon={Printer} onClick={() => window.print()}>
+            Print / Save PDF
+          </Button>
         </div>
       </div>
 

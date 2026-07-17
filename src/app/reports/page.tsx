@@ -13,6 +13,7 @@ import {
   Layers,
 } from "lucide-react";
 import Link from "next/link";
+import Button from "@/components/Button";
 import { downloadCSV } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
@@ -127,12 +128,9 @@ export default function ReportsPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-semibold"
-          >
-            <Printer className="w-4 h-4" /> Print
-          </button>
+          <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
+            Print
+          </Button>
         </div>
 
         {loading || !kpi ? (
@@ -252,11 +250,8 @@ function Row({ label, count, total }: { label: string; count: number; total: num
 
 function ExportBtn({ onClick, label }: { onClick: () => void; label: string }) {
   return (
-    <button
-      onClick={onClick}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
-    >
-      <Download className="w-4 h-4" /> {label}
-    </button>
+    <Button onClick={onClick} icon={Download}>
+      {label}
+    </Button>
   );
 }
