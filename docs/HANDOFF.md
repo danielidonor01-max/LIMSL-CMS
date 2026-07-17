@@ -129,9 +129,13 @@ back in. It fails *closed*, never open.
 A PTW is a controlled safety document, not a status field. **Its status is driven
 by signatures, never by a button.**
 
+- **HSE is the issuing authority.** Only HSE (or Super Admin) may RAISE a permit
+  (`PERMIT_ISSUE_ROLES`); the "Raise PTW" button is hidden from everyone else.
 - **Permit holder is mandatory.** A permit names an accountable person
-  (`permitHolderId` → `users`). The API refuses to raise a permit without one —
-  "Maintenance Team" is not accountable to an auditor, a person is.
+  (`permitHolderId` → `users`), usually the Foreman. The API refuses to raise a
+  permit without one — "Maintenance Team" is not accountable to an auditor.
+- **One working day validity (24h), fixed.** Not a per-permit setting. A permit not
+  fully signed within its day EXPIRES and must be re-raised — never renewed.
 - **Authorisation chain** (`PTW_CHAIN`), all four required:
   Foreman → Maintenance Manager → HSE → Factory Manager.
 - **Work cannot begin until approved.** A permit is raised `PENDING_APPROVAL` and
@@ -150,9 +154,23 @@ Procedure module). To change who signs, edit `chains.ts` — nothing else.
 
 ## 6. Next tasks
 
-1. **Role-aware dashboard** — every role currently sees identical tiles.
-2. Dark theme (light is default and was an explicit requirement; dark is later).
-3. Minor: `/permits/new` has no PPE "other" free-text field.
+**See `docs/ROADMAP.md`** for the full phased plan (written after the 2026-07-14
+audit). In short, ordered by value-per-effort:
+- **Phase A** — finish data integrity: WMS approval → sign-off chain; QR labels,
+  equipment Safety/OEM tab and hardcoded-name cleanup; add `/audit/risks` to nav.
+- **Phase B** — documents & evidence (needs a file-storage decision from Daniel).
+- **Phase C** — notifications (needs email/WhatsApp provider credentials).
+- **Phase D** — role-aware dashboard + a "my sign-offs" queue.
+- **Phase E** — printable ISO evidence reports.
+- **Phase F** — dark theme; schematic engine (parked, needs paid API).
+
+### Audit (2026-07-14) — what was fixed
+A three-agent audit found and this pass fixed: **11 mutating routes with broken
+function-level authorization** (any authenticated user, incl. VIEWER, could hit
+them — worst case: forge a WMS approval + signature), **runtime crash guards**
+(unguarded `JSON.parse` in JSX, missing not-found guards, a KPI null-deref), and
+**forgeable attribution** (hardcoded/body-supplied signer names → now stamped from
+the session). All verified live.
 
 ---
 
@@ -177,6 +195,14 @@ Procedure module). To change who signs, edit `chains.ts` — nothing else.
    `no such column`. Fix: hand-edit the generated `.sql` and select `NULL` for the
    new columns. Hit this adding `permit_holder_id` + changing the `permits.status`
    default. **Always read the generated SQL before applying it.**
+7. **Authentication ≠ authorization.** The middleware only checks that a user is
+   *logged in* — it does NOT check role. So a mutating route with no `requireRoles`
+   gate is reachable by *every* authenticated user, including VIEWER. The audit
+   found 11 such routes. **Every POST/PATCH/DELETE must call `requireRoles(...)`.**
+8. **Never trust the request body for identity.** Who created/signed/approved a
+   record must come from the session (`gate.actor` / `auth()`), never from a
+   `*Name`/`*ById` field in the body — the client can spoof it, corrupting the
+   compliance trail. Several routes did this; all fixed.
 
 ---
 
