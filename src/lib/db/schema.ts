@@ -258,7 +258,11 @@ export const correctiveMaintenance = sqliteTable("corrective_maintenance", {
   errorCodes: text("error_codes"),
   environmentalCondition: text("environmental_condition"),
   photos: text("photos"), // JSON array of file URLs
-  // Downtime metrics
+  // Downtime metrics. downStartAt/downEndAt are full local datetimes ("YYYY-MM-DDTHH:MM")
+  // marking when the machine stopped and was restored; totalDowntimeHours is derived
+  // from them against the working-hours settings (production time, not wall-clock).
+  downStartAt: text("down_start_at"),
+  downEndAt: text("down_end_at"),
   reportedTime: text("reported_time"),
   technicianArrivalTime: text("technician_arrival_time"),
   repairStartTime: text("repair_start_time"),
@@ -605,6 +609,23 @@ export const procedureRevisions = sqliteTable("procedure_revisions", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── App Settings ────────────────────────────────────────────────────────────
+// Single-row (id = "singleton") organisation settings, administered by the Super
+// Admin. The working-hours window drives production-time downtime accounting and
+// the availability/MTBF baseline — see src/lib/worktime.ts. Never hardcode these.
+export const appSettings = sqliteTable("app_settings", {
+  id: text("id").primaryKey().default("singleton"),
+  workDayStart: text("work_day_start").notNull().default("08:00"), // "HH:MM"
+  workDayEnd: text("work_day_end").notNull().default("17:00"),
+  lunchStart: text("lunch_start").default("12:00"),
+  lunchEnd: text("lunch_end").default("13:00"),
+  workingDays: text("working_days").notNull().default("[1,2,3,4,5]"), // JSON weekday nums, 0=Sun..6=Sat
+  weekendOvertime: integer("weekend_overtime", { mode: "boolean" }).notNull().default(false),
+  updatedById: text("updated_by_id"),
+  updatedByName: text("updated_by_name"),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
@@ -631,3 +652,5 @@ export type CompetencyMatrix = typeof competencyMatrix.$inferSelect;
 export type NewCompetencyMatrix = typeof competencyMatrix.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
+export type AppSettings = typeof appSettings.$inferSelect;
+export type NewAppSettings = typeof appSettings.$inferInsert;

@@ -21,6 +21,7 @@ import {
 import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
 import { toast } from "sonner";
+import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -56,6 +57,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [supervisorName, setSupervisorName] = useState("");
   const [supervisorComments, setSupervisorComments] = useState("");
 
+  // Downtime window — production hours are derived from these against the
+  // working-hours settings, so a weekend or off-shift outage isn't over-counted.
+  const [downStartAt, setDownStartAt] = useState("");
+  const [downEndAt, setDownEndAt] = useState("");
+  const [workSettings, setWorkSettings] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -63,7 +70,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         if (res.ok) {
           const data = await res.json();
           setRecord(data);
-          
+
+          // Seed the downtime window. Default the "down" moment to the reported
+          // day at the start of shift so the technician only adjusts if needed.
+          setDownStartAt(data.downStartAt || (data.reportedDate ? `${data.reportedDate}T08:00` : ""));
+          setDownEndAt(data.downEndAt || "");
+
           // Load RCA fields if pre-existing
           if (data.rcaTool) setRcaTool(data.rcaTool);
           if (data.rcaAnalysis) {
@@ -92,6 +104,22 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             }
           }
         }
+
+        // Working-hours settings drive the downtime preview (server recomputes on save).
+        const setRes = await fetch("/api/settings");
+        if (setRes.ok) {
+          const s = await setRes.json();
+          if (s && !s.error) {
+            setWorkSettings({
+              workDayStart: s.workDayStart,
+              workDayEnd: s.workDayEnd,
+              lunchStart: s.lunchStart,
+              lunchEnd: s.lunchEnd,
+              workingDays: s.workingDays,
+              weekendOvertime: s.weekendOvertime,
+            });
+          }
+        }
       } catch (err) {
         console.error("Error loading corrective details:", err);
       } finally {
@@ -100,6 +128,9 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     }
     loadData();
   }, [recordId]);
+
+  const previewDowntime =
+    downStartAt && downEndAt ? productionDowntimeHours(downStartAt, downEndAt, workSettings) : null;
 
   const addAction = () => {
     if (!newAction || !newResp) return;
@@ -154,6 +185,14 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       toast.error("Enter the approving supervisor's name.");
       return;
     }
+    if (!downStartAt || !downEndAt) {
+      toast.error("Record when the machine went down and when it was restored — this drives MTTR.");
+      return;
+    }
+    if (new Date(downEndAt).getTime() <= new Date(downStartAt).getTime()) {
+      toast.error("Restored time must be after the machine went down.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -168,6 +207,11 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           supervisorSignature: superSign,
           supervisorName: supervisorName.trim(),
           supervisorComments,
+          // The window is the source of truth; the server recomputes production
+          // downtime hours from it against the working-hours settings.
+          downStartAt,
+          downEndAt,
+          restoredToServiceTime: downEndAt,
           closeOutDate: new Date().toISOString().split("T")[0],
         }),
       });
@@ -435,6 +479,11 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 <div>
                   <p className="font-bold">Record Closed Out Successfully</p>
                   <p className="text-[10px] text-slate-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  {record.totalDowntimeHours != null && (
+                    <p className="text-[10px] text-slate-500">
+                      Production downtime: <span className="font-mono font-semibold text-slate-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -462,6 +511,41 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     onChange={(e) => setSupervisorComments(e.target.value)}
                     className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
                   />
+                </div>
+
+                {/* Downtime window — feeds MTTR. Production hours only. */}
+                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-rose-600" />
+                    <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Downtime Window</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-slate-500 uppercase">Machine went down</label>
+                      <input
+                        type="datetime-local"
+                        value={downStartAt}
+                        onChange={(e) => setDownStartAt(e.target.value)}
+                        className="w-full bg-white border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-slate-500 uppercase">Restored to service</label>
+                      <input
+                        type="datetime-local"
+                        value={downEndAt}
+                        onChange={(e) => setDownEndAt(e.target.value)}
+                        className="w-full bg-white border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  {previewDowntime !== null && (
+                    <p className="text-xs text-slate-600">
+                      Production downtime:{" "}
+                      <span className="font-bold text-slate-900 font-mono">{previewDowntime.toFixed(2)} h</span>{" "}
+                      <span className="text-[11px] text-slate-400">(excludes off-shift &amp; non-working days)</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Hand drawn Signatures */}

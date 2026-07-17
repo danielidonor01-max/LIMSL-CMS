@@ -24,6 +24,7 @@ import {
   BookText,
   GraduationCap,
   Users,
+  SlidersHorizontal,
   LogOut,
   User,
   KeyRound,
@@ -93,7 +94,13 @@ export default function Sidebar() {
     .map((s) => ({ ...s, items: s.items.filter((i) => canAccessPath(role, i.href)) }))
     .filter((s) => s.items.length > 0);
   if (isSuperAdmin(role)) {
-    sections.push({ section: "Administration", items: [{ href: "/settings/users", label: "Users", icon: Users }] });
+    sections.push({
+      section: "Administration",
+      items: [
+        { href: "/settings/users", label: "Users", icon: Users },
+        { href: "/settings", label: "App Settings", icon: SlidersHorizontal, exact: true },
+      ],
+    });
   }
 
   const isActive = (item: { href: string; exact?: boolean }) =>

@@ -5,6 +5,8 @@ import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { getWorkSettings } from "@/lib/settings";
+import { productionDowntimeHours } from "@/lib/worktime";
 
 export async function GET(
   request: Request,
@@ -50,6 +52,16 @@ export async function PATCH(
 
     const record = currentRecord[0];
 
+    // Downtime is derived server-side from the down/restored window against the
+    // working-hours settings — the client value is never trusted for a KPI input.
+    const downStartAt = body.downStartAt ?? record.downStartAt;
+    const downEndAt = body.downEndAt ?? record.downEndAt;
+    let totalDowntimeHours = record.totalDowntimeHours;
+    if (downStartAt && downEndAt) {
+      const settings = await getWorkSettings();
+      totalDowntimeHours = productionDowntimeHours(downStartAt, downEndAt, settings);
+    }
+
     // Build fields to update
     const updateFields: any = {
       faultType: body.faultType ?? record.faultType,
@@ -61,12 +73,14 @@ export async function PATCH(
       environmentalCondition: body.environmentalCondition ?? record.environmentalCondition,
       
       // Downtime metrics
+      downStartAt,
+      downEndAt,
       reportedTime: body.reportedTime ?? record.reportedTime,
       technicianArrivalTime: body.technicianArrivalTime ?? record.technicianArrivalTime,
       repairStartTime: body.repairStartTime ?? record.repairStartTime,
       repairCompletedTime: body.repairCompletedTime ?? record.repairCompletedTime,
       restoredToServiceTime: body.restoredToServiceTime ?? record.restoredToServiceTime,
-      totalDowntimeHours: body.totalDowntimeHours ?? record.totalDowntimeHours,
+      totalDowntimeHours,
       productionImpact: body.productionImpact ?? record.productionImpact,
       
       // RCA fields

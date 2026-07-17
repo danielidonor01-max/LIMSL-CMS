@@ -4,10 +4,12 @@
 // static seed numbers. This is the source of truth for the KPI dashboard and the
 // ISO evidence reports.
 //
-// Availability / MTBF use a planned-operating-time model (single shift): a machine
-// is "scheduled to run" PLANNED_HOURS_PER_MONTH; downtime comes from the recorded
-// corrective total_downtime_hours. This is the standard maintenance-KPI approach —
-// the inputs are real; only the planned-hours baseline is an assumption (tunable).
+// Availability / MTBF use a planned-operating-time model: each machine is
+// "scheduled to run" the production hours defined by the Super-Admin working-hours
+// settings (window, lunch, working days) counted over the real calendar of each
+// month; downtime comes from the recorded corrective total_downtime_hours (itself
+// production-time, from the same settings). Change the settings and the baseline —
+// and therefore availability and MTBF — move with it. Nothing here is hardcoded.
 import { db } from "@/lib/db";
 import {
   equipment,
@@ -17,9 +19,8 @@ import {
   permits,
   nonConformities,
 } from "@/lib/db/schema";
-
-// Planned operating hours per machine per month (≈ 8h × 26 working days).
-const PLANNED_HOURS_PER_MONTH = Number(process.env.KPI_PLANNED_HOURS_PER_MONTH || 208);
+import { getWorkSettings } from "@/lib/settings";
+import { plannedHoursForMonth } from "@/lib/worktime";
 
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
@@ -37,13 +38,14 @@ const inMonth = (dateStr: string | null | undefined, key: string) =>
   !!dateStr && dateStr.slice(0, 7) === key;
 
 export async function computeKpis(now = new Date()) {
-  const [equip, sched, wos, cms, perms, ncs] = await Promise.all([
+  const [equip, sched, wos, cms, perms, ncs, workSettings] = await Promise.all([
     db.select().from(equipment),
     db.select().from(maintenanceSchedule),
     db.select().from(workOrders),
     db.select().from(correctiveMaintenance),
     db.select().from(permits),
     db.select().from(nonConformities),
+    getWorkSettings(),
   ]);
 
   const totalAssets = equip.length || 1;
@@ -65,7 +67,7 @@ export async function computeKpis(now = new Date()) {
     const insDone = insSched.filter((s) => s.status === "COMPLETED").length;
     const inspectionCompliance = insSched.length ? insDone / insSched.length : null;
 
-    const plannedHours = totalAssets * PLANNED_HOURS_PER_MONTH;
+    const plannedHours = totalAssets * plannedHoursForMonth(key, workSettings);
     const availability = plannedHours > 0 ? Math.max(0, (plannedHours - downtimeHours) / plannedHours) : null;
     const uptime = Math.max(0, plannedHours - downtimeHours);
     const mtbf = breakdowns.length ? uptime / breakdowns.length : null;
@@ -91,7 +93,8 @@ export async function computeKpis(now = new Date()) {
   const windowCms = cms.filter((c) => months.includes((c.reportedDate ?? "").slice(0, 7)));
   const windowDowntime = windowCms.reduce((a, c) => a + (c.totalDowntimeHours ?? 0), 0);
   const windowRepaired = windowCms.filter((c) => (c.totalDowntimeHours ?? 0) > 0);
-  const plannedHoursWindow = totalAssets * PLANNED_HOURS_PER_MONTH * months.length;
+  const plannedHoursPerAssetWindow = months.reduce((a, key) => a + plannedHoursForMonth(key, workSettings), 0);
+  const plannedHoursWindow = totalAssets * plannedHoursPerAssetWindow;
   const mtbf = windowCms.length ? Math.max(0, plannedHoursWindow - windowDowntime) / windowCms.length : null;
   const mttr = windowRepaired.length ? windowDowntime / windowRepaired.length : null;
 
@@ -129,7 +132,7 @@ export async function computeKpis(now = new Date()) {
   // ── Per-equipment drill-down (real) ───────────────────────────────────────
   // Surface only assets that either broke down in the window or are currently
   // not operational — an auditor cares about the movers, not 30 healthy rows.
-  const plannedHoursPerAsset = PLANNED_HOURS_PER_MONTH * months.length;
+  const plannedHoursPerAsset = plannedHoursPerAssetWindow;
   const STATUS_REMARK: Record<string, string> = {
     BROKEN_DOWN: "Down — needs repair",
     UNDER_MAINTENANCE: "Under maintenance",

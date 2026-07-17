@@ -143,6 +143,10 @@ export const COMPLIANCE_WRITE_ROLES = [
   "HSE",
 ];
 
+// Roles permitted to change organisation-wide app settings (working hours,
+// production calendar). Administration is the Super Admin's domain.
+export const SETTINGS_WRITE_ROLES = ["SUPER_ADMIN"];
+
 // Roles that participate in a Work Method Statement (prepare/review/approve).
 export const WMS_WRITE_ROLES = [
   "SUPER_ADMIN",
