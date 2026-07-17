@@ -6,25 +6,16 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
-  FileText,
-  Calendar,
-  Layers,
   Activity,
   ClipboardList,
   ShieldCheck,
-  TrendingUp,
-  Building2,
-  Gauge,
   Loader2,
   PenLine,
   ChevronRight,
-  GraduationCap,
-  BookText,
-  ShieldAlert,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
-import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS } from "@/lib/roles";
 import {
   EQUIPMENT_STATUS_BADGE,
   EQUIPMENT_STATUS_LABELS,
@@ -66,22 +57,6 @@ const iconMap: Record<string, React.ElementType> = {
   OPEN_WOS: ClipboardList,
 };
 
-// Full set — filtered per role by canAccessPath so each user sees only what they
-// can actually open.
-const QUICK_LINKS = [
-  { href: "/equipment", label: "Equipment", icon: Layers },
-  { href: "/schedule", label: "Annual Plan", icon: Calendar },
-  { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
-  { href: "/wms", label: "WMS", icon: FileText },
-  { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
-  { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
-  { href: "/procedure", label: "Procedure", icon: BookText },
-  { href: "/kpi", label: "KPI Dashboard", icon: TrendingUp },
-  { href: "/oem", label: "OEM & Warranty", icon: Building2 },
-  { href: "/calibration", label: "Calibration", icon: Gauge },
-  { href: "/training", label: "Training", icon: GraduationCap },
-  { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
-];
 
 export default function Home() {
   const { data: session } = useSession();
@@ -112,8 +87,6 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Only show quick links this role can actually open.
-  const quickLinks = QUICK_LINKS.filter((q) => canAccessPath(mounted ? role : undefined, q.href));
 
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
   const critical = equipment
@@ -241,23 +214,6 @@ export default function Home() {
             })}
           </div>
         )}
-
-        {/* Module quick links (role-aware) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {quickLinks.map((q) => {
-            const Icon = q.icon;
-            return (
-              <Link
-                key={q.href}
-                href={q.href}
-                className="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl transition-all gap-2 text-center"
-              >
-                <Icon className="w-5 h-5 text-emerald-600" />
-                <span className="text-[11px] font-semibold text-slate-900">{q.label}</span>
-              </Link>
-            );
-          })}
-        </div>
 
         {/* Critical machinery + recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

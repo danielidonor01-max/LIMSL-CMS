@@ -7,6 +7,7 @@ import { ShieldAlert } from "lucide-react";
 import Sidebar from "./Sidebar";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
+import QuickActions from "./QuickActions";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
 // Global chrome: left vertical sidebar + top bar with global search.
@@ -27,8 +28,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="no-print h-14 shrink-0 sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-4 px-6">
+        <div className="no-print h-14 shrink-0 sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-2 px-6">
           <GlobalSearch />
+          <QuickActions />
           <NotificationBell />
         </div>
         <div className="flex-1 min-w-0">
