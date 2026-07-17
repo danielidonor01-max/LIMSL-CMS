@@ -4,6 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -23,6 +24,8 @@ import { toast } from "sonner";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentUserName = (session?.user as { name?: string })?.name ?? "";
   const resolvedParams = use(params);
   const recordId = resolvedParams.id;
 
@@ -50,6 +53,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   // Signatures
   const [techSign, setTechSign] = useState("");
   const [superSign, setSuperSign] = useState("");
+  const [supervisorName, setSupervisorName] = useState("");
   const [supervisorComments, setSupervisorComments] = useState("");
 
   useEffect(() => {
@@ -146,6 +150,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       toast.error("Both technician and supervisor signatures are required to close out the request.");
       return;
     }
+    if (!supervisorName.trim()) {
+      toast.error("Enter the approving supervisor's name.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -155,9 +163,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         body: JSON.stringify({
           status: "CLOSED",
           technicianSignature: techSign,
-          technicianName: "Daniel Idonor",
+          // technicianName is stamped from the session server-side — the client
+          // is not trusted to name the signer.
           supervisorSignature: superSign,
-          supervisorName: "Kingsley Iworah",
+          supervisorName: supervisorName.trim(),
           supervisorComments,
           closeOutDate: new Date().toISOString().split("T")[0],
         }),
@@ -177,6 +186,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono text-xs gap-2">
         <Loader2 className="w-6 h-6 animate-spin text-rose-500" /> Loading report detail logs...
+      </div>
+    );
+  }
+
+  if (!record) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3 text-slate-500 text-sm">
+        <p>Corrective record not found.</p>
+        <Link href="/corrective" className="text-rose-600 hover:underline">Back to corrective register</Link>
       </div>
     );
   }
@@ -421,6 +439,21 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </div>
             ) : (
               <div className="space-y-4">
+                {currentUserName && (
+                  <p className="text-[11px] text-slate-500">
+                    Closing out as <span className="font-semibold text-slate-700">{currentUserName}</span> (recorded as the technician).
+                  </p>
+                )}
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-500 uppercase">Approving Supervisor</span>
+                  <input
+                    type="text"
+                    placeholder="Name of the supervisor approving this close-out"
+                    value={supervisorName}
+                    onChange={(e) => setSupervisorName(e.target.value)}
+                    className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                  />
+                </div>
                 <div className="space-y-2">
                   <span className="text-xs font-semibold text-slate-500 uppercase">Supervisor Comments</span>
                   <textarea

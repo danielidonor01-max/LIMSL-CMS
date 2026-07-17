@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       technicianId: body.technicianId || null,
       technicianName: body.technicianName || null,
       supervisorId: body.supervisorId || null,
-      createdBy: body.createdBy || null,
+      createdBy: gate.actor?.id ?? null,
     };
 
     await db.insert(workOrders).values(newWo);
@@ -110,7 +110,8 @@ export async function POST(request: Request) {
 
     await db.insert(auditLog).values({
       id: nanoid(),
-      userName: body.createdByName || "System",
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name || "System",
       action: "CREATE",
       entityType: "work_order",
       entityId: id,

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { equipmentDocuments, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 // GET /api/documents            → all documents (joined with equipment)
 // GET /api/documents?assetId=X  → documents for one machine (X is dash- or slash-form)
@@ -52,6 +54,9 @@ export async function GET(request: Request) {
 // POST /api/documents → add a document record
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
     if (!body.equipmentId || !body.docType || !body.title) {
       return NextResponse.json(

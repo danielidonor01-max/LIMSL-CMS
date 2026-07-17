@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { schematicDiagrams, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET(
   request: Request,
@@ -41,6 +43,9 @@ export async function POST(
   { params }: { params: Promise<{ assetId: string }> }
 ) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const resolvedParams = await params;
     const assetIdKey = resolvedParams.assetId;
     const body = await request.json();

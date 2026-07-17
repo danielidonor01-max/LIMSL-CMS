@@ -121,6 +121,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     );
   }
 
+  if (!wms) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3 text-slate-500 text-sm">
+        <p>Work Method Statement not found.</p>
+        <Link href="/wms" className="text-emerald-600 hover:underline">Back to WMS library</Link>
+      </div>
+    );
+  }
+
   // Parse arrays. Items may be plain strings or {step, description}/{name} objects
   // depending on how the WMS was created — normalise to text for rendering.
   const asText = (v: unknown): string =>

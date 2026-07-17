@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   ArrowLeft,
   ShieldCheck,
@@ -15,6 +16,7 @@ import {
   AlertTriangle,
   ChevronRight,
 } from "lucide-react";
+import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 
 type Permit = {
   id: string;
@@ -38,10 +40,16 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PermitsList() {
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  const role = (session?.user as { role?: string })?.role;
+  const canIssue = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
+
   const [records, setRecords] = useState<Permit[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setMounted(true);
     async function loadData() {
       try {
         const res = await fetch("/api/permits");
@@ -78,12 +86,14 @@ export default function PermitsList() {
             </div>
           </div>
 
-          <Link
-            href="/permits/new"
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-          >
-            <PlusCircle className="w-4.5 h-4.5" /> Raise PTW
-          </Link>
+          {canIssue && (
+            <Link
+              href="/permits/new"
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+            >
+              <PlusCircle className="w-4.5 h-4.5" /> Raise PTW
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

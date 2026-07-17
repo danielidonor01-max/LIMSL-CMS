@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { riskRegister } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireRoles } from "@/lib/authz";
+import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET() {
   try {
@@ -16,6 +18,9 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
+    const gate = await requireRoles(COMPLIANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
     if (!body.id) {
       return NextResponse.json({ error: "Risk ID required" }, { status: 400 });

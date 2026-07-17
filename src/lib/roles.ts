@@ -112,15 +112,14 @@ export const MAINTENANCE_WRITE_ROLES = [
   "TECHNICIAN",
 ];
 
-// Roles permitted to issue / close a Permit-to-Work. Safety documents are owned
-// by HSE together with the maintenance supervisory chain.
-export const PERMIT_WRITE_ROLES = [
-  "SUPER_ADMIN",
-  "FACTORY_MANAGER",
-  "MAINTENANCE_MANAGER",
-  "FOREMAN",
-  "HSE",
-];
+// Roles permitted to RAISE (issue) a Permit-to-Work. HSE is the issuing
+// authority — they raise the permit and assign a holder. Super Admin can act on
+// their behalf.
+export const PERMIT_ISSUE_ROLES = ["SUPER_ADMIN", "HSE"];
+
+// Roles permitted to act on an existing permit (cancel). Same as the issuing
+// authority — the issuer owns the permit lifecycle.
+export const PERMIT_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
 // Roles permitted to manage the training & competency records.
 export const TRAINING_WRITE_ROLES = [
@@ -128,4 +127,24 @@ export const TRAINING_WRITE_ROLES = [
   "FACTORY_MANAGER",
   "MAINTENANCE_MANAGER",
   "QA_QC",
+];
+
+// Roles permitted to write compliance records — non-conformities, risk register,
+// and to trigger the compliance auto-detect scan. Owned by QA/QC and HSE together
+// with the management chain.
+export const COMPLIANCE_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "QA_QC",
+  "HSE",
+];
+
+// Roles that participate in a Work Method Statement (prepare/review/approve).
+export const WMS_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "HSE",
 ];

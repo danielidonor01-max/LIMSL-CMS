@@ -26,7 +26,6 @@ function NewPermitForm() {
   const [lotoApplied, setLotoApplied] = useState(false);
   const [areaBarricaded, setAreaBarricaded] = useState(false);
   const [permitHolderId, setPermitHolderId] = useState("");
-  const [validHours, setValidHours] = useState(24);
 
   // PPE checklist
   const [ppeChecked, setPpeChecked] = useState<Record<string, boolean>>({
@@ -96,7 +95,6 @@ function NewPermitForm() {
           lotoApplied,
           areaBarricaded,
           permitHolderId,
-          validHours,
           ppeRequired: ppeArray,
         }),
       });
@@ -247,50 +245,37 @@ function NewPermitForm() {
             </label>
           </div>
 
-          {/* Permit Holder + validity */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">
-                Permit Holder <span className="text-rose-600">*</span>
-              </label>
-              <select
-                required
-                value={permitHolderId}
-                onChange={(e) => setPermitHolderId(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
-              >
-                <option value="" disabled>
-                  Select the accountable person…
+          {/* Permit Holder */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase">
+              Permit Holder <span className="text-rose-600">*</span>
+            </label>
+            <select
+              required
+              value={permitHolderId}
+              onChange={(e) => setPermitHolderId(e.target.value)}
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+            >
+              <option value="" disabled>
+                Select the accountable person…
+              </option>
+              {userList.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} — {ROLE_LABELS[u.role] ?? u.role}
                 </option>
-                {userList.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} — {ROLE_LABELS[u.role] ?? u.role}
-                  </option>
-                ))}
-              </select>
-              <p className="text-[10px] text-slate-500">
-                Holds the permit and is accountable for the work party.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Valid For (hours)</label>
-              <input
-                type="number"
-                min={1}
-                max={168}
-                value={validHours}
-                onChange={(e) => setValidHours(Number(e.target.value))}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
-              />
-              <p className="text-[10px] text-slate-500">Permit expires automatically after this window.</p>
-            </div>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-500">
+              The person who holds this permit and is accountable for the work party (usually the Foreman).
+            </p>
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
             <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
-              Raising this permit does <strong>not</strong> authorise work. It must be signed by the Foreman,
-              Maintenance Manager, HSE and Factory Manager before work may begin.
+              Valid for <strong>one working day</strong> — the permit must be re-raised tomorrow, not renewed.
+              Raising it does <strong>not</strong> authorise work: it must be signed by the Foreman, Maintenance
+              Manager, HSE and Factory Manager before work may begin.
             </span>
           </div>
 

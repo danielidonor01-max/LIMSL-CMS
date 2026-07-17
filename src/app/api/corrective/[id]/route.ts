@@ -87,9 +87,12 @@ export async function PATCH(
       requiresExternalExpert: body.requiresExternalExpert ?? record.requiresExternalExpert,
       externalExpertDetails: body.externalExpertDetails ?? record.externalExpertDetails,
 
-      // Approvals & Sign-off
+      // Approvals & Sign-off. The technician who signs is the authenticated user —
+      // never trust the client to name the signer (that would forge the record).
       technicianSignature: body.technicianSignature ?? record.technicianSignature,
-      technicianName: body.technicianName ?? record.technicianName,
+      technicianName: body.technicianSignature
+        ? gate.actor?.name ?? record.technicianName
+        : record.technicianName,
       supervisorSignature: body.supervisorSignature ?? record.supervisorSignature,
       supervisorName: body.supervisorName ?? record.supervisorName,
       supervisorComments: body.supervisorComments ?? record.supervisorComments,

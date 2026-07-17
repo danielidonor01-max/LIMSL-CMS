@@ -94,7 +94,9 @@ export default function KpiPage() {
   );
 
   const categories = useMemo(() => {
-    if (!data) return [];
+    // Guard against an error body (HTTP 200 but no live/monthly) — the fetch
+    // doesn't check res.ok, so `data` can be truthy yet malformed.
+    if (!data || !data.live || !Array.isArray(data.monthly)) return [];
     const l = data.live;
     const m = data.monthly;
     const trendOf = (key: keyof Monthly): Trend => {

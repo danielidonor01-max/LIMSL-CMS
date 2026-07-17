@@ -102,7 +102,8 @@ export async function POST(request: Request) {
 
     await db.insert(auditLog).values({
       id: nanoid(),
-      userName: body.technicianName || "Technician",
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name || body.technicianName || "Technician",
       action: "SIGN",
       entityType: "pm_checklist",
       entityId: checklistId,

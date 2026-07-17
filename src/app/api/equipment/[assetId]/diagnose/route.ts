@@ -12,6 +12,8 @@ import {
 import { eq, or, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { diagnose } from "@/lib/diagnostics/engine";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 async function resolveEquipment(assetId: string) {
   const slash = assetId.replace(/-/g, "/");
@@ -85,6 +87,9 @@ export async function POST(
   { params }: { params: Promise<{ assetId: string }> },
 ) {
   try {
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const { assetId } = await params;
     const e = await resolveEquipment(assetId);
     if (!e) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });

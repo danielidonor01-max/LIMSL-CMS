@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wmsDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireRoles } from "@/lib/authz";
+import { WMS_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET(
   request: Request,
@@ -31,6 +33,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = await requireRoles(WMS_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const resolvedParams = await params;
     const body = await request.json();
 

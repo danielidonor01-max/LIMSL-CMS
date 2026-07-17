@@ -111,7 +111,8 @@ export async function PATCH(
 
     await db.insert(auditLog).values({
       id: nanoid(),
-      userName: body.actorName || "System",
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name || "System",
       action: "UPDATE",
       entityType: "work_order",
       entityId: id,

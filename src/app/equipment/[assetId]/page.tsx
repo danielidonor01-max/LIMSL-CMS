@@ -26,6 +26,22 @@ import {
 } from "lucide-react";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
 
+// A diagnostic-guide's steps column is JSON that may hold plain strings or
+// {step, description} objects. Coerce every element to a string so it can never
+// crash the render with "Objects are not valid as a React child".
+function parseSteps(raw: unknown): string[] {
+  if (!raw || typeof raw !== "string") return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((s) =>
+      typeof s === "string" ? s : s?.description ?? s?.step ?? JSON.stringify(s),
+    );
+  } catch {
+    return [];
+  }
+}
+
 export default function EquipmentDetail({ params }: { params: Promise<{ assetId: string }> }) {
   const resolvedParams = use(params);
   const assetIdKey = resolvedParams.assetId; // E.g., LEE-PE-1904 or eq-stako-1904
@@ -289,7 +305,6 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {components.map((comp) => {
-                    const specs = comp.technicalSpecs ? JSON.parse(comp.technicalSpecs) : {};
                     return (
                       <div key={comp.id} className="p-4 bg-slate-100 border border-slate-200 rounded-lg space-y-3">
                         <div className="flex justify-between items-start">
@@ -325,7 +340,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   </div>
 
                   {guides.map((guide) => {
-                    const steps = JSON.parse(guide.diagnosticSteps);
+                    const steps = parseSteps(guide.diagnosticSteps);
                     return (
                       <div key={guide.id} className="space-y-4">
                         <div className="text-xs">

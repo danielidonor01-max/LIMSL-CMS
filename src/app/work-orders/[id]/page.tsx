@@ -3,8 +3,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import {
   ArrowLeft,
   Loader2,
@@ -35,9 +37,15 @@ type ChecklistItem = { item: string; status: string; remarks?: string };
 export default function WorkOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  const role = (session?.user as { role?: string })?.role;
+  const canIssuePermit = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
   const [wo, setWo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const load = () => {
     setLoading(true);
@@ -142,7 +150,7 @@ export default function WorkOrderDetailPage() {
                   <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
                 </Link>
               )}
-              {eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
+              {canIssuePermit && eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
                 <Link
                   href={`/permits/new?equipmentId=${eq.id}&workOrderId=${id}`}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-semibold"

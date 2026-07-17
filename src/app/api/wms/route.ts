@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { wmsDocuments, equipment } from "@/lib/db/schema";
 import { count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { WMS_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET() {
   try {
@@ -33,6 +35,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(WMS_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
     
     // Auto-generate WMS document number e.g. WMS-2026-0001
@@ -60,8 +65,8 @@ export async function POST(request: Request) {
       emergencyRequirements: body.emergencyRequirements || "",
       references: body.references ? JSON.stringify(body.references) : "[]",
       status: "DRAFT",
-      preparedById: body.preparedById || null,
-      preparedByName: body.preparedByName || "Daniel Idonor",
+      preparedById: gate.actor?.id ?? null,
+      preparedByName: gate.actor?.name || "Unknown",
       preparedDate: new Date().toISOString().split("T")[0],
     };
 

@@ -5,20 +5,26 @@ import { permits, equipment, users } from "@/lib/db/schema";
 import { count, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { PERMIT_WRITE_ROLES } from "@/lib/roles";
+import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
+
+// A Permit-to-Work is valid for one working day. It must be re-raised the next
+// day, never renewed — this is fixed policy, not a per-permit setting.
+export const PERMIT_VALIDITY_HOURS = 24;
 
 // A permit's status is driven by its signatures, never by a button.
 //  • PENDING_APPROVAL → ACTIVE once the PTW chain is fully signed (work may begin)
 //  • ACTIVE → CLOSED once the close-out chain is fully signed
-//  • ACTIVE → EXPIRED once the permit window lapses
+//  • PENDING_APPROVAL/ACTIVE → EXPIRED once the 24h window lapses (must be reissued)
 // Same reconcile-on-read pattern the Procedure module uses.
 export async function reconcilePermits() {
   const all = await db.select().from(permits);
   const now = new Date();
 
   for (const p of all) {
+    const lapsed = !!p.expiryDate && new Date(p.expiryDate) < now;
+
     if (p.status === "PENDING_APPROVAL") {
       const chain = await getSignoffChain("PERMIT", p.id);
       if (chain.length && chainSummary(chain).complete) {
@@ -28,6 +34,10 @@ export async function reconcilePermits() {
           .where(eq(permits.id, p.id));
         // Authorised — open the close-out chain so the job can be signed off later.
         await ensureSignoffChain("PERMIT_CLOSEOUT", p.id);
+      } else if (lapsed) {
+        // A permit not fully signed within its day lapses — it cannot be
+        // approved the next day; a fresh permit must be raised.
+        await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
       }
       continue;
     }
@@ -41,7 +51,7 @@ export async function reconcilePermits() {
           .where(eq(permits.id, p.id));
         continue;
       }
-      if (p.expiryDate && new Date(p.expiryDate) < now) {
+      if (lapsed) {
         await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
       }
     }
@@ -78,7 +88,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const gate = await requireRoles(PERMIT_WRITE_ROLES);
+    // HSE is the issuing authority — only HSE (or Super Admin) may raise a permit.
+    const gate = await requireRoles(PERMIT_ISSUE_ROLES);
     if (gate.res) return gate.res;
 
     const body = await request.json();
@@ -111,7 +122,8 @@ export async function POST(request: Request) {
     const totalCount = countResult[0]?.value || 0;
     const permitNumber = `PTW-2026-${(totalCount + 1).toString().padStart(4, "0")}`;
 
-    const validHours = Number(body.validHours) > 0 ? Number(body.validHours) : 24;
+    // Fixed one-working-day validity — permits are re-raised, never renewed.
+    const expiryDate = new Date(Date.now() + PERMIT_VALIDITY_HOURS * 3600 * 1000).toISOString();
 
     const newPermit = {
       id: nanoid(),
@@ -128,7 +140,7 @@ export async function POST(request: Request) {
       permitHolderId: holder.id,
       permitHolderName: holder.name,
       issuedDate: new Date().toISOString(),
-      expiryDate: new Date(Date.now() + validHours * 3600 * 1000).toISOString(),
+      expiryDate,
       // Raised unapproved — work may not begin until the chain is fully signed.
       status: "PENDING_APPROVAL",
     };

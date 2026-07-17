@@ -4,9 +4,14 @@ import { db } from "@/lib/db";
 import { maintenanceSchedule, nonConformities, equipment } from "@/lib/db/schema";
 import { eq, lt, and, not, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function POST() {
   try {
+    const gate = await requireRoles(COMPLIANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const todayStr = new Date().toISOString().split("T")[0];
     
     // 1. Detect missed PM schedules

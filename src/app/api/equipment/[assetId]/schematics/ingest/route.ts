@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { equipment, equipmentDocuments, schematicIngestionJobs } from "@/lib/db/schema";
 import { eq, or, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { auth } from "@/auth";
+import { requireRoles } from "@/lib/authz";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { ingestionReady, config } from "@/lib/config";
 import { processPendingJobs } from "@/lib/diagnostics/ingestion/worker";
 
@@ -32,8 +33,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ assetId
 // POST → enqueue ingestion jobs for this machine's schematic documents
 export async function POST(_req: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
-    const session = await auth();
-    const user = session?.user as { id?: string } | undefined;
+    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+    const user = { id: gate.actor?.id };
     const { assetId } = await params;
     const e = await resolveEquipment(assetId);
     if (!e) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });

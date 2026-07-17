@@ -3,12 +3,17 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nonConformities } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { requireRoles } from "@/lib/authz";
+import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = await requireRoles(COMPLIANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const resolvedParams = await params;
     const body = await request.json();
 

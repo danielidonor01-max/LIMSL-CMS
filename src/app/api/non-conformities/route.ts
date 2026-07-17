@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { nonConformities } from "@/lib/db/schema";
 import { count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { requireRoles } from "@/lib/authz";
+import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
 export async function GET() {
   try {
@@ -17,6 +19,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const gate = await requireRoles(COMPLIANCE_WRITE_ROLES);
+    if (gate.res) return gate.res;
+
     const body = await request.json();
 
     const countResult = await db.select({ value: count() }).from(nonConformities);
