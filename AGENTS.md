@@ -115,6 +115,14 @@ approval flow per module.
 To add approvals to a new module: add a chain to `chains.ts` and render
 `<SignoffChain />`. That's it.
 
+## 6b. UI standard
+
+The locked-in visual system — palette, type scale, **icon sizes (w-4 inline / w-5
+prominent, no off-scale)**, spacing, and the shared components to use (`Button`,
+`Modal`, `Dropdown`, `PageHeader`, `Badge`) — is in **`docs/UI-STANDARDS.md`**. Build
+to it; don't invent per-page button/dropdown variants. The left sidebar is grouped
+into labelled sections — add new modules to the right section.
+
 ## 7. Coding style
 
 - **Client-component pages + `fetch` in `useEffect`.** Pages are `"use client"`,
