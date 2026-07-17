@@ -110,7 +110,7 @@ export default function NonConformityRegister() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <ShieldAlert className="w-4.5 h-4.5 text-slate-950 font-bold" />
+            <ShieldAlert className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">Non-Conformity Registry</h1>
@@ -121,7 +121,7 @@ export default function NonConformityRegister() {
         <button
           onClick={triggerAuditScan}
           disabled={scanning}
-          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
         >
           {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} Trigger Compliance Audit Scan
         </button>
@@ -255,7 +255,7 @@ export default function NonConformityRegister() {
                       type="button"
                       onClick={() => handleCloseNc(activeNc.id)}
                       disabled={saving || !rootCause || !correctiveAction}
-                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
                     >
                       Resolve & Close Non-Conformity
                     </button>

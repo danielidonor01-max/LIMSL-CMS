@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FolderOpen, Loader2, Search, FileWarning, CheckCircle2, Clock, Download } from "lucide-react";
+import { FolderOpen, Loader2, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 
@@ -45,6 +45,14 @@ export default function DocumentsPage() {
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     fetch("/api/documents")
@@ -76,6 +84,19 @@ export default function DocumentsPage() {
     }
     return [...out].sort((a, b) => (a.equipmentName ?? "").localeCompare(b.equipmentName ?? ""));
   }, [docs, q, typeFilter, statusFilter]);
+
+  // Group the filtered documents by equipment (name shown once, expandable).
+  const groups = useMemo(() => {
+    const byEq = new Map<string, { name: string; assetId: string | null; docs: Doc[] }>();
+    for (const d of filtered) {
+      const key = d.equipmentId;
+      if (!byEq.has(key)) byEq.set(key, { name: d.equipmentName ?? "Unassigned", assetId: d.assetId, docs: [] });
+      byEq.get(key)!.docs.push(d);
+    }
+    return [...byEq.entries()]
+      .map(([id, g]) => ({ id, ...g }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [filtered]);
 
   return (
     <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
@@ -127,54 +148,91 @@ export default function DocumentsPage() {
             </select>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
-                    <th className="py-3 px-4 font-medium">Equipment</th>
-                    <th className="py-3 px-4 font-medium">Document</th>
-                    <th className="py-3 px-4 font-medium">Type</th>
-                    <th className="py-3 px-4 font-medium">Rev</th>
-                    <th className="py-3 px-4 font-medium">Expiry</th>
-                    <th className="py-3 px-4 font-medium">Status</th>
-                    <th className="py-3 px-4 font-medium text-right">File</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {filtered.map((d) => (
-                    <tr key={d.id} className="hover:bg-slate-50">
-                      <td className="py-3 px-4">
-                        <Link href={`/equipment/${(d.assetId || "").replace(/\//g, "-")}`} className="font-medium text-slate-900 hover:text-emerald-600">
-                          {d.equipmentName}
-                        </Link>
-                        <div className="text-[10px] font-mono text-slate-400">{d.assetId}</div>
-                      </td>
-                      <td className="py-3 px-4 text-slate-700 max-w-xs truncate">{d.title}</td>
-                      <td className="py-3 px-4 text-slate-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
-                      <td className="py-3 px-4 text-slate-500">{d.revision ?? "—"}</td>
-                      <td className="py-3 px-4 font-mono text-slate-500">{formatDate(d.expiryDate)}</td>
-                      <td className="py-3 px-4">
-                        <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
-                          {d.status === "REQUIRED" ? "MISSING" : d.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        {d.fileUrl ? (
-                          <a href={d.fileUrl} className="inline-flex items-center gap-1 text-emerald-600 hover:underline">
-                            <Download className="w-3.5 h-3.5" /> Open
-                          </a>
-                        ) : (
-                          <span className="text-slate-400">—</span>
+          {/* Accordion: one row per machine, expand to reveal its documents */}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200">
+            {groups.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs">No documents match.</div>
+            ) : (
+              groups.map((g) => {
+                const isOpen = expanded.has(g.id);
+                const missing = g.docs.filter((d) => d.status === "REQUIRED").length;
+                const expiredN = g.docs.filter((d) => d.status === "EXPIRED").length;
+                return (
+                  <div key={g.id}>
+                    {/* Equipment row (accordion header) */}
+                    <button
+                      onClick={() => toggle(g.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors"
+                    >
+                      <ChevronRight className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{g.name}</p>
+                        <p className="text-[10px] font-mono text-slate-400">{g.assetId ?? "—"}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {missing > 0 && (
+                          <span className="text-[10px] font-semibold text-rose-600 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5">
+                            {missing} missing
+                          </span>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        {expiredN > 0 && (
+                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
+                            {expiredN} expired
+                          </span>
+                        )}
+                        <span className="text-[11px] text-slate-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
+                      </div>
+                    </button>
+
+                    {/* Documents for this machine */}
+                    {isOpen && (
+                      <div className="bg-slate-50/60 px-4 pb-3">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="text-slate-400">
+                              <th className="py-2 pl-7 font-medium">Document</th>
+                              <th className="py-2 px-3 font-medium">Type</th>
+                              <th className="py-2 px-3 font-medium">Rev</th>
+                              <th className="py-2 px-3 font-medium">Expiry</th>
+                              <th className="py-2 px-3 font-medium">Status</th>
+                              <th className="py-2 px-3 font-medium text-right">File</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {g.docs.map((d) => (
+                              <tr key={d.id} className="hover:bg-white">
+                                <td className="py-2 pl-7 text-slate-800 max-w-xs truncate flex items-center gap-2">
+                                  <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {d.title}
+                                </td>
+                                <td className="py-2 px-3 text-slate-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
+                                <td className="py-2 px-3 text-slate-500">{d.revision ?? "—"}</td>
+                                <td className="py-2 px-3 font-mono text-slate-500">{formatDate(d.expiryDate)}</td>
+                                <td className="py-2 px-3">
+                                  <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
+                                    {d.status === "REQUIRED" ? "MISSING" : d.status}
+                                  </Badge>
+                                </td>
+                                <td className="py-2 px-3 text-right">
+                                  {d.fileUrl ? (
+                                    <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-600 hover:underline">
+                                      <Download className="w-3.5 h-3.5" /> Open
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-400">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
-          <p className="text-[11px] text-slate-400">Showing {filtered.length} of {docs.length} documents.</p>
+          <p className="text-[11px] text-slate-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
         </>
       )}
     </div>

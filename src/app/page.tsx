@@ -118,7 +118,12 @@ export default function Home() {
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
   const critical = equipment
     .filter((e) => e.criticality === "HIGH" || e.criticality === "CRITICAL")
-    .sort((a) => (a.status === "BROKEN_DOWN" ? -1 : 1))
+    // Broken-down first, then alphabetical by name.
+    .sort((a, b) => {
+      const ab = a.status === "BROKEN_DOWN" ? 0 : 1;
+      const bb = b.status === "BROKEN_DOWN" ? 0 : 1;
+      return ab !== bb ? ab - bb : (a.name || "").localeCompare(b.name || "");
+    })
     .slice(0, 6);
 
   return (

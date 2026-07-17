@@ -50,7 +50,7 @@ export default function WmsList() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <FileText className="w-4.5 h-4.5 text-slate-950 font-bold" />
+            <FileText className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">Work Method Statements</h1>
@@ -60,7 +60,7 @@ export default function WmsList() {
 
         <Link
           href="/wms/new"
-          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
         >
           <PlusCircle className="w-4.5 h-4.5" /> Draft New WMS
         </Link>
