@@ -20,6 +20,7 @@ export type NotifyEvent =
   | "PM_SIGN_REQUEST"
   | "CORRECTIVE_SIGN_REQUEST"
   | "BREAKDOWN"
+  | "ESCALATION"
   | "GENERAL";
 
 type NotifyInput = {

@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
@@ -42,6 +42,34 @@ export default function AppSettingsPage() {
   // Live preview window — demonstrates the maths against the *unsaved* form.
   const [previewStart, setPreviewStart] = useState("");
   const [previewEnd, setPreviewEnd] = useState("");
+
+  const [escalating, setEscalating] = useState(false);
+
+  const runEscalation = async () => {
+    setEscalating(true);
+    try {
+      const res = await fetch("/api/escalations/run", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Escalation run failed.");
+        return;
+      }
+      if (d.notificationsSent === 0 && d.skippedDuplicate === 0) {
+        toast.success("Nothing overdue — no escalations needed.");
+      } else if (d.notificationsSent === 0) {
+        toast.success(`Already escalated today — ${d.skippedDuplicate} digest(s) skipped.`);
+      } else {
+        toast.success(
+          `Escalated: ${d.overdueActivities} overdue activit${d.overdueActivities === 1 ? "y" : "ies"}, ` +
+            `${d.lapsedPermits} lapsed permit(s) → ${d.notificationsSent} notification(s) sent.`,
+        );
+      }
+    } catch {
+      toast.error("Escalation run failed.");
+    } finally {
+      setEscalating(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/settings")
@@ -242,6 +270,21 @@ export default function AppSettingsPage() {
             <span className="font-bold text-slate-900 font-mono">{previewHours.toFixed(2)} h</span>
           </div>
         )}
+      </section>
+
+      {/* Overdue escalations */}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+          <BellRing className="w-4 h-4 text-emerald-600" /> Overdue Escalations
+        </h3>
+        <p className="text-xs text-slate-500">
+          Notifies responsible people and managers about overdue maintenance activities and lapsed permits. Runs safely
+          any number of times a day (each item is only escalated once). Wire the endpoint to a daily scheduler, or run it
+          on demand here.
+        </p>
+        <Button variant="secondary" icon={BellRing} loading={escalating} onClick={runEscalation}>
+          Run escalation now
+        </Button>
       </section>
 
       {meta.updatedByName && (

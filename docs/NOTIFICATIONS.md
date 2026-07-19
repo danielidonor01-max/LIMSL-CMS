@@ -81,9 +81,45 @@ TWILIO_WHATSAPP_FROM=whatsapp:+14155238886   # your Twilio WhatsApp sender
 Twilio's sandbox lets you send free-form text while testing (recipients must join
 the sandbox first). Production still routes through Meta's template rules.
 
+## Overdue escalations
+
+A scheduled scan that actively chases overdue work instead of waiting for someone
+to open a page. `runEscalations()` (`src/lib/escalations.ts`):
+
+1. reconciles the schedule + permits to today,
+2. groups **overdue maintenance activities** by responsible person and sends each
+   one a single digest ("you have N overdue activities: …"),
+3. sends the maintenance leadership one plant-wide overdue summary,
+4. sends the permit-issuing authority (HSE) a digest of **lapsed permits**
+   (`EXPIRED` — never closed out).
+
+Digests, not one-per-item, so a backlog of 70 doesn't send 70 messages. A per-day
+dedup guard (checks the `notifications` table for a matching `ESCALATION` row in
+the last 20h) makes the scan safe to run repeatedly.
+
+**Triggering** — `POST /api/escalations/run`, two ways in:
+
+- **Super Admin button** — *App Settings → Overdue Escalations → "Run escalation
+  now"*. Works today, no setup.
+- **Scheduler** — present `Authorization: Bearer $CRON_SECRET`. Set `CRON_SECRET`
+  in `.env.local`, then point any daily scheduler at the endpoint, e.g.:
+
+  ```bash
+  curl -X POST https://<host>/api/escalations/run \
+    -H "Authorization: Bearer $CRON_SECRET"
+  ```
+
+  On Windows, a daily **Task Scheduler** job running that curl works; on a Linux
+  host, a `cron` entry or the platform's cron (e.g. Vercel Cron) does.
+
+Without `CRON_SECRET` the endpoint still works for a signed-in Super Admin; the
+token only exists so an unattended scheduler can call it.
+
 ## Files
 
 - `src/lib/notifications/index.ts` — dispatcher, recipient resolution, `notifyNextSigner`.
+- `src/lib/escalations.ts` — `runEscalations()` overdue/lapsed digest scan.
+- `src/app/api/escalations/run/route.ts` — trigger (CRON_SECRET token or Super Admin).
 - `src/lib/notifications/whatsapp.ts` — Meta + Twilio send adapters.
 - `src/lib/config.ts` — `whatsappReady()` and env config.
 - `src/app/api/notifications/route.ts` — in-app inbox (GET) + mark-read (PATCH).
