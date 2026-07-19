@@ -48,5 +48,6 @@ next-env.d.ts
 drizzle/
 
 
-# Uploaded files (local storage provider)
-storage/
+# Uploaded files (local storage provider) — root runtime folder only,
+# NOT src/lib/storage/ (leading slash anchors this to the repo root).
+/storage/
