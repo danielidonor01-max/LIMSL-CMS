@@ -8,12 +8,14 @@ import {
   kpiRecords,
 } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
+import { reconcileSchedule } from "@/lib/schedule";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
 // Live executive KPIs computed from the database (no hardcoded values).
 export async function GET() {
   try {
+    await reconcileSchedule();
     const allEquip = await db.select().from(equipment);
     const totalAssets = allEquip.length;
     const brokenDown = allEquip.filter((e) => e.status === "BROKEN_DOWN").length;

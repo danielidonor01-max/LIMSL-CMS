@@ -21,6 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { getWorkSettings } from "@/lib/settings";
 import { plannedHoursForMonth } from "@/lib/worktime";
+import { reconcileSchedule } from "@/lib/schedule";
 
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
@@ -38,6 +39,9 @@ const inMonth = (dateStr: string | null | undefined, key: string) =>
   !!dateStr && dateStr.slice(0, 7) === key;
 
 export async function computeKpis(now = new Date()) {
+  // Overdue status must reflect today before compliance is measured.
+  await reconcileSchedule(now);
+
   const [equip, sched, wos, cms, perms, ncs, workSettings] = await Promise.all([
     db.select().from(equipment),
     db.select().from(maintenanceSchedule),

@@ -12,8 +12,12 @@ import {
   CheckCircle2,
   Plus,
   Search,
+  CalendarPlus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
+import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
 import { formatDate } from "@/lib/utils";
 import {
@@ -25,6 +29,16 @@ import {
   MONTH_NAMES,
 } from "@/lib/constants";
 import { CalendarDays, List } from "lucide-react";
+
+const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "One-off (no recurrence)" },
+  { value: "WEEKLY", label: "Weekly" },
+  { value: "MONTHLY", label: "Monthly" },
+  { value: "BI_MONTHLY", label: "Bi-monthly" },
+  { value: "QUARTERLY", label: "Quarterly" },
+  { value: "SEMI_ANNUAL", label: "Semi-annual" },
+  { value: "ANNUAL", label: "Annual" },
+];
 
 type ScheduleRow = {
   id: string;
@@ -49,6 +63,15 @@ type ScheduleRow = {
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
+const emptyCreate = {
+  equipmentId: "",
+  plannedDate: "",
+  activityType: "PM",
+  maintenanceFrequency: "MONTHLY",
+  taskDescription: "",
+  responsiblePersonName: "",
+};
+
 export default function SchedulePage() {
   const [rows, setRows] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,13 +82,80 @@ export default function SchedulePage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [quarterFilter, setQuarterFilter] = useState("ALL");
 
-  useEffect(() => {
+  const [equipmentList, setEquipmentList] = useState<{ id: string; assetId: string; name: string }[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState(emptyCreate);
+  const [saving, setSaving] = useState(false);
+  const [reschedule, setReschedule] = useState<{ row: ScheduleRow; date: string } | null>(null);
+
+  const load = () => {
     fetch("/api/schedule")
       .then((r) => r.json())
       .then((d) => setRows(Array.isArray(d) ? d : []))
       .catch(() => setRows([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+    fetch("/api/equipment")
+      .then((r) => r.json())
+      .then((d) => setEquipmentList(Array.isArray(d) ? d : []))
+      .catch(() => setEquipmentList([]));
   }, []);
+
+  const submitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createForm.equipmentId || !createForm.plannedDate) {
+      toast.error("Pick the equipment and a planned date.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createForm),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to schedule activity.");
+        return;
+      }
+      toast.success("Activity scheduled.");
+      setShowCreate(false);
+      setCreateForm(emptyCreate);
+      load();
+    } catch {
+      toast.error("Failed to schedule activity.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitReschedule = async () => {
+    if (!reschedule) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/schedule/${reschedule.row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plannedDate: reschedule.date }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to reschedule.");
+        return;
+      }
+      toast.success("Activity rescheduled.");
+      setReschedule(null);
+      load();
+    } catch {
+      toast.error("Failed to reschedule.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── KPI summary (PM only) ──────────────────────────────────────────────
   const summary = useMemo(() => {
@@ -161,6 +251,9 @@ export default function SchedulePage() {
                 <CalendarDays className="w-3.5 h-3.5" /> Calendar
               </button>
             </div>
+            <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
+              Schedule PM
+            </Button>
             <Link
               href="/work-orders/new"
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
@@ -317,21 +410,31 @@ export default function SchedulePage() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
-                        {r.workOrderId ? (
-                          <Link
-                            href={`/work-orders/${r.workOrderId}`}
-                            className="text-emerald-600 hover:underline"
-                          >
-                            View WO →
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/work-orders/new?scheduleId=${r.id}`}
-                            className="text-sky-600 hover:underline"
-                          >
-                            Raise WO
-                          </Link>
-                        )}
+                        <div className="flex items-center justify-end gap-3">
+                          {r.status !== "COMPLETED" && (
+                            <button
+                              onClick={() => setReschedule({ row: r, date: r.plannedDate })}
+                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                            >
+                              Reschedule
+                            </button>
+                          )}
+                          {r.workOrderId ? (
+                            <Link
+                              href={`/work-orders/${r.workOrderId}`}
+                              className="text-emerald-600 hover:underline"
+                            >
+                              View WO →
+                            </Link>
+                          ) : (
+                            <Link
+                              href={`/work-orders/new?scheduleId=${r.id}`}
+                              className="text-sky-600 hover:underline"
+                            >
+                              Raise WO
+                            </Link>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -345,10 +448,120 @@ export default function SchedulePage() {
         </p>
         </>
         )}
+
+        {/* Schedule a new activity */}
+        <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Schedule Maintenance Activity" subtitle="Recurring activities regenerate automatically on completion">
+          <form onSubmit={submitCreate} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className={modalLabel}>Equipment</label>
+              <select
+                value={createForm.equipmentId}
+                onChange={(e) => setCreateForm((f) => ({ ...f, equipmentId: e.target.value }))}
+                className={modalField}
+                required
+              >
+                <option value="">Select equipment…</option>
+                {equipmentList.map((eq) => (
+                  <option key={eq.id} value={eq.id}>
+                    {eq.assetId} — {eq.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className={modalLabel}>Planned date</label>
+                <input
+                  type="date"
+                  value={createForm.plannedDate}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, plannedDate: e.target.value }))}
+                  className={modalField}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className={modalLabel}>Activity type</label>
+                <select
+                  value={createForm.activityType}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, activityType: e.target.value }))}
+                  className={modalField}
+                >
+                  {Object.entries(ACTIVITY_TYPE_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className={modalLabel}>Frequency</label>
+              <select
+                value={createForm.maintenanceFrequency}
+                onChange={(e) => setCreateForm((f) => ({ ...f, maintenanceFrequency: e.target.value }))}
+                className={modalField}
+              >
+                {FREQUENCY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={modalLabel}>Task description</label>
+              <input
+                type="text"
+                value={createForm.taskDescription}
+                onChange={(e) => setCreateForm((f) => ({ ...f, taskDescription: e.target.value }))}
+                placeholder="e.g. Monthly lubrication & belt inspection"
+                className={modalField}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className={modalLabel}>Responsible (optional)</label>
+              <input
+                type="text"
+                value={createForm.responsiblePersonName}
+                onChange={(e) => setCreateForm((f) => ({ ...f, responsiblePersonName: e.target.value }))}
+                placeholder="Assigned technician / team"
+                className={modalField}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="secondary" onClick={() => setShowCreate(false)}>Cancel</Button>
+              <Button type="submit" loading={saving} icon={CalendarPlus}>Schedule</Button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* Reschedule an activity */}
+        <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
+          {reschedule && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500">
+                Currently planned for <span className="font-mono text-slate-700">{formatDate(reschedule.row.plannedDate)}</span>.
+              </p>
+              <div className="space-y-1.5">
+                <label className={modalLabel}>New planned date</label>
+                <input
+                  type="date"
+                  value={reschedule.date}
+                  onChange={(e) => setReschedule((r) => (r ? { ...r, date: e.target.value } : r))}
+                  className={modalField}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setReschedule(null)}>Cancel</Button>
+                <Button type="button" loading={saving} onClick={submitReschedule}>Reschedule</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
       </main>
     </div>
   );
 }
+
+const modalLabel = "text-[11px] font-semibold text-slate-500 uppercase tracking-wide";
+const modalField =
+  "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40";
 
 function FilterSelect({
   value,

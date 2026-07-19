@@ -14,6 +14,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
+import { generateNextOccurrence } from "@/lib/schedule";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -96,25 +97,35 @@ export async function POST(request: Request) {
       })
       .where(eq(workOrders.id, body.workOrderId));
 
-    // 3. Complete the linked schedule activity, if any
+    // 3. Complete the linked schedule activity and spawn its next occurrence so
+    //    the PM programme perpetuates itself instead of emptying out.
     const [wo] = await db
       .select()
       .from(workOrders)
       .where(eq(workOrders.id, body.workOrderId))
       .limit(1);
+    let recurredDate: string | null = null;
     if (wo?.scheduleId) {
       await db
         .update(maintenanceSchedule)
         .set({ status: "COMPLETED", completedDate: today })
         .where(eq(maintenanceSchedule.id, wo.scheduleId));
+      const [schedRow] = await db
+        .select()
+        .from(maintenanceSchedule)
+        .where(eq(maintenanceSchedule.id, wo.scheduleId))
+        .limit(1);
+      if (schedRow) recurredDate = await generateNextOccurrence(schedRow);
     }
 
-    // 4. Roll the equipment maintenance dates forward
+    // 4. Roll the equipment maintenance dates forward. Prefer the auto-computed
+    //    next PM date over a technician-typed one so the register stays in step
+    //    with the schedule.
     await db
       .update(equipment)
       .set({
         lastMaintenanceDate: today,
-        nextMaintenanceDate: body.nextPMDate || null,
+        nextMaintenanceDate: recurredDate || body.nextPMDate || null,
         status: body.correctiveActionRequired ? "UNDER_MAINTENANCE" : "OPERATIONAL",
         updatedAt: new Date().toISOString(),
       })
