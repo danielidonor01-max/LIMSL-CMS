@@ -25,6 +25,7 @@ import {
   GraduationCap,
   Users,
   SlidersHorizontal,
+  Database,
   LogOut,
   User,
   KeyRound,
@@ -98,6 +99,7 @@ export default function Sidebar() {
       section: "Administration",
       items: [
         { href: "/settings/users", label: "Users", icon: Users },
+        { href: "/settings/import", label: "Data Import", icon: Database },
         { href: "/settings", label: "App Settings", icon: SlidersHorizontal, exact: true },
       ],
     });
