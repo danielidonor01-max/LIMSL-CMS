@@ -77,7 +77,13 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 
-export default function Sidebar() {
+export default function Sidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
@@ -109,8 +115,18 @@ export default function Sidebar() {
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
-    <aside className="w-60 shrink-0 h-screen sticky top-0 border-r border-slate-200 bg-white flex flex-col">
-      <Link href="/" className="flex items-center gap-2.5 px-5 h-14 border-b border-slate-200 shrink-0">
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" onClick={onClose} aria-hidden="true" />
+      )}
+      <aside
+        className={`w-60 shrink-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50
+          fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
+          lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
+          ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
+      >
+      <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 border-b border-slate-200 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
           <Wrench className="w-4 h-4 text-white" />
         </div>
@@ -137,6 +153,7 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onClose}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
                     active
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -179,6 +196,7 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

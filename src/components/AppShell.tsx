@@ -1,9 +1,10 @@
 // src/components/AppShell.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
@@ -20,15 +21,26 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const mustChange = (session?.user as { mustChangePassword?: boolean })?.mustChangePassword;
   const bare = pathname === "/login" || (status === "authenticated" && mustChange && pathname === "/change-password");
 
+  const [navOpen, setNavOpen] = useState(false);
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => setNavOpen(false), [pathname]);
+
   if (bare) return <>{children}</>;
 
   const allowed = status !== "authenticated" || canAccessPath(role, pathname);
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="no-print h-14 shrink-0 sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-2 px-6">
+        <div className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-2 px-4 lg:px-6">
+          <button
+            onClick={() => setNavOpen(true)}
+            className="lg:hidden p-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <GlobalSearch />
           <QuickActions />
           <NotificationBell />

@@ -235,7 +235,7 @@ export default function PMChecklistPage() {
               <ShieldAlert className="w-3.5 h-3.5" /> All four must be confirmed before sign-off.
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               ["ptwIssued", "Permit-to-Work (PTW) issued"],
               ["lotoApplied", "LOTO applied"],
