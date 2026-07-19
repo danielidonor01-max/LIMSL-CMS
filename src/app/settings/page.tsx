@@ -55,12 +55,12 @@ export default function AppSettingsPage() {
         return;
       }
       if (d.notificationsSent === 0 && d.skippedDuplicate === 0) {
-        toast.success("Nothing overdue — no escalations needed.");
+        toast.success("Nothing overdue or due soon — no reminders needed.");
       } else if (d.notificationsSent === 0) {
-        toast.success(`Already escalated today — ${d.skippedDuplicate} digest(s) skipped.`);
+        toast.success(`Already notified today — ${d.skippedDuplicate} digest(s) skipped.`);
       } else {
         toast.success(
-          `Escalated: ${d.overdueActivities} overdue activit${d.overdueActivities === 1 ? "y" : "ies"}, ` +
+          `${d.overdueActivities} overdue, ${d.upcomingActivities} due soon, ` +
             `${d.lapsedPermits} lapsed permit(s) → ${d.notificationsSent} notification(s) sent.`,
         );
       }
@@ -275,12 +275,12 @@ export default function AppSettingsPage() {
       {/* Overdue escalations */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-          <BellRing className="w-4 h-4 text-emerald-600" /> Overdue Escalations
+          <BellRing className="w-4 h-4 text-emerald-600" /> Maintenance Reminders &amp; Escalations
         </h3>
         <p className="text-xs text-slate-500">
-          Notifies responsible people and managers about overdue maintenance activities and lapsed permits. Runs safely
-          any number of times a day (each item is only escalated once). Wire the endpoint to a daily scheduler, or run it
-          on demand here.
+          Reminds responsible people about maintenance <strong>due soon</strong>, and escalates <strong>overdue</strong>
+          activities and lapsed permits to them and to managers. Runs safely any number of times a day (each item is only
+          notified once). Wire the endpoint to a daily scheduler, or run it on demand here.
         </p>
         <Button variant="secondary" icon={BellRing} loading={escalating} onClick={runEscalation}>
           Run escalation now

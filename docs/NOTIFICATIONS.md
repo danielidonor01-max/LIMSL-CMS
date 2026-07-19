@@ -87,10 +87,12 @@ A scheduled scan that actively chases overdue work instead of waiting for someon
 to open a page. `runEscalations()` (`src/lib/escalations.ts`):
 
 1. reconciles the schedule + permits to today,
-2. groups **overdue maintenance activities** by responsible person and sends each
+2. **due-soon reminders** — activities due within `REMINDER_LEAD_DAYS` (default 3)
+   are sent to the responsible person as a heads-up *before* they go overdue,
+3. groups **overdue maintenance activities** by responsible person and sends each
    one a single digest ("you have N overdue activities: …"),
-3. sends the maintenance leadership one plant-wide overdue summary,
-4. sends the permit-issuing authority (HSE) a digest of **lapsed permits**
+4. sends the maintenance leadership one plant-wide overdue summary,
+5. sends the permit-issuing authority (HSE) a digest of **lapsed permits**
    (`EXPIRED` — never closed out).
 
 Digests, not one-per-item, so a backlog of 70 doesn't send 70 messages. A per-day

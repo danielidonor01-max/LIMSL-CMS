@@ -15,8 +15,12 @@ import { reconcileSchedule } from "@/lib/schedule";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 
+// How many days ahead counts as "due soon" for a proactive reminder.
+const REMINDER_LEAD_DAYS = Number(process.env.REMINDER_LEAD_DAYS || 3);
+
 export type EscalationSummary = {
   overdueActivities: number;
+  upcomingActivities: number;
   lapsedPermits: number;
   notificationsSent: number;
   skippedDuplicate: number;
@@ -56,6 +60,7 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
 
   const summary: EscalationSummary = {
     overdueActivities: 0,
+    upcomingActivities: 0,
     lapsedPermits: 0,
     notificationsSent: 0,
     skippedDuplicate: 0,
@@ -122,6 +127,44 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }
+  }
+
+  // ── Due-soon reminders ─────────────────────────────────────────────────────
+  // Proactive heads-up to the responsible person BEFORE an activity goes overdue.
+  // Reconcile has already flipped past-due items to OVERDUE, so anything still
+  // SCHEDULED is today-or-future.
+  const today = now.toISOString().slice(0, 10);
+  const horizon = new Date(now.getTime() + REMINDER_LEAD_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const upcoming = sched.filter(
+    (s) => s.status === "SCHEDULED" && !s.completedDate && s.plannedDate >= today && s.plannedDate <= horizon,
+  );
+  summary.upcomingActivities = upcoming.length;
+
+  const upcomingByPerson = new Map<string, typeof upcoming>();
+  for (const s of upcoming) {
+    if (!s.responsiblePersonId) continue;
+    upcomingByPerson.set(s.responsiblePersonId, [...(upcomingByPerson.get(s.responsiblePersonId) ?? []), s]);
+  }
+  for (const [personId, items] of upcomingByPerson) {
+    if (await recentlyEscalated("escalation:schedule-upcoming", personId, now)) {
+      summary.skippedDuplicate++;
+      continue;
+    }
+    const body = `You have ${items.length} maintenance ${
+      items.length === 1 ? "activity" : "activities"
+    } due in the next ${REMINDER_LEAD_DAYS} day${REMINDER_LEAD_DAYS === 1 ? "" : "s"}:\n${fmtList(
+      items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"} — ${i.activityType} (due ${i.plannedDate})`),
+    )}`;
+    const sent = await notify({
+      event: "ESCALATION",
+      title: `Maintenance due soon — ${items.length} item${items.length === 1 ? "" : "s"}`,
+      body,
+      linkPath: "/schedule",
+      relatedEntityType: "escalation:schedule-upcoming",
+      relatedEntityId: personId,
+      userIds: [personId],
+    });
+    if (sent.length) summary.notificationsSent += sent.length;
   }
 
   // ── Lapsed permits ─────────────────────────────────────────────────────────
