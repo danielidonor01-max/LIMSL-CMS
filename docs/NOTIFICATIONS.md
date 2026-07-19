@@ -25,6 +25,32 @@ SMTP_USER=no-reply@leemachinery.net
 SMTP_PASS=********
 ```
 
+### Quick start: send from a Gmail account
+
+Simplest option if you don't run your own mail server. Uses a Gmail **App
+Password** (works for personal Gmail and Google Workspace):
+
+1. On the sending account, turn on **2-Step Verification**
+   (myaccount.google.com → Security).
+2. Create an **App Password** (Security → App passwords → app "Mail") — a 16-char
+   code. Use it as `SMTP_PASS` (not your normal Gmail password).
+3. `.env.local`:
+   ```bash
+   EMAIL_ENABLED=true
+   EMAIL_FROM="LIMSL CMS <danielidonor01@gmail.com>"   # must be the Gmail address
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=danielidonor01@gmail.com
+   SMTP_PASS=<16-char app password>
+   APP_URL=http://localhost:3005                       # or the real host
+   ```
+
+> The **From** must be the authenticated Gmail address — Gmail rewrites a
+> mismatched From (e.g. `no-reply@leemachinery.net`) back to the account, which
+> can hurt deliverability. Free Gmail sends to ~500 recipients/day, plenty for a
+> workshop.
+
 Common hosts for `SMTP_HOST` / port:
 - **Google Workspace** — `smtp.gmail.com`, 587, and an **App Password** (needs
   2-Step Verification on the sending account) as `SMTP_PASS`.
