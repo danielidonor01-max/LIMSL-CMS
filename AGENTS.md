@@ -31,7 +31,7 @@ Asset IDs follow the format `LEE/PE/XXXX`. They are auto-generated on create
 | Concern | Choice |
 |---|---|
 | Framework | Next.js 16 (App Router, Turbopack) |
-| DB | SQLite (`limsl-cms.db`, gitignored) via Drizzle ORM + better-sqlite3 |
+| DB | **Postgres (Supabase)** via Drizzle ORM + postgres.js — see docs/DEPLOY.md |
 | Auth | NextAuth v5, credentials provider, JWT session carrying `role` + `id` |
 | Hashing | **scrypt** (`src/lib/password.ts`) — *not* bcrypt |
 | Styling | Tailwind v4, **light theme is the default** (dark theme is a later phase) |
@@ -152,19 +152,25 @@ see the `asText()` / `safeParse()` helpers in `src/app/wms/[id]/page.tsx`.
 
 ## 8. Database workflow
 
-`schema.ts` is the source of truth. **`drizzle/` is gitignored** — migration SQL is
-*not* committed; each environment regenerates it.
+**Postgres (Supabase)** via Drizzle + `postgres.js`. `DATABASE_URL` must be set
+(Supabase Transaction pooler, port 6543) — there is no local SQLite file. Deploy
+steps are in `docs/DEPLOY.md`.
+
+`schema.ts` (pg-core) is the source of truth. **`drizzle/` is gitignored** —
+migration SQL is *not* committed; each environment regenerates it.
 
 ```bash
-npx drizzle-kit generate            # after editing schema.ts
-npx tsx src/lib/db/migrate-only.ts  # apply (additive, preserves data)
+export DATABASE_URL=postgresql://...:6543/postgres
+npx drizzle-kit push                # create/sync tables from schema.ts (simplest)
+# or: npx drizzle-kit generate && npx tsx src/lib/db/migrate-only.ts
 ```
 
 Seeds are standalone and idempotent (`src/lib/db/seed-*.ts`), each runnable via
-`npx tsx src/lib/db/seed-<name>.ts`. Default password for every seeded user is
-`limsl2026`.
+`npx tsx src/lib/db/seed-<name>.ts` (with `DATABASE_URL` set). Default password
+for every seeded user is `limsl2026`.
 
-Never destructively reset the DB to apply a change — migrate additively.
+Timestamp/date columns are stored as **text** (ISO strings) — keep it that way;
+app code slices/compares them as strings. Never destructively reset the DB.
 
 ## 9. Git / branch protocol
 

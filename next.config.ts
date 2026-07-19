@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
-  serverExternalPackages: ["better-sqlite3", "nodemailer"],
+  serverExternalPackages: ["nodemailer"],
 };
 
 export default nextConfig;
