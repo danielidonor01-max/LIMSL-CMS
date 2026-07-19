@@ -10,8 +10,9 @@ import { db } from "@/lib/db";
 import { notifications, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { whatsappReady } from "@/lib/config";
+import { whatsappReady, emailReady } from "@/lib/config";
 import { sendWhatsApp } from "./whatsapp";
+import { sendEmail } from "./email";
 
 export type NotifyEvent =
   | "PTW_SIGN_REQUEST"
@@ -60,12 +61,24 @@ export async function notify(input: NotifyInput) {
   }
   if (recipients.length === 0) return [];
 
-  const ready = whatsappReady().ready;
-  const created: { id: string; userId: string; contact: string | null }[] = [];
+  const emailOn = emailReady().ready;
+  const waOn = whatsappReady().ready;
+  type Pending = { id: string; userId: string; channel: "EMAIL" | "WHATSAPP" | "INAPP"; to: string | null };
+  const created: Pending[] = [];
 
   for (const u of recipients) {
     const id = nanoid();
-    const contact = u.whatsapp?.trim() || null;
+    // Prefer email when configured (reliable + auditable); fall back to WhatsApp.
+    // Either way the row is the in-app inbox entry, so nothing is ever lost.
+    let channel: Pending["channel"] = "INAPP";
+    let to: string | null = null;
+    if (emailOn && u.email) {
+      channel = "EMAIL";
+      to = u.email;
+    } else if (waOn && u.whatsapp?.trim()) {
+      channel = "WHATSAPP";
+      to = u.whatsapp.trim();
+    }
     await db.insert(notifications).values({
       id,
       userId: u.id,
@@ -75,41 +88,42 @@ export async function notify(input: NotifyInput) {
       linkPath: input.linkPath ?? null,
       relatedEntityType: input.relatedEntityType ?? null,
       relatedEntityId: input.relatedEntityId ?? null,
-      channel: "WHATSAPP",
-      recipientContact: contact,
-      // Honest status: QUEUED unless we actually send below. SKIPPED if the user
-      // has no WhatsApp number on file (still visible in their in-app inbox).
-      deliveryStatus: !contact ? "SKIPPED" : "QUEUED",
+      channel,
+      recipientContact: to,
+      // Honest status: QUEUED when we'll try to send, SKIPPED when there's no
+      // configured channel/contact (still visible in the in-app inbox).
+      deliveryStatus: to ? "QUEUED" : "SKIPPED",
     });
-    created.push({ id, userId: u.id, contact });
+    created.push({ id, userId: u.id, channel, to });
   }
 
-  // Attempt delivery only when a provider is configured. Never throws.
-  if (ready) {
-    await Promise.all(
-      created
-        .filter((c) => c.contact)
-        .map(async (c) => {
-          try {
-            const res = await sendWhatsApp(c.contact!, `*LIMSL CMS*\n${input.title}\n\n${input.body}`);
-            await db
-              .update(notifications)
-              .set({
-                deliveryStatus: res.ok ? "SENT" : "FAILED",
-                providerMessageId: res.messageId ?? null,
-                deliveryError: res.ok ? null : res.error ?? "unknown",
-                sentAt: res.ok ? new Date().toISOString() : null,
-              })
-              .where(eq(notifications.id, c.id));
-          } catch (err) {
-            await db
-              .update(notifications)
-              .set({ deliveryStatus: "FAILED", deliveryError: String(err) })
-              .where(eq(notifications.id, c.id));
-          }
-        }),
-    );
-  }
+  // Deliver each queued notification over its chosen channel. Never throws.
+  await Promise.all(
+    created
+      .filter((c) => c.to)
+      .map(async (c) => {
+        try {
+          const res =
+            c.channel === "EMAIL"
+              ? await sendEmail(c.to!, input.title, input.body, input.linkPath)
+              : await sendWhatsApp(c.to!, `*LIMSL CMS*\n${input.title}\n\n${input.body}`);
+          await db
+            .update(notifications)
+            .set({
+              deliveryStatus: res.ok ? "SENT" : "FAILED",
+              providerMessageId: res.messageId ?? null,
+              deliveryError: res.ok ? null : res.error ?? "unknown",
+              sentAt: res.ok ? new Date().toISOString() : null,
+            })
+            .where(eq(notifications.id, c.id));
+        } catch (err) {
+          await db
+            .update(notifications)
+            .set({ deliveryStatus: "FAILED", deliveryError: String(err) })
+            .where(eq(notifications.id, c.id));
+        }
+      }),
+  );
 
   return created;
 }

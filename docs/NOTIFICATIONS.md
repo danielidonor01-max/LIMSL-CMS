@@ -1,10 +1,46 @@
-# Notifications & WhatsApp Alerts
+# Notifications — In-app, Email & WhatsApp
 
-**Status:** In-app inbox is live and working now. WhatsApp delivery is built and
-**turned off until credentials are set** — until then every alert is still recorded
-and shown in-app (marked `QUEUED`), never lost, never faked as sent.
+**Status:** In-app inbox is live now. **Email (SMTP) and WhatsApp are both built**
+and turn on when credentials are set. Until a channel is configured, every alert
+is still recorded and shown in-app (marked `QUEUED`), never lost, never faked as
+sent.
 
-Email is a later phase (Daniel's call: WhatsApp first).
+**Channel choice:** when email is configured, alerts go by **email** (reliable +
+auditable); if only WhatsApp is configured, they go by WhatsApp; the in-app inbox
+always has the copy either way.
+
+## Email (SMTP) — recommended, works today
+
+Delivery is nodemailer over SMTP, so it works with whatever mailbox
+`leemachinery.net` already uses. Set these in `.env.local` and restart:
+
+```bash
+EMAIL_ENABLED=true
+EMAIL_FROM="LIMSL CMS <no-reply@leemachinery.net>"
+APP_URL=https://<your-host>          # makes the "Open in LIMSL CMS" links absolute
+SMTP_HOST=smtp.example.net
+SMTP_PORT=587                        # 587 = STARTTLS (SMTP_SECURE=false), 465 = SSL (SMTP_SECURE=true)
+SMTP_SECURE=false
+SMTP_USER=no-reply@leemachinery.net
+SMTP_PASS=********
+```
+
+Common hosts for `SMTP_HOST` / port:
+- **Google Workspace** — `smtp.gmail.com`, 587, and an **App Password** (needs
+  2-Step Verification on the sending account) as `SMTP_PASS`.
+- **Microsoft 365** — `smtp.office365.com`, 587 (SMTP AUTH must be enabled for the
+  mailbox in the M365 admin centre).
+- **cPanel / webmail** — `mail.leemachinery.net`, 465 (`SMTP_SECURE=true`) or 587,
+  using the full mailbox address + its password.
+- **Resend / SendGrid (transactional)** — their SMTP host + an API key as the
+  password; verify the `leemachinery.net` domain for best deliverability.
+
+**Verify it:** *App Settings → Email Delivery → "Send test email"* (Super Admin).
+It sends a real message to the address you type (or your own account's email) and
+reports success/failure — no need to trigger a real alert to test.
+
+Recipients are resolved from **roles → the user's `email`** (set in the user admin
+screen or via Data Import), so no addresses are hardcoded.
 
 ## How it works
 

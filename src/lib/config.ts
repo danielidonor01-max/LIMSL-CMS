@@ -34,6 +34,18 @@ export const config = {
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
   twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM || "", // e.g. whatsapp:+14155238886
 
+  // ── Email notifications (SMTP via nodemailer) ─────────────────────────────
+  // Works with any mailbox that offers SMTP — Google Workspace, Microsoft 365,
+  // cPanel/webmail on leemachinery.net, or a transactional relay (Resend/SendGrid).
+  emailEnabled: process.env.EMAIL_ENABLED === "true",
+  emailFrom: process.env.EMAIL_FROM || "LIMSL CMS <no-reply@leemachinery.net>",
+  appUrl: process.env.APP_URL || "", // base URL for deep links in emails
+  smtpHost: process.env.SMTP_HOST || "",
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpSecure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587/25 (STARTTLS)
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+
   // ── File storage ────────────────────────────────────────────────────────
   // LOCAL (default) writes to a gitignored folder on the server — right for a
   // single self-hosted workshop machine. SUPABASE stores in cloud object
@@ -84,4 +96,13 @@ export function whatsappReady(): { ready: boolean; reason?: string } {
     return { ready: true };
   }
   return { ready: false, reason: `Unknown WHATSAPP_PROVIDER "${config.whatsappProvider}"` };
+}
+
+// Whether SMTP email delivery is configured. When not ready, notifications are
+// still recorded in-app (QUEUED), never faked as sent.
+export function emailReady(): { ready: boolean; reason?: string } {
+  if (!config.emailEnabled) return { ready: false, reason: "EMAIL_ENABLED is not set to true" };
+  if (!config.smtpHost) return { ready: false, reason: "SMTP_HOST is not set" };
+  if (!config.smtpUser || !config.smtpPass) return { ready: false, reason: "SMTP_USER / SMTP_PASS not set" };
+  return { ready: true };
 }

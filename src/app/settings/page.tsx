@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
@@ -44,6 +44,29 @@ export default function AppSettingsPage() {
   const [previewEnd, setPreviewEnd] = useState("");
 
   const [escalating, setEscalating] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
+
+  const sendTestEmail = async () => {
+    setSendingTest(true);
+    try {
+      const res = await fetch("/api/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmail.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to send test email.");
+        return;
+      }
+      toast.success(`Test email sent to ${d.to}. Check the inbox (and spam).`);
+    } catch {
+      toast.error("Failed to send test email.");
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   const runEscalation = async () => {
     setEscalating(true);
@@ -270,6 +293,33 @@ export default function AppSettingsPage() {
             <span className="font-bold text-slate-900 font-mono">{previewHours.toFixed(2)} h</span>
           </div>
         )}
+      </section>
+
+      {/* Email delivery */}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+          <Mail className="w-4 h-4 text-emerald-600" /> Email Delivery
+        </h3>
+        <p className="text-xs text-slate-500">
+          Reminders, escalations and sign-off requests are emailed to each person&apos;s address when SMTP is configured
+          (in <span className="font-mono">.env.local</span>). Send a test to confirm delivery. Leave blank to send to your
+          own account&apos;s email.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+          <div className="flex-1 space-y-1.5">
+            <label className={label}>Recipient (optional)</label>
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="name@leemachinery.net"
+              className={`${timeField} w-full`}
+            />
+          </div>
+          <Button variant="secondary" icon={Mail} loading={sendingTest} onClick={sendTestEmail}>
+            Send test email
+          </Button>
+        </div>
       </section>
 
       {/* Overdue escalations */}
