@@ -12,21 +12,25 @@ stored in **Supabase Storage** (Vercel's filesystem is ephemeral). SQLite is gon
    - **Direct / Session** (port **5432**) — fine for running migrations/seeds from
      your machine.
 
-## 2. Create the schema
+## 2. Create the schema + accounts
 
-From your machine, with the DB URL exported:
+Run from your machine using the **Session pooler** (port **5432**) — the direct
+`db.<ref>.supabase.co` host is not reachable over IPv4, and 5432 is better for
+DDL/seeds than the transaction pooler:
 
 ```bash
-# use the 6543 pooler URL (or the 5432 direct URL) — either works for this step
-export DATABASE_URL="postgresql://postgres.<ref>:<password>@<host>.pooler.supabase.com:6543/postgres"
-npx drizzle-kit push          # creates every table from schema.ts
-npx tsx src/lib/db/seed-auth.ts        # seed the login accounts (password: limsl2026)
-# optional demo data:
-npx tsx src/lib/db/migrate-and-seed.ts
+export DATABASE_URL="postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres"
+npx tsx src/lib/db/migrate-and-seed.ts     # tables + users + demo data
+npx tsx src/lib/db/seed-roles-signoff.ts   # full role accounts (COO, FM, MM, HSE, QA…)
+npx tsx src/lib/db/seed-auth.ts            # sets password limsl2026 + force-change on first login
 ```
 
-> Real go-live data goes in through the app: **Administration → Data Import**
-> (equipment, schedule, users). You don't have to seed demo data.
+Login accounts after this: one per role, all password **`limsl2026`** (forced
+change on first login). Super Admin is `daniel.idonor@limsl.com`.
+
+> The **app** (locally and on Vercel) uses the **Transaction pooler**, port
+> **6543**, in `DATABASE_URL`. Real go-live data goes in through the app:
+> **Administration → Data Import** (equipment, schedule, users).
 
 ## 3. Create the storage bucket
 
