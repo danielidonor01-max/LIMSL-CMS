@@ -12,6 +12,7 @@ import {
 import { eq, or, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { diagnose } from "@/lib/diagnostics/engine";
+import { searchPassages, type Passage } from "@/lib/diagnostics/retrieval";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -62,10 +63,22 @@ export async function GET(
 
     const diagnoses = symptom.trim().length >= 2 ? diagnose(symptom, guides, history, components) : [];
 
+    // Manuals & procedure passages (Postgres FTS over document_chunks).
+    // Best-effort: retrieval failure must never take down the diagnosis.
+    let passages: Passage[] = [];
+    if (symptom.trim().length >= 2) {
+      try {
+        passages = await searchPassages(e.id, symptom, 5);
+      } catch (err) {
+        console.warn("diagnose: passage retrieval failed (non-fatal)", err);
+      }
+    }
+
     return NextResponse.json({
       equipment: { id: e.id, name: e.name, assetId: e.assetId, category: e.category, status: e.status },
       symptom,
       diagnoses,
+      passages,
       schematics,
       components,
       knownSymptoms: guides.map((g) => ({ id: g.id, symptom: g.symptom, errorCode: g.errorCode })),

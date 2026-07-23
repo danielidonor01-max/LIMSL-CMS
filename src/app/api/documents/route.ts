@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { ingestDocument } from "@/lib/diagnostics/ingest-docs";
 
 // GET /api/documents            → all documents (joined with equipment)
 // GET /api/documents?assetId=X  → documents for one machine (X is dash- or slash-form)
@@ -85,7 +86,20 @@ export async function POST(request: Request) {
       uploadedBy: gate.actor?.name || null,
     };
     await db.insert(equipmentDocuments).values(doc);
-    return NextResponse.json(doc, { status: 201 });
+
+    // Chunk the document into the troubleshooting retrieval corpus (and detect
+    // pdfKind). Best-effort — an extraction failure must never fail the upload.
+    let ingestion: { status: string; chunks: number } | null = null;
+    if (doc.fileKey) {
+      try {
+        const r = await ingestDocument(doc.id);
+        ingestion = { status: r.status, chunks: r.chunks };
+      } catch (err) {
+        console.warn("documents: ingestion failed (non-fatal)", err);
+      }
+    }
+
+    return NextResponse.json({ ...doc, ingestion }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to add document:", error);

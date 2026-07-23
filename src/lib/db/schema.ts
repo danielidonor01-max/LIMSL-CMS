@@ -8,6 +8,7 @@ import {
   integer,
   real,
   boolean,
+  index,
 } from "drizzle-orm/pg-core";
 
 // ─── Equipment ─────────────────────────────────────────────────────────────
@@ -626,6 +627,35 @@ export const appSettings = pgTable("app_settings", {
   updatedByName: text("updated_by_name"),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
+
+// ─── Document Chunks ─────────────────────────────────────────────────────────
+// Retrieval corpus for the troubleshooting module (P0 of the troubleshooting
+// engine — see docs/TROUBLESHOOTING-ENGINE.md §2.2). Text documents (manuals,
+// SOPs) and the approved maintenance procedure are chunked here; a GIN
+// full-text index makes them searchable from /diagnose. equipmentId NULL means
+// plant-wide (e.g. the maintenance procedure applies to every machine).
+export const documentChunks = pgTable(
+  "document_chunks",
+  {
+    id: text("id").primaryKey(),
+    equipmentId: text("equipment_id").references(() => equipment.id),
+    documentId: text("document_id").references(() => equipmentDocuments.id),
+    sourceType: text("source_type").notNull(), // DOCUMENT | PROCEDURE
+    sourceLabel: text("source_label").notNull(), // e.g. "Operating Manual — Stako CNC" / "Maintenance Procedure Rev 2"
+    chunkIndex: integer("chunk_index").notNull(),
+    heading: text("heading"),
+    pageStart: integer("page_start"),
+    pageEnd: integer("page_end"),
+    content: text("content").notNull(),
+    tokenEstimate: integer("token_estimate"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [
+    index("document_chunks_fts_idx").using("gin", sql`to_tsvector('english', ${t.content})`),
+    index("document_chunks_equipment_idx").on(t.equipmentId),
+    index("document_chunks_document_idx").on(t.documentId),
+  ],
+);
 
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;

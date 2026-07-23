@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
+import { ingestApprovedProcedure } from "@/lib/diagnostics/ingest-docs";
 
 // Promote any PENDING_APPROVAL revision whose sign-off chain is complete, and
 // supersede the prior effective revision.
@@ -23,6 +24,14 @@ async function reconcile() {
         .update(procedureRevisions)
         .set({ status: "APPROVED", effectiveDate: new Date().toISOString().slice(0, 10), approvedAt: new Date().toISOString() })
         .where(eq(procedureRevisions.id, r.id));
+
+      // Refresh the troubleshooting retrieval corpus with the newly effective
+      // revision. Best-effort — never blocks the approval itself.
+      try {
+        await ingestApprovedProcedure();
+      } catch (err) {
+        console.warn("procedure: chunk re-ingestion failed (non-fatal)", err);
+      }
     }
   }
 }

@@ -40,15 +40,43 @@ type Diagnosis = {
   historyRefs: { cmrf: string; date: string; rootCause: string; parts?: string | null }[];
 };
 type Schematic = { id: string; title: string; type: string; sheet: string | null; fileUrl: string | null };
+type Passage = {
+  id: string;
+  sourceType: string;
+  sourceLabel: string;
+  heading: string | null;
+  pageStart: number | null;
+  pageEnd: number | null;
+  snippet: string;
+  rank: number;
+};
 type DiagnoseResult = {
   equipment: { id: string; name: string; assetId: string; category: string; status: string };
   diagnoses: Diagnosis[];
+  passages?: Passage[];
   schematics: Schematic[];
   components: Component[];
   knownSymptoms: { id: string; symptom: string; errorCode: string | null }[];
   historyCount: number;
   guideCount: number;
 };
+
+// ts_headline wraps matched terms in **…** — render those highlighted, safely
+// (plain text split, no HTML injection).
+function Snippet({ text }: { text: string }) {
+  const parts = text.split("**");
+  return (
+    <span>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? (
+          <mark key={i} className="bg-amber-100 text-slate-900 rounded px-0.5">{p}</mark>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </span>
+  );
+}
 
 const SOURCE_BADGE: Record<string, string> = {
   GUIDE: "bg-sky-50 text-sky-700 border-sky-200",
@@ -317,6 +345,37 @@ export default function TroubleshootPage() {
                 </div>
               </div>
             ))
+          )}
+
+          {/* Manuals & procedure passages (FTS over document_chunks) */}
+          {result && (result.passages?.length ?? 0) > 0 && (
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-sky-600" />
+                <h3 className="text-sm font-semibold text-slate-900">Relevant documentation</h3>
+                <span className="text-[10px] text-slate-400">manuals &amp; maintenance procedure</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {result.passages!.map((p) => (
+                  <div key={p.id} className="px-5 py-3 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-slate-700 truncate">
+                        {p.sourceLabel}
+                        {p.heading ? <span className="text-slate-400 font-normal"> · {p.heading}</span> : null}
+                      </span>
+                      {p.pageStart != null && (
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                          p.{p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `–${p.pageEnd}` : ""}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      <Snippet text={p.snippet} />
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
