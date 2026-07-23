@@ -17,6 +17,9 @@ const FALLBACK_MODELS = [...new Set([DEFAULT_MODEL, "gemini-flash-latest", "gemi
 export type GeminiImage = { mimeType: string; dataBase64: string };
 export type GeminiUsage = { inputTokens: number; outputTokens: number };
 export type GeminiResult<T> = { data: T; model: string; usage: GeminiUsage };
+// One conversational turn in Gemini's wire shape ("model" is Gemini's word for
+// the assistant role). parts may carry text and/or inlineData images.
+export type GeminiTurn = { role: "user" | "model"; parts: Array<Record<string, unknown>> };
 
 export class GeminiError extends Error {
   constructor(message: string, public readonly retryable = false) {
@@ -24,34 +27,12 @@ export class GeminiError extends Error {
   }
 }
 
-// One JSON-schema-constrained generation call. `schema` is Gemini's OpenAPI-ish
-// subset (type OBJECT/ARRAY/STRING/NUMBER/BOOLEAN/INTEGER, properties, items,
-// required, enum).
-export async function generateJson<T>(opts: {
-  system: string;
-  user: string;
-  images?: GeminiImage[];
-  schema: Record<string, unknown>;
-  maxOutputTokens?: number;
-}): Promise<GeminiResult<T>> {
+// Post one already-assembled payload, walking the model fallbacks on 404/429,
+// and parse the JSON candidate. Shared by the single-shot and chat entry points.
+async function runGenerate<T>(payload: Record<string, unknown>): Promise<GeminiResult<T>> {
   const key = await getApiKey("GEMINI");
   if (!key) throw new GeminiError("Gemini is not configured — add the API key in App Settings.");
-
-  const parts: Array<Record<string, unknown>> = [{ text: opts.user }];
-  for (const img of opts.images ?? []) {
-    parts.push({ inlineData: { mimeType: img.mimeType, data: img.dataBase64 } });
-  }
-
-  const body = JSON.stringify({
-    system_instruction: { parts: [{ text: opts.system }] },
-    contents: [{ role: "user", parts }],
-    generationConfig: {
-      response_mime_type: "application/json",
-      response_schema: opts.schema,
-      temperature: 0.2,
-      maxOutputTokens: opts.maxOutputTokens ?? 3072,
-    },
-  });
+  const body = JSON.stringify(payload);
 
   let lastErr: GeminiError | null = null;
   for (const model of FALLBACK_MODELS) {
@@ -109,4 +90,51 @@ export async function generateJson<T>(opts: {
     };
   }
   throw lastErr ?? new GeminiError("No Gemini model available.");
+}
+
+// One JSON-schema-constrained generation call. `schema` is Gemini's OpenAPI-ish
+// subset (type OBJECT/ARRAY/STRING/NUMBER/BOOLEAN/INTEGER, properties, items,
+// required, enum).
+export async function generateJson<T>(opts: {
+  system: string;
+  user: string;
+  images?: GeminiImage[];
+  schema: Record<string, unknown>;
+  maxOutputTokens?: number;
+}): Promise<GeminiResult<T>> {
+  const parts: Array<Record<string, unknown>> = [{ text: opts.user }];
+  for (const img of opts.images ?? []) {
+    parts.push({ inlineData: { mimeType: img.mimeType, data: img.dataBase64 } });
+  }
+  return runGenerate<T>({
+    system_instruction: { parts: [{ text: opts.system }] },
+    contents: [{ role: "user", parts }],
+    generationConfig: {
+      response_mime_type: "application/json",
+      response_schema: opts.schema,
+      temperature: 0.2,
+      maxOutputTokens: opts.maxOutputTokens ?? 3072,
+    },
+  });
+}
+
+// Multi-turn variant: caller supplies the full conversation (must end on a
+// `user` turn). Used by the chat-style diagnosis so the model keeps context
+// across the technician's step-by-step feedback.
+export async function generateJsonChat<T>(opts: {
+  system: string;
+  contents: GeminiTurn[];
+  schema: Record<string, unknown>;
+  maxOutputTokens?: number;
+}): Promise<GeminiResult<T>> {
+  return runGenerate<T>({
+    system_instruction: { parts: [{ text: opts.system }] },
+    contents: opts.contents,
+    generationConfig: {
+      response_mime_type: "application/json",
+      response_schema: opts.schema,
+      temperature: 0.3,
+      maxOutputTokens: opts.maxOutputTokens ?? 2048,
+    },
+  });
 }
