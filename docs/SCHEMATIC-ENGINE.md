@@ -1,5 +1,12 @@
 # Schematic Ingestion & Diagnostic Engine — Enablement Guide
 
+> **Superseded for design purposes by `docs/TROUBLESHOOTING-ENGINE.md`** — the
+> complete engineering guide covering ingestion/preprocessing (incl. the
+> overlapping-tile strategy for high-resolution schematics), query
+> understanding & retrieval, vision-assisted analysis, and guardrailed
+> generation. This file remains the quick reference for the existing
+> scaffolding and env flags.
+
 The in‑app **diagnostic engine** (`/equipment/[assetId]/troubleshoot`) is live today and
 reasons over structured data: the component registry (BOM), diagnostic guides, and
 RCA/corrective history. See `src/lib/diagnostics/engine.ts`.
