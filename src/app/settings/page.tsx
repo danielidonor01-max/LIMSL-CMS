@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
@@ -46,6 +46,82 @@ export default function AppSettingsPage() {
   const [escalating, setEscalating] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+
+  // AI provider API keys (encrypted at rest; only masked hints reach the client)
+  type Cred = {
+    provider: string; label: string; note: string; configured: boolean;
+    source: "ENV" | "DB" | null; keyHint: string | null; updatedByName: string | null; updatedAt: string | null;
+  };
+  const [creds, setCreds] = useState<Cred[]>([]);
+  const [keyInput, setKeyInput] = useState<Record<string, string>>({});
+  const [credBusy, setCredBusy] = useState<string | null>(null); // `${provider}:${action}`
+
+  const loadCreds = () => {
+    fetch("/api/settings/credentials")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.providers && setCreds(d.providers));
+  };
+  useEffect(loadCreds, []);
+
+  const saveKey = async (provider: string) => {
+    const key = (keyInput[provider] || "").trim();
+    if (!key) {
+      toast.error("Paste the API key first.");
+      return;
+    }
+    setCredBusy(`${provider}:save`);
+    try {
+      const res = await fetch("/api/settings/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, key }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to save key.");
+        return;
+      }
+      toast.success(`${provider} key saved (${d.keyHint}).`);
+      setKeyInput((k) => ({ ...k, [provider]: "" }));
+      loadCreds();
+    } finally {
+      setCredBusy(null);
+    }
+  };
+
+  const testKey = async (provider: string) => {
+    setCredBusy(`${provider}:test`);
+    try {
+      const key = (keyInput[provider] || "").trim();
+      const res = await fetch("/api/settings/credentials?action=test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, key: key || undefined }),
+      });
+      const d = await res.json();
+      if (d.ok) toast.success(`${provider}: ${d.detail}`);
+      else toast.error(`${provider}: ${d.detail ?? d.error ?? "Test failed."}`);
+    } finally {
+      setCredBusy(null);
+    }
+  };
+
+  const removeKey = async (provider: string) => {
+    setCredBusy(`${provider}:remove`);
+    try {
+      const res = await fetch("/api/settings/credentials", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      if (res.ok) {
+        toast.success(`${provider} key removed.`);
+        loadCreds();
+      } else toast.error("Failed to remove key.");
+    } finally {
+      setCredBusy(null);
+    }
+  };
 
   const sendTestEmail = async () => {
     setSendingTest(true);
@@ -293,6 +369,65 @@ export default function AppSettingsPage() {
             <span className="font-bold text-slate-900 font-mono">{previewHours.toFixed(2)} h</span>
           </div>
         )}
+      </section>
+
+      {/* AI provider API keys */}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-emerald-600" /> AI Provider API Keys
+        </h3>
+        <p className="text-xs text-slate-500">
+          Keys power the AI layers of the troubleshooting module. Stored encrypted; only a masked hint is ever shown.
+          A platform environment variable overrides the key saved here.
+        </p>
+        <div className="space-y-3">
+          {creds.map((c) => (
+            <div key={c.provider} className="rounded-lg border border-slate-200 p-3 space-y-2.5">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <span className="text-xs font-semibold text-slate-900">{c.label}</span>
+                  <span className="text-[10px] text-slate-400 ml-2">{c.note}</span>
+                </div>
+                {c.configured ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+                    Configured · {c.source === "ENV" ? "env var" : "saved"} · {c.keyHint}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">
+                    Not configured
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="password"
+                  value={keyInput[c.provider] ?? ""}
+                  onChange={(e) => setKeyInput((k) => ({ ...k, [c.provider]: e.target.value }))}
+                  placeholder={c.configured ? "Paste a new key to replace…" : "Paste API key…"}
+                  className="flex-1 min-w-56 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500/40"
+                  disabled={c.source === "ENV"}
+                />
+                <Button size="sm" icon={Save} loading={credBusy === `${c.provider}:save`} onClick={() => saveKey(c.provider)} disabled={c.source === "ENV"}>
+                  Save
+                </Button>
+                <Button size="sm" variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={() => testKey(c.provider)}>
+                  Test
+                </Button>
+                {c.source === "DB" && (
+                  <Button size="sm" variant="ghost" icon={Trash2} loading={credBusy === `${c.provider}:remove`} onClick={() => removeKey(c.provider)}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+              {c.source === "ENV" && (
+                <p className="text-[10px] text-slate-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
+              )}
+              {c.updatedByName && c.source === "DB" && (
+                <p className="text-[10px] text-slate-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Email delivery */}

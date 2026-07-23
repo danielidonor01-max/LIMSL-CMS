@@ -700,6 +700,22 @@ export const schematicTiles = pgTable(
   ],
 );
 
+// ─── API Credentials ─────────────────────────────────────────────────────────
+// Provider API keys managed from CMS Settings (Super Admin). Keys are stored
+// AES-256-GCM-encrypted with a key derived from AUTH_SECRET (src/lib/crypto.ts)
+// and are never returned to the client — only `keyHint` (last 4 chars) is.
+// Environment variables (e.g. GEMINI_API_KEY) override the DB when set, so
+// hosted deployments can keep secrets in platform env if preferred.
+export const apiCredentials = pgTable("api_credentials", {
+  provider: text("provider").primaryKey(), // GEMINI | ANTHROPIC | ...
+  encryptedKey: text("encrypted_key").notNull(), // iv:tag:ciphertext (base64)
+  keyHint: text("key_hint").notNull(), // masked preview, e.g. "AIza…f3k9"
+  enabled: boolean("enabled").notNull().default(true),
+  updatedById: text("updated_by_id"),
+  updatedByName: text("updated_by_name"),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
