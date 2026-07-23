@@ -5,6 +5,7 @@ import { equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { logEquipmentEvent } from "@/lib/equipment-log";
 
 export async function GET(
   request: Request,
@@ -57,11 +58,42 @@ export async function PATCH(
       if (body[key] !== undefined) updates[key] = body[key];
     }
 
+    const [before] = await db.select().from(equipment).where(eq(equipment.assetId, assetIdOriginal)).limit(1);
+
     const updated = await db
       .update(equipment)
       .set(updates)
       .where(eq(equipment.assetId, assetIdOriginal))
       .returning();
+
+    // Log material lifecycle changes to the machine timeline.
+    if (before) {
+      try {
+        if (body.status !== undefined && body.status !== before.status) {
+          await logEquipmentEvent({
+            equipmentId: before.id,
+            category: "STATUS",
+            title: `Status changed: ${before.status?.replace(/_/g, " ")} → ${String(body.status).replace(/_/g, " ")}`,
+            source: "AUTO",
+            performedById: gate.actor?.id ?? null,
+            performedByName: gate.actor?.name ?? null,
+          });
+        }
+        if (body.location !== undefined && body.location !== before.location && body.location) {
+          await logEquipmentEvent({
+            equipmentId: before.id,
+            category: "TRANSFER",
+            title: `Relocated: ${before.location || "—"} → ${body.location}`,
+            source: "AUTO",
+            performedById: gate.actor?.id ?? null,
+            performedByName: gate.actor?.name ?? null,
+            metadata: { from: before.location, to: body.location },
+          });
+        }
+      } catch (err) {
+        console.warn("equipment PATCH: log failed (non-fatal)", err);
+      }
+    }
 
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {

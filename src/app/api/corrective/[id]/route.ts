@@ -7,6 +7,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { getWorkSettings } from "@/lib/settings";
 import { productionDowntimeHours } from "@/lib/worktime";
+import { logEquipmentEvent } from "@/lib/equipment-log";
 
 export async function GET(
   request: Request,
@@ -117,6 +118,7 @@ export async function PATCH(
     };
 
     // If closing out the corrective work, restore equipment to OPERATIONAL
+    const closingOut = body.status === "CLOSED" && record.status !== "CLOSED";
     if (body.status === "CLOSED" && record.equipmentId) {
       await db
         .update(equipment)
@@ -126,6 +128,25 @@ export async function PATCH(
           updatedAt: new Date().toISOString(),
         })
         .where(eq(equipment.id, record.equipmentId));
+    }
+    if (closingOut && record.equipmentId) {
+      try {
+        await logEquipmentEvent({
+          equipmentId: record.equipmentId,
+          category: "CM",
+          title: `Corrective maintenance closed — ${record.cmrfNumber}`,
+          detail: `${record.faultDescription || record.observedFault || "Fault"}${record.verifiedRootCause ? ` · Root cause: ${record.verifiedRootCause}` : ""}${totalDowntimeHours != null ? ` · ${totalDowntimeHours}h downtime` : ""}`,
+          refType: "corrective_maintenance",
+          refId: record.id,
+          href: `/corrective/${record.id}`,
+          source: "AUTO",
+          performedById: gate.actor?.id ?? null,
+          performedByName: body.supervisorName || gate.actor?.name || null,
+          occurredAt: `${(body.closeOutDate ?? new Date().toISOString().split("T")[0])}T00:00:00Z`,
+        });
+      } catch (err) {
+        console.warn("corrective: equipment log failed (non-fatal)", err);
+      }
     }
 
     const updated = await db

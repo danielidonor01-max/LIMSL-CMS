@@ -15,6 +15,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { generateNextOccurrence } from "@/lib/schedule";
+import { logEquipmentEvent } from "@/lib/equipment-log";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -140,6 +141,27 @@ export async function POST(request: Request) {
       entityId: checklistId,
       entityDescription: `PM checklist signed for WO ${wo?.workOrderNumber ?? body.workOrderId}`,
     });
+
+    // Record the PM on the machine's lifetime log (best-effort).
+    try {
+      await logEquipmentEvent({
+        equipmentId: body.equipmentId,
+        category: "PM",
+        title: `Preventive maintenance completed${wo?.workOrderNumber ? ` — ${wo.workOrderNumber}` : ""}`,
+        detail: body.correctiveActionRequired
+          ? `Follow-up corrective action flagged: ${body.actionDescription || "see checklist"}`
+          : "PM checklist signed off; equipment returned to service.",
+        refType: "work_order",
+        refId: wo?.id ?? null,
+        href: body.workOrderId ? `/work-orders/${body.workOrderId}/pm-checklist` : null,
+        source: "AUTO",
+        performedById: gate.actor?.id ?? null,
+        performedByName: gate.actor?.name || body.technicianName || null,
+        occurredAt: `${today}T00:00:00Z`,
+      });
+    } catch (err) {
+      console.warn("pm-checklists: equipment log failed (non-fatal)", err);
+    }
 
     return NextResponse.json({ ...checklist, id: checklistId }, { status: 201 });
   } catch (error) {

@@ -716,6 +716,56 @@ export const apiCredentials = pgTable("api_credentials", {
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Equipment Log (digital-twin history) ───────────────────────────────────
+// The lifetime event log for a machine: PMs, CMs, inspections, accidents,
+// transfers, diagnoses, status changes, notes. Populated automatically by the
+// maintenance flows AND manually. The history timeline merges these explicit
+// entries with events derived from the source tables (work orders, NCs, docs).
+export const equipmentLog = pgTable(
+  "equipment_log",
+  {
+    id: text("id").primaryKey(),
+    equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+    category: text("category").notNull(), // PM | CM | INSPECTION | ACCIDENT | TRANSFER | DIAGNOSIS | STATUS | NOTE | CALIBRATION | DOCUMENT | OTHER
+    title: text("title").notNull(),
+    detail: text("detail"),
+    refType: text("ref_type"), // work_order | corrective_maintenance | diagnosis_session | ...
+    refId: text("ref_id"),
+    href: text("href"), // in-app deep link
+    source: text("source").notNull().default("MANUAL"), // AUTO | MANUAL
+    performedById: text("performed_by_id"),
+    performedByName: text("performed_by_name"),
+    occurredAt: text("occurred_at").notNull(), // when the event happened (ISO)
+    metadata: text("metadata"), // JSON
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("equipment_log_equipment_idx").on(t.equipmentId)],
+);
+
+// ─── Diagnosis Sessions ──────────────────────────────────────────────────────
+// A guided (chat-style) AI troubleshooting session: the running conversation,
+// the technician's step-by-step feedback, and the outcome. Created only once a
+// technician chooses to log the fault and proceed — and it feeds the machine
+// log + the diagnostic-guide learning loop on resolution.
+export const diagnosisSessions = pgTable(
+  "diagnosis_sessions",
+  {
+    id: text("id").primaryKey(),
+    equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+    logId: text("log_id"), // the equipment_log DIAGNOSIS entry
+    symptom: text("symptom").notNull(),
+    status: text("status").notNull().default("OPEN"), // OPEN | RESOLVED | ABANDONED
+    messages: text("messages").notNull().default("[]"), // JSON [{role,content,steps?,images?,ts}]
+    resolvedCause: text("resolved_cause"),
+    resolutionNote: text("resolution_note"),
+    startedById: text("started_by_id"),
+    startedByName: text("started_by_name"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+    updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("diagnosis_sessions_equipment_idx").on(t.equipmentId)],
+);
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;

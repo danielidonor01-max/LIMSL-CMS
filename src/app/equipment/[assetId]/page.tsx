@@ -24,7 +24,10 @@ import {
   Info,
   BookOpen,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
+import EquipmentLog from "@/components/EquipmentLog";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 // A diagnostic-guide's steps column is JSON that may hold plain strings or
 // {step, description} objects. Coerce every element to a string so it can never
@@ -52,6 +55,12 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   const [guides, setGuides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("specs");
+
+  // Session resolves client-side only — defer role reads past mount.
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes((session?.user as { role?: string })?.role ?? "");
 
   useEffect(() => {
     async function loadData() {
@@ -221,6 +230,14 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             }`}
           >
             Safety & OEM
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`pb-2.5 transition-all border-b-2 flex items-center gap-1.5 ${
+              activeTab === "history" ? "text-emerald-600 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+            }`}
+          >
+            <History className="w-3.5 h-3.5" /> History Log
           </button>
         </div>
 
@@ -437,8 +454,19 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           </div>
         )}
 
+        {activeTab === "history" && (
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <History className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-sm font-bold tracking-wide text-slate-900">Machine History Log</h3>
+              <span className="text-[11px] text-slate-400">every action recorded on this asset</span>
+            </div>
+            <EquipmentLog assetId={assetIdKey} canWrite={canWrite} />
+          </div>
+        )}
+
         {/* Per-machine document register (live) */}
-        <EquipmentDocuments assetId={assetIdKey} />
+        {activeTab !== "history" && <EquipmentDocuments assetId={assetIdKey} />}
       </main>
 
     </div>
