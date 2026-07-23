@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
-  serverExternalPackages: ["nodemailer", "pdfjs-dist"],
+  serverExternalPackages: ["nodemailer", "pdfjs-dist", "@napi-rs/canvas"],
 };
 
 export default nextConfig;

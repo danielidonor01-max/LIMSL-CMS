@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import SchematicViewer from "@/components/SchematicViewer";
 import {
   ArrowLeft,
   Loader2,
@@ -98,6 +99,7 @@ export default function TroubleshootPage() {
   const [diagnosing, setDiagnosing] = useState(false);
   const [checked, setChecked] = useState<Record<string, Record<number, boolean>>>({});
   const [learned, setLearned] = useState<Record<number, string>>({});
+  const [viewer, setViewer] = useState<{ docId: string; title: string; reference?: string | null } | null>(null);
 
   // Load machine context (schematics, known symptoms, counts)
   useEffect(() => {
@@ -143,6 +145,16 @@ export default function TroubleshootPage() {
   };
 
   const ctx = result ?? meta;
+
+  // Schematic *documents* (preparable into tiles) vs external diagram links —
+  // the diagnose route appends documents with their docType as `type`.
+  const schematicDocs = (ctx?.schematics ?? []).filter(
+    (s) => s.type === "ELECTRICAL_SCHEMATIC" || s.type === "OPERATIONAL_MANUAL",
+  );
+  const openOnSchematic = (reference?: string | null) => {
+    const doc = schematicDocs.find((s) => s.type === "ELECTRICAL_SCHEMATIC") ?? schematicDocs[0];
+    if (doc) setViewer({ docId: doc.id, title: doc.title, reference });
+  };
 
   if (loading) {
     return (
@@ -283,11 +295,20 @@ export default function TroubleshootPage() {
                           <span className="text-slate-700">
                             <span className="font-mono font-semibold text-slate-900">{c.componentTag}</span> · {c.name}
                           </span>
-                          {c.schematicReference && (
-                            <span className="text-[10px] text-emerald-700 font-mono flex items-center gap-1">
-                              <MapPin className="w-3 h-3" /> {c.schematicReference}
-                            </span>
-                          )}
+                          {c.schematicReference &&
+                            (schematicDocs.length > 0 ? (
+                              <button
+                                onClick={() => openOnSchematic(c.schematicReference)}
+                                className="text-[10px] text-emerald-700 font-mono flex items-center gap-1 hover:underline"
+                                title="View on schematic"
+                              >
+                                <MapPin className="w-3 h-3" /> {c.schematicReference}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-emerald-700 font-mono flex items-center gap-1">
+                                <MapPin className="w-3 h-3" /> {c.schematicReference}
+                              </span>
+                            ))}
                         </div>
                       ))}
                     </div>
@@ -387,16 +408,28 @@ export default function TroubleshootPage() {
             </h3>
             {ctx && ctx.schematics.length > 0 ? (
               <div className="space-y-2">
-                {ctx.schematics.map((s) => (
-                  <a
-                    key={s.id}
-                    href={s.fileUrl ?? "#"}
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs"
-                  >
-                    <span className="text-slate-700 truncate">{s.title}</span>
-                    <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
-                  </a>
-                ))}
+                {ctx.schematics.map((s) =>
+                  s.type === "ELECTRICAL_SCHEMATIC" || s.type === "OPERATIONAL_MANUAL" ? (
+                    <button
+                      key={s.id}
+                      onClick={() => setViewer({ docId: s.id, title: s.title })}
+                      className="w-full flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs text-left"
+                      title="Open tiled viewer"
+                    >
+                      <span className="text-slate-700 truncate">{s.title}</span>
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                    </button>
+                  ) : (
+                    <a
+                      key={s.id}
+                      href={s.fileUrl ?? "#"}
+                      className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs"
+                    >
+                      <span className="text-slate-700 truncate">{s.title}</span>
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                    </a>
+                  ),
+                )}
               </div>
             ) : (
               <p className="text-xs text-slate-400">No schematics on file.</p>
@@ -432,6 +465,16 @@ export default function TroubleshootPage() {
           </div>
         </div>
       </div>
+
+      {viewer && (
+        <SchematicViewer
+          assetId={assetId}
+          documentId={viewer.docId}
+          title={viewer.title}
+          schematicReference={viewer.reference}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </div>
   );
 }

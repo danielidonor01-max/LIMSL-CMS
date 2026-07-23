@@ -657,6 +657,39 @@ export const documentChunks = pgTable(
   ],
 );
 
+// ─── Schematic Tiles ─────────────────────────────────────────────────────────
+// P1 of the troubleshooting engine (docs/TROUBLESHOOTING-ENGINE.md §2.3): each
+// schematic PDF page is rendered at high DPI and cut into overlapping tiles so
+// dense sheets stay legible (full sheets exceed vision/display resolution).
+// level 0 = downscaled whole-page preview, 1 = standard tile grid,
+// 2 = reserved for the dense-region second pass (P2). Coordinates are pixels in
+// the rendered page space (pageWidth × pageHeight at `dpi`), so any point maps
+// deterministically to the tile containing it.
+export const schematicTiles = pgTable(
+  "schematic_tiles",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").notNull().references(() => equipmentDocuments.id),
+    equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+    page: integer("page").notNull(), // 1-based PDF page
+    tileKey: text("tile_key").notNull(), // p{page}_preview | p{page}_r{row}_c{col}
+    level: integer("level").notNull().default(1),
+    x: integer("x").notNull(),
+    y: integer("y").notNull(),
+    w: integer("w").notNull(),
+    h: integer("h").notNull(),
+    pageWidth: integer("page_width").notNull(), // rendered page size at `dpi`
+    pageHeight: integer("page_height").notNull(),
+    dpi: integer("dpi").notNull(),
+    fileKey: text("file_key").notNull(), // storage key of the PNG crop
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [
+    index("schematic_tiles_document_idx").on(t.documentId, t.page),
+    index("schematic_tiles_equipment_idx").on(t.equipmentId),
+  ],
+);
+
 // Type exports
 export type Equipment = typeof equipment.$inferSelect;
 export type NewEquipment = typeof equipment.$inferInsert;
