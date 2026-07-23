@@ -13,6 +13,7 @@ import { eq, or, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { diagnose } from "@/lib/diagnostics/engine";
 import { searchPassages, type Passage } from "@/lib/diagnostics/retrieval";
+import { getApiKey } from "@/lib/credentials";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -74,6 +75,9 @@ export async function GET(
       }
     }
 
+    // Whether the AI-assist layer can run (key configured in Settings or env).
+    const aiReady = !!(await getApiKey("GEMINI").catch(() => null));
+
     return NextResponse.json({
       equipment: { id: e.id, name: e.name, assetId: e.assetId, category: e.category, status: e.status },
       symptom,
@@ -84,6 +88,7 @@ export async function GET(
       knownSymptoms: guides.map((g) => ({ id: g.id, symptom: g.symptom, errorCode: g.errorCode })),
       historyCount: history.filter((h) => h.status === "CLOSED").length,
       guideCount: guides.length,
+      aiReady,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import SchematicViewer from "@/components/SchematicViewer";
 import {
   ArrowLeft,
@@ -66,6 +67,24 @@ type DiagnoseResult = {
   knownSymptoms: { id: string; symptom: string; errorCode: string | null }[];
   historyCount: number;
   guideCount: number;
+  aiReady?: boolean;
+};
+
+type AiDiagnosis = {
+  cause: string;
+  confidence: number;
+  evidence: { id: string; label: string; kind: string }[];
+  componentTags: { tag: string; verified: boolean }[];
+  safetyPrerequisites: string[];
+  steps: { action: string; expected?: string; ifNot?: string }[];
+  escalateIf: string | null;
+};
+type AiResult = {
+  diagnoses: AiDiagnosis[];
+  insufficientEvidence: boolean;
+  notes: string | null;
+  model: string;
+  evidenceCount: number;
 };
 
 // ts_headline wraps matched terms in **…** — render those highlighted, safely
@@ -105,6 +124,8 @@ export default function TroubleshootPage() {
   const [diagnosing, setDiagnosing] = useState(false);
   const [checked, setChecked] = useState<Record<string, Record<number, boolean>>>({});
   const [learned, setLearned] = useState<Record<number, string>>({});
+  const [ai, setAi] = useState<AiResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [viewer, setViewer] = useState<{
     docId: string;
     title: string;
@@ -126,9 +147,32 @@ export default function TroubleshootPage() {
     setSymptom(s);
     setDiagnosing(true);
     setLearned({});
+    setAi(null);
     const res = await fetch(`/api/equipment/${assetId}/diagnose?symptom=${encodeURIComponent(s)}`).then((r) => r.json());
     setResult(res);
     setDiagnosing(false);
+  };
+
+  const runAiAnalysis = async () => {
+    if (!symptom.trim()) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch(`/api/equipment/${assetId}/diagnose/ai`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptom }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "AI analysis failed — deterministic results remain valid.");
+        return;
+      }
+      setAi(d);
+    } catch {
+      toast.error("AI analysis failed — deterministic results remain valid.");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const toggleStep = (rank: number, i: number) =>
@@ -392,6 +436,115 @@ export default function TroubleshootPage() {
                 </div>
               </div>
             ))
+          )}
+
+          {/* AI-assisted analysis (Gemini) — clearly labeled, evidence-grounded */}
+          {result && result.aiReady && (
+            <div className="bg-white border border-violet-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-violet-100 bg-violet-50/50 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-600" />
+                  <h3 className="text-sm font-semibold text-slate-900">AI-assisted analysis</h3>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-700 border-amber-500/20">
+                    Verify before acting
+                  </span>
+                </div>
+                {!ai && (
+                  <button
+                    onClick={runAiAnalysis}
+                    disabled={aiLoading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold"
+                  >
+                    {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {aiLoading ? "Analyzing…" : "Run AI analysis"}
+                  </button>
+                )}
+              </div>
+
+              {ai && (
+                <div className="divide-y divide-slate-100">
+                  {ai.insufficientEvidence && (
+                    <p className="px-5 py-3 text-xs text-amber-700 bg-amber-50">
+                      The AI judged the recorded evidence insufficient for a confident diagnosis
+                      {ai.notes ? ` — ${ai.notes}` : "."}
+                    </p>
+                  )}
+                  {ai.diagnoses.map((d, i) => (
+                    <div key={i} className="px-5 py-4 space-y-2.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold text-slate-900">{d.cause}</p>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-bold text-violet-600">{d.confidence}%</div>
+                          <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                            <div className="h-full bg-violet-500 rounded-full" style={{ width: `${d.confidence}%` }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {d.safetyPrerequisites.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {d.safetyPrerequisites.map((s, j) => (
+                            <span key={j} className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-800 font-semibold">
+                              ⚠ {s}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {d.componentTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {d.componentTags.map((t) => (
+                            <span
+                              key={t.tag}
+                              className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                                t.verified
+                                  ? "bg-slate-50 border-slate-200 text-slate-700"
+                                  : "bg-rose-50 border-rose-200 text-rose-700"
+                              }`}
+                              title={t.verified ? "In the component registry" : "NOT in the component registry — unverified"}
+                            >
+                              {t.tag}{!t.verified && " ⚠ unverified"}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {d.steps.length > 0 && (
+                        <ol className="space-y-1 text-xs text-slate-700 list-decimal list-inside">
+                          {d.steps.map((s, j) => (
+                            <li key={j}>
+                              {s.action}
+                              {s.expected && <span className="text-slate-500"> — expect: {s.expected}</span>}
+                              {s.ifNot && <span className="text-slate-400"> (if not: {s.ifNot})</span>}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+
+                      {d.evidence.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {d.evidence.map((ev) => (
+                            <span key={ev.id} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700" title={ev.id}>
+                              {ev.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {d.escalateIf && (
+                        <p className="text-[11px] text-slate-500">
+                          <span className="font-semibold text-slate-600">Escalate if:</span> {d.escalateIf}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  <p className="px-5 py-2.5 text-[10px] text-slate-400 bg-slate-50/60">
+                    Generated by {ai.model} from {ai.evidenceCount} recorded evidence items. AI output is advisory —
+                    the deterministic engine and your judgment remain authoritative. Follow PTW/LOTO procedures.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Manuals & procedure passages (FTS over document_chunks) */}
