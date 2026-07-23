@@ -51,7 +51,7 @@ export function computeTileGrid(pageW: number, pageH: number): TileRect[] {
   });
 }
 
-async function loadFileBytes(fileKey: string): Promise<Uint8Array | null> {
+export async function loadFileBytes(fileKey: string): Promise<Uint8Array | null> {
   const served = await serveFile(fileKey);
   if (served.kind === "stream") return served.body;
   if (served.kind === "redirect") {

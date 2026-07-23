@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import Button from "@/components/Button";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 
-type EntityKey = "equipment" | "schedule" | "users";
+type EntityKey = "equipment" | "schedule" | "users" | "components";
 type ImportAction = "create" | "update" | "error";
 type PreviewRow = { row: number; label: string; action: ImportAction; errors: string[] };
 type Summary = { total: number; create: number; update: number; error: number; created: number; updated: number };
@@ -19,6 +19,7 @@ const TABS: { key: EntityKey; label: string; blurb: string }[] = [
   { key: "equipment", label: "Equipment Register", blurb: "The 33-machine asset register. Matched by Asset ID — re-importing updates, never duplicates." },
   { key: "schedule", label: "Maintenance Schedule", blurb: "Planned PM/inspection activities, linked to equipment by Asset ID." },
   { key: "users", label: "User Roster", blurb: "People & roles. New users get a temporary password shown once, here." },
+  { key: "components", label: "Components", blurb: "Electrical-panel component lists (tag, name, type) per machine — powers the troubleshooting engine even without schematics. Matched by Asset ID + Tag." },
 ];
 
 const ACTION_BADGE: Record<ImportAction, string> = {

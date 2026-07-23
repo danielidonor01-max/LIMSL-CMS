@@ -26,6 +26,12 @@ type Component = {
   location: string | null;
   schematicReference: string | null;
   status: string | null;
+  schematicDocId?: string | null;
+  schematicPage?: number | null;
+  bboxX?: number | null;
+  bboxY?: number | null;
+  bboxW?: number | null;
+  bboxH?: number | null;
 };
 type Diagnosis = {
   rank: number;
@@ -99,7 +105,12 @@ export default function TroubleshootPage() {
   const [diagnosing, setDiagnosing] = useState(false);
   const [checked, setChecked] = useState<Record<string, Record<number, boolean>>>({});
   const [learned, setLearned] = useState<Record<number, string>>({});
-  const [viewer, setViewer] = useState<{ docId: string; title: string; reference?: string | null } | null>(null);
+  const [viewer, setViewer] = useState<{
+    docId: string;
+    title: string;
+    reference?: string | null;
+    focus?: { page: number | null; bbox: { x: number; y: number; w: number; h: number } | null } | null;
+  } | null>(null);
 
   // Load machine context (schematics, known symptoms, counts)
   useEffect(() => {
@@ -151,9 +162,24 @@ export default function TroubleshootPage() {
   const schematicDocs = (ctx?.schematics ?? []).filter(
     (s) => s.type === "ELECTRICAL_SCHEMATIC" || s.type === "OPERATIONAL_MANUAL",
   );
-  const openOnSchematic = (reference?: string | null) => {
-    const doc = schematicDocs.find((s) => s.type === "ELECTRICAL_SCHEMATIC") ?? schematicDocs[0];
-    if (doc) setViewer({ docId: doc.id, title: doc.title, reference });
+  const openOnSchematic = (c: Component) => {
+    // Prefer the exact document the component was captured on; else the first
+    // electrical schematic. Exact bbox (PDF points) → precise pin in the viewer.
+    const doc =
+      (c.schematicDocId && schematicDocs.find((s) => s.id === c.schematicDocId)) ||
+      schematicDocs.find((s) => s.type === "ELECTRICAL_SCHEMATIC") ||
+      schematicDocs[0];
+    if (!doc) return;
+    const hasBbox = c.bboxX != null && c.bboxY != null && c.bboxW != null && c.bboxH != null;
+    setViewer({
+      docId: doc.id,
+      title: doc.title,
+      reference: c.schematicReference,
+      focus:
+        c.schematicDocId === doc.id && hasBbox
+          ? { page: c.schematicPage ?? null, bbox: { x: c.bboxX!, y: c.bboxY!, w: c.bboxW!, h: c.bboxH! } }
+          : null,
+    });
   };
 
   if (loading) {
@@ -298,7 +324,7 @@ export default function TroubleshootPage() {
                           {c.schematicReference &&
                             (schematicDocs.length > 0 ? (
                               <button
-                                onClick={() => openOnSchematic(c.schematicReference)}
+                                onClick={() => openOnSchematic(c)}
                                 className="text-[10px] text-emerald-700 font-mono flex items-center gap-1 hover:underline"
                                 title="View on schematic"
                               >
@@ -472,6 +498,14 @@ export default function TroubleshootPage() {
           documentId={viewer.docId}
           title={viewer.title}
           schematicReference={viewer.reference}
+          focus={viewer.focus}
+          onComponentsChanged={() => {
+            // Registry changed (extraction confirm / click-to-tag) — refresh
+            // the machine context so new components flow into diagnoses.
+            fetch(`/api/equipment/${assetId}/diagnose`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((d) => d && setMeta(d));
+          }}
           onClose={() => setViewer(null)}
         />
       )}

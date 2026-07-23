@@ -490,9 +490,10 @@ enforced flow instead of treating chat output as authorization.
 
 | Phase | Scope | Needs API key? |
 |---|---|---|
-| **P0** | Text-document path: `document_chunks` + local extraction + Postgres FTS; retrieval upgrade in `/diagnose` (evidence pack incl. manual passages, deterministic only) | **No** |
-| **P1** | Schematic preprocessing: render + overview-less geometric tiling + `schematic_tiles` + crop storage + "View on schematic" UX (registry entries entered manually still get crops via zone math) | **No** |
-| **P2** | AI extraction: overview pass + per-tile extraction + merge + review UI → registry. Batch-driven bulk ingestion of all 33 machines' schematics | Yes |
+| **P0** ✅ | Text-document path: `document_chunks` + local extraction + Postgres FTS; retrieval upgrade in `/diagnose` (evidence pack incl. manual passages, deterministic only) | **No** |
+| **P1** ✅ | Schematic preprocessing: render + overview-less geometric tiling + `schematic_tiles` + crop storage + "View on schematic" UX (registry entries entered manually still get crops via zone math) | **No** |
+| **P2-lite** ✅ | Deterministic component extraction from the PDF **text layer** (pdfjs strings + coordinates → IEC tag grammar + prefix dictionary → exact PDF-point bboxes) → NEEDS_REVIEW job → human confirm → registry with exact pins. Click-to-tag in the viewer for anything missed; Components tab in Data Import for panel lists (the no-schematic path). Vector/CAD PDFs need no vision AI at all for tag location. | **No** |
+| **P2** | AI extraction for what P2-lite can't do: scanned (IMAGE_ONLY) sheets, wiring/`connectsTo` nets, title-block/zone-grid reading. Overview pass + per-tile vision + merge into the same review flow. Batch-driven bulk ingestion | Yes |
 | **P3** | Guardrailed generation: evidence pack → structured diagnosis card + validation layer + audit + feedback graduation | Yes |
 | **P4** | Interactive vision Q&A on tiles; optional pgvector hybrid retrieval; optional query-rewrite | Yes |
 

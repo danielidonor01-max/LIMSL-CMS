@@ -533,6 +533,16 @@ export const componentRegistry = pgTable("component_registry", {
   modelNumber: text("model_number"),
   technicalSpecs: text("technical_specs"), // JSON string
   status: text("status").default("OPERATIONAL"), // OPERATIONAL | FAULTY | REPLACED
+  // Exact schematic location (P2-lite): which document/page the component sits
+  // on, with its bounding box in PDF points (top-left origin) — resolution-
+  // independent, so the viewer maps it onto any rendered size. Null for
+  // registry entries that only carry a textual schematicReference.
+  schematicDocId: text("schematic_doc_id").references(() => equipmentDocuments.id),
+  schematicPage: integer("schematic_page"),
+  bboxX: real("bbox_x"),
+  bboxY: real("bbox_y"),
+  bboxW: real("bbox_w"),
+  bboxH: real("bbox_h"),
 });
 
 // ─── Diagnostic Guides & Hints ────────────────────────────────────────────────

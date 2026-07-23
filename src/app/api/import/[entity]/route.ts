@@ -8,7 +8,8 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import { parseSpreadsheet, toCsv } from "@/lib/import/parse";
 import { ENTITIES, processImport, type EntityKey } from "@/lib/import/entities";
 
-const isEntity = (v: string): v is EntityKey => v === "equipment" || v === "schedule" || v === "users";
+const isEntity = (v: string): v is EntityKey =>
+  v === "equipment" || v === "schedule" || v === "users" || v === "components";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ entity: string }> }) {
   const { entity } = await params;

@@ -75,6 +75,13 @@ export async function POST(
       modelNumber: body.modelNumber || "",
       technicalSpecs: body.technicalSpecs ? JSON.stringify(body.technicalSpecs) : "{}",
       status: "OPERATIONAL",
+      // Exact schematic location (set by click-to-tag in the viewer).
+      schematicDocId: body.schematicDocId || null,
+      schematicPage: body.schematicPage ?? null,
+      bboxX: body.bbox?.x ?? null,
+      bboxY: body.bbox?.y ?? null,
+      bboxW: body.bbox?.w ?? null,
+      bboxH: body.bbox?.h ?? null,
     };
 
     await db.insert(componentRegistry).values(newComponent);

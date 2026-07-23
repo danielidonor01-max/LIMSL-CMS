@@ -4,7 +4,8 @@
 // a blank cell. Preview and commit run the SAME validation — the client is never
 // trusted to have pre-validated.
 import { db } from "@/lib/db";
-import { equipment, maintenanceSchedule, users, auditLog } from "@/lib/db/schema";
+import { equipment, maintenanceSchedule, users, componentRegistry, auditLog } from "@/lib/db/schema";
+import { classifyTag } from "@/lib/diagnostics/extract-tags";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { hashPassword } from "@/lib/password";
@@ -12,7 +13,7 @@ import { ROLES, ROLE_DEPARTMENT } from "@/lib/roles";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS, ACTIVITY_TYPE_LABELS } from "@/lib/constants";
 import { field, type Row } from "./parse";
 
-export type EntityKey = "equipment" | "schedule" | "users";
+export type EntityKey = "equipment" | "schedule" | "users" | "components";
 export type ImportAction = "create" | "update" | "error";
 export type PreviewRow = { row: number; label: string; action: ImportAction; errors: string[] };
 export type ImportSummary = { total: number; create: number; update: number; error: number; created: number; updated: number };
@@ -36,6 +37,11 @@ export const ENTITIES: Record<EntityKey, { title: string; headers: string[]; exa
     title: "User Roster",
     headers: ["Name", "Email", "Role", "Job Title", "Department", "Phone", "WhatsApp"],
     example: ["John Doe", "john.doe@limsl.com", "TECHNICIAN", "Maintenance Technician", "MAINTENANCE", "+2348030000000", "+2348030000000"],
+  },
+  components: {
+    title: "Component Registry",
+    headers: ["Asset ID", "Tag", "Name", "Type", "Location", "Schematic Reference"],
+    example: ["LEE/PE/0001", "CB-12", "Circuit Breaker", "ELECTRICAL", "Main Cabinet Panel A", "Sheet 4, Zone C2"],
   },
 };
 
@@ -288,9 +294,84 @@ async function processUsers(rows: Row[], actor: Actor, commit: boolean): Promise
   return { preview, summary: summarize(preview, created, updated), credentials };
 }
 
+// ── Component registry ───────────────────────────────────────────────────────
+// The no-schematic path: shops that only have a panel component LIST load it
+// here; the troubleshooting engine consumes the registry either way.
+async function processComponents(rows: Row[], actor: Actor, commit: boolean): Promise<ProcessResult> {
+  const equip = await db.select().from(equipment);
+  const byAsset = new Map(equip.map((e) => [e.assetId.toUpperCase(), e.id]));
+  const existing = await db.select().from(componentRegistry);
+  const keyOf = (eqId: string, tag: string) => `${eqId}|${tag.toUpperCase()}`;
+  const byKey = new Map(existing.map((c) => [keyOf(c.equipmentId, c.componentTag), c.id]));
+  const typeSet = new Set(["ELECTRICAL", "HYDRAULIC", "PNEUMATIC", "CONTROL", "MECHANICAL"]);
+  const seen = new Set<string>();
+
+  const preview: PreviewRow[] = [];
+  let created = 0;
+  let updated = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const errors: string[] = [];
+
+    const assetIdRaw = field(r, "Asset ID", "Asset Code", "Asset Tag");
+    const equipmentId = assetIdRaw ? byAsset.get(assetIdRaw.toUpperCase()) : undefined;
+    if (!assetIdRaw) errors.push("Asset ID is required");
+    else if (!equipmentId) errors.push(`No equipment with Asset ID "${assetIdRaw}"`);
+
+    const tag = field(r, "Tag", "Component Tag", "Designation").toUpperCase();
+    if (!tag) errors.push("Tag is required");
+    else if (equipmentId) {
+      const k = keyOf(equipmentId, tag);
+      if (seen.has(k)) errors.push(`Duplicate tag "${tag}" for this machine in file`);
+      seen.add(k);
+    }
+
+    const guess = tag ? classifyTag(tag) : null;
+    const name = field(r, "Name", "Description") || guess?.name || "Component";
+    let type = field(r, "Type").toUpperCase().replace(/\s+/g, "_");
+    if (!type) type = guess?.type ?? "ELECTRICAL";
+    if (!typeSet.has(type)) errors.push(`Unknown type "${type}"`);
+
+    const action: ImportAction =
+      errors.length || !equipmentId ? "error" : byKey.has(keyOf(equipmentId, tag)) ? "update" : "create";
+    preview.push({ row: i + 2, label: `${assetIdRaw || "?"} · ${tag || "?"} · ${name}`, action, errors });
+
+    if (commit && action !== "error" && equipmentId) {
+      const fields = {
+        name,
+        type,
+        location: field(r, "Location") || null,
+        schematicReference: field(r, "Schematic Reference", "Schematic Ref", "Sheet") || null,
+      };
+      const priorId = byKey.get(keyOf(equipmentId, tag));
+      if (priorId) {
+        const upd: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(fields)) if (v !== null && v !== "") upd[k] = v;
+        await db.update(componentRegistry).set(upd).where(eq(componentRegistry.id, priorId));
+        updated++;
+      } else {
+        const id = nanoid();
+        await db.insert(componentRegistry).values({
+          id,
+          equipmentId,
+          componentTag: tag,
+          status: "OPERATIONAL",
+          ...fields,
+        });
+        byKey.set(keyOf(equipmentId, tag), id);
+        created++;
+      }
+    }
+  }
+  if (commit) await audit(actor, "component_registry", created, updated);
+  return { preview, summary: summarize(preview, created, updated) };
+}
+
 export async function processImport(entity: EntityKey, rows: Row[], actor: Actor, commit: boolean): Promise<ProcessResult> {
   if (entity === "equipment") return processEquipment(rows, actor, commit);
   if (entity === "schedule") return processSchedule(rows, actor, commit);
   if (entity === "users") return processUsers(rows, actor, commit);
+  if (entity === "components") return processComponents(rows, actor, commit);
   throw new Error(`Unknown import entity: ${entity}`);
 }
