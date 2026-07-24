@@ -79,18 +79,24 @@ chains on rework, so signatures always attest to current content.
       against ms-less stored timestamps).
 - [x] `notifications(user_id, read_at)` index (pulled forward from Sprint 4).
 
-## Sprint 3 — Operations & notifications
+## Sprint 3 — Operations & notifications ✅ (code side)
 
-- [ ] Notify technician on WO assignment/reassignment.
-- [ ] Calibration + training expiry digests in `runEscalations`.
-- [ ] Wire the `notifyInApp` preference into NotificationBell.
-- [ ] Completion path for non-PM work orders (corrective/emergency/calibration
-      WOs currently strand IN_PROGRESS).
-- [ ] Cancelling a WO clears `maintenanceSchedule.workOrderId` so the
-      occurrence can be re-raised.
-- [ ] Fix supervisor dropdowns filtering on non-existent roles
-      (`SUPERVISOR`/`MANAGEMENT`).
-- [ ] Confirm email delivery once SMTP env vars land in Vercel.
+- [x] Technician notified on WO assignment (create) and reassignment (PATCH).
+- [x] Calibration due/overdue (14-day lead, `CALIBRATION_LEAD_DAYS`) and
+      training expiry (30-day lead, `TRAINING_LEAD_DAYS`) digests in
+      `runEscalations`, to Maintenance Manager + QA/QC, with the same per-day
+      dedup as the other digests.
+- [x] `notifyInApp` preference wired into NotificationBell (badge hidden,
+      polling stopped; inbox stays reachable).
+- [x] Non-PM work orders complete via "Complete Work" with a mandatory
+      work-performed summary → machine history log + audit; preventive types
+      still must complete through the PM checklist (409 otherwise).
+- [x] Cancelling a WO clears `maintenanceSchedule.workOrderId` so the
+      occurrence can be re-raised; leftover hardcoded actorName removed.
+- [x] Supervisor/technician pickers filter on real roles
+      (FOREMAN/MAINTENANCE_MANAGER/FACTORY_MANAGER; TECHNICIAN/FOREMAN).
+- [ ] Confirm email delivery once SMTP env vars land in Vercel (user action —
+      Settings → Notifications & Email → Verify connection / Send test).
 
 ## Sprint 4 — AI & scale
 

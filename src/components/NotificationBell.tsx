@@ -5,19 +5,23 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
+import { useUserPrefs } from "@/components/PreferencesProvider";
 
 // Topbar bell showing the current user's unread notification count. Polls
 // lightly and refreshes on navigation. Renders nothing until mounted so the
-// server HTML and first client paint match.
+// server HTML and first client paint match. Honours the per-user "in-app
+// notifications" preference: when off, the bell stays (the inbox remains
+// reachable) but the badge is hidden and polling stops.
 export default function NotificationBell() {
   const pathname = usePathname();
+  const { prefs } = useUserPrefs();
   const [mounted, setMounted] = useState(false);
   const [unread, setUnread] = useState(0);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !prefs.notifyInApp) return;
     let alive = true;
     const fetchCount = async () => {
       try {
@@ -35,7 +39,7 @@ export default function NotificationBell() {
       alive = false;
       clearInterval(t);
     };
-  }, [mounted, pathname]);
+  }, [mounted, pathname, prefs.notifyInApp]);
 
   if (!mounted) return null;
 
@@ -46,7 +50,7 @@ export default function NotificationBell() {
       className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
     >
       <Bell className="w-5 h-5" />
-      {unread > 0 && (
+      {prefs.notifyInApp && unread > 0 && (
         <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
           {unread > 9 ? "9+" : unread}
         </span>

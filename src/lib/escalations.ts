@@ -8,7 +8,14 @@
 // so a backlog of 70 items doesn't mean 70 messages. A per-day dedup guard makes
 // the scan safe to run repeatedly (manual button or a daily cron).
 import { db } from "@/lib/db";
-import { maintenanceSchedule, permits, equipment, notifications } from "@/lib/db/schema";
+import {
+  maintenanceSchedule,
+  permits,
+  equipment,
+  notifications,
+  calibrationRecords,
+  competencyMatrix,
+} from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { notify } from "@/lib/notifications";
 import { reconcileSchedule } from "@/lib/schedule";
@@ -22,6 +29,8 @@ export type EscalationSummary = {
   overdueActivities: number;
   upcomingActivities: number;
   lapsedPermits: number;
+  calibrationDue: number;
+  trainingExpiring: number;
   notificationsSent: number;
   skippedDuplicate: number;
 };
@@ -62,6 +71,8 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
     overdueActivities: 0,
     upcomingActivities: 0,
     lapsedPermits: 0,
+    calibrationDue: 0,
+    trainingExpiring: 0,
     notificationsSent: 0,
     skippedDuplicate: 0,
   };
@@ -190,5 +201,67 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
     }
   }
 
+  // ── Calibration due / overdue ──────────────────────────────────────────────
+  // An instrument out of calibration silently invalidates every inspection made
+  // with it — a direct ISO 9001 non-conformity. Longer lead than PMs because
+  // external calibration labs need booking.
+  const calLeadDays = Number(process.env.CALIBRATION_LEAD_DAYS || 14);
+  const calHorizon = new Date(now.getTime() + calLeadDays * 86_400_000).toISOString().slice(0, 10);
+  const calRecords = await db.select().from(calibrationRecords);
+  const calDue = calRecords.filter((c) => c.nextCalibrationDate && c.nextCalibrationDate <= calHorizon);
+  summary.calibrationDue = calDue.length;
+  if (calDue.length) {
+    if (await recentlyEscalated("escalation:calibration", "ALL", now)) {
+      summary.skippedDuplicate++;
+    } else {
+      const overdueCal = calDue.filter((c) => c.nextCalibrationDate! < today);
+      const body =
+        `${calDue.length} instrument${calDue.length === 1 ? " is" : "s are"} due for calibration within ${calLeadDays} days` +
+        `${overdueCal.length ? ` — ${overdueCal.length} already OVERDUE` : ""}:\n` +
+        fmtList(calDue.map((c) => `${c.instrumentName}${c.serialNumber ? ` (S/N ${c.serialNumber})` : ""} — due ${c.nextCalibrationDate}${c.nextCalibrationDate! < today ? " ⚠ overdue" : ""}`));
+      const sent = await notify({
+        event: "ESCALATION",
+        title: `Calibration due — ${calDue.length} instrument${calDue.length === 1 ? "" : "s"}`,
+        body,
+        linkPath: "/calibration",
+        relatedEntityType: "escalation:calibration",
+        relatedEntityId: "ALL",
+        roles: ["MAINTENANCE_MANAGER", "QA_QC"],
+      });
+      if (sent.length) summary.notificationsSent += sent.length;
+    }
+  }
+
+  // ── Expiring training / competency ─────────────────────────────────────────
+  // Lapsed competency means the person is no longer qualified for the tasks the
+  // matrix certifies them for.
+  const trainLeadDays = Number(process.env.TRAINING_LEAD_DAYS || 30);
+  const trainHorizon = new Date(now.getTime() + trainLeadDays * 86_400_000).toISOString().slice(0, 10);
+  const comps = await db.select().from(competencyMatrix);
+  const expiring = comps.filter((c) => c.expiryDate && c.expiryDate <= trainHorizon);
+  summary.trainingExpiring = expiring.length;
+  if (expiring.length) {
+    if (await recentlyEscalated("escalation:training", "ALL", now)) {
+      summary.skippedDuplicate++;
+    } else {
+      const lapsedTr = expiring.filter((c) => c.expiryDate! < today);
+      const body =
+        `${expiring.length} competency record${expiring.length === 1 ? "" : "s"} expire${expiring.length === 1 ? "s" : ""} within ${trainLeadDays} days` +
+        `${lapsedTr.length ? ` — ${lapsedTr.length} already LAPSED` : ""}:\n` +
+        fmtList(expiring.map((c) => `${c.employeeName} — ${c.skillArea} (expires ${c.expiryDate}${c.expiryDate! < today ? " ⚠ lapsed" : ""})`));
+      const sent = await notify({
+        event: "ESCALATION",
+        title: `Training expiring — ${expiring.length} record${expiring.length === 1 ? "" : "s"}`,
+        body,
+        linkPath: "/training",
+        relatedEntityType: "escalation:training",
+        relatedEntityId: "ALL",
+        roles: ["MAINTENANCE_MANAGER", "QA_QC"],
+      });
+      if (sent.length) summary.notificationsSent += sent.length;
+    }
+  }
+
   return summary;
 }
+
