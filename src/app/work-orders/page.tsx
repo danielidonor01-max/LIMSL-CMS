@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -102,28 +103,26 @@ export default function WorkOrdersPage() {
               className="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-56"
             />
           </div>
-          <select
-            aria-label="Status"
+          <Select
+            ariaLabel="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
+            onChange={(v) => setStatusFilter(v)}
           >
             <option value="ALL">All statuses</option>
             {Object.entries(WO_STATUS_LABELS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
-          </select>
-          <select
-            aria-label="Type"
+          </Select>
+          <Select
+            ariaLabel="Type"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
+            onChange={(v) => setTypeFilter(v)}
           >
             <option value="ALL">All types</option>
             {Object.entries(WO_TYPE_LABELS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">

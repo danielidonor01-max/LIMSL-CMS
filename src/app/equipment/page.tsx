@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { useApi } from "@/lib/api-cache";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
@@ -130,32 +131,30 @@ export default function EquipmentList() {
           <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-slate-500 uppercase">Category:</span>
-              <select
+              <Select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none text-slate-600"
+                onChange={(v) => setCategoryFilter(v)}
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {catLabel(cat)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-slate-500 uppercase">Status:</span>
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none text-slate-600"
+                onChange={(v) => setStatusFilter(v)}
               >
                 {statuses.map((stat) => (
                   <option key={stat} value={stat}>
                     {statusLabel(stat)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 
 type Event = {
   id: string;
@@ -191,9 +192,9 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-500 uppercase">Category</label>
-              <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className={field}>
+              <Select value={form.category} onChange={(v) => setForm((f) => ({ ...f, category: v }))} className="w-full">
                 {MANUAL_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-500 uppercase">When</label>

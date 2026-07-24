@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { classifyTag } from "@/lib/diagnostics/extract-tags";
 
 type Tile = { tileKey: string; x: number; y: number; w: number; h: number; url: string };
@@ -416,13 +417,12 @@ export default function SchematicViewer({
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-semibold text-slate-500 uppercase">Type</label>
-                      <select
+                      <Select
                         value={tagDraft.type}
-                        onChange={(e) => setTagDraft((d) => d && { ...d, type: e.target.value })}
-                        className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        onChange={(v) => setTagDraft((d) => d && { ...d, type: v })}
                       >
                         {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                      </Select>
                     </div>
                     <Button size="sm" icon={CheckCircle2} loading={savingTag} onClick={saveTag}>Save</Button>
                     <Button size="sm" variant="ghost" onClick={() => setTagDraft(null)}>Cancel</Button>
@@ -504,13 +504,12 @@ export default function SchematicViewer({
                         onChange={(e) => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
                         className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-emerald-500/40"
                       />
-                      <select
+                      <Select
                         value={c.type}
-                        onChange={(e) => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}
-                        className="bg-slate-50 border border-slate-200 rounded px-1 py-1 text-[10px] focus:outline-none"
+                        onChange={(v) => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, type: v } : x)))}
                       >
                         {TYPES.map((t) => <option key={t} value={t}>{t.slice(0, 4)}</option>)}
-                      </select>
+                      </Select>
                     </div>
                   </div>
                 ))}

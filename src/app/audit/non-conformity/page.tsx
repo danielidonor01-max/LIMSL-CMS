@@ -17,6 +17,7 @@ import {
   Filter,
   UserCheck,
 } from "lucide-react";
+import Select from "@/components/Select";
 
 export default function NonConformityRegister() {
   const [ncList, setNcList] = useState<any[]>([]);
@@ -141,15 +142,14 @@ export default function NonConformityRegister() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-slate-500 uppercase">Filter Status:</span>
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none text-slate-600"
+                onChange={(v) => setStatusFilter(v)}
               >
                 <option value="ALL">All Statuses</option>
                 <option value="OPEN">Open NCs</option>
                 <option value="CLOSED">Closed NCs</option>
-              </select>
+              </Select>
             </div>
           </div>
 

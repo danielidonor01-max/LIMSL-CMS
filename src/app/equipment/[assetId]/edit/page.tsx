@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save, Pencil } from "lucide-react";
+import Select from "@/components/Select";
+import Toggle from "@/components/Toggle";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
@@ -109,19 +111,19 @@ export default function EquipmentEditPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Category</label>
-            <select value={form.category ?? ""} onChange={(e) => set("category", e.target.value)} className={field}>
+            <Select value={form.category ?? ""} onChange={(v) => set("category", v)} className="w-full">
               {Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Status</label>
-            <select value={form.status ?? ""} onChange={(e) => set("status", e.target.value)} className={field}>
+            <Select value={form.status ?? ""} onChange={(v) => set("status", v)} className="w-full">
               {Object.entries(EQUIPMENT_STATUS_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Location</label>
@@ -141,28 +143,28 @@ export default function EquipmentEditPage() {
           </div>
           <div>
             <label className={label}>Maintenance Frequency</label>
-            <select value={form.maintenanceFrequency ?? ""} onChange={(e) => set("maintenanceFrequency", e.target.value)} className={field}>
+            <Select value={form.maintenanceFrequency ?? ""} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
               <option value="">—</option>
               {FREQUENCIES.map((f) => <option key={f} value={f}>{f.replace(/_/g, " ")}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Criticality</label>
-            <select value={form.criticality ?? "MEDIUM"} onChange={(e) => set("criticality", e.target.value)} className={field}>
+            <Select value={form.criticality ?? "MEDIUM"} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            </Select>
           </div>
         </div>
 
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-xs text-slate-700">
-            <input type="checkbox" checked={!!form.requiresCalibration} onChange={(e) => set("requiresCalibration", e.target.checked)} className="accent-emerald-600 w-4 h-4" />
-            Requires calibration
-          </label>
-          <label className="flex items-center gap-2 text-xs text-slate-700">
-            <input type="checkbox" checked={!!form.requiresPremob} onChange={(e) => set("requiresPremob", e.target.checked)} className="accent-emerald-600 w-4 h-4" />
-            Requires pre-mobilization (premob)
-          </label>
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          <div className="flex items-center gap-2.5">
+            <Toggle checked={!!form.requiresCalibration} onChange={(v) => set("requiresCalibration", v)} ariaLabel="Requires calibration" />
+            <span className="text-xs text-slate-700">Requires calibration</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Toggle checked={!!form.requiresPremob} onChange={(v) => set("requiresPremob", v)} ariaLabel="Requires pre-mobilization" />
+            <span className="text-xs text-slate-700">Requires pre-mobilization (premob)</span>
+          </div>
         </div>
 
         <div>

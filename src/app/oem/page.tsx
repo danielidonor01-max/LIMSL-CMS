@@ -21,6 +21,7 @@ import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
 
@@ -78,6 +79,13 @@ export default function OemPage() {
   const [showIntervention, setShowIntervention] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Select renders a button (no form field), so these selections are held in
+  // state instead of being read back from FormData on submit.
+  const [vendorEquipmentId, setVendorEquipmentId] = useState("");
+  const [intOemId, setIntOemId] = useState("");
+  const [intEquipmentId, setIntEquipmentId] = useState("");
+  const [intWarrantyStatus, setIntWarrantyStatus] = useState("OUT");
+
   async function loadData() {
     try {
       const res = await fetch("/api/oem");
@@ -111,6 +119,10 @@ export default function OemPage() {
 
   async function submitVendor(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!vendorEquipmentId) {
+      toast.error("Select the equipment.");
+      return;
+    }
     const fd = new FormData(e.currentTarget);
     setSaving(true);
     try {
@@ -118,7 +130,7 @@ export default function OemPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          equipmentId: fd.get("equipmentId"),
+          equipmentId: vendorEquipmentId,
           vendorName: fd.get("vendorName"),
           contactPerson: fd.get("contactPerson"),
           phone: fd.get("phone"),
@@ -153,11 +165,11 @@ export default function OemPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          oemId: fd.get("oemId") || null,
-          equipmentId: fd.get("equipmentId") || null,
+          oemId: intOemId || null,
+          equipmentId: intEquipmentId || null,
           interventionDate: fd.get("interventionDate") || null,
           problemDescription: fd.get("problemDescription"),
-          warrantyStatus: fd.get("warrantyStatus"),
+          warrantyStatus: intWarrantyStatus,
           responseTimeHrs: fd.get("responseTimeHrs") ? Number(fd.get("responseTimeHrs")) : null,
           resolutionSummary: fd.get("resolutionSummary"),
           closed: fd.get("closed") === "on",
@@ -206,13 +218,21 @@ export default function OemPage() {
           {canWrite && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowIntervention(true)}
+                onClick={() => {
+                  setIntOemId("");
+                  setIntEquipmentId("");
+                  setIntWarrantyStatus("OUT");
+                  setShowIntervention(true);
+                }}
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
               >
                 <Wrench className="w-4 h-4" /> Log Intervention
               </button>
               <button
-                onClick={() => setShowVendor(true)}
+                onClick={() => {
+                  setVendorEquipmentId("");
+                  setShowVendor(true);
+                }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
               >
                 <Plus className="w-4 h-4" /> Add Vendor
@@ -347,12 +367,12 @@ export default function OemPage() {
         <form onSubmit={submitVendor} className="space-y-4">
           <div className="space-y-1.5">
             <label className={labelCls}>Equipment</label>
-            <select name="equipmentId" required className={inputCls} defaultValue="">
+            <Select value={vendorEquipmentId} onChange={setVendorEquipmentId} required className="w-full">
               <option value="" disabled>Select equipment…</option>
               {equipmentList.map((e) => (
                 <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <label className={labelCls}>Vendor / OEM Name</label>
@@ -405,21 +425,21 @@ export default function OemPage() {
         <form onSubmit={submitIntervention} className="space-y-4">
           <div className="space-y-1.5">
             <label className={labelCls}>Vendor (optional)</label>
-            <select name="oemId" className={inputCls} defaultValue="">
+            <Select value={intOemId} onChange={setIntOemId} className="w-full">
               <option value="">— No linked vendor —</option>
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>{v.vendorName} ({v.assetId})</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <label className={labelCls}>Equipment (if no vendor)</label>
-            <select name="equipmentId" className={inputCls} defaultValue="">
+            <Select value={intEquipmentId} onChange={setIntEquipmentId} className="w-full">
               <option value="">— Select equipment —</option>
               {equipmentList.map((e) => (
                 <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -428,10 +448,10 @@ export default function OemPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Warranty Status</label>
-              <select name="warrantyStatus" className={inputCls} defaultValue="OUT">
+              <Select value={intWarrantyStatus} onChange={setIntWarrantyStatus} className="w-full">
                 <option value="IN">In Warranty</option>
                 <option value="OUT">Out of Warranty</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Response Time (hrs)</label>

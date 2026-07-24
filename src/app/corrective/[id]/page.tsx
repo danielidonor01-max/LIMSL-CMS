@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
+import Select from "@/components/Select";
 import { toast } from "sonner";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 
@@ -362,10 +363,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <span className="text-xs font-semibold text-slate-500 uppercase">Root Cause Category</span>
-                <select
+                <Select
                   value={rootCauseCategory}
-                  onChange={(e) => setRootCauseCategory(e.target.value)}
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
+                  onChange={(v) => setRootCauseCategory(v)}
+                  className="w-full"
                 >
                   <option value="MECHANICAL">Mechanical Failure</option>
                   <option value="ELECTRICAL">Electrical Failure</option>
@@ -373,7 +374,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   <option value="PROCEDURAL">Procedural Gap</option>
                   <option value="ENVIRONMENTAL">Environmental Conditions</option>
                   <option value="DESIGN">Design Flaw</option>
-                </select>
+                </Select>
               </div>
 
               <div className="space-y-2">

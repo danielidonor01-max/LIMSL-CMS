@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import Select from "@/components/Select";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
 import { formatDate } from "@/lib/utils";
 import {
@@ -454,10 +455,10 @@ export default function SchedulePage() {
           <form onSubmit={submitCreate} className="space-y-4">
             <div className="space-y-1.5">
               <label className={modalLabel}>Equipment</label>
-              <select
+              <Select
                 value={createForm.equipmentId}
-                onChange={(e) => setCreateForm((f) => ({ ...f, equipmentId: e.target.value }))}
-                className={modalField}
+                onChange={(v) => setCreateForm((f) => ({ ...f, equipmentId: v }))}
+                className="w-full"
                 required
               >
                 <option value="">Select equipment…</option>
@@ -466,7 +467,7 @@ export default function SchedulePage() {
                     {eq.assetId} — {eq.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -481,28 +482,28 @@ export default function SchedulePage() {
               </div>
               <div className="space-y-1.5">
                 <label className={modalLabel}>Activity type</label>
-                <select
+                <Select
                   value={createForm.activityType}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, activityType: e.target.value }))}
-                  className={modalField}
+                  onChange={(v) => setCreateForm((f) => ({ ...f, activityType: v }))}
+                  className="w-full"
                 >
                   {Object.entries(ACTIVITY_TYPE_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
             <div className="space-y-1.5">
               <label className={modalLabel}>Frequency</label>
-              <select
+              <Select
                 value={createForm.maintenanceFrequency}
-                onChange={(e) => setCreateForm((f) => ({ ...f, maintenanceFrequency: e.target.value }))}
-                className={modalField}
+                onChange={(v) => setCreateForm((f) => ({ ...f, maintenanceFrequency: v }))}
+                className="w-full"
               >
                 {FREQUENCY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={modalLabel}>Task description</label>
@@ -575,13 +576,12 @@ function FilterSelect({
   children: React.ReactNode;
 }) {
   return (
-    <select
-      aria-label={label}
+    <Select
+      ariaLabel={label}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
+      onChange={(v) => onChange(v)}
     >
       {children}
-    </select>
+    </Select>
   );
 }

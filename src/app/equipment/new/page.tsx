@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Layers, RefreshCw } from "lucide-react";
+import Select from "@/components/Select";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
@@ -125,15 +126,15 @@ export default function NewEquipmentPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Category</label>
-            <select value={form.category} onChange={(e) => set("category", e.target.value)} className={field}>
+            <Select value={form.category} onChange={(v) => set("category", v)} className="w-full">
               {Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Status</label>
-            <select value={form.status} onChange={(e) => set("status", e.target.value)} className={field}>
+            <Select value={form.status} onChange={(v) => set("status", v)} className="w-full">
               {Object.entries(EQUIPMENT_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Location</label>
@@ -161,15 +162,15 @@ export default function NewEquipmentPage() {
           </div>
           <div>
             <label className={label}>Maintenance Frequency</label>
-            <select value={form.maintenanceFrequency} onChange={(e) => set("maintenanceFrequency", e.target.value)} className={field}>
+            <Select value={form.maintenanceFrequency} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
               {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{fq.replace(/_/g, " ")}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Criticality</label>
-            <select value={form.criticality} onChange={(e) => set("criticality", e.target.value)} className={field}>
+            <Select value={form.criticality} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            </Select>
           </div>
         </div>
 

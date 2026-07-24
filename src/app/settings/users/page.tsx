@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Dropdown from "@/components/Dropdown";
+import Select from "@/components/Select";
 import { ROLES, ROLE_LABELS, ROLE_BADGE, canManageUsers } from "@/lib/roles";
 
 type User = {
@@ -180,11 +181,11 @@ export default function UsersAdminPage() {
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Role</label>
-            <select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} className={field}>
+            <Select value={form.role} onChange={(v) => setForm((f) => ({ ...f, role: v }))} className="w-full">
               {ROLES.filter((r) => r !== "VIEWER").map((r) => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Job title (optional)</label>

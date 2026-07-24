@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Loader2, ArrowLeft, Save } from "lucide-react";
+import Select from "@/components/Select";
 import {
   WO_TYPE_LABELS,
   WO_TYPE_OPTIONS,
@@ -163,10 +164,10 @@ function NewWorkOrderForm() {
 
             <div>
               <label className={labelCls}>Equipment *</label>
-              <select
+              <Select
                 value={form.equipmentId}
-                onChange={(e) => onEquipmentChange(e.target.value)}
-                className={field}
+                onChange={(v) => onEquipmentChange(v)}
+                className="w-full"
                 required
               >
                 <option value="">Select equipment…</option>
@@ -175,35 +176,35 @@ function NewWorkOrderForm() {
                     {e.assetId} — {e.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Type *</label>
-                <select
+                <Select
                   value={form.type}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, type: e.target.value }))
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, type: v }))
                   }
-                  className={field}
+                  className="w-full"
                 >
                   {WO_TYPE_OPTIONS.map((t) => (
                     <option key={t} value={t}>{WO_TYPE_LABELS[t]}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className={labelCls}>Priority</label>
-                <select
+                <Select
                   value={form.priority}
-                  onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
-                  className={field}
+                  onChange={(v) => setForm((f) => ({ ...f, priority: v }))}
+                  className="w-full"
                 >
                   {PRIORITY_OPTIONS.map((p) => (
                     <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -230,10 +231,10 @@ function NewWorkOrderForm() {
               </div>
               <div>
                 <label className={labelCls}>Assigned Technician</label>
-                <select
+                <Select
                   value={form.technicianId}
-                  onChange={(e) => setForm((f) => ({ ...f, technicianId: e.target.value }))}
-                  className={field}
+                  onChange={(v) => setForm((f) => ({ ...f, technicianId: v }))}
+                  className="w-full"
                 >
                   <option value="">Unassigned</option>
                   {users
@@ -241,7 +242,7 @@ function NewWorkOrderForm() {
                     .map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
-                </select>
+                </Select>
               </div>
             </div>
 

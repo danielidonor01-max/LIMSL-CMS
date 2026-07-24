@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { FolderOpen, Loader2, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 
 type Doc = {
@@ -136,16 +137,16 @@ export default function DocumentsPage() {
                 className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/40 w-56"
               />
             </div>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+            <Select value={typeFilter} onChange={(v) => setTypeFilter(v)}>
               <option value="ALL">All types</option>
               {Object.entries(DOC_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+            </Select>
+            <Select value={statusFilter} onChange={(v) => setStatusFilter(v)}>
               <option value="ALL">All statuses</option>
               <option value="AVAILABLE">Available</option>
               <option value="REQUIRED">Missing</option>
               <option value="EXPIRED">Expired</option>
-            </select>
+            </Select>
           </div>
 
           {/* Accordion: one row per machine, expand to reveal its documents */}

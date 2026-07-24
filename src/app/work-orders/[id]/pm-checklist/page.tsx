@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import Modal from "@/components/Modal";
+import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 
 type Item = { item: string; status: string; remarks: string };
@@ -325,10 +326,10 @@ export default function PMChecklistPage() {
               <SignaturePad label="Technician Signature *" onChange={setTechnicianSignature} />
             </div>
             <div className="space-y-2">
-              <select
+              <Select
                 value={supervisorName}
-                onChange={(e) => setSupervisorName(e.target.value)}
-                className={field}
+                onChange={(v) => setSupervisorName(v)}
+                className="w-full"
               >
                 <option value="">Supervisor (optional)…</option>
                 {users
@@ -336,7 +337,7 @@ export default function PMChecklistPage() {
                   .map((u) => (
                     <option key={u.id} value={u.name}>{u.name}</option>
                   ))}
-              </select>
+              </Select>
               <SignaturePad label="Supervisor Signature" onChange={setSupervisorSignature} />
             </div>
           </div>

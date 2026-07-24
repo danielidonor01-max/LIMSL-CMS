@@ -17,6 +17,7 @@ import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { TRAINING_WRITE_ROLES, ROLE_LABELS } from "@/lib/roles";
 import { toast } from "sonner";
 
@@ -76,6 +77,14 @@ export default function TrainingPage() {
   const [showAssess, setShowAssess] = useState(false);
   const [showTraining, setShowTraining] = useState(false);
 
+  // Select renders a button (no form field), so these selections are held in
+  // state instead of being read back from FormData on submit.
+  const [assessCategory, setAssessCategory] = useState("TECHNICAL");
+  const [assessLevel, setAssessLevel] = useState("2");
+  const [assessRequiredLevel, setAssessRequiredLevel] = useState("2");
+  const [trainCategory, setTrainCategory] = useState("TECHNICAL");
+  const [trainType, setTrainType] = useState("INTERNAL");
+
   async function loadData() {
     try {
       const res = await fetch("/api/training");
@@ -122,9 +131,9 @@ export default function TrainingPage() {
         body: JSON.stringify({
           employeeName: fd.get("employeeName"),
           skillArea: fd.get("skillArea"),
-          category: fd.get("category"),
-          level: Number(fd.get("level")),
-          requiredLevel: Number(fd.get("requiredLevel")),
+          category: assessCategory,
+          level: Number(assessLevel),
+          requiredLevel: Number(assessRequiredLevel),
           expiryDate: fd.get("expiryDate") || null,
         }),
       });
@@ -152,8 +161,8 @@ export default function TrainingPage() {
         body: JSON.stringify({
           employeeName: fd.get("employeeName"),
           trainingTitle: fd.get("trainingTitle"),
-          category: fd.get("category"),
-          type: fd.get("type"),
+          category: trainCategory,
+          type: trainType,
           trainer: fd.get("trainer"),
           plannedDate: fd.get("plannedDate") || null,
           duration: fd.get("duration"),
@@ -202,13 +211,22 @@ export default function TrainingPage() {
           {canWrite && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowAssess(true)}
+                onClick={() => {
+                  setAssessCategory("TECHNICAL");
+                  setAssessLevel("2");
+                  setAssessRequiredLevel("2");
+                  setShowAssess(true);
+                }}
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
               >
                 <ClipboardCheck className="w-4 h-4" /> Record Assessment
               </button>
               <button
-                onClick={() => setShowTraining(true)}
+                onClick={() => {
+                  setTrainCategory("TECHNICAL");
+                  setTrainType("INTERNAL");
+                  setShowTraining(true);
+                }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
               >
                 <Plus className="w-4 h-4" /> Schedule Training
@@ -397,24 +415,24 @@ export default function TrainingPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Category</label>
-              <select name="category" className={inputCls} defaultValue="TECHNICAL">
+              <Select value={assessCategory} onChange={setAssessCategory} className="w-full">
                 <option value="TECHNICAL">Technical</option>
                 <option value="HSE">HSE</option>
                 <option value="QA_QC">QA/QC</option>
                 <option value="OEM">OEM</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Assessed Level</label>
-              <select name="level" className={inputCls} defaultValue="2">
+              <Select value={assessLevel} onChange={setAssessLevel} className="w-full">
                 {LEVELS.map((l, i) => <option key={l} value={i}>{i} · {l}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Required Level</label>
-              <select name="requiredLevel" className={inputCls} defaultValue="2">
+              <Select value={assessRequiredLevel} onChange={setAssessRequiredLevel} className="w-full">
                 {LEVELS.map((l, i) => <option key={l} value={i}>{i} · {l}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Recert Due (optional)</label>
@@ -443,20 +461,20 @@ export default function TrainingPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Category</label>
-              <select name="category" className={inputCls} defaultValue="TECHNICAL">
+              <Select value={trainCategory} onChange={setTrainCategory} className="w-full">
                 <option value="TECHNICAL">Technical</option>
                 <option value="HSE">HSE</option>
                 <option value="QA_QC">QA/QC</option>
                 <option value="OEM">OEM</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Type</label>
-              <select name="type" className={inputCls} defaultValue="INTERNAL">
+              <Select value={trainType} onChange={setTrainType} className="w-full">
                 <option value="INTERNAL">Internal</option>
                 <option value="EXTERNAL">External</option>
                 <option value="OEM">OEM</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Planned Date</label>

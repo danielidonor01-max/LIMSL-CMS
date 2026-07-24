@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { FileText, Download, FileWarning, Upload, Loader2, Plus } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
@@ -55,6 +56,9 @@ export default function EquipmentDocuments({
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [eqId, setEqId] = useState(equipmentId ?? "");
+  // Select renders a button (no form field), so the type is held in state
+  // instead of being read back from FormData on submit.
+  const [docType, setDocType] = useState("OPERATIONAL_MANUAL");
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -101,7 +105,7 @@ export default function EquipmentDocuments({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           equipmentId: targetEq,
-          docType: fd.get("docType"),
+          docType,
           title: fd.get("title") || saved.name,
           revision: fd.get("revision") || null,
           expiryDate: fd.get("expiryDate") || null,
@@ -138,7 +142,7 @@ export default function EquipmentDocuments({
           <span className="text-[10px] text-slate-400 font-mono">{docs.length} records</span>
           {canUpload && (
             <button
-              onClick={() => setShowForm((s) => !s)}
+              onClick={() => { setDocType("OPERATIONAL_MANUAL"); setShowForm((s) => !s); }}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-semibold"
             >
               <Plus className="w-3.5 h-3.5" /> Upload
@@ -152,11 +156,11 @@ export default function EquipmentDocuments({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-slate-500 uppercase">Document Type</label>
-              <select name="docType" className={inputCls} defaultValue="OPERATIONAL_MANUAL">
+              <Select value={docType} onChange={setDocType} className="w-full">
                 {DOC_TYPES.map((t) => (
                   <option key={t} value={t}>{DOC_TYPE_LABELS[t]}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-slate-500 uppercase">Revision (optional)</label>

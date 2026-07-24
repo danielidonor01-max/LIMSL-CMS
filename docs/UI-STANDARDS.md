@@ -61,14 +61,23 @@ Do **not** use `w-4.5` or other off-scale sizes (normalised out).
 |---|---|---|
 | Any button | `@/components/Button` | `variant` (primary/secondary/danger/ghost/subtle), `size` (sm/md/lg), `icon`/`iconRight`, `loading`, `href` → renders a Link. Consistent icon spacing by construction. |
 | Dialog / form modal | `@/components/Modal` | Centered, scrim, close button. Never a native dialog. |
-| Styled dropdown (non-native) | `@/components/Dropdown` | Button + popover, click-outside + Esc. Use in **tables** and anywhere a native `<select>` looks out of place. |
+| Any dropdown/picker in a form or filter bar | `@/components/Select` | **Native `<select>` is banned.** Select renders a styled field trigger + popover (no browser-drawn menu) and accepts the same `<option>` children; `onChange` gets the plain value. |
+| Compact inline picker (tables, badges) | `@/components/Dropdown` | Trigger styled by the call site; popover menu. |
+| Boolean setting (enable/disable) | `@/components/Toggle` | Switch, not a checkbox. Real checkboxes remain **only** for genuine tick-marks: checklist steps and signed attestations. |
 | Page title row | `@/components/PageHeader` | Icon chip + title + subtitle + actions. |
 | Status pill | `@/components/Badge` | The `bg/text/border` tint formula. |
 | Notifications | `sonner` `toast.*` | Success/error feedback. |
 
-**Selects:** plain form `<select>`s are acceptable (they get a consistent custom
-chevron via `globals.css`). For table-inline or badge-styled pickers, use
-`Dropdown` instead — a native select there looks out of place.
+**Native controls:** no native `<select>` anywhere — use `Select` (forms/filters)
+or `Dropdown` (inline). Date/time still use native `type="date|time|datetime-local"`
+inputs (styled) — the OS picker is deliberate. Checkboxes only as tick-marks (see
+above), styled `accent-emerald-600`.
+
+**AI chat (DiagnosisChat):** buttons and interactive controls use the standard
+emerald primary like the rest of the app; violet is reserved for *AI identity
+accents only* (assistant label, hypothesis, evidence chips). The composer's
+Enter behaviour follows the per-user preference `chatEnterToSend` (default off:
+Enter = new line, Ctrl/Cmd+Enter sends) — never hardcode Enter-to-send.
 
 ## Navigation
 

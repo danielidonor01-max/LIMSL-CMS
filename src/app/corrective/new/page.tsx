@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import Select from "@/components/Select";
 
 export default function NewCorrectiveRequest() {
   const router = useRouter();
@@ -123,10 +124,10 @@ export default function NewCorrectiveRequest() {
                 <Loader2 className="w-4 h-4 animate-spin text-rose-600 mr-2" /> Loading equipment list...
               </div>
             ) : (
-              <select
+              <Select
                 value={equipmentId}
-                onChange={(e) => setEquipmentId(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                onChange={(v) => setEquipmentId(v)}
+                className="w-full"
                 required
               >
                 {equipmentList.map((eq) => (
@@ -134,7 +135,7 @@ export default function NewCorrectiveRequest() {
                     {eq.assetId} - {eq.name} ({eq.location})
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
           </div>
 
@@ -142,33 +143,33 @@ export default function NewCorrectiveRequest() {
             {/* Fault Nature */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-500 uppercase">Nature of Fault</label>
-              <select
+              <Select
                 value={faultType}
-                onChange={(e) => setFaultType(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                onChange={(v) => setFaultType(v)}
+                className="w-full"
               >
                 {faultTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Urgency */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-500 uppercase">Urgency Level</label>
-              <select
+              <Select
                 value={urgency}
-                onChange={(e) => setUrgency(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                onChange={(v) => setUrgency(v)}
+                className="w-full"
               >
                 {urgencies.map((u) => (
                   <option key={u.value} value={u.value}>
                     {u.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
@@ -188,16 +189,16 @@ export default function NewCorrectiveRequest() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-500 uppercase">Operating Status at Failure</label>
-              <select
+              <Select
                 value={operatingStatusAtFailure}
-                onChange={(e) => setOperatingStatusAtFailure(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                onChange={(v) => setOperatingStatusAtFailure(v)}
+                className="w-full"
               >
                 <option value="RUNNING">Running</option>
                 <option value="IDLE">Idle</option>
                 <option value="STARTUP">Startup Sequence</option>
                 <option value="SHUTDOWN">Shutdown Sequence</option>
-              </select>
+              </Select>
             </div>
 
             <div className="space-y-2">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import Select from "@/components/Select";
 import { ROLE_LABELS } from "@/lib/roles";
 
 function NewPermitForm() {
@@ -168,10 +169,10 @@ function NewPermitForm() {
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-600 mr-2" /> Loading equipment list...
               </div>
             ) : (
-              <select
+              <Select
                 value={equipmentId}
-                onChange={(e) => setEquipmentId(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                onChange={(v) => setEquipmentId(v)}
+                className="w-full"
                 required
               >
                 {equipmentList.map((eq) => (
@@ -179,7 +180,7 @@ function NewPermitForm() {
                     {eq.assetId} - {eq.name} ({eq.location})
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
           </div>
 
@@ -220,10 +221,10 @@ function NewPermitForm() {
           {/* Supporting WMS */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-500 uppercase">Work Method Statement (supporting document)</label>
-            <select
+            <Select
               value={wmsId}
-              onChange={(e) => setWmsId(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+              onChange={(v) => setWmsId(v)}
+              className="w-full"
             >
               <option value="">— No WMS linked —</option>
               {wmsList.map((w) => (
@@ -231,7 +232,7 @@ function NewPermitForm() {
                   {w.wmsNumber} — {w.title}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="text-[10px] text-slate-500">
               Only <strong>approved</strong> WMS documents can be attached. Shown to every signer.
             </p>
@@ -255,16 +256,15 @@ function NewPermitForm() {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step {i + 1}</span>
                     <div className="flex items-center gap-2">
-                      <select
+                      <Select
                         value={row.residualRisk}
-                        onChange={(e) => updateJha(i, "residualRisk", e.target.value)}
-                        className="bg-white border border-slate-200 rounded p-1.5 text-[11px] focus:outline-none"
-                        title="Residual risk"
+                        onChange={(v) => updateJha(i, "residualRisk", v)}
+                        ariaLabel="Residual risk"
                       >
                         <option value="LOW">Residual: Low</option>
                         <option value="MEDIUM">Residual: Medium</option>
                         <option value="HIGH">Residual: High</option>
-                      </select>
+                      </Select>
                       <button
                         type="button"
                         onClick={() => removeJhaRow(i)}
@@ -357,11 +357,11 @@ function NewPermitForm() {
             <label className="text-xs font-semibold text-slate-500 uppercase">
               Permit Holder <span className="text-rose-600">*</span>
             </label>
-            <select
+            <Select
               required
               value={permitHolderId}
-              onChange={(e) => setPermitHolderId(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+              onChange={(v) => setPermitHolderId(v)}
+              className="w-full"
             >
               <option value="" disabled>
                 Select the accountable person…
@@ -371,7 +371,7 @@ function NewPermitForm() {
                   {u.name} — {ROLE_LABELS[u.role] ?? u.role}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="text-[10px] text-slate-500">
               The person who holds this permit and is accountable for the work party (usually the Foreman).
             </p>
