@@ -24,17 +24,32 @@ const safeColumns = {
   createdAt: users.createdAt,
 };
 
+// Directory projection for non-admins: enough to populate people pickers
+// (technician/holder dropdowns need id + name + role), without handing every
+// authenticated session the full staff contact book (email/phone/WhatsApp).
+const directoryColumns = {
+  id: users.id,
+  name: users.name,
+  role: users.role,
+  jobTitle: users.jobTitle,
+  department: users.department,
+  isActive: users.isActive,
+};
+
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+    const actor = session?.user as { role?: string } | undefined;
+    const admin = canManageUsers(actor?.role);
+
     const includeInactive = new URL(request.url).searchParams.get("includeInactive") === "1";
-    const list = await db.select(safeColumns).from(users);
+    const list = await db.select(admin ? safeColumns : directoryColumns).from(users);
     const filtered = includeInactive ? list : list.filter((u) => u.isActive !== false);
     filtered.sort((a, b) => a.name.localeCompare(b.name));
     return NextResponse.json(filtered);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch users:", error);
-    return NextResponse.json({ error: "Failed to fetch users", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
 
@@ -105,8 +120,7 @@ export async function POST(request: Request) {
     // Return the temp password ONCE so the admin can hand it to the new user.
     return NextResponse.json({ id, name, email, role, tempPassword }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to create user:", error);
-    return NextResponse.json({ error: "Failed to create user", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }
 }
