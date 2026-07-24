@@ -8,14 +8,18 @@ import {
   equipment,
   permits,
   auditLog,
+  signoffs,
+  correctiveMaintenance,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { generateNextOccurrence } from "@/lib/schedule";
 import { logEquipmentEvent } from "@/lib/equipment-log";
+import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
+import { notifyNextSigner } from "@/lib/notifications";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -81,7 +85,10 @@ export async function POST(request: Request) {
       nextPMDate: body.nextPMDate || null,
       technicianSignature: body.technicianSignature || null,
       supervisorSignature: body.supervisorSignature || null,
-      technicianName: body.technicianName || null,
+      // The performing technician is the authenticated submitter — never client
+      // text. (The supervisor's authenticated approval lives in the PM sign-off
+      // chain started below; the name here is display-only shop-floor capture.)
+      technicianName: gate.actor?.name || body.technicianName || null,
       supervisorName: body.supervisorName || null,
       signedAt: new Date().toISOString(),
     };
@@ -121,13 +128,28 @@ export async function POST(request: Request) {
 
     // 4. Roll the equipment maintenance dates forward. Prefer the auto-computed
     //    next PM date over a technician-typed one so the register stays in step
-    //    with the schedule.
+    //    with the schedule. A PM sign-off must not present a machine as fit for
+    //    service while a corrective fault is still open on it.
+    const [openCm] = await db
+      .select({ id: correctiveMaintenance.id })
+      .from(correctiveMaintenance)
+      .where(
+        and(
+          eq(correctiveMaintenance.equipmentId, body.equipmentId),
+          ne(correctiveMaintenance.status, "CLOSED"),
+        ),
+      )
+      .limit(1);
     await db
       .update(equipment)
       .set({
         lastMaintenanceDate: today,
         nextMaintenanceDate: recurredDate || body.nextPMDate || null,
-        status: body.correctiveActionRequired ? "UNDER_MAINTENANCE" : "OPERATIONAL",
+        ...(body.correctiveActionRequired
+          ? { status: "UNDER_MAINTENANCE" }
+          : openCm
+            ? {}
+            : { status: "OPERATIONAL" }),
         updatedAt: new Date().toISOString(),
       })
       .where(eq(equipment.id, body.equipmentId));
@@ -141,6 +163,33 @@ export async function POST(request: Request) {
       entityId: checklistId,
       entityDescription: `PM checklist signed for WO ${wo?.workOrderNumber ?? body.workOrderId}`,
     });
+
+    // Start the PM approval chain NOW (not lazily on some later page load): the
+    // submitting technician's authenticated signature covers step 1, and the
+    // Foreman is notified that verification is due. The work order itself stays
+    // COMPLETED — the chain governs the checklist record's approval, not whether
+    // the physical work happened.
+    try {
+      const chain = await ensureSignoffChain("PM_CHECKLIST", checklistId, wo?.workOrderNumber);
+      const step1 = chain.find((s) => s.stepOrder === 1 && s.role === "TECHNICIAN");
+      if (step1 && checklist.technicianSignature && step1.status === "PENDING") {
+        await db
+          .update(signoffs)
+          .set({
+            status: "SIGNED",
+            signedById: gate.actor?.id ?? null,
+            signedByName: gate.actor?.name ?? null,
+            signedByRole: gate.actor?.role ?? null,
+            signatureData: checklist.technicianSignature,
+            signedAt: new Date().toISOString(),
+          })
+          .where(eq(signoffs.id, step1.id));
+        const fresh = await getSignoffChain("PM_CHECKLIST", checklistId);
+        await notifyNextSigner("PM_CHECKLIST", checklistId, fresh, wo?.workOrderNumber);
+      }
+    } catch (err) {
+      console.warn("pm-checklists: sign-off chain start failed (non-fatal)", err);
+    }
 
     // Record the PM on the machine's lifetime log (best-effort).
     try {

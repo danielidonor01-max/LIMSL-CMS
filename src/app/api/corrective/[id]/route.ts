@@ -2,12 +2,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { getWorkSettings } from "@/lib/settings";
 import { productionDowntimeHours } from "@/lib/worktime";
 import { logEquipmentEvent } from "@/lib/equipment-log";
+import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
+import { chainSummary } from "@/lib/signoff/chains";
 
 export async function GET(
   request: Request,
@@ -52,6 +54,54 @@ export async function PATCH(
     }
 
     const record = currentRecord[0];
+
+    // ── Close-out gate ────────────────────────────────────────────────────────
+    // Closing a corrective record is a controlled event: the CM sign-off chain
+    // (Technician → Foreman → HSE → Maintenance Manager → Factory Manager) must
+    // be fully signed, and the record must carry a verified root cause and a
+    // valid downtime window. Client-side checks alone cannot be trusted for a
+    // compliance record.
+    const closingOut = body.status === "CLOSED" && record.status !== "CLOSED";
+    let chainTechnicianName: string | null = null;
+    let chainSupervisorName: string | null = null;
+    if (closingOut) {
+      await ensureSignoffChain("CORRECTIVE", record.id, record.cmrfNumber);
+      const chain = await getSignoffChain("CORRECTIVE", record.id);
+      const summary = chainSummary(chain);
+      if (!summary.complete) {
+        return NextResponse.json(
+          {
+            error:
+              `Close-out requires the full corrective sign-off chain — ` +
+              `${summary.signed} of ${summary.total} required signatures are in place. ` +
+              `Complete the chain on this page first.`,
+          },
+          { status: 409 },
+        );
+      }
+      const rootCause = String(body.verifiedRootCause ?? record.verifiedRootCause ?? "").trim();
+      if (!rootCause) {
+        return NextResponse.json(
+          { error: "A verified root cause is required before close-out (complete the RCA section)." },
+          { status: 400 },
+        );
+      }
+      const ds = body.downStartAt ?? record.downStartAt;
+      const de = body.downEndAt ?? record.downEndAt;
+      if (!ds || !de || new Date(de).getTime() <= new Date(ds).getTime()) {
+        return NextResponse.json(
+          { error: "A valid downtime window (down → restored) is required before close-out — it drives MTTR." },
+          { status: 400 },
+        );
+      }
+      // The names on the closed record come from the authenticated chain
+      // signatures, never from client-supplied text — that's what makes the
+      // record forgery-proof.
+      chainTechnicianName =
+        chain.find((s) => s.role === "TECHNICIAN" && s.status === "SIGNED")?.signedByName ?? null;
+      chainSupervisorName =
+        chain.find((s) => s.role === "FOREMAN" && s.status === "SIGNED")?.signedByName ?? null;
+    }
 
     // Downtime is derived server-side from the down/restored window against the
     // working-hours settings — the client value is never trusted for a KPI input.
@@ -102,14 +152,17 @@ export async function PATCH(
       requiresExternalExpert: body.requiresExternalExpert ?? record.requiresExternalExpert,
       externalExpertDetails: body.externalExpertDetails ?? record.externalExpertDetails,
 
-      // Approvals & Sign-off. The technician who signs is the authenticated user —
-      // never trust the client to name the signer (that would forge the record).
+      // Approvals & Sign-off. Names are never client text: outside close-out the
+      // technician name is stamped from the authenticated session; on close-out
+      // both names are derived from the signed CM chain steps.
       technicianSignature: body.technicianSignature ?? record.technicianSignature,
-      technicianName: body.technicianSignature
-        ? gate.actor?.name ?? record.technicianName
-        : record.technicianName,
+      technicianName: closingOut
+        ? chainTechnicianName ?? record.technicianName
+        : body.technicianSignature
+          ? gate.actor?.name ?? record.technicianName
+          : record.technicianName,
       supervisorSignature: body.supervisorSignature ?? record.supervisorSignature,
-      supervisorName: body.supervisorName ?? record.supervisorName,
+      supervisorName: closingOut ? chainSupervisorName ?? record.supervisorName : record.supervisorName,
       supervisorComments: body.supervisorComments ?? record.supervisorComments,
       effectivenessChecked: body.effectivenessChecked ?? record.effectivenessChecked,
       closeOutDate: body.closeOutDate ?? record.closeOutDate,
@@ -117,13 +170,25 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
-    // If closing out the corrective work, restore equipment to OPERATIONAL
-    const closingOut = body.status === "CLOSED" && record.status !== "CLOSED";
+    // If closing out, restore equipment to OPERATIONAL — but only when NO other
+    // corrective record is still open on this machine. Closing one of two faults
+    // must not present a still-broken machine as fit for service.
     if (body.status === "CLOSED" && record.equipmentId) {
+      const otherOpen = await db
+        .select({ id: correctiveMaintenance.id })
+        .from(correctiveMaintenance)
+        .where(
+          and(
+            eq(correctiveMaintenance.equipmentId, record.equipmentId),
+            ne(correctiveMaintenance.id, record.id),
+            ne(correctiveMaintenance.status, "CLOSED"),
+          ),
+        )
+        .limit(1);
       await db
         .update(equipment)
         .set({
-          status: "OPERATIONAL",
+          ...(otherOpen.length === 0 ? { status: "OPERATIONAL" } : {}),
           lastMaintenanceDate: new Date().toISOString().split("T")[0],
           updatedAt: new Date().toISOString(),
         })
