@@ -76,6 +76,7 @@ export const users = pgTable("users", {
   department: text("department"), // MAINTENANCE | QA_QC | HSE | FACTORY | MANAGEMENT
   phone: text("phone"),
   whatsapp: text("whatsapp"),
+  preferences: text("preferences"), // JSON: per-user prefs (landing, density, notify) — see src/lib/user-prefs.ts
   isActive: boolean("is_active").default(true),
   mustChangePassword: boolean("must_change_password").default(false),
   createdBy: text("created_by"),

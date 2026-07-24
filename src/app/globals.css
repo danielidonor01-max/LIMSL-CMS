@@ -36,6 +36,20 @@ select[size]:not([size="1"]) {
   padding-right: 0.6rem !important;
 }
 
+/* Compact density (a per-user preference). Tightens the two things that most
+   affect information density — page padding and table row height — without
+   touching component internals, so layouts stay intact. Specificity beats the
+   Tailwind utility classes it overrides. */
+:root[data-density="compact"] main {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+:root[data-density="compact"] table th,
+:root[data-density="compact"] table td {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
 /* Print: drop app chrome (sidebar + top bar + marked controls), print content only. */
 @media print {
   aside,

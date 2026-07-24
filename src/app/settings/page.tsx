@@ -32,6 +32,7 @@ export default function AppSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"calendar" | "notifications" | "integrations">("calendar");
   const [form, setForm] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
   const [lunchEnabled, setLunchEnabled] = useState(true);
   const [meta, setMeta] = useState<{ updatedByName: string | null; updatedAt: string | null }>({
@@ -261,21 +262,37 @@ export default function AppSettingsPage() {
   return (
     <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <SlidersHorizontal className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">App Settings</h2>
-            <p className="text-xs text-slate-500 font-mono">Super Admin · production calendar & working hours</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
+          <SlidersHorizontal className="w-5 h-5" />
         </div>
-        <Button onClick={save} loading={saving} icon={Save}>
-          Save Settings
-        </Button>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">App Settings</h2>
+          <p className="text-xs text-slate-500 font-mono">Super Admin · organisation-wide configuration</p>
+        </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
+        {([
+          { id: "calendar", label: "Work Calendar", icon: CalendarDays },
+          { id: "notifications", label: "Notifications & Email", icon: BellRing },
+          { id: "integrations", label: "Integrations", icon: KeyRound },
+        ] as const).map(({ id, label: l, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
+              tab === id ? "text-emerald-700 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+            }`}
+          >
+            <Icon className="w-4 h-4" /> {l}
+          </button>
+        ))}
+      </div>
+
+      {tab === "calendar" && (
+      <div className="space-y-6">
       {/* Why it matters */}
       <div className="flex items-start gap-2.5 p-3 rounded-lg bg-sky-50 border border-sky-100 text-sky-800 text-xs">
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
@@ -371,6 +388,14 @@ export default function AppSettingsPage() {
         )}
       </section>
 
+      <div className="flex justify-end">
+        <Button onClick={save} loading={saving} icon={Save}>Save work calendar</Button>
+      </div>
+      </div>
+      )}
+
+      {tab === "integrations" && (
+      <div className="space-y-6">
       {/* AI provider API keys */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
@@ -429,7 +454,11 @@ export default function AppSettingsPage() {
           ))}
         </div>
       </section>
+      </div>
+      )}
 
+      {tab === "notifications" && (
+      <div className="space-y-6">
       {/* Email delivery */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
@@ -471,8 +500,10 @@ export default function AppSettingsPage() {
           Run escalation now
         </Button>
       </section>
+      </div>
+      )}
 
-      {meta.updatedByName && (
+      {tab === "calendar" && meta.updatedByName && (
         <p className="text-[11px] text-slate-400 text-right">
           Last updated by {meta.updatedByName}
           {meta.updatedAt ? ` · ${new Date(meta.updatedAt).toLocaleString()}` : ""}

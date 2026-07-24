@@ -94,7 +94,7 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
 };
 
 // Paths every authenticated role may reach, regardless of scope.
-const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications"];
+const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications", "/account"];
 
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware

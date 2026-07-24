@@ -3,6 +3,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
+import PreferencesProvider from "@/components/PreferencesProvider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     // it or refetch on every window focus. Both default to on and cause constant
     // re-renders + /api/auth/session round trips across the app.
     <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
-      {children}
+      <PreferencesProvider>{children}</PreferencesProvider>
       <Toaster
         position="top-right"
         richColors

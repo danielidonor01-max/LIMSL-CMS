@@ -11,6 +11,7 @@ import { notifications, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { whatsappReady, emailReady } from "@/lib/config";
+import { parsePrefs } from "@/lib/user-prefs";
 import { sendWhatsApp } from "./whatsapp";
 import { sendEmail } from "./email";
 
@@ -72,7 +73,9 @@ export async function notify(input: NotifyInput) {
     // Either way the row is the in-app inbox entry, so nothing is ever lost.
     let channel: Pending["channel"] = "INAPP";
     let to: string | null = null;
-    if (emailOn && u.email) {
+    // Honour the recipient's email opt-out; the in-app inbox row is still recorded.
+    const prefs = parsePrefs(u.preferences);
+    if (emailOn && u.email && prefs.notifyEmail) {
       channel = "EMAIL";
       to = u.email;
     } else if (waOn && u.whatsapp?.trim()) {
