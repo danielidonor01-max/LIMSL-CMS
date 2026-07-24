@@ -1,14 +1,40 @@
 // src/app/api/notifications/test/route.ts
-// Sends a one-off test email so an admin can confirm SMTP delivery works before
-// relying on it for reminders/escalations. Super-Admin only.
+// Email delivery diagnostics for a Super Admin — all three without exposing
+// secrets:
+//   GET               → readiness status + masked config (is SMTP configured?)
+//   POST {verifyOnly} → open the SMTP connection & auth, without sending
+//   POST {to}         → send a real test message
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
-import { emailReady } from "@/lib/config";
-import { sendEmail } from "@/lib/notifications/email";
+import { config, emailReady } from "@/lib/config";
+import { sendEmail, verifyEmail } from "@/lib/notifications/email";
+
+// Never returns passwords — only whether each field is present + safe metadata.
+function status() {
+  const ready = emailReady();
+  return {
+    ready: ready.ready,
+    reason: ready.reason ?? null,
+    enabled: config.emailEnabled,
+    from: config.emailFrom,
+    host: config.smtpHost || null,
+    port: config.smtpPort,
+    secure: config.smtpSecure,
+    hasUser: !!config.smtpUser,
+    hasPass: !!config.smtpPass,
+    appUrlSet: !!config.appUrl,
+  };
+}
+
+export async function GET() {
+  const gate = await requireRoles(SETTINGS_WRITE_ROLES);
+  if (gate.res) return gate.res;
+  return NextResponse.json(status());
+}
 
 export async function POST(request: Request) {
   const gate = await requireRoles(SETTINGS_WRITE_ROLES);
@@ -19,13 +45,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Email is not configured — ${ready.reason}.` }, { status: 400 });
   }
 
-  let to = "";
+  let body: { to?: string; verifyOnly?: boolean } = {};
   try {
-    const body = await request.json();
-    to = String(body?.to || "").trim();
+    body = await request.json();
   } catch {
-    // no body — fall back to the admin's own address below
+    // no body — treat as a send to the admin's own address
   }
+
+  // Connection/credential check only — proves SMTP is reachable and auth works.
+  if (body.verifyOnly) {
+    const res = await verifyEmail();
+    if (!res.ok) return NextResponse.json({ error: `Connection failed: ${res.error}` }, { status: 502 });
+    return NextResponse.json({ ok: true, verified: true });
+  }
+
+  let to = String(body?.to || "").trim();
   if (!to && gate.actor?.id) {
     const [u] = await db.select().from(users).where(eq(users.id, gate.actor.id)).limit(1);
     to = u?.email || "";

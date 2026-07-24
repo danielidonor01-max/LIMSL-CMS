@@ -3,9 +3,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2 } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
+import Toggle from "@/components/Toggle";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import {
   productiveHoursPerDay,
@@ -47,6 +48,40 @@ export default function AppSettingsPage() {
   const [escalating, setEscalating] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  type EmailStatus = {
+    ready: boolean; reason: string | null; enabled: boolean; from: string;
+    host: string | null; port: number; secure: boolean; hasUser: boolean; hasPass: boolean; appUrlSet: boolean;
+  };
+  const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
+
+  const loadEmailStatus = () => {
+    fetch("/api/notifications/test")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setEmailStatus(d));
+  };
+  useEffect(loadEmailStatus, []);
+
+  const verifyConnection = async () => {
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verifyOnly: true }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Connection failed.");
+        return;
+      }
+      toast.success("SMTP connection verified — credentials accepted.");
+    } catch {
+      toast.error("Connection check failed.");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   // AI provider API keys (encrypted at rest; only masked hints reach the client)
   type Cred = {
@@ -326,10 +361,10 @@ export default function AppSettingsPage() {
             <input type="time" value={form.lunchEnd ?? ""} disabled={!lunchEnabled} onChange={(e) => setForm((f) => ({ ...f, lunchEnd: e.target.value }))} className={`${timeField} w-full disabled:opacity-50`} />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-          <input type="checkbox" checked={lunchEnabled} onChange={(e) => setLunchEnabled(e.target.checked)} className="accent-emerald-600 w-4 h-4" />
-          Deduct a lunch break from production time
-        </label>
+        <div className="flex items-center gap-2.5">
+          <Toggle checked={lunchEnabled} onChange={setLunchEnabled} ariaLabel="Deduct a lunch break from production time" />
+          <span className="text-xs text-slate-600">Deduct a lunch break from production time</span>
+        </div>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-slate-500">Productive hours per working day:</span>
           <span className="font-bold text-emerald-700 font-mono">{perDay.toFixed(2)} h</span>
@@ -360,10 +395,14 @@ export default function AppSettingsPage() {
             );
           })}
         </div>
-        <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-          <input type="checkbox" checked={form.weekendOvertime} onChange={(e) => setForm((f) => ({ ...f, weekendOvertime: e.target.checked }))} className="accent-emerald-600 w-4 h-4" />
-          Count weekend (Sat/Sun) hours as production time when worked (overtime)
-        </label>
+        <div className="flex items-center gap-2.5">
+          <Toggle
+            checked={form.weekendOvertime}
+            onChange={(v) => setForm((f) => ({ ...f, weekendOvertime: v }))}
+            ariaLabel="Count weekend hours as production time"
+          />
+          <span className="text-xs text-slate-600">Count weekend (Sat/Sun) hours as production time when worked (overtime)</span>
+        </div>
       </section>
 
       {/* Live downtime preview */}
@@ -461,28 +500,83 @@ export default function AppSettingsPage() {
       <div className="space-y-6">
       {/* Email delivery */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-          <Mail className="w-4 h-4 text-emerald-600" /> Email Delivery
-        </h3>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <Mail className="w-4 h-4 text-emerald-600" /> Email Delivery
+          </h3>
+          {emailStatus && (
+            emailStatus.ready ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Configured
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-700 border-amber-500/20">
+                <XCircle className="w-3.5 h-3.5" /> Not configured
+              </span>
+            )
+          )}
+        </div>
         <p className="text-xs text-slate-500">
-          Reminders, escalations and sign-off requests are emailed to each person&apos;s address when SMTP is configured
-          (in <span className="font-mono">.env.local</span>). Send a test to confirm delivery. Leave blank to send to your
-          own account&apos;s email.
+          Reminders, escalations and sign-off requests are emailed to each person&apos;s address when SMTP is configured.
+          Set the variables below in your hosting environment (Vercel → Project → Settings → Environment Variables),
+          redeploy, then verify the connection and send a test.
         </p>
+
+        {emailStatus && !emailStatus.ready && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+            <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Required environment variables (Gmail App Password)</p>
+            <pre className="text-[11px] font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=you@gmail.com
+SMTP_PASS=<16-char Google App Password>
+EMAIL_FROM=LIMSL CMS <you@gmail.com>
+APP_URL=https://<your-app>.vercel.app`}</pre>
+            <p className="text-[11px] text-amber-700">Currently missing: {emailStatus.reason}</p>
+            <p className="text-[11px] text-slate-500">
+              Create the App Password in your Google Account → Security → 2-Step Verification → App passwords. See
+              <span className="font-mono"> docs/NOTIFICATIONS.md</span> for the full walkthrough.
+            </p>
+          </div>
+        )}
+
+        {emailStatus && emailStatus.ready && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            <div className="rounded-lg border border-slate-200 p-2">
+              <p className="text-slate-400 uppercase tracking-wide">Host</p>
+              <p className="font-mono text-slate-700 truncate">{emailStatus.host}:{emailStatus.port}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-2">
+              <p className="text-slate-400 uppercase tracking-wide">Security</p>
+              <p className="font-mono text-slate-700">{emailStatus.secure ? "SSL (465)" : "STARTTLS"}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-2 col-span-2">
+              <p className="text-slate-400 uppercase tracking-wide">From</p>
+              <p className="font-mono text-slate-700 truncate">{emailStatus.from}</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
           <div className="flex-1 space-y-1.5">
-            <label className={label}>Recipient (optional)</label>
+            <label className={label}>Send a test to (optional)</label>
             <input
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="name@leemachinery.net"
+              placeholder="name@leemachinery.net — blank sends to you"
               className={`${timeField} w-full`}
             />
           </div>
-          <Button variant="secondary" icon={Mail} loading={sendingTest} onClick={sendTestEmail}>
-            Send test email
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" icon={PlugZap} loading={verifying} onClick={verifyConnection} disabled={!emailStatus?.ready}>
+              Verify connection
+            </Button>
+            <Button icon={Mail} loading={sendingTest} onClick={sendTestEmail} disabled={!emailStatus?.ready}>
+              Send test
+            </Button>
+          </div>
         </div>
       </section>
 

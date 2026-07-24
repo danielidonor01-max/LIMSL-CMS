@@ -61,9 +61,22 @@ Common hosts for `SMTP_HOST` / port:
 - **Resend / SendGrid (transactional)** — their SMTP host + an API key as the
   password; verify the `leemachinery.net` domain for best deliverability.
 
-**Verify it:** *App Settings → Email Delivery → "Send test email"* (Super Admin).
-It sends a real message to the address you type (or your own account's email) and
-reports success/failure — no need to trigger a real alert to test.
+### On Vercel (hosted deploy)
+
+Set the same variables under **Vercel → Project → Settings → Environment
+Variables** (all environments), then **redeploy** so they take effect — `.env.local`
+is not used in the cloud. Never commit secrets; they live only in Vercel + the
+gitignored `.env.local` for local runs.
+
+**Verify it:** *App Settings → Notifications & Email → Email Delivery* (Super Admin):
+1. The section shows a **Configured / Not configured** status pill. When not
+   configured it lists the exact variables still missing.
+2. **Verify connection** opens the SMTP connection and authenticates — proving the
+   host/port/credentials are right — without sending anything.
+3. **Send test** sends a real message to the address you type (or your own
+   account's email) and reports success/failure.
+
+No need to trigger a real alert to test.
 
 Recipients are resolved from **roles → the user's `email`** (set in the user admin
 screen or via Data Import), so no addresses are hardcoded.

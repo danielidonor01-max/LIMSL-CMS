@@ -13,6 +13,7 @@ import {
   LayoutGrid, Rows3, Bell, ChevronRight,
 } from "lucide-react";
 import Button from "@/components/Button";
+import Toggle from "@/components/Toggle";
 import { Badge } from "@/components/Badge";
 import { ROLE_BADGE } from "@/lib/roles";
 import { useUserPrefs } from "@/components/PreferencesProvider";
@@ -242,15 +243,7 @@ function ToggleRow({
         <p className="text-sm font-medium text-slate-900">{title}</p>
         <p className="text-[11px] text-slate-500 mt-0.5">{desc}</p>
       </div>
-      <button
-        role="switch"
-        aria-checked={checked}
-        aria-label={title}
-        onClick={() => onChange(!checked)}
-        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${checked ? "bg-emerald-600" : "bg-slate-300"}`}
-      >
-        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : ""}`} />
-      </button>
+      <Toggle checked={checked} onChange={onChange} ariaLabel={title} />
     </div>
   );
 }
