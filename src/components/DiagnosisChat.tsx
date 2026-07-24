@@ -21,6 +21,7 @@ type ChatMessage = {
   ts: string;
   text: string;
   imageCount?: number;
+  imageKeys?: string[];
   likelyCause?: string | null;
   confidence?: number | null;
   question?: string | null;
@@ -184,14 +185,20 @@ export default function DiagnosisChat({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "resolve", sessionId, resolvedCause: resolveCause.trim() }),
     });
+    const d = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
       toast.error(d.error || "Could not close the session.");
       return;
     }
     setStatus("RESOLVED");
     setResolving(false);
-    toast.success("Diagnosis resolved and logged to machine history.");
+    toast.success(
+      d.learned === "created"
+        ? "Resolved, logged to history — and learned as a new diagnostic guide."
+        : d.learned === "reinforced"
+          ? "Resolved, logged to history — known cause reinforced in the engine."
+          : "Diagnosis resolved and logged to machine history.",
+    );
   };
 
   // ── Pre-session gate ────────────────────────────────────────────────────────
@@ -364,7 +371,20 @@ function MessageBubble({
       <div className="flex justify-end">
         <div className="max-w-[85%] bg-emerald-600 text-white rounded-2xl rounded-br-sm px-3.5 py-2">
           <p className="text-sm whitespace-pre-wrap break-words">{m.text}</p>
-          {m.imageCount ? (
+          {m.imageKeys && m.imageKeys.length > 0 ? (
+            <div className="flex gap-1.5 mt-1.5">
+              {m.imageKeys.map((k) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <a key={k} href={`/api/files/${k}`} target="_blank" rel="noreferrer">
+                  <img
+                    src={`/api/files/${k}`}
+                    alt="Attached panel photo"
+                    className="w-16 h-16 object-cover rounded-lg border border-emerald-500"
+                  />
+                </a>
+              ))}
+            </div>
+          ) : m.imageCount ? (
             <p className="text-[10px] text-emerald-100 mt-1 flex items-center gap-1">
               <ImageIcon className="w-3 h-3" /> {m.imageCount} photo{m.imageCount > 1 ? "s" : ""} attached
             </p>

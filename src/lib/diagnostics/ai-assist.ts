@@ -11,7 +11,7 @@ import {
   correctiveMaintenance,
   componentRegistry,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { diagnose, type Guide, type HistoryCase, type Component } from "./engine";
 import { searchPassages, type Passage } from "./retrieval";
 import { generateJson, generateJsonChat, type GeminiUsage, type GeminiImage, type GeminiTurn } from "./gemini";
@@ -32,7 +32,13 @@ export async function buildEvidencePack(
   const components = await db.select().from(componentRegistry).where(eq(componentRegistry.equipmentId, equipmentId));
   // Whole-plant history — the engine's similarity scoring picks what's relevant,
   // and cross-machine learning is intentional (same guide as the GET route).
-  const history = await db.select().from(correctiveMaintenance);
+  // Bounded to the most recent cases so the pack can't grow without limit as
+  // years of records accumulate.
+  const history = await db
+    .select()
+    .from(correctiveMaintenance)
+    .orderBy(desc(correctiveMaintenance.createdAt))
+    .limit(300);
 
   // Rank with the deterministic engine, then keep the top slices.
   const ranked = diagnose(symptom, guides as Guide[], history as HistoryCase[], components as Component[]);
@@ -303,14 +309,16 @@ type RawChatTurn = {
   resolved?: boolean;
 };
 
-// One stored transcript message. Base64 image data is never persisted — only a
-// count — to keep the session row small; images are passed to the model on the
-// turn they arrive.
+// One stored transcript message. Base64 image data is never kept on the session
+// row — photos are persisted to file storage and referenced by key (served via
+// the auth-gated /api/files route); the model sees the bytes only on the turn
+// they arrive.
 export type ChatMessage = {
   role: "user" | "assistant";
   ts: string;
   text: string;
   imageCount?: number;
+  imageKeys?: string[];
   likelyCause?: string | null;
   confidence?: number | null;
   question?: string | null;

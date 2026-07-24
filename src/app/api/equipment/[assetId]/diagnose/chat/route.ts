@@ -5,11 +5,12 @@
 // machine history log — when the technician explicitly starts the AI chat
 // ("log this and proceed"); the deterministic search alone never logs.
 //   GET  ?session=<id>  → load a session transcript (resume / deep-link)
+//   GET  (no param)     → list this machine's past sessions
 //   POST { action: "start" | "message" | "resolve" | "abandon", ... }
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { equipment, diagnosisSessions, equipmentLog, auditLog } from "@/lib/db/schema";
-import { and, eq, gte, or } from "drizzle-orm";
+import { equipment, diagnosisSessions, equipmentLog, auditLog, diagnosticGuides } from "@/lib/db/schema";
+import { and, desc, eq, gte, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -17,6 +18,7 @@ import { aiChatTurn, type ChatMessage } from "@/lib/diagnostics/ai-assist";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { GeminiError, type GeminiImage } from "@/lib/diagnostics/gemini";
 import { isoSeconds } from "@/lib/utils";
+import { saveFile, makeKey } from "@/lib/storage";
 
 const HOURLY_LIMIT = Number(process.env.AI_CHAT_HOURLY_LIMIT || 40);
 const MAX_IMAGES = 3;
@@ -56,6 +58,66 @@ function sanitizeImages(input: unknown): GeminiImage[] {
   return out;
 }
 
+// Panel/component photos are compliance evidence — persist them to file storage
+// and keep only the keys on the transcript (never base64 in the session row).
+// Served back through the auth-gated /api/files route. Best-effort: a storage
+// failure must not block the diagnosis turn.
+async function persistImages(images: GeminiImage[], sessionId: string): Promise<string[]> {
+  const keys: string[] = [];
+  for (const img of images) {
+    try {
+      const ext = img.mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+      const key = makeKey(`diagnosis-${sessionId}.${ext}`, nanoid(8));
+      await saveFile(key, Buffer.from(img.dataBase64, "base64"), {
+        name: `diagnosis-photo.${ext}`,
+        mimeType: img.mimeType,
+      });
+      keys.push(key);
+    } catch (err) {
+      console.warn("diagnosis chat: photo persist failed (non-fatal)", err);
+    }
+  }
+  return keys;
+}
+
+// Feed a confirmed resolution back into the deterministic engine — the same
+// learning the one-shot path does. A cause the guides already know gets
+// reinforced; a new one becomes a new guide, seeded with the assistant's last
+// suggested checks as the diagnostic steps.
+async function learnFromResolution(
+  equipmentId: string,
+  symptom: string,
+  resolvedCause: string,
+  resolutionNote: string | null,
+  history: ChatMessage[],
+) {
+  const guides = await db.select().from(diagnosticGuides).where(eq(diagnosticGuides.equipmentId, equipmentId));
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const existing = guides.find((g) => norm(g.probableCause ?? "") === norm(resolvedCause));
+  if (existing) {
+    await db
+      .update(diagnosticGuides)
+      .set({ successCount: (existing.successCount ?? 0) + 1 })
+      .where(eq(diagnosticGuides.id, existing.id));
+    return { learned: "reinforced" as const, guideId: existing.id };
+  }
+  const lastSteps =
+    [...history].reverse().find((m) => m.role === "assistant" && m.steps?.length)?.steps?.map((s) => s.action) ?? [];
+  const guide = {
+    id: nanoid(),
+    equipmentId,
+    symptom: symptom.slice(0, 200),
+    errorCode: "",
+    componentTag: "",
+    probableCause: resolvedCause.slice(0, 300),
+    diagnosticSteps: JSON.stringify(lastSteps),
+    resolutionAction: resolutionNote ?? "",
+    successCount: 1,
+  };
+  await db.insert(diagnosticGuides).values(guide);
+  return { learned: "created" as const, guideId: guide.id };
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
     const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
@@ -65,7 +127,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ asse
     if (!e) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
 
     const sessionId = new URL(request.url).searchParams.get("session");
-    if (!sessionId) return NextResponse.json({ error: "session id required" }, { status: 400 });
+
+    // No session param → the machine's diagnosis history (for the "past
+    // diagnoses" list on the troubleshoot page).
+    if (!sessionId) {
+      const sessions = await db
+        .select({
+          id: diagnosisSessions.id,
+          symptom: diagnosisSessions.symptom,
+          status: diagnosisSessions.status,
+          resolvedCause: diagnosisSessions.resolvedCause,
+          startedByName: diagnosisSessions.startedByName,
+          createdAt: diagnosisSessions.createdAt,
+        })
+        .from(diagnosisSessions)
+        .where(eq(diagnosisSessions.equipmentId, e.id))
+        .orderBy(desc(diagnosisSessions.createdAt))
+        .limit(20);
+      return NextResponse.json({ sessions });
+    }
 
     const [s] = await db.select().from(diagnosisSessions).where(eq(diagnosisSessions.id, sessionId)).limit(1);
     if (!s || s.equipmentId !== e.id) return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -122,6 +202,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
         })
         .where(eq(diagnosisSessions.id, s.id));
 
+      // Close the learning loop: a confirmed resolution teaches the
+      // deterministic engine, exactly like the one-shot path. Best-effort.
+      let learned: { learned: string; guideId: string } | null = null;
+      if (action === "resolve" && resolvedCause) {
+        try {
+          learned = await learnFromResolution(e.id, s.symptom, resolvedCause, resolutionNote, parseMessages(s.messages));
+        } catch (err) {
+          console.warn("diagnosis resolve: learning failed (non-fatal)", err);
+        }
+      }
+
       if (s.logId) {
         await db
           .update(equipmentLog)
@@ -137,7 +228,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
           })
           .where(eq(equipmentLog.id, s.logId));
       }
-      return NextResponse.json({ ok: true, status: action === "resolve" ? "RESOLVED" : "ABANDONED" });
+      return NextResponse.json({
+        ok: true,
+        status: action === "resolve" ? "RESOLVED" : "ABANDONED",
+        learned: learned?.learned ?? null,
+      });
     }
 
     if (!(await underRateLimit(gate.actor?.id))) {
@@ -169,11 +264,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
         occurredAt: now,
       });
 
+      const imageKeys = images.length ? await persistImages(images, sessionId) : [];
       const userTurn: ChatMessage = {
         role: "user",
         ts: now,
         text: symptom,
         imageCount: images.length || undefined,
+        imageKeys: imageKeys.length ? imageKeys : undefined,
       };
       const { turn, model, usage, evidenceCount } = await aiChatTurn({
         equipment: { id: e.id, name: e.name, assetId: e.assetId, category: e.category },
@@ -218,7 +315,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
     if (!text && images.length === 0) return NextResponse.json({ error: "Enter a message." }, { status: 400 });
 
     const history = parseMessages(s.messages);
-    const userTurn: ChatMessage = { role: "user", ts: now, text: text || "(see attached photo)", imageCount: images.length || undefined };
+    const msgImageKeys = images.length ? await persistImages(images, sessionId) : [];
+    const userTurn: ChatMessage = {
+      role: "user",
+      ts: now,
+      text: text || "(see attached photo)",
+      imageCount: images.length || undefined,
+      imageKeys: msgImageKeys.length ? msgImageKeys : undefined,
+    };
 
     const { turn, model, usage, evidenceCount } = await aiChatTurn({
       equipment: { id: e.id, name: e.name, assetId: e.assetId, category: e.category },

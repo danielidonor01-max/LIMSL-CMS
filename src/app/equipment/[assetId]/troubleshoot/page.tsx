@@ -110,6 +110,8 @@ export default function TroubleshootPage() {
   const [learned, setLearned] = useState<Record<number, string>>({});
   const [searchedSymptom, setSearchedSymptom] = useState("");
   const [resumeSession, setResumeSession] = useState<string | null>(null);
+  type PastSession = { id: string; symptom: string; status: string; resolvedCause: string | null; startedByName: string | null; createdAt: string };
+  const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [viewer, setViewer] = useState<{
     docId: string;
     title: string;
@@ -131,6 +133,14 @@ export default function TroubleshootPage() {
     const sid = new URLSearchParams(window.location.search).get("session");
     if (sid) setResumeSession(sid);
   }, []);
+
+  // This machine's past AI diagnoses (for the sidebar list).
+  useEffect(() => {
+    fetch(`/api/equipment/${assetId}/diagnose/chat`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.sessions && setPastSessions(d.sessions))
+      .catch(() => {});
+  }, [assetId, resumeSession]);
 
   const runDiagnosis = async (sym?: string) => {
     const s = (sym ?? symptom).trim();
@@ -495,6 +505,46 @@ export default function TroubleshootPage() {
               <p className="text-xs text-slate-400">No schematics on file.</p>
             )}
           </div>
+
+          {pastSessions.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <HistoryIcon className="w-4 h-4 text-violet-600" /> Past AI diagnoses
+              </h3>
+              <div className="space-y-1.5">
+                {pastSessions.slice(0, 8).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setResumeSession(s.id)}
+                    className={`w-full text-left p-2.5 rounded-lg border transition-colors ${
+                      resumeSession === s.id ? "border-violet-300 bg-violet-50" : "border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-800 truncate">{s.symptom}</span>
+                      <span
+                        className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${
+                          s.status === "RESOLVED"
+                            ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                            : s.status === "OPEN"
+                              ? "bg-amber-500/10 text-amber-700 border-amber-500/20"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        {s.status}
+                      </span>
+                    </div>
+                    {s.resolvedCause && (
+                      <p className="text-[10px] text-slate-500 truncate mt-0.5">→ {s.resolvedCause}</p>
+                    )}
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {s.startedByName ?? "—"} · {(s.createdAt ?? "").slice(0, 10)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
