@@ -30,16 +30,28 @@ export async function ensureSignoffChain(entityType: string, entityId: string, r
     required: s.required,
     status: "PENDING" as const,
   }));
-  await db.insert(signoffs).values(rows);
+  // Two concurrent first-accesses both reach this insert; the unique index on
+  // (entity_type, entity_id, step_order) makes the loser a no-op instead of a
+  // duplicated chain, and both callers return the canonical rows.
+  await db.insert(signoffs).values(rows).onConflictDoNothing();
+  const canonical = await db
+    .select()
+    .from(signoffs)
+    .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)))
+    .orderBy(asc(signoffs.stepOrder));
 
-  // Best-effort — never let a notification failure abort chain creation.
-  try {
-    await notifyNextSigner(entityType, entityId, rows, reference);
-  } catch (err) {
-    console.warn("ensureSignoffChain: notify failed", err);
+  // Best-effort — never let a notification failure abort chain creation. Only
+  // the caller whose rows actually landed notifies, so a lost race can't send
+  // the first-signer request twice.
+  if (canonical[0]?.id === rows[0].id) {
+    try {
+      await notifyNextSigner(entityType, entityId, canonical, reference);
+    } catch (err) {
+      console.warn("ensureSignoffChain: notify failed", err);
+    }
   }
 
-  return rows;
+  return canonical;
 }
 
 export async function getSignoffChain(entityType: string, entityId: string) {

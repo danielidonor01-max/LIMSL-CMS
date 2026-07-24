@@ -2,10 +2,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wmsDocuments, equipment } from "@/lib/db/schema";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { WMS_WRITE_ROLES } from "@/lib/roles";
+import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 
@@ -66,7 +67,7 @@ export async function GET() {
     return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch WMS list:", error);
-    return NextResponse.json({ error: "Failed to fetch WMS list", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch WMS list" }, { status: 500 });
   }
 }
 
@@ -77,10 +78,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     
-    // Auto-generate WMS document number e.g. WMS-2026-0001
-    const countResult = await db.select({ value: count() }).from(wmsDocuments);
-    const totalCount = countResult[0]?.value || 0;
-    const wmsNumber = `WMS-2026-${(totalCount + 1).toString().padStart(4, "0")}`;
+    const wmsNumber = await nextDocNumber("WMS");
 
     const newWms = {
       id: nanoid(),
@@ -113,6 +111,6 @@ export async function POST(request: Request) {
     return NextResponse.json(newWms, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create WMS document:", error);
-    return NextResponse.json({ error: "Failed to create WMS", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create WMS" }, { status: 500 });
   }
 }

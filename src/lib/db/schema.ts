@@ -9,6 +9,7 @@ import {
   real,
   boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ─── Equipment ─────────────────────────────────────────────────────────────
@@ -490,7 +491,9 @@ export const competencyMatrix = pgTable("competency_matrix", {
 // `userId`) and the delivery outbox (WhatsApp). Recorded regardless of whether an
 // external channel is configured, so alerts are never silently lost and there is
 // an audit trail. deliveryStatus is honest — QUEUED until actually sent.
-export const notifications = pgTable("notifications", {
+export const notifications = pgTable(
+  "notifications",
+  {
   id: text("id").primaryKey(),
   userId: text("user_id").references(() => users.id), // recipient (in-app inbox)
   event: text("event").notNull(), // PTW_SIGN_REQUEST | WMS_SIGN_REQUEST | BREAKDOWN | PROCEDURE_SIGN_REQUEST | PM_SIGN_REQUEST | GENERAL
@@ -508,7 +511,10 @@ export const notifications = pgTable("notifications", {
   deliveryError: text("delivery_error"),
   sentAt: text("sent_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+  },
+  // The inbox is polled per user on every bell refresh.
+  (t) => [index("notifications_user_idx").on(t.userId, t.readAt)],
+);
 
 // ─── Schematic Diagrams ──────────────────────────────────────────────────────
 export const schematicDiagrams = pgTable("schematic_diagrams", {
@@ -563,22 +569,37 @@ export const diagnosticGuides = pgTable("diagnostic_guides", {
 // ─── Multi-level Sign-offs ───────────────────────────────────────────────────
 // A configurable approval chain attached to any signable entity (PM checklist,
 // corrective maintenance, WMS…). Each row is one step in the chain for one role.
-export const signoffs = pgTable("signoffs", {
-  id: text("id").primaryKey(),
-  entityType: text("entity_type").notNull(), // PM_CHECKLIST | CORRECTIVE | WMS | WORK_ORDER
-  entityId: text("entity_id").notNull(),
-  stepOrder: integer("step_order").notNull(), // 1-based position in the chain
-  role: text("role").notNull(), // required role for this step
-  roleLabel: text("role_label").notNull(), // e.g. "Performed by", "Verified by", "Approved by"
-  required: boolean("required").notNull().default(true),
-  status: text("status").notNull().default("PENDING"), // PENDING | SIGNED | REJECTED
-  signedById: text("signed_by_id").references(() => users.id),
-  signedByName: text("signed_by_name"),
-  signedByRole: text("signed_by_role"),
-  signatureData: text("signature_data"), // base64 drawn signature
-  comments: text("comments"),
-  signedAt: text("signed_at"),
-  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+export const signoffs = pgTable(
+  "signoffs",
+  {
+    id: text("id").primaryKey(),
+    entityType: text("entity_type").notNull(), // PM_CHECKLIST | CORRECTIVE | WMS | WORK_ORDER
+    entityId: text("entity_id").notNull(),
+    stepOrder: integer("step_order").notNull(), // 1-based position in the chain
+    role: text("role").notNull(), // required role for this step
+    roleLabel: text("role_label").notNull(), // e.g. "Performed by", "Verified by", "Approved by"
+    required: boolean("required").notNull().default(true),
+    status: text("status").notNull().default("PENDING"), // PENDING | SIGNED | REJECTED
+    signedById: text("signed_by_id").references(() => users.id),
+    signedByName: text("signed_by_name"),
+    signedByRole: text("signed_by_role"),
+    signatureData: text("signature_data"), // base64 drawn signature
+    comments: text("comments"),
+    signedAt: text("signed_at"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  // The unique index is both the duplicate-chain guard (two concurrent
+  // ensureSignoffChain calls can no longer both insert a chain) and the lookup
+  // index for the app's hottest query, getSignoffChain(entityType, entityId).
+  (t) => [uniqueIndex("signoffs_entity_step_uq").on(t.entityType, t.entityId, t.stepOrder)],
+);
+
+// Per-series atomic counters backing document numbers (WO-2026-0031 etc.).
+// Numbers must NEVER be derived from count() or a max() scan — concurrent
+// creates collide, and count-based numbering reuses numbers after deletion.
+export const docCounters = pgTable("doc_counters", {
+  series: text("series").primaryKey(), // e.g. "WO-2026", "PTW-2026"
+  value: integer("value").notNull().default(0),
 });
 
 // ─── Schematic Ingestion Jobs (engine scaffolding — disabled until configured) ─

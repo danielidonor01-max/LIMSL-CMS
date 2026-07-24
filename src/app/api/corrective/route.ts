@@ -2,10 +2,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { nextDocNumber } from "@/lib/doc-number";
 import { notify } from "@/lib/notifications";
 
 export async function GET() {
@@ -20,7 +21,7 @@ export async function GET() {
     return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch corrective list:", error);
-    return NextResponse.json({ error: "Failed to fetch corrective list", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch corrective list" }, { status: 500 });
   }
 }
 
@@ -31,10 +32,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    // Auto-generate CMRF number e.g. CMRF-2026-0001
-    const countResult = await db.select({ value: count() }).from(correctiveMaintenance);
-    const totalCount = countResult[0]?.value || 0;
-    const cmrfNumber = `CMRF-2026-${(totalCount + 1).toString().padStart(4, "0")}`;
+    const cmrfNumber = await nextDocNumber("CMRF");
 
     const newCorrective = {
       id: nanoid(),
@@ -54,18 +52,21 @@ export async function POST(request: Request) {
       status: "OPEN",
     };
 
-    // Update equipment status to BROKEN_DOWN or UNDER_MAINTENANCE depending on urgency
-    if (body.equipmentId) {
-      await db
-        .update(equipment)
-        .set({
-          status: body.urgency === "CRITICAL" || body.urgency === "HIGH" ? "BROKEN_DOWN" : "UNDER_MAINTENANCE",
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(equipment.id, body.equipmentId));
-    }
-
-    await db.insert(correctiveMaintenance).values(newCorrective);
+    // The fault record and the machine's status flip are one atomic unit — a
+    // machine must never sit flagged BROKEN_DOWN with no corrective record
+    // backing it (the record inserts FIRST inside the transaction).
+    await db.transaction(async (tx) => {
+      await tx.insert(correctiveMaintenance).values(newCorrective);
+      if (body.equipmentId) {
+        await tx
+          .update(equipment)
+          .set({
+            status: body.urgency === "CRITICAL" || body.urgency === "HIGH" ? "BROKEN_DOWN" : "UNDER_MAINTENANCE",
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(equipment.id, body.equipmentId));
+      }
+    });
 
     // Alert the maintenance leadership + HSE that a breakdown was logged.
     // Best-effort — never let a notification failure fail the record.
@@ -88,6 +89,6 @@ export async function POST(request: Request) {
     return NextResponse.json(newCorrective, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create corrective record:", error);
-    return NextResponse.json({ error: "Failed to create corrective record", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create corrective record" }, { status: 500 });
   }
 }

@@ -11,6 +11,7 @@ import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { nextDocNumber } from "@/lib/doc-number";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
@@ -40,27 +41,12 @@ export async function GET() {
 
     return NextResponse.json(rows);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch work orders:", error);
     return NextResponse.json(
-      { error: "Failed to fetch work orders", details: message },
+      { error: "Failed to fetch work orders" },
       { status: 500 },
     );
   }
-}
-
-// Next sequential work-order number, e.g. WO-2026-0031
-async function nextWorkOrderNumber(): Promise<string> {
-  const year = new Date().getFullYear();
-  const existing = await db
-    .select({ n: workOrders.workOrderNumber })
-    .from(workOrders);
-  let max = 0;
-  for (const row of existing) {
-    const m = row.n?.match(/WO-\d{4}-(\d+)/);
-    if (m) max = Math.max(max, parseInt(m[1], 10));
-  }
-  return `WO-${year}-${String(max + 1).padStart(4, "0")}`;
 }
 
 // Create a new work order.
@@ -79,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     const id = nanoid();
-    const workOrderNumber = await nextWorkOrderNumber();
+    const workOrderNumber = await nextDocNumber("WO");
 
     const newWo = {
       id,
@@ -120,10 +106,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newWo, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to create work order:", error);
     return NextResponse.json(
-      { error: "Failed to create work order", details: message },
+      { error: "Failed to create work order" },
       { status: 500 },
     );
   }

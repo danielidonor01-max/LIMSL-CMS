@@ -2,10 +2,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nonConformities, auditLog } from "@/lib/db/schema";
-import { count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
+import { nextDocNumber } from "@/lib/doc-number";
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch non-conformities:", error);
-    return NextResponse.json({ error: "Failed to fetch non-conformities", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch non-conformities" }, { status: 500 });
   }
 }
 
@@ -27,9 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A description of the non-conformity is required." }, { status: 400 });
     }
 
-    const countResult = await db.select({ value: count() }).from(nonConformities);
-    const totalCount = countResult[0]?.value || 0;
-    const ncNumber = `NC-2026-${(totalCount + 1).toString().padStart(4, "0")}`;
+    const ncNumber = await nextDocNumber("NC");
 
     const newNc = {
       id: nanoid(),
@@ -69,6 +67,6 @@ export async function POST(request: Request) {
     return NextResponse.json(newNc, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create non-conformity:", error);
-    return NextResponse.json({ error: "Failed to create non-conformity", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create non-conformity" }, { status: 500 });
   }
 }

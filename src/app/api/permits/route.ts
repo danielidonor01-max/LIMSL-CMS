@@ -2,10 +2,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { permits, equipment, users } from "@/lib/db/schema";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 
@@ -82,7 +83,7 @@ export async function GET() {
     return NextResponse.json(enriched);
   } catch (error: any) {
     console.error("Failed to fetch permit list:", error);
-    return NextResponse.json({ error: "Failed to fetch permits", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch permits" }, { status: 500 });
   }
 }
 
@@ -118,9 +119,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Permit holder not found." }, { status: 400 });
     }
 
-    const countResult = await db.select({ value: count() }).from(permits);
-    const totalCount = countResult[0]?.value || 0;
-    const permitNumber = `PTW-2026-${(totalCount + 1).toString().padStart(4, "0")}`;
+    const permitNumber = await nextDocNumber("PTW");
 
     // Fixed one-working-day validity — permits are re-raised, never renewed.
     const expiryDate = new Date(Date.now() + PERMIT_VALIDITY_HOURS * 3600 * 1000).toISOString();
@@ -153,6 +152,6 @@ export async function POST(request: Request) {
     return NextResponse.json(newPermit, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create Permit-to-Work:", error);
-    return NextResponse.json({ error: "Failed to create Permit-to-Work", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create Permit-to-Work" }, { status: 500 });
   }
 }
