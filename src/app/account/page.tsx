@@ -10,9 +10,10 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
   UserCircle, Loader2, Save, KeyRound, Mail, Phone, MessageCircle, SlidersHorizontal,
-  LayoutGrid, Rows3, Bell, ChevronRight,
+  LayoutGrid, Rows3, Bell, ChevronRight, Sparkles,
 } from "lucide-react";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import Toggle from "@/components/Toggle";
 import { Badge } from "@/components/Badge";
 import { ROLE_BADGE } from "@/lib/roles";
@@ -159,13 +160,13 @@ export default function AccountPage() {
         {/* Default landing */}
         <div className="space-y-1.5">
           <label className={label}>Landing page after sign-in</label>
-          <select
+          <Select
             value={prefs.defaultLanding}
-            onChange={(e) => savePrefs({ ...prefs, defaultLanding: e.target.value })}
-            className={`${field} max-w-xs`}
-          >
-            {LANDING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+            onChange={(v) => savePrefs({ ...prefs, defaultLanding: v })}
+            options={LANDING_OPTIONS}
+            className="max-w-xs"
+            ariaLabel="Landing page after sign-in"
+          />
         </div>
 
         {/* Density */}
@@ -207,6 +208,17 @@ export default function AccountPage() {
             desc="Show the notification inbox badge in the top bar."
             checked={prefs.notifyInApp}
             onChange={(v) => savePrefs({ ...prefs, notifyInApp: v })}
+          />
+        </div>
+
+        {/* AI chat */}
+        <div className="space-y-2.5">
+          <label className={label}><Sparkles className="w-3 h-3 inline mr-1" />AI chat</label>
+          <ToggleRow
+            title="Enter key sends the message"
+            desc="Off: Enter starts a new line — send with Ctrl+Enter or the Send button. On: Enter sends; Shift+Enter starts a new line."
+            checked={prefs.chatEnterToSend}
+            onChange={(v) => savePrefs({ ...prefs, chatEnterToSend: v })}
           />
         </div>
       </section>

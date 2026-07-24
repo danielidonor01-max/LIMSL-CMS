@@ -10,8 +10,10 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Sparkles, Send, Loader2, Paperclip, X, ShieldAlert, CheckCircle2,
-  CircleHelp, ClipboardCheck, ImageIcon, MessageSquare,
+  CircleHelp, ClipboardCheck, ImageIcon,
 } from "lucide-react";
+import Button from "@/components/Button";
+import { useUserPrefs } from "@/components/PreferencesProvider";
 
 type Step = { action: string; expected?: string; ifNot?: string };
 type ChatMessage = {
@@ -54,6 +56,7 @@ export default function DiagnosisChat({
   symptom: string;
   resumeSessionId?: string | null;
 }) {
+  const { prefs } = useUserPrefs();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<"OPEN" | "RESOLVED" | "ABANDONED">("OPEN");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -205,20 +208,12 @@ export default function DiagnosisChat({
         </div>
         {attachments.length > 0 && <AttachmentStrip attachments={attachments} onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))} />}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={start}
-            disabled={starting || symptom.trim().length < 3}
-            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold"
-          >
-            {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          <Button icon={Sparkles} loading={starting} disabled={symptom.trim().length < 3} onClick={start}>
             {starting ? "Starting…" : "Log fault & start AI diagnosis"}
-          </button>
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-medium"
-          >
-            <Paperclip className="w-3.5 h-3.5" /> Attach photo
-          </button>
+          </Button>
+          <Button variant="secondary" icon={Paperclip} onClick={() => fileRef.current?.click()}>
+            Attach photo
+          </Button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
           {symptom.trim().length < 3 && <span className="text-[11px] text-slate-400">Enter a symptom above first.</span>}
         </div>
@@ -257,7 +252,7 @@ export default function DiagnosisChat({
           {lastSteps.length > 0 && (
             <button
               onClick={reportSteps}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-violet-700 hover:text-violet-900"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 hover:text-emerald-900"
             >
               <ClipboardCheck className="w-3.5 h-3.5" /> Report ticked steps
             </button>
@@ -276,24 +271,32 @@ export default function DiagnosisChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                // Send shortcut follows the user's preference (Account → Preferences
+                // → AI chat). Default: Enter is a plain new line — a stray Enter on a
+                // phone must not fire a half-typed report — and Ctrl/Cmd+Enter sends.
+                if (e.key !== "Enter") return;
+                if (prefs.chatEnterToSend ? !e.shiftKey : e.ctrlKey || e.metaKey) {
                   e.preventDefault();
                   send(input);
                 }
               }}
-              rows={1}
+              rows={2}
               placeholder="Report what you observed…"
-              className="flex-1 resize-none max-h-32 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500/40"
+              className="flex-1 resize-none max-h-32 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
             />
             <button
               onClick={() => send(input)}
               disabled={sending || (!input.trim() && attachments.length === 0)}
-              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white rounded-lg shrink-0"
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg shrink-0"
               title="Send"
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
+          <p className="text-[10px] text-slate-400 text-right">
+            {prefs.chatEnterToSend ? "Enter sends · Shift+Enter for a new line" : "Ctrl+Enter sends · Enter for a new line"}
+            <span className="text-slate-300"> · change in Account → Preferences</span>
+          </p>
 
           {resolving ? (
             <div className="flex flex-col sm:flex-row gap-2 pt-1">
@@ -359,10 +362,10 @@ function MessageBubble({
   if (m.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-violet-600 text-white rounded-2xl rounded-br-sm px-3.5 py-2">
+        <div className="max-w-[85%] bg-emerald-600 text-white rounded-2xl rounded-br-sm px-3.5 py-2">
           <p className="text-sm whitespace-pre-wrap break-words">{m.text}</p>
           {m.imageCount ? (
-            <p className="text-[10px] text-violet-100 mt-1 flex items-center gap-1">
+            <p className="text-[10px] text-emerald-100 mt-1 flex items-center gap-1">
               <ImageIcon className="w-3 h-3" /> {m.imageCount} photo{m.imageCount > 1 ? "s" : ""} attached
             </p>
           ) : null}
@@ -419,7 +422,7 @@ function MessageBubble({
                   disabled={!isLastAssistant}
                   checked={!!stepChecks?.[j]}
                   onChange={() => onToggleStep(j)}
-                  className="accent-violet-600 w-3.5 h-3.5 mt-0.5 shrink-0"
+                  className="accent-emerald-600 w-3.5 h-3.5 mt-0.5 shrink-0"
                 />
                 <span className={stepChecks?.[j] ? "line-through text-slate-400" : ""}>
                   {s.action}

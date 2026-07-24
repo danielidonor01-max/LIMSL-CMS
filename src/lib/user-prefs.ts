@@ -12,6 +12,10 @@ export type UserPrefs = {
   density: Density; // list/table spacing
   notifyEmail: boolean; // receive email notifications (when SMTP is configured)
   notifyInApp: boolean; // show the in-app notification inbox badge
+  // AI chat composer: false (default) = Enter inserts a new line and Ctrl/Cmd+Enter
+  // sends — the safe choice on shop-floor phones where a stray Enter mid-report
+  // would fire a half-typed message at the assistant. true = Enter sends.
+  chatEnterToSend: boolean;
 };
 
 export const DEFAULT_PREFS: UserPrefs = {
@@ -19,6 +23,7 @@ export const DEFAULT_PREFS: UserPrefs = {
   density: "comfortable",
   notifyEmail: true,
   notifyInApp: true,
+  chatEnterToSend: false,
 };
 
 // Landing pages a user may choose — kept to broadly-accessible destinations so
@@ -40,6 +45,7 @@ export function parsePrefs(raw: unknown): UserPrefs {
       density: p.density === "compact" ? "compact" : "comfortable",
       notifyEmail: p.notifyEmail !== false,
       notifyInApp: p.notifyInApp !== false,
+      chatEnterToSend: p.chatEnterToSend === true,
     };
   } catch {
     return { ...DEFAULT_PREFS };
@@ -55,5 +61,6 @@ export function sanitizePrefs(input: unknown): UserPrefs {
     density: p.density === "compact" ? "compact" : "comfortable",
     notifyEmail: p.notifyEmail !== false,
     notifyInApp: p.notifyInApp !== false,
+    chatEnterToSend: p.chatEnterToSend === true,
   };
 }
