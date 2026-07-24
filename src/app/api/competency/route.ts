@@ -1,7 +1,7 @@
 // src/app/api/competency/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { competencyMatrix } from "@/lib/db/schema";
+import { competencyMatrix, auditLog } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -23,6 +23,9 @@ export async function POST(request: Request) {
     }
 
     const level = Number(body.level ?? 0);
+    if (!Number.isFinite(level) || level < 0 || level > 5) {
+      return NextResponse.json({ error: "Competency level must be a number between 0 and 5." }, { status: 400 });
+    }
     const now = new Date().toISOString();
     const today = now.slice(0, 10);
 
@@ -58,6 +61,15 @@ export async function POST(request: Request) {
         .from(competencyMatrix)
         .where(eq(competencyMatrix.id, existing[0].id))
         .limit(1);
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? "User",
+        action: "UPDATE",
+        entityType: "competency",
+        entityId: existing[0].id,
+        entityDescription: `Competency re-assessed — ${body.employeeName} · ${body.skillArea} → level ${level}`,
+      });
       return NextResponse.json(updated);
     }
 
@@ -76,6 +88,15 @@ export async function POST(request: Request) {
       notes: body.notes || null,
     };
     await db.insert(competencyMatrix).values(row);
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name ?? "User",
+      action: "CREATE",
+      entityType: "competency",
+      entityId: row.id,
+      entityDescription: `Competency recorded — ${row.employeeName} · ${row.skillArea} level ${level}`,
+    });
     return NextResponse.json(row, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

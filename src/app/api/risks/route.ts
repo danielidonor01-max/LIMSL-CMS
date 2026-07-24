@@ -1,8 +1,9 @@
 // src/app/api/risks/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { riskRegister } from "@/lib/db/schema";
+import { riskRegister, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -36,6 +37,17 @@ export async function PATCH(request: Request) {
       })
       .where(eq(riskRegister.id, body.id))
       .returning();
+
+    // Risk-register changes are compliance evidence — always leave a trail.
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name ?? "User",
+      action: body.status === "CLOSED" ? "CLOSE" : "UPDATE",
+      entityType: "risk_register",
+      entityId: String(body.id),
+      entityDescription: `Risk item updated${body.status ? ` — status ${body.status}` : ""}`,
+    });
 
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {

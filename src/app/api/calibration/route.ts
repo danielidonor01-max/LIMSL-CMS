@@ -1,7 +1,7 @@
 // src/app/api/calibration/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { calibrationRecords, equipment } from "@/lib/db/schema";
+import { calibrationRecords, equipment, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -44,6 +44,9 @@ export async function POST(request: Request) {
     const today = new Date().toISOString().slice(0, 10);
     const lastCalibrationDate = body.lastCalibrationDate || today;
     const interval = body.calibrationInterval ? Number(body.calibrationInterval) : 365;
+    if (!Number.isFinite(interval) || interval < 1) {
+      return NextResponse.json({ error: "Calibration interval must be a positive number of days." }, { status: 400 });
+    }
     const nextCalibrationDate = body.nextCalibrationDate || addDays(lastCalibrationDate, interval);
     const status = statusFor(nextCalibrationDate);
 
@@ -67,6 +70,15 @@ export async function POST(request: Request) {
         .from(calibrationRecords)
         .where(eq(calibrationRecords.id, body.id))
         .limit(1);
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? "User",
+        action: "UPDATE",
+        entityType: "calibration",
+        entityId: String(body.id),
+        entityDescription: `Calibration rolled forward — ${updated?.instrumentName ?? body.id} → next due ${nextCalibrationDate}`,
+      });
       return NextResponse.json(updated);
     }
 
@@ -99,6 +111,16 @@ export async function POST(request: Request) {
         .set({ requiresCalibration: true, updatedAt: new Date().toISOString() })
         .where(eq(equipment.id, body.equipmentId));
     }
+
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name ?? "User",
+      action: "CREATE",
+      entityType: "calibration",
+      entityId: record.id,
+      entityDescription: `Calibration record created — ${record.instrumentName} · next due ${nextCalibrationDate}`,
+    });
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {

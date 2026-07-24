@@ -1,8 +1,9 @@
 // src/app/api/non-conformities/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { nonConformities } from "@/lib/db/schema";
+import { nonConformities, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -41,6 +42,20 @@ export async function PATCH(
       .set(updateFields)
       .where(eq(nonConformities.id, resolvedParams.id))
       .returning();
+
+    // Every NC state change is auditable evidence — especially the close-out.
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: gate.actor?.id ?? null,
+      userName: gate.actor?.name ?? "User",
+      action: body.status === "CLOSED" && nc.status !== "CLOSED" ? "CLOSE" : "UPDATE",
+      entityType: "non_conformity",
+      entityId: nc.id,
+      entityDescription:
+        body.status && body.status !== nc.status
+          ? `NC ${nc.ncNumber} status ${nc.status} → ${body.status}`
+          : `NC ${nc.ncNumber} updated (root cause / corrective action)`,
+    });
 
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
