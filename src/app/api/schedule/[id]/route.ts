@@ -30,6 +30,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (Number.isNaN(d.getTime())) {
         return NextResponse.json({ error: "Invalid planned date" }, { status: 400 });
       }
+      // A reschedule must move work to a future date. Backdating would flip the
+      // row straight back to OVERDUE at best — and at worst be used to massage
+      // the overdue list. Reconciliation also re-evaluates RESCHEDULED rows, so
+      // rescheduling can never hide an activity from the overdue KPI.
+      const today = new Date().toISOString().slice(0, 10);
+      if (String(body.plannedDate).slice(0, 10) < today) {
+        return NextResponse.json({ error: "The new planned date must be today or later." }, { status: 400 });
+      }
       set.plannedDate = body.plannedDate.slice(0, 10);
       set.year = d.getFullYear();
       set.quarter = Math.floor(d.getMonth() / 3) + 1;

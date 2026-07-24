@@ -544,6 +544,7 @@ export default function SchedulePage() {
                 <input
                   type="date"
                   value={reschedule.date}
+                  min={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setReschedule((r) => (r ? { ...r, date: e.target.value } : r))}
                   className={modalField}
                 />

@@ -7,7 +7,7 @@
 // nextPlannedDate() is pure and covered by the frequency table below.
 import { db } from "@/lib/db";
 import { maintenanceSchedule } from "@/lib/db/schema";
-import { and, eq, lt, isNull } from "drizzle-orm";
+import { and, eq, inArray, lt, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 // Frequency → interval. Keys match equipment.maintenanceFrequency plus common aliases.
@@ -57,8 +57,11 @@ export function nextPlannedDate(dateISO: string | null | undefined, freq: string
   return null;
 }
 
-// Persist SCHEDULED → OVERDUE for any activity whose planned date has passed and
-// which was never completed. Idempotent; safe to call on every schedule read.
+// Persist → OVERDUE for any activity whose planned date has passed and which was
+// never completed. RESCHEDULED rows are deliberately included: a reschedule moves
+// the date, it does not exempt the activity — otherwise rescheduling would
+// permanently hide work from the overdue KPI and escalations. Idempotent; safe to
+// call on every schedule read.
 export async function reconcileSchedule(now = new Date()): Promise<void> {
   const today = now.toISOString().slice(0, 10);
   await db
@@ -66,7 +69,7 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
     .set({ status: "OVERDUE" })
     .where(
       and(
-        eq(maintenanceSchedule.status, "SCHEDULED"),
+        inArray(maintenanceSchedule.status, ["SCHEDULED", "RESCHEDULED"]),
         isNull(maintenanceSchedule.completedDate),
         lt(maintenanceSchedule.plannedDate, today),
       ),
