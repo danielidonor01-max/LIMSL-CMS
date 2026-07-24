@@ -1,7 +1,7 @@
 // src/app/equipment/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   Layers,
@@ -19,34 +19,16 @@ import {
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
+import { useApi } from "@/lib/api-cache";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
 export default function EquipmentList() {
-  const [equipmentList, setEquipmentList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: equipmentList, loading } = useApi<any[]>("/api/equipment", []);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
-
-  // Fetch real seeded equipment list on mount
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch("/api/equipment");
-        if (res.ok) {
-          const data = await res.json();
-          setEquipmentList(data);
-        }
-      } catch (err) {
-        console.error("Error loading equipment from DB:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
 
   // Filtering
   const filteredEquipment = equipmentList.filter((eq) => {

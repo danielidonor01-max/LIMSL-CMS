@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
+import { useApi } from "@/lib/api-cache";
 import { ROLE_LABELS } from "@/lib/roles";
 import {
   EQUIPMENT_STATUS_BADGE,
@@ -64,28 +65,16 @@ export default function Home() {
   const role = (session?.user as { role?: string })?.role;
   const firstName = ((session?.user?.name as string) ?? "").split(" ")[0];
 
-  const [stats, setStats] = useState<Stat[]>([]);
-  const [equipment, setEquipment] = useState<Equip[]>([]);
-  const [activity, setActivity] = useState<Audit[]>([]);
-  const [signoffs, setSignoffs] = useState<SignoffItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    setMounted(true);
-    Promise.all([
-      fetch("/api/dashboard/stats").then((r) => (r.ok ? r.json() : [])),
-      fetch("/api/equipment").then((r) => (r.ok ? r.json() : [])),
-      fetch("/api/audit").then((r) => (r.ok ? r.json() : [])),
-      fetch("/api/signoffs/mine").then((r) => (r.ok ? r.json() : { items: [] })),
-    ])
-      .then(([s, e, a, m]) => {
-        setStats(Array.isArray(s) ? s : []);
-        setEquipment(Array.isArray(e) ? e : []);
-        setActivity(Array.isArray(a) ? a : []);
-        setSignoffs(Array.isArray(m?.items) ? m.items : []);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Stale-while-revalidate: cached data paints instantly on revisit, then
+  // refreshes in the background — the four dashboard reads no longer block.
+  const { data: stats, loading: statsLoading } = useApi<Stat[]>("/api/dashboard/stats", []);
+  const { data: equipment } = useApi<Equip[]>("/api/equipment", []);
+  const { data: activity } = useApi<Audit[]>("/api/audit", []);
+  const { data: mine } = useApi<{ items: SignoffItem[] }>("/api/signoffs/mine", { items: [] });
+  const signoffs = mine.items ?? [];
+  const loading = statsLoading;
 
 
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
