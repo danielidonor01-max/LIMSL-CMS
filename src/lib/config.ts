@@ -3,6 +3,11 @@
 // scaffolded but OFF until an AI provider is configured (no Claude subscription
 // yet) — see docs/SCHEMATIC-ENGINE.md.
 
+function normalizeSmtpPass(raw: string): string {
+  const v = raw.trim();
+  return /^[a-z]{4} [a-z]{4} [a-z]{4} [a-z]{4}$/i.test(v) ? v.replace(/ /g, "") : v;
+}
+
 export const config = {
   // Master switch for the AI schematic-ingestion engine.
   schematicIngestionEnabled: process.env.SCHEMATIC_INGESTION_ENABLED === "true",
@@ -43,8 +48,12 @@ export const config = {
   smtpHost: process.env.SMTP_HOST || "",
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpSecure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587/25 (STARTTLS)
-  smtpUser: process.env.SMTP_USER || "",
-  smtpPass: process.env.SMTP_PASS || "",
+  smtpUser: (process.env.SMTP_USER || "").trim(),
+  // Google shows App Passwords as "xxxx xxxx xxxx xxxx"; pasted WITH the spaces
+  // Gmail rejects the login (535 BadCredentials). Strip the spaces only when the
+  // value matches that exact shape, so real passwords containing spaces on other
+  // providers are never touched.
+  smtpPass: normalizeSmtpPass(process.env.SMTP_PASS || ""),
 
   // ── File storage ────────────────────────────────────────────────────────
   // LOCAL (default) writes to a gitignored folder on the server — right for a

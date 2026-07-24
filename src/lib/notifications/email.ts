@@ -23,13 +23,41 @@ function getTransport(): Transporter {
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 
+// Providers answer auth failures with cryptic codes; translate the common ones
+// into what the admin should actually check. The raw message is kept after the
+// hint so nothing is hidden.
+function explainSmtpError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  if (/535|BadCredentials|Username and Password not accepted/i.test(raw)) {
+    return (
+      "Gmail rejected the username/password. Check: (1) SMTP_PASS must be a 16-character App Password " +
+      "(Google Account → Security → 2-Step Verification → App passwords), NOT your normal Gmail password; " +
+      "(2) paste it without quotes; (3) SMTP_USER must be the exact address that created the App Password; " +
+      "(4) after changing a Vercel env var you must redeploy. Raw: " + raw
+    );
+  }
+  if (/534|application-specific password|InvalidSecondFactor/i.test(raw)) {
+    return (
+      "Gmail requires an App Password for SMTP (2-Step Verification must be ON, then Google Account → " +
+      "Security → App passwords). Your normal password will never work here. Raw: " + raw
+    );
+  }
+  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) {
+    return `SMTP_HOST could not be resolved — check the hostname (smtp.gmail.com for Gmail). Raw: ${raw}`;
+  }
+  if (/ETIMEDOUT|ECONNREFUSED|ESOCKET/i.test(raw)) {
+    return `Could not reach the SMTP server — check SMTP_PORT (587 with SMTP_SECURE=false, or 465 with true). Raw: ${raw}`;
+  }
+  return raw;
+}
+
 // Verify the SMTP connection/credentials without sending — used by the test button.
 export async function verifyEmail(): Promise<SendResult> {
   try {
     await getTransport().verify();
     return { ok: true };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return { ok: false, error: explainSmtpError(err) };
   }
 }
 
@@ -54,6 +82,6 @@ export async function sendEmail(to: string, title: string, body: string, linkPat
     });
     return { ok: true, messageId: info.messageId };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return { ok: false, error: explainSmtpError(err) };
   }
 }
