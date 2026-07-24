@@ -12,6 +12,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { aiDiagnose } from "@/lib/diagnostics/ai-assist";
 import { GeminiError } from "@/lib/diagnostics/gemini";
+import { isoSeconds } from "@/lib/utils";
 
 const HOURLY_LIMIT = Number(process.env.AI_DIAGNOSE_HOURLY_LIMIT || 10);
 
@@ -38,7 +39,7 @@ export async function POST(
 
     // Per-user hourly rate limit, counted from the audit trail (serverless-safe).
     if (gate.actor?.id) {
-      const hourAgo = new Date(Date.now() - 3600_000).toISOString();
+      const hourAgo = isoSeconds(new Date(Date.now() - 3600_000));
       const recent = await db
         .select({ id: auditLog.id })
         .from(auditLog)
@@ -77,8 +78,7 @@ export async function POST(
     if (error instanceof GeminiError) {
       return NextResponse.json({ error: error.message }, { status: error.retryable ? 429 : 502 });
     }
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("AI diagnose failed:", error);
-    return NextResponse.json({ error: "AI analysis failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "AI analysis failed" }, { status: 500 });
   }
 }

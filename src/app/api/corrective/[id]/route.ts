@@ -29,7 +29,7 @@ export async function GET(
     return NextResponse.json(records[0]);
   } catch (error: any) {
     console.error("Failed to fetch corrective details:", error);
-    return NextResponse.json({ error: "Failed to fetch details", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch details" }, { status: 500 });
   }
 }
 
@@ -223,6 +223,6 @@ export async function PATCH(
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
     console.error("Failed to update corrective record:", error);
-    return NextResponse.json({ error: "Failed to update record", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update record" }, { status: 500 });
   }
 }

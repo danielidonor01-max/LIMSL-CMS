@@ -93,43 +93,15 @@ export async function POST(request: Request) {
       signedAt: new Date().toISOString(),
     };
 
-    await db.insert(pmChecklists).values(checklist);
-
-    // 2. Complete the work order
-    await db
-      .update(workOrders)
-      .set({
-        status: "COMPLETED",
-        completionDate: today,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(workOrders.id, body.workOrderId));
-
-    // 3. Complete the linked schedule activity and spawn its next occurrence so
-    //    the PM programme perpetuates itself instead of emptying out.
+    // The completion flow is one atomic unit: checklist + WO status + schedule
+    // roll + equipment dates must all land or none — a mid-sequence failure must
+    // not leave a COMPLETED work order with an un-rolled schedule (or vice
+    // versa). Reads that feed the writes happen first.
     const [wo] = await db
       .select()
       .from(workOrders)
       .where(eq(workOrders.id, body.workOrderId))
       .limit(1);
-    let recurredDate: string | null = null;
-    if (wo?.scheduleId) {
-      await db
-        .update(maintenanceSchedule)
-        .set({ status: "COMPLETED", completedDate: today })
-        .where(eq(maintenanceSchedule.id, wo.scheduleId));
-      const [schedRow] = await db
-        .select()
-        .from(maintenanceSchedule)
-        .where(eq(maintenanceSchedule.id, wo.scheduleId))
-        .limit(1);
-      if (schedRow) recurredDate = await generateNextOccurrence(schedRow);
-    }
-
-    // 4. Roll the equipment maintenance dates forward. Prefer the auto-computed
-    //    next PM date over a technician-typed one so the register stays in step
-    //    with the schedule. A PM sign-off must not present a machine as fit for
-    //    service while a corrective fault is still open on it.
     const [openCm] = await db
       .select({ id: correctiveMaintenance.id })
       .from(correctiveMaintenance)
@@ -140,19 +112,53 @@ export async function POST(request: Request) {
         ),
       )
       .limit(1);
-    await db
-      .update(equipment)
-      .set({
-        lastMaintenanceDate: today,
-        nextMaintenanceDate: recurredDate || body.nextPMDate || null,
-        ...(body.correctiveActionRequired
-          ? { status: "UNDER_MAINTENANCE" }
-          : openCm
-            ? {}
-            : { status: "OPERATIONAL" }),
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(equipment.id, body.equipmentId));
+
+    let recurredDate: string | null = null;
+    await db.transaction(async (tx) => {
+      await tx.insert(pmChecklists).values(checklist);
+
+      await tx
+        .update(workOrders)
+        .set({
+          status: "COMPLETED",
+          completionDate: today,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(workOrders.id, body.workOrderId));
+
+      // Complete the linked schedule activity and spawn its next occurrence so
+      // the PM programme perpetuates itself instead of emptying out.
+      if (wo?.scheduleId) {
+        await tx
+          .update(maintenanceSchedule)
+          .set({ status: "COMPLETED", completedDate: today })
+          .where(eq(maintenanceSchedule.id, wo.scheduleId));
+        const [schedRow] = await tx
+          .select()
+          .from(maintenanceSchedule)
+          .where(eq(maintenanceSchedule.id, wo.scheduleId))
+          .limit(1);
+        if (schedRow) recurredDate = await generateNextOccurrence(schedRow, new Date(), tx);
+      }
+
+      // Roll the equipment maintenance dates forward. Prefer the auto-computed
+      // next PM date over a technician-typed one so the register stays in step
+      // with the schedule. A PM sign-off must not present a machine as fit for
+      // service while a corrective fault is still open on it.
+      await tx
+        .update(equipment)
+        .set({
+          lastMaintenanceDate: today,
+          nextMaintenanceDate: recurredDate || body.nextPMDate || null,
+          ...(body.correctiveActionRequired
+            ? { status: "UNDER_MAINTENANCE" }
+            : openCm
+              ? {}
+              : { status: "OPERATIONAL" }),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(equipment.id, body.equipmentId));
+    });
 
     await db.insert(auditLog).values({
       id: nanoid(),
@@ -214,10 +220,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ...checklist, id: checklistId }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to submit PM checklist:", error);
     return NextResponse.json(
-      { error: "Failed to submit PM checklist", details: message },
+      { error: "Failed to submit PM checklist" },
       { status: 500 },
     );
   }

@@ -16,6 +16,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { aiChatTurn, type ChatMessage } from "@/lib/diagnostics/ai-assist";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { GeminiError, type GeminiImage } from "@/lib/diagnostics/gemini";
+import { isoSeconds } from "@/lib/utils";
 
 const HOURLY_LIMIT = Number(process.env.AI_CHAT_HOURLY_LIMIT || 40);
 const MAX_IMAGES = 3;
@@ -77,14 +78,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ asse
       messages: parseMessages(s.messages),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Failed to load session", details: message }, { status: 500 });
+    console.error("Failed to load session:", error);
+    return NextResponse.json({ error: "Failed to load session" }, { status: 500 });
   }
 }
 
 async function underRateLimit(userId: string | null | undefined): Promise<boolean> {
   if (!userId) return true;
-  const hourAgo = new Date(Date.now() - 3600_000).toISOString();
+  const hourAgo = isoSeconds(new Date(Date.now() - 3600_000));
   const recent = await db
     .select({ id: auditLog.id })
     .from(auditLog)
@@ -248,8 +249,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
     if (error instanceof GeminiError) {
       return NextResponse.json({ error: error.message }, { status: error.retryable ? 429 : 502 });
     }
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("AI chat failed:", error);
-    return NextResponse.json({ error: "AI chat failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "AI chat failed" }, { status: 500 });
   }
 }

@@ -77,11 +77,14 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
 }
 
 type ScheduleRow = typeof maintenanceSchedule.$inferSelect;
+// Accepts either the global client or an in-flight transaction, so the PM
+// completion flow can spawn the next occurrence atomically with the rest.
+type Dbc = Pick<typeof db, "select" | "insert">;
 
 // Given a just-completed recurring activity, insert its next occurrence. Rolls the
 // date forward past today so a long-overdue PM yields one upcoming date, not a
 // backlog. Returns the new planned date, or null when non-recurring / already present.
-export async function generateNextOccurrence(row: ScheduleRow, now = new Date()): Promise<string | null> {
+export async function generateNextOccurrence(row: ScheduleRow, now = new Date(), dbc: Dbc = db): Promise<string | null> {
   let next = nextPlannedDate(row.plannedDate, row.maintenanceFrequency);
   if (!next) return null;
 
@@ -94,7 +97,7 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date())
   }
 
   // Don't duplicate an occurrence that already exists for this machine + activity.
-  const existing = await db
+  const existing = await dbc
     .select({ id: maintenanceSchedule.id })
     .from(maintenanceSchedule)
     .where(
@@ -108,7 +111,7 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date())
   if (existing.length) return null;
 
   const d = new Date(`${next}T00:00:00`);
-  await db.insert(maintenanceSchedule).values({
+  await dbc.insert(maintenanceSchedule).values({
     id: nanoid(),
     equipmentId: row.equipmentId,
     year: d.getFullYear(),
