@@ -16,6 +16,23 @@ import { sendEmail, verifyEmail } from "@/lib/notifications/email";
 // Never returns passwords — only whether each field is present + safe metadata.
 function status() {
   const ready = emailReady();
+  const env = process.env;
+
+  // Catch the most common "I set it but it's still not configured" causes:
+  // a wrong value for the boolean, or a variable set under a name the app
+  // doesn't read. Never surface secret VALUES — only names (and the non-secret
+  // EMAIL_ENABLED value).
+  const hints: string[] = [];
+  if (env.EMAIL_ENABLED && env.EMAIL_ENABLED !== "true") {
+    hints.push(`EMAIL_ENABLED is "${env.EMAIL_ENABLED}" — it must be exactly true (lowercase, no quotes/spaces).`);
+  }
+  const nearMiss = (canonical: string, aliases: string[]) => {
+    if (!env[canonical]) for (const a of aliases) if (env[a]) hints.push(`Found ${a}, but the app reads ${canonical} — rename it to ${canonical}.`);
+  };
+  nearMiss("SMTP_HOST", ["SMTP_SERVER", "SMTP_HOSTNAME", "MAIL_HOST", "SMPT_HOST"]);
+  nearMiss("SMTP_USER", ["SMTP_USERNAME", "SMTP_EMAIL", "SMTP_MAIL", "EMAIL_USER", "GMAIL_USER"]);
+  nearMiss("SMTP_PASS", ["SMTP_PASSWORD", "SMTP_PWD", "EMAIL_PASS", "EMAIL_PASSWORD", "GMAIL_APP_PASSWORD", "APP_PASSWORD"]);
+
   return {
     ready: ready.ready,
     reason: ready.reason ?? null,
@@ -27,6 +44,7 @@ function status() {
     hasUser: !!config.smtpUser,
     hasPass: !!config.smtpPass,
     appUrlSet: !!config.appUrl,
+    hints,
   };
 }
 

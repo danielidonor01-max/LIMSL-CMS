@@ -52,6 +52,7 @@ export default function AppSettingsPage() {
   type EmailStatus = {
     ready: boolean; reason: string | null; enabled: boolean; from: string;
     host: string | null; port: number; secure: boolean; hasUser: boolean; hasPass: boolean; appUrlSet: boolean;
+    hints?: string[];
   };
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
 
@@ -533,6 +534,17 @@ export default function AppSettingsPage() {
 
         {emailStatus && !emailStatus.ready && (
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+            {/* Auto-detected likely causes (wrong value / misnamed variable). */}
+            {emailStatus.hints && emailStatus.hints.length > 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 space-y-1">
+                <p className="text-[11px] font-semibold text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5" /> Likely cause detected
+                </p>
+                {emailStatus.hints.map((h, i) => (
+                  <p key={i} className="text-[11px] text-amber-800">• {h}</p>
+                ))}
+              </div>
+            )}
             {/* Per-variable diagnosis — shows exactly what this deployment sees. */}
             <div className="space-y-1.5">
               <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">What this deployment sees</p>
