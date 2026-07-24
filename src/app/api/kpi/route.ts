@@ -8,8 +8,7 @@ export async function GET() {
     const data = await computeKpis();
     return NextResponse.json(data);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to compute KPIs:", error);
-    return NextResponse.json({ error: "Failed to compute KPIs", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to compute KPIs" }, { status: 500 });
   }
 }

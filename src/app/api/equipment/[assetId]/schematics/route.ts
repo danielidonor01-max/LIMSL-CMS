@@ -34,7 +34,7 @@ export async function GET(
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch schematics:", error);
-    return NextResponse.json({ error: "Failed to fetch schematics", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch schematics" }, { status: 500 });
   }
 }
 
@@ -74,6 +74,6 @@ export async function POST(
     return NextResponse.json(newSchematic, { status: 201 });
   } catch (error: any) {
     console.error("Failed to upload schematic:", error);
-    return NextResponse.json({ error: "Failed to upload schematic", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to upload schematic" }, { status: 500 });
   }
 }

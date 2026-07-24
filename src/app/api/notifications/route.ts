@@ -23,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ notifications: rows, unread });
   } catch (error: any) {
     console.error("Failed to load notifications:", error);
-    return NextResponse.json({ error: "Failed to load notifications", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load notifications" }, { status: 500 });
   }
 }
 
@@ -57,6 +57,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Provide id or all" }, { status: 400 });
   } catch (error: any) {
     console.error("Failed to update notifications:", error);
-    return NextResponse.json({ error: "Failed to update notifications", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update notifications" }, { status: 500 });
   }
 }

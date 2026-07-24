@@ -61,8 +61,7 @@ export async function PATCH(
 
     return NextResponse.json({ id, tempPassword });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to update user:", error);
-    return NextResponse.json({ error: "Failed to update user", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }

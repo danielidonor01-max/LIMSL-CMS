@@ -27,9 +27,8 @@ export async function GET() {
     rows.sort((a, b) => (a.nextCalibrationDate ?? "").localeCompare(b.nextCalibrationDate ?? ""));
     return NextResponse.json(rows);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load calibration data:", error);
-    return NextResponse.json({ error: "Failed to load calibration data", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load calibration data" }, { status: 500 });
   }
 }
 
@@ -124,8 +123,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to record calibration:", error);
-    return NextResponse.json({ error: "Failed to record calibration", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to record calibration" }, { status: 500 });
   }
 }

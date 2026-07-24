@@ -15,8 +15,7 @@ export async function GET() {
     const next = `LEE/PE/${String(max + 1).padStart(4, "0")}`;
     return NextResponse.json({ nextAssetId: next });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to generate asset id:", error);
-    return NextResponse.json({ error: "Failed to generate asset id", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to generate asset id" }, { status: 500 });
   }
 }

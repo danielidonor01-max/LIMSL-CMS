@@ -28,7 +28,7 @@ export async function GET(
     return NextResponse.json(records[0]);
   } catch (error: any) {
     console.error("Failed to fetch WMS details:", error);
-    return NextResponse.json({ error: "Failed to fetch WMS details", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch WMS details" }, { status: 500 });
   }
 }
 
@@ -122,6 +122,6 @@ export async function PATCH(
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
     console.error("Failed to update WMS document:", error);
-    return NextResponse.json({ error: "Failed to update WMS", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update WMS" }, { status: 500 });
   }
 }

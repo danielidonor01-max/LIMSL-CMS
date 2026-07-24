@@ -66,9 +66,8 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load procedure:", error);
-    return NextResponse.json({ error: "Failed to load procedure", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load procedure" }, { status: 500 });
   }
 }
 
@@ -122,8 +121,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id, revision: nextRevision }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to propose revision:", error);
-    return NextResponse.json({ error: "Failed to propose revision", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to propose revision" }, { status: 500 });
   }
 }

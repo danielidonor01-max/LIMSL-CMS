@@ -48,8 +48,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ent
     const result = await processImport(entity, rows, { id: gate.actor?.id, name: gate.actor?.name }, mode === "commit");
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error(`Import (${entity}) failed:`, error);
-    return NextResponse.json({ error: "Import failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Import failed" }, { status: 500 });
   }
 }

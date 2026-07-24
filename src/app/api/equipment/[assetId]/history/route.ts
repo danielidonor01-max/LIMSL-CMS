@@ -153,8 +153,7 @@ export async function GET(
 
     return NextResponse.json({ equipment: eqp, events });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to build history:", error);
-    return NextResponse.json({ error: "Failed to build history", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to build history" }, { status: 500 });
   }
 }

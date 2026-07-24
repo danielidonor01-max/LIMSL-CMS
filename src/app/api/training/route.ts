@@ -14,9 +14,8 @@ export async function GET() {
     trainings.sort((a, b) => (b.plannedDate ?? "").localeCompare(a.plannedDate ?? ""));
     return NextResponse.json({ competencies, trainings });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load training data:", error);
-    return NextResponse.json({ error: "Failed to load training data", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load training data" }, { status: 500 });
   }
 }
 
@@ -54,9 +53,8 @@ export async function POST(request: Request) {
     await db.insert(trainingRecords).values(record);
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to create training record:", error);
-    return NextResponse.json({ error: "Failed to create training record", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create training record" }, { status: 500 });
   }
 }
 
@@ -81,8 +79,7 @@ export async function PATCH(request: Request) {
     const [updated] = await db.select().from(trainingRecords).where(eq(trainingRecords.id, body.id)).limit(1);
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to update training record:", error);
-    return NextResponse.json({ error: "Failed to update training record", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update training record" }, { status: 500 });
   }
 }

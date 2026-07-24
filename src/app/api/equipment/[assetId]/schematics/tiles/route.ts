@@ -74,9 +74,8 @@ export async function GET(
 
     return NextResponse.json({ documentId, pages });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch schematic tiles:", error);
-    return NextResponse.json({ error: "Failed to fetch schematic tiles", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch schematic tiles" }, { status: 500 });
   }
 }
 
@@ -106,8 +105,7 @@ export async function POST(
     const progress = await prepareSchematic(documentId, 1);
     return NextResponse.json(progress);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Schematic preparation failed:", error);
-    return NextResponse.json({ error: "Schematic preparation failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Schematic preparation failed" }, { status: 500 });
   }
 }

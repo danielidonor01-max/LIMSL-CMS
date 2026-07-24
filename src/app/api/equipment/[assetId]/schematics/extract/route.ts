@@ -53,9 +53,8 @@ export async function GET(
         : null,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch extraction:", error);
-    return NextResponse.json({ error: "Failed to fetch extraction", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch extraction" }, { status: 500 });
   }
 }
 
@@ -117,8 +116,7 @@ export async function POST(
 
     return NextResponse.json({ job: { id: job.id, status: job.status, error: job.error, data: extraction } }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Extraction failed:", error);
-    return NextResponse.json({ error: "Extraction failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Extraction failed" }, { status: 500 });
   }
 }

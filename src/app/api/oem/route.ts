@@ -34,9 +34,8 @@ export async function GET() {
 
     return NextResponse.json({ vendors, interventions });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load OEM data:", error);
-    return NextResponse.json({ error: "Failed to load OEM data", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load OEM data" }, { status: 500 });
   }
 }
 
@@ -84,8 +83,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(vendor, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to register OEM vendor:", error);
-    return NextResponse.json({ error: "Failed to register OEM vendor", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to register OEM vendor" }, { status: 500 });
   }
 }

@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json(normalize(row));
   } catch (error: any) {
     console.error("Failed to load settings:", error);
-    return NextResponse.json({ error: "Failed to load settings", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load settings" }, { status: 500 });
   }
 }
 
@@ -86,6 +86,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json(normalize(row));
   } catch (error: any) {
     console.error("Failed to save settings:", error);
-    return NextResponse.json({ error: "Failed to save settings", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
   }
 }

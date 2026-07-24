@@ -60,6 +60,6 @@ export async function PATCH(
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
     console.error("Failed to update non-conformity:", error);
-    return NextResponse.json({ error: "Failed to update NC", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update NC" }, { status: 500 });
   }
 }

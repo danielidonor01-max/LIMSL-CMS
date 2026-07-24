@@ -28,7 +28,7 @@ export async function GET(
     return NextResponse.json(records[0]);
   } catch (error: any) {
     console.error("Failed to fetch asset detail:", error);
-    return NextResponse.json({ error: "Failed to fetch asset detail", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch asset detail" }, { status: 500 });
   }
 }
 
@@ -98,6 +98,6 @@ export async function PATCH(
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
     console.error("Failed to update asset:", error);
-    return NextResponse.json({ error: "Failed to update asset", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update asset" }, { status: 500 });
   }
 }

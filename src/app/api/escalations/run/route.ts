@@ -22,8 +22,7 @@ export async function POST(request: Request) {
     const summary = await runEscalations();
     return NextResponse.json(summary);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Escalation run failed:", error);
-    return NextResponse.json({ error: "Escalation run failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Escalation run failed" }, { status: 500 });
   }
 }

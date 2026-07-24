@@ -79,8 +79,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ assetI
         : `Engine disabled — ${created} schematic(s) queued for future processing (${ready.reason}).`,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Ingest enqueue failed:", error);
-    return NextResponse.json({ error: "Ingest enqueue failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Ingest enqueue failed" }, { status: 500 });
   }
 }

@@ -13,7 +13,7 @@ export async function GET() {
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch risk register:", error);
-    return NextResponse.json({ error: "Failed to fetch risks", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch risks" }, { status: 500 });
   }
 }
 
@@ -52,6 +52,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {
     console.error("Failed to update risk item:", error);
-    return NextResponse.json({ error: "Failed to update risk", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update risk" }, { status: 500 });
   }
 }

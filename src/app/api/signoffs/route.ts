@@ -16,8 +16,7 @@ export async function GET(request: Request) {
     const chain = await getSignoffChain(entityType, entityId);
     return NextResponse.json(chain);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load sign-offs:", error);
-    return NextResponse.json({ error: "Failed to load sign-offs", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load sign-offs" }, { status: 500 });
   }
 }

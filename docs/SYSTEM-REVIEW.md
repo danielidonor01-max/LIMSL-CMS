@@ -56,19 +56,28 @@ re-signable by the authorised role — correct for physical-work chains (fix the
 issue, signer re-signs). Document modules (WMS/procedure) instead reset their
 chains on rework, so signatures always attest to current content.
 
-## Sprint 2 — Integrity & hygiene (next)
+## Sprint 2 — Integrity & hygiene ✅
 
-- [ ] Unique index `signoffs(entity_type, entity_id, step_order)` + upsert in
-      `ensureSignoffChain` (duplicate-chain race).
-- [ ] Document numbers from per-series counters, not `count()+1` (collision +
-      reuse race). Applies to WO / permit / NC / WMS / CMRF numbers.
-- [ ] Wrap PM completion + corrective creation multi-write flows in
-      `db.transaction`.
-- [ ] Move reconcile-on-read (permits, WMS, procedure, schedule) to a guarded
-      job; keep GETs side-effect-free.
-- [ ] Stop returning `details: error.message` to clients (~20 routes).
-- [ ] Restrict staff directory PII (email/phone/WhatsApp) to admin roles.
-- [ ] Rate-limit text-timestamp comparison edge (`.sssZ` vs `Z` formats).
+- [x] Unique index `signoffs(entity_type, entity_id, step_order)` + upsert in
+      `ensureSignoffChain` (duplicate-chain race); race loser no longer
+      double-notifies. Doubles as the lookup index for `getSignoffChain`.
+- [x] Document numbers from per-series atomic counters (`doc_counters` +
+      `nextDocNumber`) — WO / PTW / WMS / CMRF / NC. Counters seeded from real
+      maxima (never counts); series are per-year so 2027 starts fresh.
+- [x] PM completion (checklist + WO + schedule roll + next occurrence +
+      equipment) and corrective creation (record + status flip, record first)
+      wrapped in `db.transaction`.
+- [x] Reconcile-on-read: DECISION — retained. It is idempotent, the dangerous
+      race (duplicate chains) is eliminated by the unique index, and the daily
+      escalations run already reconciles schedule + permits as the scheduled
+      path. Revisit only if read latency becomes a problem.
+- [x] `details: error.message` removed from API error responses (~87
+      occurrences); detail stays in server logs only.
+- [x] Staff directory: non-admin sessions get a reduced projection
+      (id/name/role/dept) — email/phone/WhatsApp are admin-only.
+- [x] Text-timestamp boundary fixed (`isoSeconds()` for range comparisons
+      against ms-less stored timestamps).
+- [x] `notifications(user_id, read_at)` index (pulled forward from Sprint 4).
 
 ## Sprint 3 — Operations & notifications
 
@@ -89,7 +98,8 @@ chains on rework, so signatures always attest to current content.
       one-shot path already does).
 - [ ] Persist chat photo evidence (equipment documents/storage), not just a count.
 - [ ] "Past diagnoses" list on the troubleshoot page.
-- [ ] Index `signoffs(entity_type, entity_id)` and `notifications(user_id)`.
+- [x] Index `signoffs(entity_type, entity_id)` and `notifications(user_id)` —
+      landed with Sprint 2.
 - [ ] Global search: SQL-side filtering + LIMIT (mirror the document-chunks FTS).
 - [ ] Adopt `useApi` cache across remaining list pages.
 - [ ] Scope the AI evidence pack's history query before fleet growth.

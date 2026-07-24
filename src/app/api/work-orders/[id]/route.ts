@@ -57,10 +57,9 @@ export async function GET(
       checklist: checklist[0] ?? null,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch work order:", error);
     return NextResponse.json(
-      { error: "Failed to fetch work order", details: message },
+      { error: "Failed to fetch work order" },
       { status: 500 },
     );
   }
@@ -122,10 +121,9 @@ export async function PATCH(
     const [updated] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to update work order:", error);
     return NextResponse.json(
-      { error: "Failed to update work order", details: message },
+      { error: "Failed to update work order" },
       { status: 500 },
     );
   }

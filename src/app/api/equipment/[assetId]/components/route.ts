@@ -36,7 +36,7 @@ export async function GET(
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch components:", error);
-    return NextResponse.json({ error: "Failed to fetch components", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch components" }, { status: 500 });
   }
 }
 
@@ -88,6 +88,6 @@ export async function POST(
     return NextResponse.json(newComponent, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create component:", error);
-    return NextResponse.json({ error: "Failed to create component", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create component" }, { status: 500 });
   }
 }

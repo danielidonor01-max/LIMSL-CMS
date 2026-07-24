@@ -137,6 +137,6 @@ export async function GET() {
     return NextResponse.json({ items });
   } catch (error: any) {
     console.error("Failed to load sign-off queue:", error);
-    return NextResponse.json({ error: "Failed to load sign-off queue", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load sign-off queue" }, { status: 500 });
   }
 }

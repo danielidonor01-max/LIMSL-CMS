@@ -28,9 +28,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ass
     if (!e) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
     return NextResponse.json({ events: await buildTimeline(e.id) });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to build timeline:", error);
-    return NextResponse.json({ error: "Failed to load history", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load history" }, { status: 500 });
   }
 }
 
@@ -73,8 +72,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
 
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to add log entry:", error);
-    return NextResponse.json({ error: "Failed to add log entry", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to add log entry" }, { status: 500 });
   }
 }

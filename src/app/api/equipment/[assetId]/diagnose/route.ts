@@ -91,9 +91,8 @@ export async function GET(
       aiReady,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Diagnose failed:", error);
-    return NextResponse.json({ error: "Diagnose failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Diagnose failed" }, { status: 500 });
   }
 }
 
@@ -148,8 +147,7 @@ export async function POST(
 
     return NextResponse.json({ learned: "none" });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Learning failed:", error);
-    return NextResponse.json({ error: "Learning failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Learning failed" }, { status: 500 });
   }
 }

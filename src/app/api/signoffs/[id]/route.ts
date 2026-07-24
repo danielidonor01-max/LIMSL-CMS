@@ -108,8 +108,7 @@ export async function POST(
     const [updated] = await db.select().from(signoffs).where(eq(signoffs.id, id)).limit(1);
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to sign:", error);
-    return NextResponse.json({ error: "Failed to sign", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to sign" }, { status: 500 });
   }
 }

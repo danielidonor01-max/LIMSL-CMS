@@ -68,8 +68,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const [updated] = await db.select().from(maintenanceSchedule).where(eq(maintenanceSchedule.id, id)).limit(1);
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to update schedule activity:", error);
-    return NextResponse.json({ error: "Failed to update activity", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update activity" }, { status: 500 });
   }
 }

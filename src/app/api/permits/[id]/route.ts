@@ -48,7 +48,7 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("Failed to fetch permit:", error);
-    return NextResponse.json({ error: "Failed to fetch permit", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch permit" }, { status: 500 });
   }
 }
 
@@ -104,6 +104,6 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error("Failed to update permit:", error);
-    return NextResponse.json({ error: "Failed to update permit", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update permit" }, { status: 500 });
   }
 }

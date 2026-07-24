@@ -76,8 +76,7 @@ export async function GET() {
 
     return NextResponse.json(stats);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to load dashboard stats:", error);
-    return NextResponse.json({ error: "Failed to load stats", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load stats" }, { status: 500 });
   }
 }

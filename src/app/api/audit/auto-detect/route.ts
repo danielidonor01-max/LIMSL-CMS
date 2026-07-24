@@ -91,6 +91,6 @@ export async function POST() {
     });
   } catch (error: any) {
     console.error("Auto-detect audit failed:", error);
-    return NextResponse.json({ error: "Audit scan failed", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Audit scan failed" }, { status: 500 });
   }
 }

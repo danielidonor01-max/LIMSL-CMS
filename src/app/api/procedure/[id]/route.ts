@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!rev) return NextResponse.json({ error: "Revision not found" }, { status: 404 });
     return NextResponse.json(rev);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Failed to load revision", details: message }, { status: 500 });
+    console.error("Failed to load revision:", error);
+    return NextResponse.json({ error: "Failed to load revision" }, { status: 500 });
   }
 }

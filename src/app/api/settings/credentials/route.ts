@@ -35,8 +35,8 @@ export async function GET() {
   try {
     return NextResponse.json({ providers: await listCredentials() });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Failed to list credentials", details: message }, { status: 500 });
+    console.error("Failed to list credentials:", error);
+    return NextResponse.json({ error: "Failed to list credentials" }, { status: 500 });
   }
 }
 
@@ -63,9 +63,8 @@ export async function POST(request: Request) {
     await audit({ id: gate.actor?.id, name: gate.actor?.name }, "UPDATE", provider);
     return NextResponse.json({ saved: true, keyHint });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Credential save failed:", error);
-    return NextResponse.json({ error: "Credential save failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Credential save failed" }, { status: 500 });
   }
 }
 
@@ -80,7 +79,7 @@ export async function DELETE(request: Request) {
     await audit({ id: gate.actor?.id, name: gate.actor?.name }, "DELETE", provider);
     return NextResponse.json({ removed: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Credential removal failed", details: message }, { status: 500 });
+    console.error("Credential removal failed:", error);
+    return NextResponse.json({ error: "Credential removal failed" }, { status: 500 });
   }
 }

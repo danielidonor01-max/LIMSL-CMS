@@ -10,6 +10,6 @@ export async function GET() {
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch audit log:", error);
-    return NextResponse.json({ error: "Failed to fetch audit logs", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 });
   }
 }

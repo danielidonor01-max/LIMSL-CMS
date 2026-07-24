@@ -41,10 +41,9 @@ export async function GET() {
 
     return NextResponse.json(rows);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch schedule:", error);
     return NextResponse.json(
-      { error: "Failed to fetch schedule", details: message },
+      { error: "Failed to fetch schedule" },
       { status: 500 },
     );
   }
@@ -101,8 +100,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(row, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to create schedule activity:", error);
-    return NextResponse.json({ error: "Failed to create schedule activity", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create schedule activity" }, { status: 500 });
   }
 }

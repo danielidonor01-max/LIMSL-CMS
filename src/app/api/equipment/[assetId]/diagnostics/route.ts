@@ -34,7 +34,7 @@ export async function GET(
     return NextResponse.json(list);
   } catch (error: any) {
     console.error("Failed to fetch diagnostics:", error);
-    return NextResponse.json({ error: "Failed to fetch diagnostics", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch diagnostics" }, { status: 500 });
   }
 }
 
@@ -77,6 +77,6 @@ export async function POST(
     return NextResponse.json(newGuide, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create diagnostic guide:", error);
-    return NextResponse.json({ error: "Failed to create diagnostic guide", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create diagnostic guide" }, { status: 500 });
   }
 }

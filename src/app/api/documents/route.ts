@@ -46,9 +46,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(filtered);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to fetch documents:", error);
-    return NextResponse.json({ error: "Failed to fetch documents", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
   }
 }
 
@@ -101,8 +100,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ...doc, ingestion }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to add document:", error);
-    return NextResponse.json({ error: "Failed to add document", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to add document" }, { status: 500 });
   }
 }

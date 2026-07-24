@@ -48,9 +48,8 @@ export async function POST(request: Request) {
     await db.insert(oemInterventions).values(intervention);
     return NextResponse.json(intervention, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to log OEM intervention:", error);
-    return NextResponse.json({ error: "Failed to log OEM intervention", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to log OEM intervention" }, { status: 500 });
   }
 }
 
@@ -79,8 +78,7 @@ export async function PATCH(request: Request) {
       .limit(1);
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to update OEM intervention:", error);
-    return NextResponse.json({ error: "Failed to update OEM intervention", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update OEM intervention" }, { status: 500 });
   }
 }

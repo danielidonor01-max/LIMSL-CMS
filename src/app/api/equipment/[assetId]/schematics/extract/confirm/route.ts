@@ -98,8 +98,7 @@ export async function POST(
 
     return NextResponse.json({ confirmed: created + updated, created, updated });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Confirm failed:", error);
-    return NextResponse.json({ error: "Confirm failed", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Confirm failed" }, { status: 500 });
   }
 }

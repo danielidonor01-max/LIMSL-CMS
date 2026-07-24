@@ -99,8 +99,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(row, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to record competency:", error);
-    return NextResponse.json({ error: "Failed to record competency", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to record competency" }, { status: 500 });
   }
 }
