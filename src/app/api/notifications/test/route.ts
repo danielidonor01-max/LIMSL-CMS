@@ -30,10 +30,14 @@ function status() {
   };
 }
 
+// Always reflect the running deployment's live env — never a cached snapshot,
+// so a "Recheck" right after redeploying shows the real state.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const gate = await requireRoles(SETTINGS_WRITE_ROLES);
   if (gate.res) return gate.res;
-  return NextResponse.json(status());
+  return NextResponse.json(status(), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {

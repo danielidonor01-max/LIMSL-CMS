@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -56,7 +56,7 @@ export default function AppSettingsPage() {
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
 
   const loadEmailStatus = () => {
-    fetch("/api/notifications/test")
+    fetch("/api/notifications/test", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setEmailStatus(d));
   };
@@ -504,17 +504,26 @@ export default function AppSettingsPage() {
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
             <Mail className="w-4 h-4 text-emerald-600" /> Email Delivery
           </h3>
-          {emailStatus && (
-            emailStatus.ready ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Configured
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-700 border-amber-500/20">
-                <XCircle className="w-3.5 h-3.5" /> Not configured
-              </span>
-            )
-          )}
+          <div className="flex items-center gap-2">
+            {emailStatus && (
+              emailStatus.ready ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Configured
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-700 border-amber-500/20">
+                  <XCircle className="w-3.5 h-3.5" /> Not configured
+                </span>
+              )
+            )}
+            <button
+              onClick={loadEmailStatus}
+              title="Re-check after redeploying"
+              className="p-1 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
         <p className="text-xs text-slate-500">
           Reminders, escalations and sign-off requests are emailed to each person&apos;s address when SMTP is configured.
@@ -523,9 +532,33 @@ export default function AppSettingsPage() {
         </p>
 
         {emailStatus && !emailStatus.ready && (
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-            <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Required environment variables (Gmail App Password)</p>
-            <pre className="text-[11px] font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+            {/* Per-variable diagnosis — shows exactly what this deployment sees. */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">What this deployment sees</p>
+              {([
+                { k: "EMAIL_ENABLED", ok: emailStatus.enabled, note: "must be exactly true (no quotes)" },
+                { k: "SMTP_HOST", ok: !!emailStatus.host, note: "e.g. smtp.gmail.com" },
+                { k: "SMTP_USER", ok: emailStatus.hasUser, note: "the sending address" },
+                { k: "SMTP_PASS", ok: emailStatus.hasPass, note: "16-char Google App Password" },
+                { k: "EMAIL_FROM", ok: !!emailStatus.from, note: "sender name/address" },
+                { k: "APP_URL", ok: emailStatus.appUrlSet, note: "optional — absolute email links", optional: true },
+              ] as { k: string; ok: boolean; note: string; optional?: boolean }[]).map((v) => (
+                <div key={v.k} className="flex items-center gap-2 text-[11px]">
+                  {v.ok ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <XCircle className={`w-3.5 h-3.5 shrink-0 ${v.optional ? "text-slate-300" : "text-rose-500"}`} />
+                  )}
+                  <span className={`font-mono ${v.ok ? "text-slate-700" : v.optional ? "text-slate-400" : "text-rose-600 font-semibold"}`}>{v.k}</span>
+                  <span className="text-slate-400">— {v.ok ? "set" : v.optional ? "not set (optional)" : `missing · ${v.note}`}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-1.5 pt-1 border-t border-slate-200">
+              <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Set these in Vercel → Settings → Environment Variables (Production), then redeploy</p>
+              <pre className="text-[11px] font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
@@ -533,11 +566,12 @@ SMTP_USER=you@gmail.com
 SMTP_PASS=<16-char Google App Password>
 EMAIL_FROM=LIMSL CMS <you@gmail.com>
 APP_URL=https://<your-app>.vercel.app`}</pre>
-            <p className="text-[11px] text-amber-700">Currently missing: {emailStatus.reason}</p>
-            <p className="text-[11px] text-slate-500">
-              Create the App Password in your Google Account → Security → 2-Step Verification → App passwords. See
-              <span className="font-mono"> docs/NOTIFICATIONS.md</span> for the full walkthrough.
-            </p>
+              <p className="text-[11px] text-amber-700">
+                Common cause: env vars only apply to <strong>new</strong> deployments and to the <strong>environment they&apos;re scoped to</strong>.
+                Add them to <strong>Production</strong>, don&apos;t wrap values in quotes, then trigger a fresh redeploy. Full walkthrough:
+                <span className="font-mono"> docs/NOTIFICATIONS.md</span>.
+              </p>
+            </div>
           </div>
         )}
 
