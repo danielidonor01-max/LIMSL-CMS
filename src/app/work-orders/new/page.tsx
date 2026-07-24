@@ -238,7 +238,7 @@ function NewWorkOrderForm() {
                 >
                   <option value="">Unassigned</option>
                   {users
-                    .filter((u) => u.role === "TECHNICIAN" || u.role === "SUPERVISOR")
+                    .filter((u) => u.role === "TECHNICIAN" || u.role === "FOREMAN")
                     .map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}

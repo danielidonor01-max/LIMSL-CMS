@@ -12,6 +12,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
+import { notify } from "@/lib/notifications";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
@@ -103,6 +104,23 @@ export async function POST(request: Request) {
       entityId: id,
       entityDescription: `${workOrderNumber} — ${body.title}`,
     });
+
+    // Tell the assigned technician their job exists. Best-effort.
+    if (newWo.technicianId) {
+      try {
+        await notify({
+          event: "GENERAL",
+          title: `Work order assigned to you — ${workOrderNumber}`,
+          body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. Open the work order for details.`,
+          linkPath: `/work-orders/${id}`,
+          relatedEntityType: "work_order",
+          relatedEntityId: id,
+          userIds: [newWo.technicianId],
+        });
+      } catch (err) {
+        console.warn("work-order create: assignment notify failed", err);
+      }
+    }
 
     return NextResponse.json(newWo, { status: 201 });
   } catch (error) {

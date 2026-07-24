@@ -333,7 +333,7 @@ export default function PMChecklistPage() {
               >
                 <option value="">Supervisor (optional)…</option>
                 {users
-                  .filter((u) => u.role === "SUPERVISOR" || u.role === "MANAGEMENT")
+                  .filter((u) => ["FOREMAN", "MAINTENANCE_MANAGER", "FACTORY_MANAGER"].includes(u.role))
                   .map((u) => (
                     <option key={u.id} value={u.name}>{u.name}</option>
                   ))}

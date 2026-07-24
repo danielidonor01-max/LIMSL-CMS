@@ -14,6 +14,8 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
+import { notify } from "@/lib/notifications";
+import { logEquipmentEvent } from "@/lib/equipment-log";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
 export async function GET(
@@ -77,6 +79,28 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
+    const [current] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
+    if (!current) return NextResponse.json({ error: "Work order not found" }, { status: 404 });
+
+    // Preventive/inspection work orders complete ONLY through the PM checklist —
+    // that's where the safety attestations, signatures and schedule roll live.
+    // Every other type (corrective, emergency, calibration) completes here with
+    // a mandatory summary of what was done, so they can't strand IN_PROGRESS.
+    const isPreventive = current.type === "PREVENTIVE" || current.type === "INSPECTION";
+    const completing = body.status === "COMPLETED" && current.status !== "COMPLETED";
+    if (completing && isPreventive) {
+      return NextResponse.json(
+        { error: "Preventive/inspection work orders are completed by submitting the PM checklist." },
+        { status: 409 },
+      );
+    }
+    if (completing && !String(body.completionNotes ?? "").trim()) {
+      return NextResponse.json(
+        { error: "Describe the work performed before completing this work order." },
+        { status: 400 },
+      );
+    }
+
     // Work may not begin under an unapproved permit. If a PTW has been raised for
     // this work order, it must be fully signed (ACTIVE) before the job starts.
     // Work orders with no permit at all are unaffected — not every job needs one.
@@ -101,6 +125,7 @@ export async function PATCH(
     if (body.status === "IN_PROGRESS" && !body.startDate) {
       updates.startDate = new Date().toISOString().slice(0, 10);
     }
+    if (completing) updates.completionDate = new Date().toISOString().slice(0, 10);
     if (body.priority) updates.priority = body.priority;
     if (body.technicianId !== undefined) updates.technicianId = body.technicianId;
     if (body.technicianName !== undefined) updates.technicianName = body.technicianName;
@@ -108,15 +133,67 @@ export async function PATCH(
 
     await db.update(workOrders).set(updates).where(eq(workOrders.id, id));
 
+    // Cancelling frees the linked schedule occurrence so a replacement WO can be
+    // raised — otherwise the occurrence points at a dead WO forever and its PM
+    // silently never happens.
+    if (body.status === "CANCELLED" && current.scheduleId) {
+      await db
+        .update(maintenanceSchedule)
+        .set({ workOrderId: null })
+        .where(eq(maintenanceSchedule.id, current.scheduleId));
+    }
+
     await db.insert(auditLog).values({
       id: nanoid(),
       userId: gate.actor?.id ?? null,
       userName: gate.actor?.name || "System",
-      action: "UPDATE",
+      action: completing ? "COMPLETE" : body.status === "CANCELLED" ? "CANCEL" : "UPDATE",
       entityType: "work_order",
       entityId: id,
       changes: JSON.stringify(updates),
+      entityDescription: completing
+        ? `${current.workOrderNumber} completed — ${String(body.completionNotes).slice(0, 120)}`
+        : `${current.workOrderNumber} updated`,
     });
+
+    // Completion of a non-PM job is a machine-history event (PM completions are
+    // logged by the checklist flow).
+    if (completing) {
+      try {
+        await logEquipmentEvent({
+          equipmentId: current.equipmentId,
+          category: current.type === "CALIBRATION" ? "CALIBRATION" : "CM",
+          title: `${current.type} work order ${current.workOrderNumber} completed`,
+          detail: String(body.completionNotes).slice(0, 500),
+          refType: "work_order",
+          refId: id,
+          href: `/work-orders/${id}`,
+          source: "AUTO",
+          performedById: gate.actor?.id ?? null,
+          performedByName: gate.actor?.name ?? null,
+        });
+      } catch (err) {
+        console.warn("work-order complete: equipment log failed (non-fatal)", err);
+      }
+    }
+
+    // Tell the newly-assigned technician — the person actually doing the job was
+    // previously the only party never notified. Best-effort.
+    if (body.technicianId && body.technicianId !== current.technicianId) {
+      try {
+        await notify({
+          event: "GENERAL",
+          title: `Work order assigned to you — ${current.workOrderNumber}`,
+          body: `${current.title}. Priority ${(updates.priority as string) ?? current.priority}. Open the work order for details.`,
+          linkPath: `/work-orders/${id}`,
+          relatedEntityType: "work_order",
+          relatedEntityId: id,
+          userIds: [String(body.technicianId)],
+        });
+      } catch (err) {
+        console.warn("work-order assign: notify failed", err);
+      }
+    }
 
     const [updated] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
     return NextResponse.json(updated);

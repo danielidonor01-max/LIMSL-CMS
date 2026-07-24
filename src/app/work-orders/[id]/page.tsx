@@ -17,8 +17,12 @@ import {
   Calendar,
   User,
   ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
+import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import { formatDate } from "@/lib/utils";
 import {
@@ -44,6 +48,8 @@ export default function WorkOrderDetailPage() {
   const [wo, setWo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState("");
 
   useEffect(() => setMounted(true), []);
 
@@ -59,13 +65,35 @@ export default function WorkOrderDetailPage() {
 
   const patch = async (body: Record<string, unknown>) => {
     setActing(true);
-    await fetch(`/api/work-orders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, actorName: "Daniel Idonor" }),
-    });
-    setActing(false);
-    load();
+    try {
+      const res = await fetch(`/api/work-orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Update failed.");
+        return false;
+      }
+      return true;
+    } finally {
+      setActing(false);
+      load();
+    }
+  };
+
+  const submitComplete = async () => {
+    if (!completionNotes.trim()) {
+      toast.error("Describe the work performed.");
+      return;
+    }
+    const ok = await patch({ status: "COMPLETED", completionNotes: completionNotes.trim() });
+    if (ok) {
+      toast.success("Work order completed and logged to the machine history.");
+      setCompleteOpen(false);
+      setCompletionNotes("");
+    }
   };
 
   if (loading) {
@@ -149,6 +177,15 @@ export default function WorkOrderDetailPage() {
                 >
                   <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
                 </Link>
+              )}
+              {!isPreventive && wo.status === "IN_PROGRESS" && (
+                <button
+                  onClick={() => setCompleteOpen(true)}
+                  disabled={acting}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold disabled:opacity-60"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Complete Work
+                </button>
               )}
               {canIssuePermit && eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
                 <Link
@@ -253,6 +290,35 @@ export default function WorkOrderDetailPage() {
           />
         )}
       </main>
+
+      {/* Non-PM completion — the summary becomes the machine-history entry. */}
+      <Modal
+        open={completeOpen}
+        onClose={() => setCompleteOpen(false)}
+        title="Complete work order"
+        subtitle={`${wo.workOrderNumber} · records to the machine history log`}
+      >
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Work performed / outcome
+            </label>
+            <textarea
+              value={completionNotes}
+              onChange={(e) => setCompletionNotes(e.target.value)}
+              rows={4}
+              placeholder="What was done, parts used, condition on hand-back…"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="secondary" onClick={() => setCompleteOpen(false)}>Cancel</Button>
+            <Button type="button" loading={acting} icon={CheckCircle2} onClick={submitComplete}>
+              Complete work order
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
