@@ -1,10 +1,12 @@
 // src/app/api/wms/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments } from "@/lib/db/schema";
+import { wmsDocuments, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { WMS_WRITE_ROLES } from "@/lib/roles";
+import { getSignoffChain, resetSignoffChain } from "@/lib/signoff/service";
 import { reconcileWmsStatus } from "../route";
 
 export async function GET(
@@ -52,12 +54,27 @@ export async function PATCH(
 
     const wms = currentRecords[0];
 
+    // A WMS is a controlled safety document: once anyone has signed it (or
+    // rejected it), its content can only change under a NEW revision with a
+    // fresh approval chain — signatures attest to specific content, and silent
+    // post-signature edits would leave operators working an unreviewed method.
+    const chain = await getSignoffChain("WMS", wms.id);
+    const hasSignatures = chain.some((s) => s.status === "SIGNED" || s.status === "REJECTED");
+    const CONTENT_KEYS = [
+      "title", "machinesScope", "equipmentIds", "purpose", "scope", "mobilization",
+      "equipmentAndTools", "materials", "safetyRequirements", "methodology",
+      "workProcedureSteps", "hseRequirements", "qualityControlRequirements",
+      "emergencyRequirements", "references",
+    ];
+    const touchesContent = CONTENT_KEYS.some((k) => body[k] !== undefined);
+    const startsNewRevision = hasSignatures && touchesContent;
+
     // Content edits only. Approval/status is DERIVED from the sign-off chain
     // (see reconcileWmsStatus) — it can never be forced through the API, so the
     // status and reviewed/approved fields are deliberately NOT writable here.
     const updateFields: any = {
       title: body.title ?? wms.title,
-      revision: body.revision ?? wms.revision,
+      revision: startsNewRevision ? (wms.revision ?? 0) + 1 : wms.revision,
       machinesScope: body.machinesScope ? JSON.stringify(body.machinesScope) : wms.machinesScope,
       equipmentIds: body.equipmentIds ? JSON.stringify(body.equipmentIds) : wms.equipmentIds,
       purpose: body.purpose ?? wms.purpose,
@@ -75,11 +92,32 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
+    if (startsNewRevision) {
+      // Clear the previous approval attribution; the new revision has none yet.
+      updateFields.approvedByName = null;
+      updateFields.approvedById = null;
+      updateFields.approvedDate = null;
+    }
+
     const updated = await db
       .update(wmsDocuments)
       .set(updateFields)
       .where(eq(wmsDocuments.id, resolvedParams.id))
       .returning();
+
+    if (startsNewRevision) {
+      await resetSignoffChain("WMS", wms.id, wms.wmsNumber);
+      await reconcileWmsStatus(wms.id); // derives DRAFT from the fresh chain
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? "User",
+        action: "UPDATE",
+        entityType: "wms",
+        entityId: wms.id,
+        entityDescription: `WMS ${wms.wmsNumber} content changed after sign-off — revision ${(wms.revision ?? 0) + 1} opened, approval chain reset`,
+      });
+    }
 
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {

@@ -10,11 +10,18 @@ import { chainSummary } from "@/lib/signoff/chains";
 import { ingestApprovedProcedure } from "@/lib/diagnostics/ingest-docs";
 
 // Promote any PENDING_APPROVAL revision whose sign-off chain is complete, and
-// supersede the prior effective revision.
+// supersede the prior effective revision. A revision whose chain has a rejected
+// required step reconciles to REJECTED — otherwise a single rejection would
+// leave it PENDING_APPROVAL forever and (since only one revision may be pending
+// at a time) permanently block all future procedure revisions.
 async function reconcile() {
   const revs = await db.select().from(procedureRevisions);
   for (const r of revs.filter((x) => x.status === "PENDING_APPROVAL")) {
     const chain = await getSignoffChain("PROCEDURE", r.id);
+    if (chain.some((s) => s.required && s.status === "REJECTED")) {
+      await db.update(procedureRevisions).set({ status: "REJECTED" }).where(eq(procedureRevisions.id, r.id));
+      continue;
+    }
     if (chainSummary(chain).complete) {
       // supersede current approved
       for (const a of revs.filter((x) => x.status === "APPROVED")) {

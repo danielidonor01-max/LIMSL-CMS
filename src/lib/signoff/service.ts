@@ -49,3 +49,14 @@ export async function getSignoffChain(entityType: string, entityId: string) {
     .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)))
     .orderBy(asc(signoffs.stepOrder));
 }
+
+// Rework path: after a rejection (or a content change to an already-signed
+// document) the old signatures no longer attest to anything — drop the chain and
+// start a fresh one so every step must sign the CURRENT content. The old steps'
+// audit-log entries remain; only the live chain resets.
+export async function resetSignoffChain(entityType: string, entityId: string, reference?: string) {
+  await db
+    .delete(signoffs)
+    .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)));
+  return ensureSignoffChain(entityType, entityId, reference);
+}

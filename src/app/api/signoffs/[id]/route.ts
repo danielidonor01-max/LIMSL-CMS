@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canSignStep } from "@/lib/roles";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
-import { notifyNextSigner } from "@/lib/notifications";
+import { notify, notifyNextSigner } from "@/lib/notifications";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
 // Enforces: authenticated, role matches the step (or senior/super-admin), and
@@ -74,13 +74,34 @@ export async function POST(
       entityDescription: `${step.roleLabel} ${action === "reject" ? "rejected" : "signed"}`,
     });
 
-    // After a signature, notify whoever must sign next. Best-effort.
+    // After a signature, notify whoever must sign next. After a rejection,
+    // notify the preparing role (step 1) — a rejection means rework, and the
+    // person who owns the document must hear about it, not silence. Best-effort.
     if (action === "sign") {
       try {
         const fresh = await getSignoffChain(step.entityType, step.entityId);
         await notifyNextSigner(step.entityType, step.entityId, fresh);
       } catch (err) {
         console.warn("signoff: notify next signer failed", err);
+      }
+    } else {
+      try {
+        const fresh = await getSignoffChain(step.entityType, step.entityId);
+        const preparer = fresh.find((s) => s.stepOrder === 1);
+        if (preparer) {
+          await notify({
+            event: "GENERAL",
+            title: `${step.entityType.replace(/_/g, " ")} rejected at "${step.roleLabel}"`,
+            body:
+              `${user.name ?? "A signer"} rejected the sign-off${body.comments ? `: "${String(body.comments).slice(0, 200)}"` : "."} ` +
+              `Revise the document and resubmit for approval.`,
+            relatedEntityType: step.entityType,
+            relatedEntityId: step.entityId,
+            roles: [preparer.role],
+          });
+        }
+      } catch (err) {
+        console.warn("signoff: rejection notification failed", err);
       }
     }
 
