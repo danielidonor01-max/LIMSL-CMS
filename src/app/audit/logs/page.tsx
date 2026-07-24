@@ -1,30 +1,13 @@
 // src/app/audit/logs/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, List, Shield, User, Clock, HardDrive } from "lucide-react";
+import { useApi } from "@/lib/api-cache";
 
 export default function AuditTrailLogs() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadLogs() {
-      try {
-        const res = await fetch("/api/audit");
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadLogs();
-  }, []);
+  const { data: logs, loading } = useApi<any[]>("/api/audit", []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">

@@ -1,8 +1,9 @@
 // src/app/documents/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useApi } from "@/lib/api-cache";
 import { FolderOpen, Loader2, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
@@ -41,8 +42,8 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function DocumentsPage() {
-  const [docs, setDocs] = useState<Doc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: docsData, loading } = useApi<Doc[]>("/api/documents", []);
+  const docs = Array.isArray(docsData) ? docsData : [];
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -54,13 +55,6 @@ export default function DocumentsPage() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-
-  useEffect(() => {
-    fetch("/api/documents")
-      .then((r) => r.json())
-      .then((d) => setDocs(Array.isArray(d) ? d : []))
-      .finally(() => setLoading(false));
-  }, []);
 
   const summary = useMemo(() => {
     const available = docs.filter((d) => d.status === "AVAILABLE").length;

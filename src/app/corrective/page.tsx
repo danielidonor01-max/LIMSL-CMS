@@ -1,8 +1,9 @@
 // src/app/corrective/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
+import { useApi } from "@/lib/api-cache";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -17,25 +18,7 @@ import {
 } from "lucide-react";
 
 export default function CorrectiveMaintenanceList() {
-  const [records, setRecords] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch("/api/corrective");
-        if (res.ok) {
-          const data = await res.json();
-          setRecords(data);
-        }
-      } catch (err) {
-        console.error("Error loading corrective logs:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const { data: records, loading } = useApi<any[]>("/api/corrective", []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">

@@ -1,9 +1,10 @@
 // src/app/audit/non-conformity/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useApi } from "@/lib/api-cache";
 import {
   ArrowLeft,
   Loader2,
@@ -20,8 +21,7 @@ import {
 import Select from "@/components/Select";
 
 export default function NonConformityRegister() {
-  const [ncList, setNcList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ncList, loading, refresh } = useApi<any[]>("/api/non-conformities", []);
   const [scanning, setScanning] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -31,23 +31,9 @@ export default function NonConformityRegister() {
   const [correctiveAction, setCorrectiveAction] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function loadNCs() {
-    try {
-      const res = await fetch("/api/non-conformities");
-      if (res.ok) {
-        const data = await res.json();
-        setNcList(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadNCs();
-  }, []);
+  const loadNCs = () => {
+    refresh();
+  };
 
   const triggerAuditScan = async () => {
     setScanning(true);

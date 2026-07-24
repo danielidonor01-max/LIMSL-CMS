@@ -1,9 +1,10 @@
 // src/app/procedure/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useApi } from "@/lib/api-cache";
 import { toast } from "sonner";
 import {
   BookText,
@@ -45,10 +46,14 @@ export default function ProcedurePage() {
   const role = (session?.user as { role?: string })?.role;
   const canPropose = role === "QA_QC" || role === "SUPER_ADMIN";
 
-  const [current, setCurrent] = useState<Rev | null>(null);
-  const [pending, setPending] = useState<{ id: string; revision: number } | null>(null);
-  const [revisions, setRevisions] = useState<Rev[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: procData, loading, refresh } = useApi<{
+    current?: Rev | null;
+    pending?: { id: string; revision: number } | null;
+    revisions?: Rev[];
+  }>("/api/procedure", {});
+  const current = procData.current ?? null;
+  const pending = procData.pending ?? null;
+  const revisions = procData.revisions ?? [];
   const [showHistory, setShowHistory] = useState(false);
 
   const [editing, setEditing] = useState(false);
@@ -57,16 +62,8 @@ export default function ProcedurePage() {
   const [saving, setSaving] = useState(false);
 
   const load = () => {
-    fetch("/api/procedure")
-      .then((r) => r.json())
-      .then((d) => {
-        setCurrent(d.current);
-        setPending(d.pending);
-        setRevisions(d.revisions ?? []);
-      })
-      .finally(() => setLoading(false));
+    refresh();
   };
-  useEffect(load, []);
 
   const startEdit = () => {
     setDraft(current?.contentMarkdown ?? "");

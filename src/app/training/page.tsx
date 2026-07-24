@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useApi } from "@/lib/api-cache";
 import {
   GraduationCap,
   Loader2,
@@ -70,9 +71,12 @@ export default function TrainingPage() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && TRAINING_WRITE_ROLES.includes(role ?? "");
 
-  const [competencies, setCompetencies] = useState<Competency[]>([]);
-  const [trainings, setTrainings] = useState<Training[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: trainingData, loading, refresh } = useApi<{
+    competencies?: Competency[];
+    trainings?: Training[];
+  }>("/api/training", {});
+  const competencies = trainingData.competencies ?? [];
+  const trainings = trainingData.trainings ?? [];
   const [saving, setSaving] = useState(false);
   const [showAssess, setShowAssess] = useState(false);
   const [showTraining, setShowTraining] = useState(false);
@@ -85,23 +89,11 @@ export default function TrainingPage() {
   const [trainCategory, setTrainCategory] = useState("TECHNICAL");
   const [trainType, setTrainType] = useState("INTERNAL");
 
-  async function loadData() {
-    try {
-      const res = await fetch("/api/training");
-      if (res.ok) {
-        const d = await res.json();
-        setCompetencies(d.competencies ?? []);
-        setTrainings(d.trainings ?? []);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+  const loadData = () => {
+    refresh();
+  };
 
-  useEffect(() => {
-    setMounted(true);
-    loadData();
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   // Distinct people and skill areas → build the matrix grid.
   const { people, skills, cell } = useMemo(() => {

@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useApi } from "@/lib/api-cache";
 import { Gauge, Loader2, CheckCircle2, Clock, AlertTriangle, Plus, RotateCw } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
@@ -51,26 +52,17 @@ export default function CalibrationPage() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
 
-  const [rows, setRows] = useState<Cal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rowsData, loading, refresh } = useApi<Cal[]>("/api/calibration", []);
+  const rows = Array.isArray(rowsData) ? rowsData : [];
   const [saving, setSaving] = useState(false);
   // null = closed; {} = new instrument; {id,...} = recalibrate existing
   const [editing, setEditing] = useState<Partial<Cal> | null>(null);
 
-  async function loadData() {
-    try {
-      const res = await fetch("/api/calibration");
-      const d = res.ok ? await res.json() : [];
-      setRows(Array.isArray(d) ? d : []);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const loadData = () => {
+    refresh();
+  };
 
-  useEffect(() => {
-    setMounted(true);
-    loadData();
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   async function submitCalibration(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

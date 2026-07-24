@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useApi } from "@/lib/api-cache";
 import {
   ArrowLeft,
   ShieldCheck,
@@ -45,23 +46,9 @@ export default function PermitsList() {
   const role = (session?.user as { role?: string })?.role;
   const canIssue = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
 
-  const [records, setRecords] = useState<Permit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: records, loading } = useApi<Permit[]>("/api/permits", []);
 
-  useEffect(() => {
-    setMounted(true);
-    async function loadData() {
-      try {
-        const res = await fetch("/api/permits");
-        if (res.ok) setRecords(await res.json());
-      } catch (err) {
-        console.error("Error loading permits:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   const awaiting = records.filter((r) => r.status === "PENDING_APPROVAL").length;
   const active = records.filter((r) => r.status === "ACTIVE").length;

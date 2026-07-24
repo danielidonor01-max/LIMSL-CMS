@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useApi } from "@/lib/api-cache";
 import {
   Building2,
   Loader2,
@@ -70,10 +71,14 @@ export default function OemPage() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
 
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [interventions, setInterventions] = useState<Intervention[]>([]);
-  const [equipmentList, setEquipmentList] = useState<Equip[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: oemData, loading, refresh: refreshOem } = useApi<{
+    vendors?: Vendor[];
+    interventions?: Intervention[];
+  }>("/api/oem", {});
+  const vendors = oemData.vendors ?? [];
+  const interventions = oemData.interventions ?? [];
+  const { data: equipmentData } = useApi<Equip[]>("/api/equipment", []);
+  const equipmentList = Array.isArray(equipmentData) ? equipmentData : [];
 
   const [showVendor, setShowVendor] = useState(false);
   const [showIntervention, setShowIntervention] = useState(false);
@@ -86,26 +91,9 @@ export default function OemPage() {
   const [intEquipmentId, setIntEquipmentId] = useState("");
   const [intWarrantyStatus, setIntWarrantyStatus] = useState("OUT");
 
-  async function loadData() {
-    try {
-      const res = await fetch("/api/oem");
-      if (res.ok) {
-        const d = await res.json();
-        setVendors(d.vendors ?? []);
-        setInterventions(d.interventions ?? []);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-    fetch("/api/equipment")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => setEquipmentList(Array.isArray(d) ? d : []))
-      .catch(() => {});
-  }, []);
+  const loadData = () => {
+    refreshOem();
+  };
 
   const summary = useMemo(() => {
     const active = vendors.filter((v) => v.warrantyActive && (v.warrantyEnd ?? "") >= TODAY).length;

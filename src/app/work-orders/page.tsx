@@ -1,8 +1,9 @@
 // src/app/work-orders/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useApi } from "@/lib/api-cache";
 import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
@@ -32,19 +33,11 @@ type WorkOrder = {
 };
 
 export default function WorkOrdersPage() {
-  const [rows, setRows] = useState<WorkOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rowsData, loading } = useApi<WorkOrder[]>("/api/work-orders", []);
+  const rows = Array.isArray(rowsData) ? rowsData : [];
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
-
-  useEffect(() => {
-    fetch("/api/work-orders")
-      .then((r) => r.json())
-      .then((d) => setRows(Array.isArray(d) ? d : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
-  }, []);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { OPEN: 0, IN_PROGRESS: 0, COMPLETED: 0, TOTAL: rows.length };

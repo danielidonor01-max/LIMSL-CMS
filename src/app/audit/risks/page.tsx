@@ -1,36 +1,22 @@
 // src/app/audit/risks/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, ShieldCheck, AlertTriangle, Search, Info } from "lucide-react";
+import { useApi } from "@/lib/api-cache";
 
 export default function RiskRegister() {
-  const [risks, setRisks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: risks, loading, refresh } = useApi<any[]>("/api/risks", []);
   const [search, setSearch] = useState("");
 
   const [activeRisk, setActiveRisk] = useState<any>(null);
   const [mitigationAction, setMitigationAction] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function loadRisks() {
-    try {
-      const res = await fetch("/api/risks");
-      if (res.ok) {
-        const data = await res.json();
-        setRisks(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadRisks();
-  }, []);
+  const loadRisks = () => {
+    refresh();
+  };
 
   const handleUpdateMitigation = async (e: React.FormEvent) => {
     e.preventDefault();

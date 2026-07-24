@@ -1,8 +1,9 @@
 // src/app/wms/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
+import { useApi } from "@/lib/api-cache";
 import {
   FileText,
   ArrowLeft,
@@ -17,25 +18,7 @@ import {
 } from "lucide-react";
 
 export default function WmsList() {
-  const [records, setRecords] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch("/api/wms");
-        if (res.ok) {
-          const data = await res.json();
-          setRecords(data);
-        }
-      } catch (err) {
-        console.error("Error loading WMS documents:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const { data: records, loading } = useApi<any[]>("/api/wms", []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">

@@ -1,8 +1,9 @@
 // src/app/schedule/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useApi } from "@/lib/api-cache";
 import {
   Calendar,
   Loader2,
@@ -74,8 +75,8 @@ const emptyCreate = {
 };
 
 export default function SchedulePage() {
-  const [rows, setRows] = useState<ScheduleRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rowsData, loading, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
+  const rows = Array.isArray(rowsData) ? rowsData : [];
   const [tab, setTab] = useState<"upcoming" | "all">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [q, setQ] = useState("");
@@ -83,27 +84,19 @@ export default function SchedulePage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [quarterFilter, setQuarterFilter] = useState("ALL");
 
-  const [equipmentList, setEquipmentList] = useState<{ id: string; assetId: string; name: string }[]>([]);
+  const { data: equipmentData } = useApi<{ id: string; assetId: string; name: string }[]>(
+    "/api/equipment",
+    [],
+  );
+  const equipmentList = Array.isArray(equipmentData) ? equipmentData : [];
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreate);
   const [saving, setSaving] = useState(false);
   const [reschedule, setReschedule] = useState<{ row: ScheduleRow; date: string } | null>(null);
 
   const load = () => {
-    fetch("/api/schedule")
-      .then((r) => r.json())
-      .then((d) => setRows(Array.isArray(d) ? d : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
+    refresh();
   };
-
-  useEffect(() => {
-    load();
-    fetch("/api/equipment")
-      .then((r) => r.json())
-      .then((d) => setEquipmentList(Array.isArray(d) ? d : []))
-      .catch(() => setEquipmentList([]));
-  }, []);
 
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();

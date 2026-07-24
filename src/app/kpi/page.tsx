@@ -1,7 +1,8 @@
 // src/app/kpi/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useApi } from "@/lib/api-cache";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -67,15 +68,7 @@ const pct = (n: number | null | undefined) =>
   n === null || n === undefined ? "—" : `${(n * 100).toFixed(1)}%`;
 
 export default function KpiPage() {
-  const [data, setData] = useState<KpiData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/kpi")
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, loading } = useApi<KpiData | null>("/api/kpi", null);
 
   const chartData = useMemo(
     () =>

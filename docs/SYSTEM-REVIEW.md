@@ -98,19 +98,25 @@ chains on rework, so signatures always attest to current content.
 - [ ] Confirm email delivery once SMTP env vars land in Vercel (user action —
       Settings → Notifications & Email → Verify connection / Send test).
 
-## Sprint 4 — AI & scale
+## Sprint 4 — AI & scale ✅ (code side)
 
-- [ ] Chat diagnosis resolution feeds the diagnostic-guide learning loop (the
-      one-shot path already does).
-- [ ] Persist chat photo evidence (equipment documents/storage), not just a count.
-- [ ] "Past diagnoses" list on the troubleshoot page.
+- [x] Chat diagnosis resolution teaches the deterministic engine: a known cause
+      (case-insensitive match) reinforces its guide's successCount; a new cause
+      becomes a new guide seeded with the assistant's last suggested checks.
+      The resolve toast tells the technician what was learned.
+- [x] Chat photos persist to file storage (keys on the transcript, never base64
+      in the session row), served via the auth-gated /api/files route and
+      rendered as thumbnails in the chat — evidence is retained, not discarded.
+- [x] "Past AI diagnoses" list on the troubleshoot sidebar (status, cause,
+      who/when) — click to resume any session.
 - [x] Index `signoffs(entity_type, entity_id)` and `notifications(user_id)` —
       landed with Sprint 2.
-- [ ] Global search: SQL-side filtering + LIMIT (mirror the document-chunks FTS).
-- [ ] Adopt `useApi` cache across remaining list pages.
-- [ ] Scope the AI evidence pack's history query before fleet growth.
-- [ ] Governance: move proprietary OEM docs off the free Gemini tier (paid tier
-      with data-use opt-out) before scaling ingestion.
+- [x] Global search is SQL-side: ILIKE + per-entity LIMIT on selected columns
+      (wildcards escaped) — no more whole-table scans per keystroke.
+- [x] `useApi` cache adopted across the main list pages.
+- [x] AI evidence pack's history query bounded to the 300 most recent cases.
+- [ ] Governance (user decision): move proprietary OEM docs off the free Gemini
+      tier (paid tier with data-use opt-out) before scaling ingestion.
 
 ## Strategic
 
