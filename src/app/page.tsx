@@ -158,7 +158,7 @@ export default function Home() {
             </div>
             {mounted && canAccessPath(role ?? "", "/corrective/new") && (
               <Link
-                href="/corrective/new"
+                href={`/corrective/new?equipmentId=${eq.id}`}
                 className="relative z-10 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
               >
                 Report Corrective Fault

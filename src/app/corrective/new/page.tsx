@@ -30,7 +30,12 @@ export default function NewCorrectiveRequest() {
         if (res.ok) {
           const data = await res.json();
           setEquipmentList(data);
-          if (data.length > 0) setEquipmentId(data[0].id);
+          // Deep links (?equipmentId=…) from the twin / dashboard / QR flow
+          // preselect the machine you're standing at — no re-picking.
+          const wanted = new URLSearchParams(window.location.search).get("equipmentId");
+          const match = wanted && data.find((e: { id: string; assetId?: string }) => e.id === wanted || e.assetId === wanted.replace(/-/g, "/"));
+          if (match) setEquipmentId(match.id);
+          else if (data.length > 0) setEquipmentId(data[0].id);
         }
       } catch (err) {
         console.error("Failed to load machinery list:", err);

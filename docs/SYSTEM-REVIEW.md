@@ -126,3 +126,25 @@ chains on rework, so signatures always attest to current content.
 - Known-accepted: permit validity is 24 clock-hours; recurrence anchors to
   planned (not completion) date — documented decisions, revisit if operations
   disagree.
+
+## Phase 3 — Capstone audit roadmap (2026-08-06)
+
+Verdict: structurally sound as a single source of truth (canonical roles,
+chains, numbering, history, AI knowledge base). Remaining work is convergence.
+
+1. [x] (S) Prefill + quick-report: corrective/new accepts ?equipmentId=; wired
+       from the digital twin ("Report Fault" quick action) and the dashboard
+       breakdown CTA — a fault report no longer re-picks the machine.
+2. [ ] (M) Canonical-identity pass: userId-first for internal actors (text only
+       for external parties); calibrationRecords as the one calibration truth
+       (derive equipment.requiresCalibration / next-due); equipment.status
+       derived from open CMs + WOs with a single writer; locations lookup.
+3. [ ] (M) Regression test suite for the compliance engine (sign-off chains,
+       close-out gates, doc numbering, notification routing).
+4. [ ] (M) Shared DataTable (extract the users-table pattern) + batch
+       operations (schedule assignment, notification triage first).
+5. [ ] (L) Shop-floor PWA/offline tolerance (queue checklist submissions and
+       photos through connectivity gaps).
+
+Also logged: PM-checklist observations should feed retrieval; NC close-out
+needs a minimal CAPA verification step; KPI drill-downs are thin.

@@ -142,7 +142,13 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link
+            href={`/corrective/new?equipmentId=${eq.id}`}
+            className="p-2 hover:bg-rose-50 text-rose-600 hover:text-rose-700 rounded-lg border border-rose-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <AlertTriangle className="w-4 h-4" /> Report Fault
+          </Link>
           <Link
             href={`/equipment/${assetIdKey}/edit`}
             className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
