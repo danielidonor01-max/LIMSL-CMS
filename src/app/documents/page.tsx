@@ -162,7 +162,19 @@ export default function DocumentsPage() {
                       <ChevronRight className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-slate-900 truncate">{g.name}</p>
-                        <p className="text-[10px] font-mono text-slate-400">{g.assetId ?? "—"}</p>
+                        <p className="text-[10px] font-mono text-slate-400">
+                          {g.assetId ? (
+                            <Link
+                              href={`/equipment/${g.assetId.replace(/\//g, "-")}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:text-emerald-600 hover:underline"
+                            >
+                              {g.assetId}
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {missing > 0 && (

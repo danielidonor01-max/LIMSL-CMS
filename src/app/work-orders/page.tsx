@@ -155,8 +155,15 @@ export default function WorkOrdersPage() {
                           <div className="font-medium text-slate-900 max-w-[220px] truncate">
                             {r.equipmentName}
                           </div>
-                          <div className="text-[10px] font-mono text-slate-500">{r.assetId}</div>
                         </Link>
+                        {r.assetId && (
+                          <Link
+                            href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
+                            className="text-[10px] font-mono text-slate-500 hover:text-emerald-600 hover:underline"
+                          >
+                            {r.assetId}
+                          </Link>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <Badge className={WO_TYPE_BADGE[r.type]}>{WO_TYPE_LABELS[r.type] ?? r.type}</Badge>

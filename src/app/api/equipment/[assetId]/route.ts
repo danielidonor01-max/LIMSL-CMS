@@ -17,7 +17,7 @@ export async function GET(
     const assetIdOriginal = assetIdKey.replace(/-/g, "/"); // Convert to LEE/PE/1904
 
     // Accept the dash-form asset id, the raw slash form, AND a DB id — the
-    // sibling routes (/log, /history, /diagnose) already do; this one 404ing on
+    // sibling routes (/log, /diagnose) already do; this one 404ing on
     // DB-id URLs while its sub-resources succeeded was a real trap.
     const records = await db
       .select()

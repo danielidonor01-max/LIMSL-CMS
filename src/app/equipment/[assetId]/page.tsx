@@ -18,6 +18,7 @@ import {
   Settings,
   ShieldAlert,
   History,
+  Pencil,
   QrCode,
   UserCheck,
   Loader2,
@@ -142,6 +143,18 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         </div>
 
         <div className="flex gap-2">
+          <Link
+            href={`/equipment/${assetIdKey}/edit`}
+            className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <Pencil className="w-4 h-4" /> Edit
+          </Link>
+          <Link
+            href={`/equipment/${assetIdKey}/history`}
+            className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <History className="w-4 h-4" /> History
+          </Link>
           <Link
             href={`/equipment/qr/${assetIdKey}`}
             className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"

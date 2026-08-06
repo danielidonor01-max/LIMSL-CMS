@@ -386,7 +386,16 @@ export default function SchedulePage() {
                           {r.equipmentName}
                         </div>
                         <div className="text-[10px] font-mono text-slate-500">
-                          {r.assetId} · {r.category ? EQUIPMENT_CATEGORY_LABELS[r.category] : ""}
+                          {r.assetId ? (
+                            <Link
+                              href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
+                              className="hover:text-emerald-600 hover:underline"
+                            >
+                              {r.assetId}
+                            </Link>
+                          ) : null}
+                          {" · "}
+                          {r.category ? EQUIPMENT_CATEGORY_LABELS[r.category] : ""}
                         </div>
                       </td>
                       <td className="py-3 px-4">

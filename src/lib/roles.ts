@@ -99,6 +99,12 @@ const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications", "/accou
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
   if (UNIVERSAL_PATHS.includes(pathname)) return true;
+  // Administration lives under /settings — even "full access" roles must not
+  // reach it by direct URL. Mirrors SETTINGS_WRITE_ROLES, which gates the
+  // settings API routes.
+  if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+    return SETTINGS_WRITE_ROLES.includes(role);
+  }
   const allowed = ROLE_ALLOWED_PATHS[role];
   if (!allowed) return true; // full-access roles
   return allowed.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)));

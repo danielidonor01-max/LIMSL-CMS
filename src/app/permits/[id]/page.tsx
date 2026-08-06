@@ -186,7 +186,16 @@ export default function PermitDetail() {
                 )}
               </div>
               <h2 className="text-xl font-bold tracking-tight mt-2">
-                {permit.equipment?.assetId} — {permit.equipment?.name}
+                {permit.equipment?.assetId ? (
+                  <Link
+                    href={`/equipment/${permit.equipment.assetId.replace(/\//g, "-")}`}
+                    className="font-mono hover:text-emerald-600 hover:underline"
+                  >
+                    {permit.equipment.assetId}
+                  </Link>
+                ) : null}
+                {" — "}
+                {permit.equipment?.name}
               </h2>
             </div>
             <div className="flex flex-col gap-2 shrink-0 no-print">

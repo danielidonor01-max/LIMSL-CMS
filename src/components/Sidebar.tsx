@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   AlertOctagon,
+  ScrollText,
   FileBarChart,
   FolderOpen,
   BookText,
@@ -63,6 +64,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
       { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
       { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },
+      { href: "/audit/logs", label: "Audit Log", icon: ScrollText },
     ],
   },
   {
