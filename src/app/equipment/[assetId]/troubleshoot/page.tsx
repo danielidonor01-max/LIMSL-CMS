@@ -510,7 +510,7 @@ export default function TroubleshootPage() {
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
               No AI provider is configured. Add an API key in{" "}
-              <Link href="/settings" className="text-emerald-600 hover:underline">App Settings</Link> to enable the assistant.
+              <Link href="/settings?tab=ai" className="text-emerald-600 hover:underline">App Settings → AI Providers</Link> to enable the assistant.
             </div>
           ))}
 

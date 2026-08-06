@@ -3,7 +3,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -33,7 +34,23 @@ export default function AppSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"calendar" | "notifications" | "integrations">("calendar");
+  type TabId = "calendar" | "notifications" | "ai" | "sharepoint" | "data";
+  const [tab, setTab] = useState<TabId>("calendar");
+
+  // Deep-linkable sections (/settings?tab=ai) so other pages can point straight
+  // at the right pane; "integrations" is the legacy name for the AI pane.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (!t) return;
+    const mapped = t === "integrations" ? "ai" : t;
+    if (["calendar", "notifications", "ai", "sharepoint", "data"].includes(mapped)) setTab(mapped as TabId);
+  }, []);
+  const switchTab = (t: TabId) => {
+    setTab(t);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", t);
+    window.history.replaceState(null, "", url.toString());
+  };
   const [form, setForm] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
   const [lunchEnabled, setLunchEnabled] = useState(true);
   const [meta, setMeta] = useState<{ updatedByName: string | null; updatedAt: string | null }>({
@@ -357,8 +374,26 @@ export default function AppSettingsPage() {
   const timeField =
     "bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40";
 
+  const aiConfigured = creds.filter((c) => c.configured).length;
+  const NAV: { id: TabId; label: string; desc: string; icon: typeof CalendarDays; status?: { ok: boolean; text: string } }[] = [
+    { id: "calendar", label: "Work Calendar", desc: "Production hours — the basis of downtime & KPIs", icon: CalendarDays },
+    {
+      id: "notifications", label: "Notifications & Email", desc: "SMTP delivery, digests, test send", icon: BellRing,
+      status: emailStatus ? { ok: emailStatus.ready, text: emailStatus.ready ? "Configured" : "Not configured" } : undefined,
+    },
+    {
+      id: "ai", label: "AI Providers", desc: "API keys & the diagnosis failover chain", icon: KeyRound,
+      status: { ok: aiConfigured > 0, text: aiConfigured > 0 ? `${aiConfigured} active` : "No keys" },
+    },
+    {
+      id: "sharepoint", label: "SharePoint", desc: "Pull live Excel registers from Microsoft 365", icon: Cloud,
+      status: spStatus ? { ok: spStatus.configured, text: spStatus.configured ? "Connected" : "Not connected" } : undefined,
+    },
+    { id: "data", label: "Data & Users", desc: "Go-live imports and user accounts", icon: Database },
+  ];
+
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-5xl w-full mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -370,24 +405,50 @@ export default function AppSettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
-        {([
-          { id: "calendar", label: "Work Calendar", icon: CalendarDays },
-          { id: "notifications", label: "Notifications & Email", icon: BellRing },
-          { id: "integrations", label: "Integrations", icon: KeyRound },
-        ] as const).map(({ id, label: l, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
-              tab === id ? "text-emerald-700 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
-            }`}
-          >
-            <Icon className="w-4 h-4" /> {l}
-          </button>
-        ))}
-      </div>
+      <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-8 lg:items-start space-y-4 lg:space-y-0">
+        {/* Mobile: horizontal pills */}
+        <div className="lg:hidden flex gap-1.5 overflow-x-auto pb-1 -mb-1">
+          {NAV.map(({ id, label: l, icon: Icon, status: st }) => (
+            <button
+              key={id}
+              onClick={() => switchTab(id)}
+              className={`inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors ${
+                tab === id ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-slate-200 text-slate-600"
+              }`}
+            >
+              <Icon className="w-4 h-4" /> {l}
+              {st && <span className={`w-1.5 h-1.5 rounded-full ${st.ok ? "bg-emerald-400" : "bg-amber-400"} ${tab === id ? "ring-1 ring-white/60" : ""}`} />}
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop: nav rail */}
+        <nav className="hidden lg:block sticky top-6 space-y-1" aria-label="Settings sections">
+          {NAV.map(({ id, label: l, desc, icon: Icon, status: st }) => (
+            <button
+              key={id}
+              onClick={() => switchTab(id)}
+              aria-current={tab === id ? "page" : undefined}
+              className={`w-full text-left rounded-lg px-3 py-2.5 border transition-colors ${
+                tab === id ? "bg-white border-emerald-200 shadow-sm" : "border-transparent hover:bg-white hover:border-slate-200"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Icon className={`w-4 h-4 shrink-0 ${tab === id ? "text-emerald-600" : "text-slate-400"}`} />
+                <span className={`text-sm font-semibold ${tab === id ? "text-slate-900" : "text-slate-600"}`}>{l}</span>
+                {st && (
+                  <span
+                    className={`ml-auto w-2 h-2 rounded-full shrink-0 ${st.ok ? "bg-emerald-500" : "bg-amber-400"}`}
+                    title={st.text}
+                  />
+                )}
+              </span>
+              <span className="block text-[11px] text-slate-400 mt-0.5 ml-6 leading-snug">{desc}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="min-w-0 space-y-6">
 
       {tab === "calendar" && (
       <div className="space-y-6">
@@ -496,7 +557,7 @@ export default function AppSettingsPage() {
       </div>
       )}
 
-      {tab === "integrations" && (
+      {tab === "ai" && (
       <div className="space-y-6">
       {/* AI provider API keys */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
@@ -574,12 +635,16 @@ export default function AppSettingsPage() {
           ))}
         </div>
       </section>
+      </div>
+      )}
 
+      {tab === "sharepoint" && (
+      <div className="space-y-6">
       {/* SharePoint (Microsoft 365) connection */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-            <PlugZap className="w-4 h-4 text-emerald-600" /> SharePoint Connection
+            <Cloud className="w-4 h-4 text-emerald-600" /> SharePoint Connection
           </h3>
           {spStatus?.configured ? (
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
@@ -660,6 +725,46 @@ export default function AppSettingsPage() {
           </div>
         )}
       </section>
+      </div>
+      )}
+
+      {tab === "data" && (
+      <div className="space-y-3">
+        {([
+          {
+            href: "/settings/import",
+            icon: Database,
+            title: "Data Import",
+            desc: "Go-live registers from CSV / Excel or straight from SharePoint — equipment, schedule, users and components, with preview before commit.",
+          },
+          {
+            href: "/settings/users",
+            icon: UsersIcon,
+            title: "User Management",
+            desc: "Accounts, roles and access — create users, reset passwords, deactivate leavers.",
+          },
+          {
+            href: "/account",
+            icon: UserCircle,
+            title: "My Account & Preferences",
+            desc: "Personal settings — density, landing page, notification and AI-chat preferences. Every user has their own.",
+          },
+        ] as const).map(({ href, icon: Icon, title, desc }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex items-center gap-4 bg-white border border-slate-200 rounded-xl p-4 hover:border-emerald-300 hover:shadow-sm transition-all group"
+          >
+            <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+              <Icon className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-900">{title}</p>
+              <p className="text-xs text-slate-500 mt-0.5 leading-snug">{desc}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 ml-auto shrink-0 transition-colors" />
+          </Link>
+        ))}
       </div>
       )}
 
@@ -815,6 +920,8 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
           {meta.updatedAt ? ` · ${new Date(meta.updatedAt).toLocaleString()}` : ""}
         </p>
       )}
+        </div>
+      </div>
     </div>
   );
 }
