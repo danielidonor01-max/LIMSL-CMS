@@ -50,23 +50,25 @@ async function audit(actor: Actor, entity: string, created: number, updated: num
 
 const errMsg = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
-// Unique, unambiguous normalized-contains match of a free-text machine name
-// against the register. Ambiguity is reported, never guessed away.
+// Normalized-contains match of a free-text machine name against the register.
+// Returns EVERY matching machine: several machines legitimately share a name
+// ("Beveling Machine" ×2) and differ only by asset id/serial — the caller
+// decides whether multiple hits mean "apply to each" (schedule) or "ambiguous"
+// (history, where an event belongs to exactly one machine).
 function matchEquipmentByName(
   needle: string,
   all: Array<{ id: string; assetId: string; name: string }>,
-): { hit?: { id: string; assetId: string; name: string }; error?: string } {
+): { hits: Array<{ id: string; assetId: string; name: string }>; error?: string } {
   const n = normName(needle);
-  if (n.length < 4) return { error: `"${needle}" is too short to match an equipment name safely` };
+  if (n.length < 4) return { hits: [], error: `"${needle}" is too short to match an equipment name safely` };
   const exact = all.filter((e) => normName(e.name) === n);
-  if (exact.length === 1) return { hit: exact[0] };
+  if (exact.length > 0) return { hits: exact };
   const partial = all.filter((e) => {
     const en = normName(e.name);
     return en.includes(n) || n.includes(en);
   });
-  if (partial.length === 1) return { hit: partial[0] };
-  if (partial.length > 1) return { error: `"${needle}" matches ${partial.length} machines (${partial.slice(0, 3).map((e) => e.assetId).join(", ")}…)` };
-  return { error: `No equipment matches "${needle}"` };
+  if (partial.length > 0) return { hits: partial };
+  return { hits: [], error: `No equipment matches "${needle}"` };
 }
 
 const FREQUENCY_MAP: Array<[RegExp, string]> = [
@@ -239,8 +241,14 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
       for (const candidate of [sheet.description, sheet.sheetName]) {
         if (!candidate) continue;
         const m = matchEquipmentByName(candidate, all);
-        if (m.hit) { equipmentId = m.hit.id; break; }
-        resolveErrors.push(m.error!);
+        // A history event belongs to exactly ONE machine — a multi-hit name is
+        // genuinely ambiguous here (unlike the schedule, which fans out).
+        if (m.hits.length === 1) { equipmentId = m.hits[0].id; break; }
+        resolveErrors.push(
+          m.hits.length > 1
+            ? `"${candidate}" matches ${m.hits.length} machines (${m.hits.slice(0, 3).map((e) => e.assetId).join(", ")}) — add the asset code to the sheet to pick one`
+            : m.error ?? `No equipment matches "${candidate}"`,
+        );
       }
     }
 
@@ -420,28 +428,32 @@ async function processSchedule(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
     }
     for (const machineName of cat.assetNames) {
       const m = matchEquipmentByName(machineName, all);
-      if (!m.hit) {
+      if (m.hits.length === 0) {
         preview.push({
           row: ++n,
           label: `${sourceLabel} · ${machineName}`,
           action: "error",
-          errors: [m.error!],
+          errors: [m.error ?? `No equipment matches "${machineName}"`],
         });
         continue;
       }
-      const key = keyOf(m.hit.id, activityType, plannedDate);
-      if (entryKeys.has(key)) continue;
-      entryKeys.add(key);
-      entries.push({
-        equipmentId: m.hit.id,
-        assetId: m.hit.assetId,
-        plannedDate,
-        activityType,
-        taskDescription,
-        frequency: mapFrequency(cat.frequencyRaw),
-        responsible: responsible || cat.responsible || null,
-        sourceLabel,
-      });
+      // Several machines legitimately share a name (distinct asset ids/serials);
+      // a scheduled activity for that name applies to EVERY one of them.
+      for (const hit of m.hits) {
+        const key = keyOf(hit.id, activityType, plannedDate);
+        if (entryKeys.has(key)) continue;
+        entryKeys.add(key);
+        entries.push({
+          equipmentId: hit.id,
+          assetId: hit.assetId,
+          plannedDate,
+          activityType,
+          taskDescription,
+          frequency: mapFrequency(cat.frequencyRaw),
+          responsible: responsible || cat.responsible || null,
+          sourceLabel,
+        });
+      }
     }
   };
 
