@@ -8,8 +8,16 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import { getSharepointConfig, downloadFile, SharepointError } from "@/lib/sharepoint";
 import { parseSpreadsheet } from "@/lib/import/parse";
 import { ENTITIES, processImport, type EntityKey } from "@/lib/import/entities";
+import { processLegacyImport, type LegacyKind } from "@/lib/import/legacy";
 
 const isEntity = (v: string): v is EntityKey => v in ENTITIES;
+
+// The import page's legacy tabs post their tab key as `entity`.
+const LEGACY_ENTITY: Record<string, LegacyKind> = {
+  "legacy-register": "register",
+  "legacy-history": "history",
+  "legacy-schedule": "schedule",
+};
 
 export async function POST(request: Request) {
   const gate = await requireRoles(SETTINGS_WRITE_ROLES);
@@ -21,12 +29,27 @@ export async function POST(request: Request) {
     const entity = String(body.entity || "");
     const mode = body.mode === "commit" ? "commit" : "preview";
     if (!itemId) return NextResponse.json({ error: "Pick a file first." }, { status: 400 });
-    if (!isEntity(entity)) return NextResponse.json({ error: "Unknown entity." }, { status: 400 });
+    const legacyKind = LEGACY_ENTITY[entity];
+    if (!legacyKind && !isEntity(entity)) {
+      return NextResponse.json({ error: "Unknown entity." }, { status: 400 });
+    }
 
     const cfg = await getSharepointConfig();
     if (!cfg) return NextResponse.json({ error: "SharePoint is not connected — configure it in App Settings." }, { status: 400 });
 
     const { bytes, name } = await downloadFile(cfg, itemId);
+
+    if (legacyKind) {
+      const result = await processLegacyImport(
+        legacyKind,
+        bytes,
+        { id: gate.actor?.id, name: gate.actor?.name },
+        mode === "commit",
+      );
+      return NextResponse.json({ ...result, file: name });
+    }
+    if (!isEntity(entity)) return NextResponse.json({ error: "Unknown entity." }, { status: 400 });
+
     const file = new File([bytes], name, {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });

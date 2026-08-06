@@ -14,6 +14,7 @@ export const EQUIPMENT_CATEGORY_LABELS: Record<string, string> = {
   EARTHING: "Earthing & Lightning",
   FACILITY_AC: "Facility AC / LV",
   MEASURING: "Measuring Instruments",
+  SYSTEM: "Facility Systems",
   OTHER: "Other",
 };
 

@@ -10,17 +10,22 @@ import Modal from "@/components/Modal";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 
 type EntityKey = "equipment" | "schedule" | "users" | "components";
+type LegacyTabKey = "legacy-register" | "legacy-history" | "legacy-schedule";
+type TabKey = EntityKey | LegacyTabKey;
 type ImportAction = "create" | "update" | "error";
 type PreviewRow = { row: number; label: string; action: ImportAction; errors: string[] };
 type Summary = { total: number; create: number; update: number; error: number; created: number; updated: number };
 type Credential = { email: string; tempPassword: string };
 type Result = { preview: PreviewRow[]; summary: Summary; credentials?: Credential[] };
 
-const TABS: { key: EntityKey; label: string; blurb: string }[] = [
+const TABS: { key: TabKey; label: string; blurb: string }[] = [
   { key: "equipment", label: "Equipment Register", blurb: "The 33-machine asset register. Matched by Asset ID — re-importing updates, never duplicates." },
   { key: "schedule", label: "Maintenance Schedule", blurb: "Planned PM/inspection activities, linked to equipment by Asset ID." },
   { key: "users", label: "User Roster", blurb: "People & roles. New users get a temporary password shown once, here." },
   { key: "components", label: "Components", blurb: "Electrical-panel component lists (tag, name, type) per machine — powers the troubleshooting engine even without schematics. Matched by Asset ID + Tag." },
+  { key: "legacy-register", label: "Legacy: LIMS Log", blurb: "The \"LIMS Maintenance Log\" workbook (.xlsm) exactly as kept — equipment, calibration and PM dates from the \"Maintenance Log Database\" sheet. Matched by LEE Tag; facility systems without a tag get an auto-assigned LEE/SYS id." },
+  { key: "legacy-history", label: "Legacy: History Log", blurb: "The \"EQUIPMENT HISTORY LOG\" workbook — one sheet per machine. Every dated A–H tick row becomes a machine-log entry; rows already in the log are skipped, so re-importing is safe." },
+  { key: "legacy-schedule", label: "Legacy: Annual Schedule", blurb: "The \"Annual Maintenance Master Schedule\" workbook — PM/CM marks on the quarterly calendar sheets become schedule entries for each machine listed under the category's Asset IDs." },
 ];
 
 const ACTION_BADGE: Record<ImportAction, string> = {
@@ -34,7 +39,7 @@ export default function DataImportPage() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = !!role && SETTINGS_WRITE_ROLES.includes(role);
 
-  const [tab, setTab] = useState<EntityKey>("equipment");
+  const [tab, setTab] = useState<TabKey>("equipment");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<Result | null>(null);
   const [committed, setCommitted] = useState<Result | null>(null);
@@ -78,10 +83,12 @@ export default function DataImportPage() {
     }
   };
 
-  const switchTab = (t: EntityKey) => {
+  const switchTab = (t: TabKey) => {
     setTab(t);
     reset();
   };
+
+  const isLegacy = tab.startsWith("legacy-");
 
   const send = async (mode: "preview" | "commit") => {
     if (!file && !spFile) {
@@ -97,6 +104,12 @@ export default function DataImportPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ itemId: spFile.id, entity: tab, mode }),
         });
+      } else if (isLegacy) {
+        const fd = new FormData();
+        fd.append("file", file!);
+        fd.append("kind", tab.replace("legacy-", ""));
+        fd.append("mode", mode);
+        res = await fetch("/api/import/legacy", { method: "POST", body: fd });
       } else {
         const fd = new FormData();
         fd.append("file", file!);
@@ -179,16 +192,18 @@ export default function DataImportPage() {
         <p className="text-xs text-slate-500">{active.blurb}</p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <a
-            href={`/api/import/${tab}`}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
-          >
-            <Download className="w-4 h-4" /> Download template
-          </a>
+          {!isLegacy && (
+            <a
+              href={`/api/import/${tab}`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
+            >
+              <Download className="w-4 h-4" /> Download template
+            </a>
+          )}
           <input
             ref={fileInput}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx,.xls,.xlsm"
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
               setSpFile(null);

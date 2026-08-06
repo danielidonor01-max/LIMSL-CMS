@@ -51,7 +51,7 @@ const parseDate = (s: string): string | null => {
   return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 };
 
-const summarize = (preview: PreviewRow[], created: number, updated: number): ImportSummary => ({
+export const summarize = (preview: PreviewRow[], created: number, updated: number): ImportSummary => ({
   total: preview.length,
   create: preview.filter((p) => p.action === "create").length,
   update: preview.filter((p) => p.action === "update").length,
