@@ -11,7 +11,9 @@ import {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/";
+  const rawCallback = params.get("callbackUrl") || "/";
+  // Only same-app paths — an absolute URL here would be an open redirect.
+  const callbackUrl = rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

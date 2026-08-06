@@ -208,7 +208,7 @@ export default function DocumentsPage() {
                                   </Badge>
                                 </td>
                                 <td className="py-2 px-3 text-right">
-                                  {d.fileUrl ? (
+                                  {d.fileUrl && !d.fileUrl.startsWith("#") ? (
                                     <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-600 hover:underline">
                                       <Download className="w-3.5 h-3.5" /> Open
                                     </a>

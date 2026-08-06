@@ -63,35 +63,29 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes((session?.user as { role?: string })?.role ?? "");
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        // 1. Fetch asset details
-        const res = await fetch(`/api/equipment/${assetIdKey}`);
-        if (res.ok) {
-          const data = await res.json();
-          setEq(data);
-
-          // 2. Fetch components (BOM)
-          const compRes = await fetch(`/api/equipment/${assetIdKey}/components`);
-          if (compRes.ok) {
-            const compData = await compRes.json();
-            setComponents(compData);
-          }
-
-          // 3. Fetch diagnostic guides
-          const guideRes = await fetch(`/api/equipment/${assetIdKey}/diagnostics`);
-          if (guideRes.ok) {
-            const guideData = await guideRes.json();
-            setGuides(guideData);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading twin details:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    // All three fetches fly in parallel, and the page unblocks as soon as the
+    // asset itself lands — components/guides fill their sections when ready.
+    // The previous serial chain tripled the perceived load time.
+    let alive = true;
+    fetch(`/api/equipment/${assetIdKey}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive) return;
+        setEq(d);
+      })
+      .catch((err) => console.error("Error loading twin details:", err))
+      .finally(() => alive && setLoading(false));
+    fetch(`/api/equipment/${assetIdKey}/components`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => alive && setComponents(Array.isArray(d) ? d : []))
+      .catch(() => {});
+    fetch(`/api/equipment/${assetIdKey}/diagnostics`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => alive && setGuides(Array.isArray(d) ? d : []))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
   }, [assetIdKey]);
 
   if (loading) {
@@ -188,7 +182,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   Launch Troubleshooting Wizard
                 </Link>
                 <Link
-                  href="/work-orders/new"
+                  href={`/work-orders/new?equipmentId=${eq.id}`}
                   className="px-4 py-2 bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-900 rounded-lg text-xs font-semibold transition-all"
                 >
                   Create Work Order
@@ -196,7 +190,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               </>
             ) : (
               <Link
-                href="/work-orders/new?type=PM"
+                href={`/work-orders/new?equipmentId=${eq.id}`}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
               >
                 Launch PM Checklist

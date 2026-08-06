@@ -273,7 +273,16 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block mb-1">Equipment Name</span>
-                <span className="font-semibold text-slate-900">{equipment?.name || "Loading..."}</span>
+                {equipment?.assetId ? (
+                  <Link
+                    href={`/equipment/${equipment.assetId.replace(/\//g, "-")}`}
+                    className="font-semibold text-emerald-700 hover:underline"
+                  >
+                    {equipment.name}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-slate-900">{equipment?.name || "Loading..."}</span>
+                )}
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block mb-1">Tag ID</span>

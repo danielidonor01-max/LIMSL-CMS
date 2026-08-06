@@ -166,6 +166,23 @@ export default function AppSettingsPage() {
     }
   };
 
+  const [dbMaintBusy, setDbMaintBusy] = useState(false);
+  const runDbMaintenance = async () => {
+    setDbMaintBusy(true);
+    try {
+      const res = await fetch("/api/admin/db-maintenance", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Maintenance failed.");
+        return;
+      }
+      if (d.ok) toast.success(`Indexes verified/applied (${d.applied.length}).`);
+      else toast.error(`${d.applied.length} applied, ${d.failed.length} failed — see server logs.`);
+    } finally {
+      setDbMaintBusy(false);
+    }
+  };
+
   const removeSharepoint = async () => {
     setSpBusy("remove");
     try {
@@ -765,6 +782,22 @@ export default function AppSettingsPage() {
             <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 ml-auto shrink-0 transition-colors" />
           </Link>
         ))}
+
+        {/* Database maintenance — self-service index migration for the deployed DB. */}
+        <section className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Database maintenance</h3>
+          </div>
+          <p className="text-xs text-slate-500 leading-snug">
+            Applies the performance indexes this version of the app expects (equipment lookups, per-machine
+            documents/components/history, audit queries). Safe to run any time — it only creates what&apos;s missing
+            and never touches data. Run once after updating the app.
+          </p>
+          <Button variant="secondary" icon={RefreshCw} loading={dbMaintBusy} onClick={runDbMaintenance}>
+            Apply performance indexes
+          </Button>
+        </section>
       </div>
       )}
 

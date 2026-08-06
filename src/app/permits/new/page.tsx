@@ -144,7 +144,7 @@ function NewPermitForm() {
       <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
         <div className="flex items-center justify-between gap-4 mb-1">
           <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
+          <Link href="/permits" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
@@ -389,7 +389,7 @@ function NewPermitForm() {
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-3">
             <Link
-              href="/"
+              href="/permits"
               className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all"
             >
               Cancel

@@ -222,7 +222,7 @@ export default function EquipmentDocuments({
                 <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
                   {d.status === "REQUIRED" ? "MISSING" : d.status}
                 </Badge>
-                {d.fileUrl && (
+                {d.fileUrl && !d.fileUrl.startsWith("#") && (
                   <a
                     href={d.fileUrl}
                     target="_blank"

@@ -227,7 +227,7 @@ export default function WorkOrderDetailPage() {
             </h3>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <Link href={`/equipment/${eq.assetId}`} className="font-medium text-slate-900 hover:text-emerald-600">
+                <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="font-medium text-slate-900 hover:text-emerald-600">
                   {eq.name}
                 </Link>
                 <p className="text-[11px] font-mono text-slate-500 mt-0.5">

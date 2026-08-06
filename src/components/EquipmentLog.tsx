@@ -7,6 +7,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Wrench, AlertTriangle, ClipboardCheck, Truck, Stethoscope, Activity,
   FileText, StickyNote, Gauge, CircleDot, Plus, Loader2, ExternalLink, Filter,
@@ -174,9 +175,9 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
                   <div className="flex items-center gap-3 mt-1.5">
                     {ev.performedByName && <span className="text-[10px] text-slate-400">by {ev.performedByName}</span>}
                     {ev.href && (
-                      <a href={ev.href} className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-0.5">
+                      <Link href={ev.href} className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-0.5">
                         Open <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

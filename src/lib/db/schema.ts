@@ -39,7 +39,7 @@ export const equipment = pgTable("equipment", {
   requiresPremob: boolean("requires_premob").default(false),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("equipment_asset_id_idx").on(t.assetId)]);
 
 // ─── Equipment Documents ─────────────────────────────────────────────────────
 // Per-machine document register: electrical schematics, operational manuals,
@@ -64,7 +64,7 @@ export const equipmentDocuments = pgTable("equipment_documents", {
   uploadedBy: text("uploaded_by"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("equipment_documents_equipment_idx").on(t.equipmentId)]);
 
 // ─── Users ─────────────────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -102,7 +102,7 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   workOrderId: text("work_order_id"),
   remarks: text("remarks"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("maintenance_schedule_equipment_idx").on(t.equipmentId)]);
 
 // ─── Work Orders ────────────────────────────────────────────────────────────
 export const workOrders = pgTable("work_orders", {
@@ -129,7 +129,7 @@ export const workOrders = pgTable("work_orders", {
   createdBy: text("created_by").references(() => users.id),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("work_orders_equipment_idx").on(t.equipmentId)]);
 
 // ─── PM Checklists ──────────────────────────────────────────────────────────
 export const pmChecklists = pgTable("pm_checklists", {
@@ -162,7 +162,7 @@ export const pmChecklists = pgTable("pm_checklists", {
   supervisorName: text("supervisor_name"),
   signedAt: text("signed_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("pm_checklists_work_order_idx").on(t.workOrderId)]);
 
 // ─── WMS (Work Method Statements) ──────────────────────────────────────────
 export const wmsDocuments = pgTable("wms_documents", {
@@ -301,7 +301,7 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   status: text("status").notNull().default("OPEN"), // OPEN | IN_PROGRESS | PENDING_RCA | PENDING_APPROVAL | CLOSED
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("corrective_maintenance_equipment_idx").on(t.equipmentId)]);
 
 // ─── KPI Records ────────────────────────────────────────────────────────────
 export const kpiRecords = pgTable("kpi_records", {
@@ -419,7 +419,7 @@ export const auditLog = pgTable("audit_log", {
   changes: text("changes"), // JSON diff of what changed
   ipAddress: text("ip_address"),
   timestamp: text("timestamp").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("audit_log_user_action_idx").on(t.userId, t.action, t.timestamp)]);
 
 // ─── Risk Register ───────────────────────────────────────────────────────────
 export const riskRegister = pgTable("risk_register", {
@@ -550,7 +550,7 @@ export const componentRegistry = pgTable("component_registry", {
   bboxY: real("bbox_y"),
   bboxW: real("bbox_w"),
   bboxH: real("bbox_h"),
-});
+}, (t) => [index("component_registry_equipment_idx").on(t.equipmentId)]);
 
 // ─── Diagnostic Guides & Hints ────────────────────────────────────────────────
 export const diagnosticGuides = pgTable("diagnostic_guides", {
@@ -564,7 +564,7 @@ export const diagnosticGuides = pgTable("diagnostic_guides", {
   resolutionAction: text("resolution_action"),
   successCount: integer("success_count").default(0),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
-});
+}, (t) => [index("diagnostic_guides_equipment_idx").on(t.equipmentId)]);
 
 // ─── Multi-level Sign-offs ───────────────────────────────────────────────────
 // A configurable approval chain attached to any signable entity (PM checklist,

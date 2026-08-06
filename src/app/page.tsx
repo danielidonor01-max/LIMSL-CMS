@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 import { useApi } from "@/lib/api-cache";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS, canAccessPath } from "@/lib/roles";
 import {
   EQUIPMENT_STATUS_BADGE,
   EQUIPMENT_STATUS_LABELS,
@@ -156,12 +156,14 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <Link
-              href="/corrective/new"
-              className="relative z-10 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
-            >
-              Report Corrective Fault
-            </Link>
+            {mounted && canAccessPath(role ?? "", "/corrective/new") && (
+              <Link
+                href="/corrective/new"
+                className="relative z-10 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
+              >
+                Report Corrective Fault
+              </Link>
+            )}
           </div>
         ))}
 
@@ -226,7 +228,8 @@ export default function Home() {
                   {critical.map((eq) => (
                     <tr key={eq.id} className="hover:bg-slate-50 text-slate-700">
                       <td className="py-3 font-medium text-slate-900">
-                        <Link href={`/equipment/${eq.assetId}`} className="hover:text-emerald-600">{eq.name}</Link>
+                        {/* Asset IDs carry slashes (LEE/PE/1904) — routes take the dash form. */}
+                        <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-emerald-600">{eq.name}</Link>
                       </td>
                       <td className="py-3 font-mono text-slate-500">{eq.assetId}</td>
                       <td className="py-3">{eq.location ?? eq.bay ?? "—"}</td>
@@ -246,7 +249,9 @@ export default function Home() {
           <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-slate-900">Recent Activity</h3>
-              <Link href="/audit/logs" className="text-xs text-emerald-600 hover:underline">Audit Log</Link>
+              {mounted && canAccessPath(role ?? "", "/audit/logs") && (
+                <Link href="/audit/logs" className="text-xs text-emerald-600 hover:underline">Audit Log</Link>
+              )}
             </div>
             <div className="space-y-4">
               {activity.length === 0 && (

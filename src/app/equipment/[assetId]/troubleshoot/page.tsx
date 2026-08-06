@@ -572,14 +572,21 @@ export default function TroubleshootPage() {
                       <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
                     </button>
                   ) : (
-                    <a
-                      key={s.id}
-                      href={s.fileUrl ?? "#"}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs"
-                    >
-                      <span className="text-slate-700 truncate">{s.title}</span>
-                      <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
-                    </a>
+                    s.fileUrl && !s.fileUrl.startsWith("#") ? (
+                      <a
+                        key={s.id}
+                        href={s.fileUrl}
+                        className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs"
+                      >
+                        <span className="text-slate-700 truncate">{s.title}</span>
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                      </a>
+                    ) : (
+                      <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 text-xs opacity-60">
+                        <span className="text-slate-500 truncate">{s.title}</span>
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2">no file</span>
+                      </div>
+                    )
                   ),
                 )}
               </div>

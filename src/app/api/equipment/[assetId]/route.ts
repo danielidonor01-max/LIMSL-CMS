@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { equipment } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { logEquipmentEvent } from "@/lib/equipment-log";
@@ -16,10 +16,13 @@ export async function GET(
     const assetIdKey = resolvedParams.assetId; // E.g., LEE-PE-1904
     const assetIdOriginal = assetIdKey.replace(/-/g, "/"); // Convert to LEE/PE/1904
 
+    // Accept the dash-form asset id, the raw slash form, AND a DB id — the
+    // sibling routes (/log, /history, /diagnose) already do; this one 404ing on
+    // DB-id URLs while its sub-resources succeeded was a real trap.
     const records = await db
       .select()
       .from(equipment)
-      .where(eq(equipment.assetId, assetIdOriginal));
+      .where(or(eq(equipment.assetId, assetIdOriginal), eq(equipment.assetId, assetIdKey), eq(equipment.id, assetIdKey)));
 
     if (records.length === 0) {
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
@@ -58,12 +61,17 @@ export async function PATCH(
       if (body[key] !== undefined) updates[key] = body[key];
     }
 
-    const [before] = await db.select().from(equipment).where(eq(equipment.assetId, assetIdOriginal)).limit(1);
+    const [before] = await db
+      .select()
+      .from(equipment)
+      .where(or(eq(equipment.assetId, assetIdOriginal), eq(equipment.assetId, assetIdKey), eq(equipment.id, assetIdKey)))
+      .limit(1);
+    if (!before) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
     const updated = await db
       .update(equipment)
       .set(updates)
-      .where(eq(equipment.assetId, assetIdOriginal))
+      .where(eq(equipment.id, before.id))
       .returning();
 
     // Log material lifecycle changes to the machine timeline.

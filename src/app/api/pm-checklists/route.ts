@@ -208,7 +208,9 @@ export async function POST(request: Request) {
           : "PM checklist signed off; equipment returned to service.",
         refType: "work_order",
         refId: wo?.id ?? null,
-        href: body.workOrderId ? `/work-orders/${body.workOrderId}/pm-checklist` : null,
+        // The signed record is viewed on the WO page — the /pm-checklist path is
+        // the blank submission form and 409s on re-submit.
+        href: body.workOrderId ? `/work-orders/${body.workOrderId}` : null,
         source: "AUTO",
         performedById: gate.actor?.id ?? null,
         performedByName: gate.actor?.name || body.technicianName || null,
