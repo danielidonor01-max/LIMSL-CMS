@@ -112,6 +112,10 @@ export default function TroubleshootPage() {
   const [resumeSession, setResumeSession] = useState<string | null>(null);
   type PastSession = { id: string; symptom: string; status: string; resolvedCause: string | null; startedByName: string | null; createdAt: string };
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
+  // One content region, three views — the page previously stacked engine
+  // results, the AI panel and documentation into one long scroll with no
+  // hierarchy; a segmented panel keeps a single focus of attention.
+  const [panel, setPanel] = useState<"engine" | "ai" | "docs">("engine");
   const [viewer, setViewer] = useState<{
     docId: string;
     title: string;
@@ -131,7 +135,10 @@ export default function TroubleshootPage() {
   // (?session=…). Read from location to avoid a Suspense-bound useSearchParams.
   useEffect(() => {
     const sid = new URLSearchParams(window.location.search).get("session");
-    if (sid) setResumeSession(sid);
+    if (sid) {
+      setResumeSession(sid);
+      setPanel("ai");
+    }
   }, []);
 
   // This machine's past AI diagnoses (for the sidebar list).
@@ -150,6 +157,7 @@ export default function TroubleshootPage() {
     setResumeSession(null);
     setDiagnosing(true);
     setLearned({});
+    setPanel("engine");
     const res = await fetch(`/api/equipment/${assetId}/diagnose?symptom=${encodeURIComponent(s)}`).then((r) => r.json());
     setResult(res);
     setDiagnosing(false);
@@ -208,8 +216,29 @@ export default function TroubleshootPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="p-6 max-w-6xl w-full mx-auto space-y-6" aria-busy="true" aria-label="Loading diagnostic engine">
+        <div className="h-4 w-40 bg-slate-200 rounded animate-pulse" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-slate-200 animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
+            <div className="h-3 w-64 bg-slate-100 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="h-28 bg-white border border-slate-200 rounded-xl p-5">
+          <div className="h-3 w-56 bg-slate-100 rounded animate-pulse mb-3" />
+          <div className="h-11 bg-slate-100 rounded-lg animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
+            <div className="h-40 bg-white border border-slate-200 rounded-xl animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-32 bg-white border border-slate-200 rounded-xl animate-pulse" />
+            <div className="h-48 bg-white border border-slate-200 rounded-xl animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -247,7 +276,7 @@ export default function TroubleshootPage() {
         <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
           Describe the fault, symptom, or error code
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -255,26 +284,26 @@ export default function TroubleshootPage() {
               onChange={(e) => setSymptom(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && runDiagnosis()}
               placeholder="e.g. No motion X axis, error E-041"
-              className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/40"
+              className="w-full min-h-[44px] pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
             />
           </div>
           <button
             onClick={() => runDiagnosis()}
             disabled={diagnosing || symptom.trim().length < 2}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold"
+            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold shrink-0"
           >
             {diagnosing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             Diagnose
           </button>
         </div>
         {meta.knownSymptoms.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[10px] text-slate-400 self-center">Known:</span>
+          <div className="flex flex-wrap gap-1.5 pt-1 items-center">
+            <span className="text-[10px] text-slate-400">Known:</span>
             {meta.knownSymptoms.map((k) => (
               <button
                 key={k.id}
                 onClick={() => runDiagnosis(k.errorCode ? `${k.symptom} ${k.errorCode}` : k.symptom)}
-                className="px-2 py-1 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200"
+                className="px-2.5 py-2 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200"
               >
                 {k.errorCode ? `[${k.errorCode}] ` : ""}{k.symptom}
               </button>
@@ -284,15 +313,57 @@ export default function TroubleshootPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Diagnoses */}
+        {/* One content region, three views — segmented so the technician always
+            has a single focus instead of a long mixed scroll. */}
         <div className="lg:col-span-2 space-y-4">
-          {!result ? (
+          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1" role="tablist" aria-label="Diagnosis views">
+            {([
+              { key: "engine", label: "Engine results", short: "Engine", icon: Stethoscope, count: result?.diagnoses.length ?? null },
+              { key: "ai", label: "AI assistant", short: "AI", icon: Sparkles, count: null },
+              { key: "docs", label: "Documentation", short: "Docs", icon: BookOpen, count: result?.passages?.length ?? null },
+            ] as const).map((t) => {
+              const Icon = t.icon;
+              const active = panel === t.key;
+              return (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setPanel(t.key)}
+                  className={`flex-1 min-h-[44px] px-2 sm:px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors ${
+                    active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${t.key === "ai" ? "text-violet-500" : active ? "text-emerald-600" : ""}`} />
+                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="sm:hidden">{t.short}</span>
+                  {t.count != null && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {panel === "engine" && (!result ? (
             <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
               Enter a symptom and run the engine to see ranked probable causes.
             </div>
           ) : result.diagnoses.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
               No confident match found. Resolve the fault, then record the outcome so the engine learns it.
+              {meta.aiReady && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => setPanel("ai")}
+                    className="inline-flex items-center gap-1.5 min-h-[44px] px-4 text-xs font-semibold text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-50"
+                  >
+                    <Sparkles className="w-4 h-4" /> Work it with the AI assistant instead
+                  </button>
+                </div>
+              )}
               <div className="mt-4">
                 <NewGuideForm assetId={assetId} symptom={symptom} onDone={() => runDiagnosis()} />
               </div>
@@ -416,10 +487,10 @@ export default function TroubleshootPage() {
                 </div>
               </div>
             ))
-          )}
+          ))}
 
           {/* AI diagnosis — chat-style, evidence-grounded, guardrailed server-side */}
-          {(result || resumeSession) && meta.aiReady && (
+          {panel === "ai" && (meta.aiReady ? (
             <div className="bg-white border border-violet-200 rounded-xl overflow-hidden">
               <div className="px-5 py-3 border-b border-violet-100 bg-violet-50/50 flex items-center gap-2 flex-wrap">
                 <Sparkles className="w-4 h-4 text-violet-600" />
@@ -436,10 +507,21 @@ export default function TroubleshootPage() {
                 resumeSessionId={resumeSession}
               />
             </div>
-          )}
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
+              No AI provider is configured. Add an API key in{" "}
+              <Link href="/settings" className="text-emerald-600 hover:underline">App Settings</Link> to enable the assistant.
+            </div>
+          ))}
 
           {/* Manuals & procedure passages (FTS over document_chunks) */}
-          {result && (result.passages?.length ?? 0) > 0 && (
+          {panel === "docs" && (!result || (result.passages?.length ?? 0) === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
+              {!result
+                ? "Run a diagnosis first — matching manual and procedure passages appear here."
+                : "No documentation passages matched this symptom."}
+            </div>
+          ) : (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-sky-600" />
@@ -467,7 +549,7 @@ export default function TroubleshootPage() {
                 ))}
               </div>
             </div>
-          )}
+          ))}
         </div>
 
         {/* Schematics + component sidebar */}
