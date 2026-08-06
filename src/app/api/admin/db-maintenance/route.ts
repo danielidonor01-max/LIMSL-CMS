@@ -12,8 +12,10 @@ import { auditLog } from "@/lib/db/schema";
 import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 
-// Kept in lockstep with the index tuples in src/lib/db/schema.ts.
+// Kept in lockstep with the index tuples in src/lib/db/schema.ts. Also carries
+// additive column migrations (IF NOT EXISTS — idempotent, data-safe).
 const INDEXES: [string, string][] = [
+  ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
   ["equipment_asset_id_idx", "CREATE INDEX IF NOT EXISTS equipment_asset_id_idx ON equipment (asset_id)"],
   ["equipment_documents_equipment_idx", "CREATE INDEX IF NOT EXISTS equipment_documents_equipment_idx ON equipment_documents (equipment_id)"],
   ["maintenance_schedule_equipment_idx", "CREATE INDEX IF NOT EXISTS maintenance_schedule_equipment_idx ON maintenance_schedule (equipment_id)"],

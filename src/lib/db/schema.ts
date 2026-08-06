@@ -655,6 +655,9 @@ export const appSettings = pgTable("app_settings", {
   lunchEnd: text("lunch_end").default("13:00"),
   workingDays: text("working_days").notNull().default("[1,2,3,4,5]"), // JSON weekday nums, 0=Sun..6=Sat
   weekendOvertime: boolean("weekend_overtime").notNull().default(false),
+  // JSON {event: {enabled, roles|null}} — admin overrides for who gets what;
+  // null/absent event = code defaults (see lib/notifications/routing.ts).
+  notificationRouting: text("notification_routing"),
   updatedById: text("updated_by_id"),
   updatedByName: text("updated_by_name"),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),

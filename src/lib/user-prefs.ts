@@ -16,6 +16,11 @@ export type UserPrefs = {
   // sends — the safe choice on shop-floor phones where a stray Enter mid-report
   // would fire a half-typed message at the assistant. true = Enter sends.
   chatEnterToSend: boolean;
+  // Alert channels for NEW in-app notifications while the app is open:
+  // a short chime, and/or a system (Windows) desktop notification (needs the
+  // browser permission, requested when the user turns it on).
+  notifySound: boolean;
+  notifyDesktop: boolean;
 };
 
 export const DEFAULT_PREFS: UserPrefs = {
@@ -24,6 +29,8 @@ export const DEFAULT_PREFS: UserPrefs = {
   notifyEmail: true,
   notifyInApp: true,
   chatEnterToSend: false,
+  notifySound: true,
+  notifyDesktop: false,
 };
 
 // Landing pages a user may choose — kept to broadly-accessible destinations so
@@ -46,6 +53,8 @@ export function parsePrefs(raw: unknown): UserPrefs {
       notifyEmail: p.notifyEmail !== false,
       notifyInApp: p.notifyInApp !== false,
       chatEnterToSend: p.chatEnterToSend === true,
+      notifySound: p.notifySound !== false,
+      notifyDesktop: p.notifyDesktop === true,
     };
   } catch {
     return { ...DEFAULT_PREFS };
@@ -62,5 +71,7 @@ export function sanitizePrefs(input: unknown): UserPrefs {
     notifyEmail: p.notifyEmail !== false,
     notifyInApp: p.notifyInApp !== false,
     chatEnterToSend: p.chatEnterToSend === true,
+    notifySound: p.notifySound !== false,
+    notifyDesktop: p.notifyDesktop === true,
   };
 }

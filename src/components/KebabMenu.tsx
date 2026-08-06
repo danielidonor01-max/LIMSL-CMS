@@ -25,7 +25,15 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
   const toggle = () => {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 176) });
+      // Flip above the trigger when the menu would run past the bottom edge
+      // (last table rows), and clamp inside the viewport either way.
+      const estHeight = items.length * 34 + 10;
+      const below = r.bottom + 4;
+      const top =
+        below + estHeight > window.innerHeight - 8
+          ? Math.max(8, r.top - 4 - estHeight)
+          : below;
+      setPos({ top, left: Math.max(8, Math.min(r.right - 176, window.innerWidth - 176 - 8)) });
     }
     setOpen((o) => !o);
   };

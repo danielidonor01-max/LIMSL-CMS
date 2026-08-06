@@ -53,9 +53,21 @@ async function resolveRecipients(roles?: string[], userIds?: string[]) {
 // Returns the created notification rows. Safe to await from any handler — it
 // swallows delivery errors and only records their status.
 export async function notify(input: NotifyInput) {
+  // Admin routing overlay: an event switched off in Settings sends nowhere; a
+  // role-audience override redirects role-targeted sends. Best-effort — a
+  // routing read failure must never block a notification.
+  let target: { roles?: string[]; userIds?: string[] } | null = { roles: input.roles, userIds: input.userIds };
+  try {
+    const { getRouting, applyRouting } = await import("./routing");
+    target = applyRouting(await getRouting(), input.event, input.roles, input.userIds);
+  } catch (err) {
+    console.warn("notify: routing lookup failed — using defaults", err);
+  }
+  if (!target) return [];
+
   let recipients;
   try {
-    recipients = await resolveRecipients(input.roles, input.userIds);
+    recipients = await resolveRecipients(target.roles, target.userIds);
   } catch (err) {
     console.warn("notify: failed to resolve recipients", err);
     return [];

@@ -1,7 +1,7 @@
 // src/components/NotificationBell.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
@@ -17,8 +17,48 @@ export default function NotificationBell() {
   const { prefs } = useUserPrefs();
   const [mounted, setMounted] = useState(false);
   const [unread, setUnread] = useState(0);
+  // Previous count for new-arrival detection; null until the first poll so a
+  // page load with existing unread doesn't chime.
+  const prevUnread = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
+
+  // A short two-tone chime via WebAudio — no audio asset to ship or load.
+  const chime = () => {
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.06;
+      gain.connect(ctx.destination);
+      [880, 1175].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.15);
+      });
+      setTimeout(() => ctx.close(), 600);
+    } catch {
+      /* audio blocked — fine */
+    }
+  };
+
+  const announce = (count: number, delta: number) => {
+    if (prefs.notifySound) chime();
+    if (prefs.notifyDesktop && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      try {
+        new Notification("LIMSL CMS", {
+          body: `${delta} new notification${delta > 1 ? "s" : ""} — ${count} unread`,
+          tag: "limsl-cms-inbox",
+        });
+      } catch {
+        /* blocked — fine */
+      }
+    }
+  };
 
   useEffect(() => {
     if (!mounted || !prefs.notifyInApp) return;
@@ -28,7 +68,13 @@ export default function NotificationBell() {
         const res = await fetch("/api/notifications");
         if (!res.ok) return;
         const d = await res.json();
-        if (alive) setUnread(d.unread ?? 0);
+        if (!alive) return;
+        const next = d.unread ?? 0;
+        if (prevUnread.current !== null && next > prevUnread.current) {
+          announce(next, next - prevUnread.current);
+        }
+        prevUnread.current = next;
+        setUnread(next);
       } catch {
         /* ignore */
       }

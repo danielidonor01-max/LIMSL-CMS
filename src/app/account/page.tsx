@@ -209,6 +209,27 @@ export default function AccountPage() {
             checked={prefs.notifyInApp}
             onChange={(v) => savePrefs({ ...prefs, notifyInApp: v })}
           />
+          <ToggleRow
+            title="Notification sound"
+            desc="Play a short chime when a new notification arrives while the app is open."
+            checked={prefs.notifySound}
+            onChange={(v) => savePrefs({ ...prefs, notifySound: v })}
+          />
+          <ToggleRow
+            title="Desktop (system) notifications"
+            desc="Show a Windows notification for new alerts — your browser will ask for permission once."
+            checked={prefs.notifyDesktop}
+            onChange={async (v) => {
+              if (v && typeof Notification !== "undefined" && Notification.permission !== "granted") {
+                const perm = await Notification.requestPermission();
+                if (perm !== "granted") {
+                  toast.error("Permission declined — desktop notifications stay off.");
+                  return;
+                }
+              }
+              savePrefs({ ...prefs, notifyDesktop: v });
+            }}
+          />
         </div>
 
         {/* AI chat */}

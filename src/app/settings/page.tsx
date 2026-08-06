@@ -8,7 +8,8 @@ import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Inf
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
-import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
+import { Badge } from "@/components/Badge";
+import { ROLES, ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import {
   productiveHoursPerDay,
   productionDowntimeHours,
@@ -80,6 +81,51 @@ export default function AppSettingsPage() {
   };
   useEffect(loadEmailStatus, []);
 
+  // Notification routing — which events send, and to which roles.
+  type RoutingEvent = { event: string; label: string; desc: string; personal: boolean; defaultRoles: string[] | null };
+  const [routingEvents, setRoutingEvents] = useState<RoutingEvent[]>([]);
+  const [routing, setRouting] = useState<Record<string, { enabled: boolean; roles: string[] | null }>>({});
+  const [routingSaving, setRoutingSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/settings/notification-routing")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setRoutingEvents(d.events ?? []);
+        setRouting(d.routing ?? {});
+      });
+  }, []);
+
+  const routeFor = (ev: RoutingEvent) => routing[ev.event] ?? { enabled: true, roles: null };
+  const setRoute = (event: string, patch: Partial<{ enabled: boolean; roles: string[] | null }>) =>
+    setRouting((r) => ({ ...r, [event]: { ...(r[event] ?? { enabled: true, roles: null }), ...patch } }));
+  const toggleRouteRole = (ev: RoutingEvent, roleKey: string) => {
+    const cur = routeFor(ev);
+    const base = cur.roles ?? ev.defaultRoles ?? [];
+    const next = base.includes(roleKey) ? base.filter((x) => x !== roleKey) : [...base, roleKey];
+    setRoute(ev.event, { roles: next });
+  };
+  const saveRoutingCfg = async () => {
+    setRoutingSaving(true);
+    try {
+      const res = await fetch("/api/settings/notification-routing", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routing }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to save routing.");
+        return;
+      }
+      setRouting(d.routing ?? {});
+      toast.success("Notification routing saved.");
+    } finally {
+      setRoutingSaving(false);
+    }
+  };
+
   const verifyConnection = async () => {
     setVerifying(true);
     try {
@@ -109,6 +155,7 @@ export default function AppSettingsPage() {
   const [creds, setCreds] = useState<Cred[]>([]);
   const [keyInput, setKeyInput] = useState<Record<string, string>>({});
   const [credBusy, setCredBusy] = useState<string | null>(null); // `${provider}:${action}`
+  const [aiTab, setAiTab] = useState<string | null>(null); // selected provider tab
 
   const loadCreds = () => {
     fetch("/api/settings/credentials")
@@ -593,41 +640,86 @@ export default function AppSettingsPage() {
             errors. Add more than one key and an exhausted free tier never stops a diagnosis.
           </span>
         </div>
-        <div className="space-y-3">
-          {creds.map((c, ci) => (
-            <div key={c.provider} className="rounded-lg border border-slate-200 p-3 space-y-2.5">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
-                      c.configured ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
-                    }`}
-                    title={`Failover priority ${ci + 1}`}
-                  >
-                    {ci + 1}
-                  </span>
-                  <div>
-                    <span className="text-xs font-semibold text-slate-900">{c.label}</span>
-                    <span className="text-[10px] text-slate-400 ml-2">{c.note}</span>
-                  </div>
-                </div>
-                {c.configured ? (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
-                    Configured · {c.source === "ENV" ? "env var" : "saved"} · {c.keyHint}
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">
-                    Not configured
-                  </span>
-                )}
-              </div>
+        {/* Summary table — the whole chain at a glance */}
+        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50">
+              <tr className="text-slate-500 border-b border-slate-200">
+                <th className="py-2.5 px-3 font-medium w-10">#</th>
+                <th className="py-2.5 px-3 font-medium">Provider</th>
+                <th className="py-2.5 px-3 font-medium">Status</th>
+                <th className="py-2.5 px-3 font-medium">Key</th>
+                <th className="py-2.5 px-3 font-medium hidden md:table-cell">Saved by</th>
+                <th className="py-2.5 px-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {creds.map((c, ci) => (
+                <tr
+                  key={c.provider}
+                  onClick={() => setAiTab(c.provider)}
+                  className={`cursor-pointer transition-colors ${(aiTab ?? creds[0]?.provider) === c.provider ? "bg-emerald-50/50" : "hover:bg-slate-50"}`}
+                >
+                  <td className="py-2.5 px-3">
+                    <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${c.configured ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`} title={`Failover priority ${ci + 1}`}>
+                      {ci + 1}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900">{c.label}</td>
+                  <td className="py-2.5 px-3">
+                    {c.configured ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+                        <CheckCircle2 className="w-3 h-3" /> Active · {c.source === "ENV" ? "env" : "saved"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">Not configured</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-3 font-mono text-slate-500">{c.keyHint ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-slate-400 hidden md:table-cell">
+                    {c.updatedByName ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}` : "—"}
+                  </td>
+                  <td className="py-2.5 px-3 text-right">
+                    <Button size="sm" variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={(e) => { e.stopPropagation(); testKey(c.provider); }}>
+                      Test
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Per-provider tabs — manage one key at a time */}
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto">
+          {creds.map((c) => {
+            const active = (aiTab ?? creds[0]?.provider) === c.provider;
+            return (
+              <button
+                key={c.provider}
+                onClick={() => setAiTab(c.provider)}
+                className={`px-3 py-2 rounded-md text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 transition-colors ${
+                  active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                {c.label}
+                <span className={`w-1.5 h-1.5 rounded-full ${c.configured ? "bg-emerald-500" : "bg-slate-300"}`} />
+              </button>
+            );
+          })}
+        </div>
+        {creds
+          .filter((c) => c.provider === (aiTab ?? creds[0]?.provider))
+          .map((c) => (
+            <div key={c.provider} className="rounded-lg border border-slate-200 p-4 space-y-3">
+              <p className="text-xs text-slate-500">{c.note}</p>
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="password"
                   value={keyInput[c.provider] ?? ""}
                   onChange={(e) => setKeyInput((k) => ({ ...k, [c.provider]: e.target.value }))}
                   placeholder={c.configured ? "Paste a new key to replace…" : "Paste API key…"}
-                  className="flex-1 min-w-56 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500/40"
+                  className="flex-1 min-w-56 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
                   disabled={c.source === "ENV"}
                 />
                 <Button size="sm" icon={Save} loading={credBusy === `${c.provider}:save`} onClick={() => saveKey(c.provider)} disabled={c.source === "ENV"}>
@@ -650,7 +742,6 @@ export default function AppSettingsPage() {
               )}
             </div>
           ))}
-        </div>
       </section>
       </div>
       )}
@@ -943,6 +1034,59 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         <Button variant="secondary" icon={BellRing} loading={escalating} onClick={runEscalation}>
           Run escalation now
         </Button>
+      </section>
+
+      {/* Notification routing — who gets what */}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <BellRing className="w-4 h-4 text-emerald-600" /> Notification Routing
+          </h3>
+          <Button icon={Save} loading={routingSaving} onClick={saveRoutingCfg}>Save routing</Button>
+        </div>
+        <p className="text-xs text-slate-500">
+          Control which notification kinds are sent, and which roles receive the role-targeted ones. Personal notices
+          (your sign-off step, a work order assigned to you) always go to the person concerned — routing can only switch
+          them off. Each recipient&apos;s own channel preferences (email, sound, desktop) still apply on top.
+        </p>
+        <div className="divide-y divide-slate-100">
+          {routingEvents.map((ev) => {
+            const r = routeFor(ev);
+            const activeRoles = r.roles ?? ev.defaultRoles;
+            return (
+              <div key={ev.event} className="py-3 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">{ev.label}</p>
+                    <p className="text-[11px] text-slate-500">{ev.desc}</p>
+                  </div>
+                  <Toggle checked={r.enabled !== false} onChange={(v) => setRoute(ev.event, { enabled: v })} ariaLabel={`${ev.label} enabled`} />
+                </div>
+                {r.enabled !== false && !ev.personal && ev.defaultRoles && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {ROLES.filter((rk) => rk !== "SUPER_ADMIN").map((rk) => {
+                      const on = (activeRoles ?? []).includes(rk);
+                      return (
+                        <button
+                          key={rk}
+                          onClick={() => toggleRouteRole(ev, rk)}
+                          className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                            on ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                          }`}
+                        >
+                          {ROLE_LABELS[rk] ?? rk}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {r.enabled !== false && !ev.personal && !ev.defaultRoles && (
+                  <p className="text-[10px] text-slate-400">Sent to whoever must sign the pending step (chain-driven).</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </section>
       </div>
       )}
