@@ -445,13 +445,31 @@ export default function AppSettingsPage() {
           Keys power the AI layers of the troubleshooting module. Stored encrypted; only a masked hint is ever shown.
           A platform environment variable overrides the key saved here.
         </p>
+        <div className="flex items-start gap-2 text-[11px] text-sky-800 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2">
+          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>
+            Configured providers form a <strong>failover chain</strong> in the order below: every AI diagnosis tries
+            the first configured provider, and moves to the next automatically when one runs out of free quota or
+            errors. Add more than one key and an exhausted free tier never stops a diagnosis.
+          </span>
+        </div>
         <div className="space-y-3">
-          {creds.map((c) => (
+          {creds.map((c, ci) => (
             <div key={c.provider} className="rounded-lg border border-slate-200 p-3 space-y-2.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <span className="text-xs font-semibold text-slate-900">{c.label}</span>
-                  <span className="text-[10px] text-slate-400 ml-2">{c.note}</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                      c.configured ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
+                    }`}
+                    title={`Failover priority ${ci + 1}`}
+                  >
+                    {ci + 1}
+                  </span>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-900">{c.label}</span>
+                    <span className="text-[10px] text-slate-400 ml-2">{c.note}</span>
+                  </div>
                 </div>
                 {c.configured ? (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 border-emerald-500/20">

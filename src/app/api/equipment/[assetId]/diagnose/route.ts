@@ -13,7 +13,7 @@ import { eq, or, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { diagnose } from "@/lib/diagnostics/engine";
 import { searchPassages, type Passage } from "@/lib/diagnostics/retrieval";
-import { getApiKey } from "@/lib/credentials";
+import { anyProviderConfigured } from "@/lib/diagnostics/providers";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -76,7 +76,7 @@ export async function GET(
     }
 
     // Whether the AI-assist layer can run (key configured in Settings or env).
-    const aiReady = !!(await getApiKey("GEMINI").catch(() => null));
+    const aiReady = await anyProviderConfigured().catch(() => false);
 
     return NextResponse.json({
       equipment: { id: e.id, name: e.name, assetId: e.assetId, category: e.category, status: e.status },

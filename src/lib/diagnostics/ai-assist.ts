@@ -14,7 +14,8 @@ import {
 import { desc, eq } from "drizzle-orm";
 import { diagnose, type Guide, type HistoryCase, type Component } from "./engine";
 import { searchPassages, type Passage } from "./retrieval";
-import { generateJson, generateJsonChat, type GeminiUsage, type GeminiImage, type GeminiTurn } from "./gemini";
+import { type GeminiUsage, type GeminiImage, type GeminiTurn } from "./gemini";
+import { generateJsonFailover } from "./providers";
 
 // ── Evidence pack ────────────────────────────────────────────────────────────
 
@@ -239,9 +240,9 @@ export async function aiDiagnose(
     ...pack.items.map((i) => `[${i.id}] (${i.kind}) ${i.text}`),
   ].join("\n");
 
-  const result = await generateJson<RawResponse>({
+  const result = await generateJsonFailover<RawResponse>({
     system: SYSTEM_CONTRACT,
-    user,
+    contents: [{ role: "user", parts: [{ text: user }] }],
     schema: RESPONSE_SCHEMA,
     maxOutputTokens: 3072,
   });
@@ -412,7 +413,7 @@ export async function aiChatTurn(opts: {
 
   const contents: GeminiTurn[] = [...historyToContents(history), { role: "user", parts: newParts }];
 
-  const result = await generateJsonChat<RawChatTurn>({ system, contents, schema: CHAT_RESPONSE_SCHEMA, maxOutputTokens: 2048 });
+  const result = await generateJsonFailover<RawChatTurn>({ system, contents, schema: CHAT_RESPONSE_SCHEMA, maxOutputTokens: 2048 });
   const turn = validateChatTurn(result.data, pack);
   return { turn, model: result.model, usage: result.usage, evidenceCount: pack.items.length };
 }

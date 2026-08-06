@@ -8,8 +8,13 @@ import { apiCredentials } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
+// Declaration order IS the AI failover order: when a diagnosis call hits a
+// quota/auth error on one provider, the next configured one takes over.
 export const PROVIDERS = {
   GEMINI: { label: "Google Gemini", envVar: "GEMINI_API_KEY", note: "Free tier available (AI Studio)" },
+  GROQ: { label: "Groq (Llama)", envVar: "GROQ_API_KEY", note: "Free tier, very fast — console.groq.com" },
+  OPENROUTER: { label: "OpenRouter", envVar: "OPENROUTER_API_KEY", note: "Free models available — openrouter.ai" },
+  MISTRAL: { label: "Mistral", envVar: "MISTRAL_API_KEY", note: "Free tier — console.mistral.ai" },
   ANTHROPIC: { label: "Anthropic Claude", envVar: "ANTHROPIC_API_KEY", note: "Pay-as-you-go credits" },
 } as const;
 export type Provider = keyof typeof PROVIDERS;
@@ -99,23 +104,44 @@ export async function listCredentials(): Promise<CredentialStatus[]> {
 // Cheap, no-cost liveness checks against each provider's metadata endpoint.
 export async function testApiKey(provider: Provider, key: string): Promise<{ ok: boolean; detail: string }> {
   try {
-    if (provider === "GEMINI") {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${encodeURIComponent(key)}`,
-        { signal: AbortSignal.timeout(10_000) },
-      );
-      if (res.ok) return { ok: true, detail: "Key accepted by Google AI." };
-      const body = await res.json().catch(() => null);
-      return { ok: false, detail: body?.error?.message ?? `Rejected (HTTP ${res.status}).` };
+    let res: Response;
+    switch (provider) {
+      case "GEMINI":
+        res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${encodeURIComponent(key)}`,
+          { signal: AbortSignal.timeout(10_000) },
+        );
+        break;
+      case "GROQ":
+        res = await fetch("https://api.groq.com/openai/v1/models", {
+          headers: { Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        break;
+      case "OPENROUTER":
+        // /key returns the key's own metadata (limits/usage) — authoritative
+        // validity check, free.
+        res = await fetch("https://openrouter.ai/api/v1/key", {
+          headers: { Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        break;
+      case "MISTRAL":
+        res = await fetch("https://api.mistral.ai/v1/models", {
+          headers: { Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        break;
+      case "ANTHROPIC":
+        res = await fetch("https://api.anthropic.com/v1/models?limit=1", {
+          headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+          signal: AbortSignal.timeout(10_000),
+        });
+        break;
     }
-    // ANTHROPIC — models list is a free metadata endpoint.
-    const res = await fetch("https://api.anthropic.com/v1/models?limit=1", {
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (res.ok) return { ok: true, detail: "Key accepted by Anthropic." };
+    if (res.ok) return { ok: true, detail: `Key accepted by ${PROVIDERS[provider].label}.` };
     const body = await res.json().catch(() => null);
-    return { ok: false, detail: body?.error?.message ?? `Rejected (HTTP ${res.status}).` };
+    return { ok: false, detail: body?.error?.message ?? body?.message ?? `Rejected (HTTP ${res.status}).` };
   } catch (err) {
     return { ok: false, detail: err instanceof Error ? err.message : "Network error." };
   }
