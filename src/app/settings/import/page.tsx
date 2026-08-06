@@ -3,9 +3,10 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Database, Download, Upload, Loader2, ShieldAlert, CheckCircle2, AlertTriangle, Copy, Check } from "lucide-react";
+import { Database, Download, Upload, Loader2, ShieldAlert, CheckCircle2, AlertTriangle, Copy, Check, Cloud, X, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 
 type EntityKey = "equipment" | "schedule" | "users" | "components";
@@ -41,11 +42,40 @@ export default function DataImportPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
+  // SharePoint source (live Excel registers pulled via Microsoft Graph).
+  type SpFile = { id: string; name: string; folder: string | null; lastModified: string | null; lastModifiedBy: string | null };
+  const [spFile, setSpFile] = useState<SpFile | null>(null);
+  const [spOpen, setSpOpen] = useState(false);
+  const [spFiles, setSpFiles] = useState<SpFile[] | null>(null);
+  const [spLoading, setSpLoading] = useState(false);
+
   const reset = () => {
     setFile(null);
+    setSpFile(null);
     setPreview(null);
     setCommitted(null);
     if (fileInput.current) fileInput.current.value = "";
+  };
+
+  const openSharepoint = async () => {
+    setSpOpen(true);
+    if (spFiles) return;
+    setSpLoading(true);
+    try {
+      const res = await fetch("/api/sharepoint/files");
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not reach SharePoint.");
+        setSpOpen(false);
+        return;
+      }
+      setSpFiles(d.files ?? []);
+    } catch {
+      toast.error("Could not reach SharePoint.");
+      setSpOpen(false);
+    } finally {
+      setSpLoading(false);
+    }
   };
 
   const switchTab = (t: EntityKey) => {
@@ -54,16 +84,25 @@ export default function DataImportPage() {
   };
 
   const send = async (mode: "preview" | "commit") => {
-    if (!file) {
-      toast.error("Choose a CSV or Excel file first.");
+    if (!file && !spFile) {
+      toast.error("Choose a file — upload one or pick it from SharePoint.");
       return;
     }
     setBusy(mode);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("mode", mode);
-      const res = await fetch(`/api/import/${tab}`, { method: "POST", body: fd });
+      let res: Response;
+      if (spFile) {
+        res = await fetch("/api/sharepoint/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId: spFile.id, entity: tab, mode }),
+        });
+      } else {
+        const fd = new FormData();
+        fd.append("file", file!);
+        fd.append("mode", mode);
+        res = await fetch(`/api/import/${tab}`, { method: "POST", body: fd });
+      }
       const d = await res.json();
       if (!res.ok) {
         toast.error(d.error || "Import failed.");
@@ -152,15 +191,30 @@ export default function DataImportPage() {
             accept=".csv,.xlsx,.xls"
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
+              setSpFile(null);
               setPreview(null);
               setCommitted(null);
             }}
             className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-slate-200 file:bg-slate-50 file:text-slate-700 file:text-xs file:font-semibold hover:file:bg-slate-100"
           />
-          <Button variant="secondary" icon={Upload} loading={busy === "preview"} onClick={() => send("preview")} disabled={!file}>
+          <Button variant="secondary" icon={Cloud} onClick={openSharepoint}>
+            From SharePoint
+          </Button>
+          <Button variant="secondary" icon={Upload} loading={busy === "preview"} onClick={() => send("preview")} disabled={!file && !spFile}>
             Preview
           </Button>
         </div>
+
+        {spFile && (
+          <div className="flex items-center gap-2 text-xs bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 w-fit">
+            <FileSpreadsheet className="w-4 h-4 text-sky-600 shrink-0" />
+            <span className="text-slate-800 font-medium">{spFile.name}</span>
+            <span className="text-slate-400">from SharePoint{spFile.lastModified ? ` · updated ${spFile.lastModified.slice(0, 10)}` : ""}</span>
+            <button onClick={() => setSpFile(null)} className="p-1 rounded text-slate-400 hover:text-slate-700" aria-label="Clear SharePoint file">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Preview */}
         {preview && (
@@ -254,6 +308,44 @@ export default function DataImportPage() {
           </div>
         )}
       </section>
+
+      {/* SharePoint file picker */}
+      <Modal open={spOpen} onClose={() => setSpOpen(false)} title="Import from SharePoint" subtitle="Excel files on the connected site — newest first">
+        {spLoading ? (
+          <div className="py-10 flex justify-center text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          </div>
+        ) : !spFiles || spFiles.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-400">No Excel files found on the connected site.</p>
+        ) : (
+          <div className="max-h-96 overflow-y-auto -mx-1 px-1 space-y-1.5">
+            {spFiles.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => {
+                  setSpFile(f);
+                  setFile(null);
+                  if (fileInput.current) fileInput.current.value = "";
+                  setPreview(null);
+                  setCommitted(null);
+                  setSpOpen(false);
+                }}
+                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-sm font-medium text-slate-900 truncate">{f.name}</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5 ml-6">
+                  {f.folder && f.folder !== "/" ? `${f.folder} · ` : ""}
+                  {f.lastModified ? `updated ${f.lastModified.slice(0, 10)}` : ""}
+                  {f.lastModifiedBy ? ` by ${f.lastModifiedBy}` : ""}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
