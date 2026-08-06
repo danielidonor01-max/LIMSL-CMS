@@ -61,6 +61,21 @@ export async function verifyEmail(): Promise<SendResult> {
   }
 }
 
+// The From ADDRESS must be the authenticated mailbox — Gmail (and any
+// DMARC-checking receiver) treats a From at a different domain than the
+// authenticated sender as spoofing, which is a straight ticket to spam. The
+// display name from EMAIL_FROM is kept; only a mismatched address is replaced.
+function alignedFrom(): string {
+  const from = config.emailFrom;
+  const user = config.smtpUser;
+  if (!user.includes("@")) return from;
+  const m = from.match(/^(.*)<([^>]+)>\s*$/);
+  const name = m ? m[1].trim() : "LIMSL CMS";
+  const addr = m ? m[2].trim() : from.trim();
+  if (addr.toLowerCase() === user.toLowerCase()) return from;
+  return `${name || "LIMSL CMS"} <${user}>`;
+}
+
 export async function sendEmail(to: string, title: string, body: string, linkPath?: string | null): Promise<SendResult> {
   try {
     const base = config.appUrl.replace(/\/$/, "");
@@ -74,7 +89,7 @@ export async function sendEmail(to: string, title: string, body: string, linkPat
       <p style="font-size:11px;color:#94a3b8;margin:0">LIMSL CMS — automated maintenance notification. Please do not reply to this email.</p>
     </div>`;
     const info = await getTransport().sendMail({
-      from: config.emailFrom,
+      from: alignedFrom(),
       to,
       subject: `[LIMSL CMS] ${title}`,
       text,
