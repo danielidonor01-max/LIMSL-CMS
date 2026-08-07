@@ -13,6 +13,8 @@ import {
   History,
   Pencil,
   Plus,
+  Stethoscope,
+  AlertTriangle,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
@@ -231,6 +233,11 @@ export default function EquipmentList() {
                                 ariaLabel={`Actions for ${eq.name}`}
                                 items={[
                                   { label: "Digital Twin", icon: Eye, href: `/equipment/${urlParam}` },
+                                  // The diagnostic engine was reachable only via
+                                  // a banner on the twin page — the most valuable
+                                  // feature in the product, effectively hidden.
+                                  { label: "Troubleshoot", icon: Stethoscope, href: `/equipment/${urlParam}/troubleshoot` },
+                                  { label: "Report Fault", icon: AlertTriangle, href: `/corrective/new?equipmentId=${eq.id}`, danger: true },
                                   { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
                                   { label: "Edit", icon: Pencil, href: `/equipment/${urlParam}/edit` },
                                   { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${urlParam}` },

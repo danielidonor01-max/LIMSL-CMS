@@ -160,6 +160,22 @@ none. Migrate them when those forms are next touched for real work.
 
 ---
 
+### Phase 3 — status: SHIPPED
+QR now lands on `/equipment/[assetId]/do` — report a fault · start/continue a
+job · why does it keep failing — each carrying the machine, so the three worst
+journeys drop from 6–12 taps to 2 · "Your jobs" on the dashboard backed by
+`/api/work-orders/mine` · local drafts with restore-on-return on the PM
+checklist and the RCA (`lib/use-draft.ts`), cleared on successful submit ·
+checklist OK/NOT OK/NA rebuilt as a 44px segmented control · offline banner ·
+Troubleshoot and Report Fault added to the equipment row menu.
+
+**Not done in this phase (deliberate):** queuing a submit while offline. The
+banner tells the truth and drafts survive, but a POST attempted with no
+connection still fails and must be retried by the user. Real offline queueing
+belongs with the PWA work in Phase 6, where a service worker can own it.
+
+---
+
 ## PHASE 4 — Maintenance capability *(≈2 weeks)*
 *Converts the system from a compliant record-keeper into something that prevents failures.*
 

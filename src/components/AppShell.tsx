@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ShieldAlert, Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
+import OfflineBanner from "./OfflineBanner";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
 import QuickActions from "./QuickActions";
@@ -33,6 +34,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <Sidebar mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
       <div className="flex-1 min-w-0 flex flex-col">
+        <OfflineBanner />
         <div className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-2 px-4 lg:px-6">
           <button
             onClick={() => setNavOpen(true)}

@@ -22,6 +22,7 @@ import SignoffChain from "@/components/SignoffChain";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "sonner";
+import { useDraft } from "@/lib/use-draft";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -153,6 +154,27 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     );
   };
 
+  // The 5 Whys plus an action list is a long sit-down on a phone or a laptop in
+  // the workshop; keep a local draft so a dropped connection or a closed tab
+  // doesn't cost the whole investigation.
+  const { draft, clearDraft, dismissDraft } = useDraft(
+    recordId ? `rca:${recordId}` : null,
+    { why1, why2, why3, why4, why5, rootCauseCategory, verifiedRootCause, actions },
+  );
+  const restoreDraft = () => {
+    if (!draft) return;
+    setWhy1(draft.why1);
+    setWhy2(draft.why2);
+    setWhy3(draft.why3);
+    setWhy4(draft.why4);
+    setWhy5(draft.why5);
+    setRootCauseCategory(draft.rootCauseCategory);
+    setVerifiedRootCause(draft.verifiedRootCause);
+    setActions(draft.actions);
+    dismissDraft();
+    toast.success("Your unsaved analysis was restored.");
+  };
+
   // The RCA fields as the API expects them. Close-out sends these TOO — a
   // technician who fills the 5 Whys and closes out without first pressing
   // "Save RCA Analysis" used to lose the entire analysis silently.
@@ -177,6 +199,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         toast.error(d.error || "Couldn't save the RCA — check your connection and try again.");
         return;
       }
+      clearDraft();
       toast.success("RCA and corrective actions saved.");
     } catch {
       toast.error("Couldn't save the RCA — check your connection and try again.");
@@ -232,6 +255,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         toast.error(d.error || "Couldn't close out the record — your entries are still here, try again.");
         return;
       }
+      clearDraft();
       toast.success("Breakdown closed out.");
       router.push("/corrective");
     } catch {
@@ -308,6 +332,24 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </p>
             </div>
           </div>
+
+          {/* Offer back an unfinished investigation rather than losing it. */}
+          {draft && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs text-amber-900 flex-1 min-w-[12rem]">
+                You have an unsaved root-cause analysis for this breakdown on this device.
+              </p>
+              <button
+                onClick={restoreDraft}
+                className="min-h-11 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold"
+              >
+                Restore it
+              </button>
+              <button onClick={dismissDraft} className="min-h-11 px-3 text-xs font-semibold text-amber-800 hover:text-amber-950">
+                Discard
+              </button>
+            </div>
+          )}
 
           {/* Root Cause Analysis (RCA) Card */}
           <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-5">

@@ -50,6 +50,18 @@ type Audit = {
   userName: string | null;
   timestamp: string;
 };
+type MyJob = {
+  id: string;
+  workOrderNumber: string;
+  type: string;
+  status: string;
+  priority: string;
+  title: string;
+  plannedDate: string | null;
+  equipmentName: string | null;
+  assetId: string | null;
+  overdue: boolean;
+};
 
 const iconMap: Record<string, React.ElementType> = {
   AVAILABILITY: Activity,
@@ -74,6 +86,11 @@ export default function Home() {
   const { data: activity } = useApi<Audit[]>("/api/audit", []);
   const { data: mine } = useApi<{ items: SignoffItem[] }>("/api/signoffs/mine", { items: [] });
   const signoffs = mine.items ?? [];
+  const { data: myWork } = useApi<{ items: MyJob[]; openCount: number; overdueCount: number }>(
+    "/api/work-orders/mine",
+    { items: [], openCount: 0, overdueCount: 0 },
+  );
+  const myJobs = myWork.items ?? [];
   const loading = statsLoading;
 
 
@@ -100,6 +117,50 @@ export default function Home() {
                 {firstName ? `Welcome, ${firstName}` : "Welcome"}
               </h1>
               <p className="text-xs text-slate-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Your jobs — the technician's dashboard used to be an executive KPI
+            board with an empty approver's card. This is their actual work. */}
+        {myJobs.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2 flex-wrap">
+              <ClipboardList className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-sm font-bold text-slate-900">Your jobs</h3>
+              <span className="text-xs text-slate-500">
+                {myWork.openCount} open
+                {myWork.overdueCount > 0 && (
+                  <span className="text-rose-600 font-semibold"> · {myWork.overdueCount} overdue</span>
+                )}
+              </span>
+              <Link href="/work-orders" className="ml-auto text-xs text-emerald-700 hover:underline">
+                All work orders
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {myJobs.slice(0, 5).map((j) => (
+                <Link
+                  key={j.id}
+                  href={j.type === "PREVENTIVE" || j.type === "INSPECTION" ? `/work-orders/${j.id}/pm-checklist` : `/work-orders/${j.id}`}
+                  className="flex items-center justify-between gap-3 px-5 py-3 min-h-[60px] hover:bg-slate-50 transition-colors group"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {j.title}
+                      {j.overdue && (
+                        <span className="ml-2 text-[11px] font-semibold text-rose-700">overdue</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">
+                      <span className="font-mono">{j.workOrderNumber}</span>
+                      {j.equipmentName ? ` · ${j.equipmentName}` : ""}
+                      {j.plannedDate ? ` · due ${formatDate(j.plannedDate)}` : ""}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0" />
+                </Link>
+              ))}
             </div>
           </div>
         )}

@@ -11,11 +11,14 @@ import {
   ShieldAlert,
   ShieldCheck,
   Save,
+  RotateCcw,
 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+import { useDraft } from "@/lib/use-draft";
 
 type Item = { item: string; status: string; remarks: string };
 type User = { id: string; name: string; role: string };
@@ -85,6 +88,29 @@ export default function PMChecklistPage() {
   const [supervisorSignature, setSupervisorSignature] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [attested, setAttested] = useState(false);
+
+  // ~30 inputs filled standing at a machine on workshop wifi. Losing them to a
+  // backgrounded browser or a dropped connection cost the technician the whole
+  // visit, so the form keeps a local draft and offers it back on return.
+  const draftValue = {
+    visual, functional, lubrication, electrical,
+    observations, correctiveActionRequired, actionDescription, sparePartsNeeded, nextPMDate,
+  };
+  const { draft, clearDraft, dismissDraft } = useDraft(id ? `pm:${id}` : null, draftValue);
+  const restoreDraft = () => {
+    if (!draft) return;
+    setVisual(draft.visual);
+    setFunctional(draft.functional);
+    setLubrication(draft.lubrication);
+    setElectrical(draft.electrical);
+    setObservations(draft.observations);
+    setCorrectiveActionRequired(draft.correctiveActionRequired);
+    setActionDescription(draft.actionDescription);
+    setSparePartsNeeded(draft.sparePartsNeeded);
+    setNextPMDate(draft.nextPMDate);
+    dismissDraft();
+    toast.success("Your unsaved checklist was restored.");
+  };
 
   useEffect(() => {
     async function load() {
@@ -163,6 +189,8 @@ export default function PMChecklistPage() {
         const d = await res.json();
         throw new Error(d.error || "Submit failed");
       }
+      clearDraft();
+      toast.success("PM checklist filed.");
       router.push(`/work-orders/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");
@@ -212,6 +240,29 @@ export default function PMChecklistPage() {
             <p className="text-xs text-slate-500 font-mono">{wo.workOrderNumber} · Complete & sign off</p>
           </div>
         </div>
+
+        {/* Offer back what the last visit left unsaved — never apply it
+            silently, since a stale draft could overwrite a fresh start. */}
+        {draft && (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <RotateCcw className="w-4 h-4 text-amber-700 shrink-0" />
+            <p className="text-xs text-amber-900 flex-1 min-w-[12rem]">
+              You have an unfinished checklist for this work order saved on this device.
+            </p>
+            <button
+              onClick={restoreDraft}
+              className="min-h-11 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold"
+            >
+              Restore it
+            </button>
+            <button
+              onClick={dismissDraft}
+              className="min-h-11 px-3 text-xs font-semibold text-amber-800 hover:text-amber-950"
+            >
+              Start fresh
+            </button>
+          </div>
+        )}
 
         {/* 1. Equipment info */}
         <div className={sectionCls}>
@@ -456,23 +507,32 @@ function ChecklistEditor({
         {title}
       </h3>
       <div className="space-y-2">
+        {/* This is the most-tapped control in the product — sixty-plus of them
+            per checklist, pressed on a phone, often with gloves on. They were
+            22px tall and 4px apart. Full-width segmented control at the touch
+            floor, stacked on small screens. */}
         {items.map((it, i) => (
-          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="text-xs text-slate-700 flex-1">{it.item}</span>
-            <div className="flex gap-1">
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+            <span className="text-sm sm:text-xs text-slate-700 flex-1">{it.item}</span>
+            <div
+              className="flex gap-1 w-full sm:w-auto shrink-0"
+              role="group"
+              aria-label={`Result for ${it.item}`}
+            >
               {STATUS_OPTIONS.map((s) => (
                 <button
                   key={s}
                   type="button"
+                  aria-pressed={it.status === s}
                   onClick={() => onChange(i, { status: s })}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all ${
+                  className={`flex-1 sm:flex-none sm:min-w-[68px] min-h-11 px-3 rounded-lg text-xs font-semibold border transition-colors ${
                     it.status === s
                       ? s === "OK"
-                        ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                        ? "bg-emerald-600 text-white border-emerald-600"
                         : s === "NOT_OK"
-                          ? "bg-rose-500/15 text-rose-600 border-rose-500/30"
-                          : "bg-slate-500/15 text-slate-700 border-slate-500/30"
-                      : "bg-slate-100 text-slate-500 border-slate-200 hover:text-slate-700"
+                          ? "bg-rose-600 text-white border-rose-600"
+                          : "bg-slate-600 text-white border-slate-600"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
                   }`}
                 >
                   {s === "NOT_OK" ? "NOT OK" : s}
@@ -483,7 +543,8 @@ function ChecklistEditor({
               value={it.remarks}
               onChange={(e) => onChange(i, { remarks: e.target.value })}
               placeholder="Remarks"
-              className="sm:w-40 px-2 py-1 bg-slate-100 border border-slate-200 rounded-md text-[11px] text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/40"
+              aria-label={`Remarks for ${it.item}`}
+              className="sm:w-40 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm sm:text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
             />
           </div>
         ))}
