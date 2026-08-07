@@ -206,15 +206,29 @@ metric), DECOMMISSIONED assets leave the availability denominator,
 AWAITING_PARTS counts as unavailable, and backlog reports how many rows carried
 a real estimate. 175 tests green.
 
+### Phase 4b — status: SHIPPED
+- **Schedule adherence**: `daysLate` stamped at PM completion; compliance now
+  means completed AND inside a frequency-scaled window (weekly 3d → annual 30d),
+  so a PM done six months late no longer counts as met.
+- **Failure taxonomy** (`lib/maintenance/failure-codes.ts`): ~30 coded failure
+  modes narrowed by fault type, six detection methods, plus `componentId` on
+  corrective records. A coded mode is required at close-out ("Not determined" is
+  a valid honest answer). This is what makes "how many bearing failures across
+  the CNC fleet this year" answerable at all.
+- **Criticality now drives strategy** (`lib/maintenance/adherence.ts`): default
+  PM frequency, work-order priority and escalation lead all derive from it
+  instead of it being a badge colour. Clients can still override.
+
 **Still open in Phase 4 — not done, do not assume:**
-- 4.2 schedule *adherence* (`daysLate`, ±N-day compliance window). Compliance is
-  still pass/fail on completion, so a PM done six months late counts as met.
-- 4.3 failure coding + `componentId` on corrective records (the two fields that
-  buy reliability analysis).
-- 4.4 remaining KPI work: the two contradictory Availability definitions on one
-  page, planned downtime excluded from availability, the PTW-compliance metric
-  that cannot go down, and capturing real labour hours.
-- 4.5 deferred-maintenance register · 4.6 criticality driving frequency/priority.
+- Remaining KPI definitions: two contradictory Availability figures on one page,
+  planned (PM) downtime still excluded from availability, the PTW-compliance
+  metric that cannot go down, and real labour hours (so backlog stops being an
+  assumption).
+- Deferred-maintenance register: schema and approval fields exist
+  (`deferredReason`/`deferredBy`/`deferredReviewDate`, status `DEFERRED`) but
+  **no UI or API writes them yet** — deferral still happens by silence.
+- `suggestedPmFrequency` is not yet applied at equipment create/schedule
+  generation (only priority is wired).
 
 ---
 

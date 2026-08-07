@@ -21,6 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { getWorkSettings } from "@/lib/settings";
 import { plannedHoursForMonth } from "@/lib/worktime";
+import { adherenceOf } from "@/lib/maintenance/adherence";
 import { reconcileSchedule } from "@/lib/schedule";
 
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -68,7 +69,13 @@ export async function computeKpis(now = new Date()) {
     const mttr = breakdowns.length ? downtimeHours / breakdowns.length : null;
 
     const pmSched = sched.filter((s) => s.activityType === "PM" && inMonth(s.plannedDate, key));
-    const pmDone = pmSched.filter((s) => s.status === "COMPLETED").length;
+    // Compliant = completed AND within the adherence window for its frequency.
+    // Counting any completion, however late, made this metric unfalsifiable.
+    const pmDone = pmSched.filter(
+      (s) =>
+        s.status === "COMPLETED" &&
+        (!s.completedDate || adherenceOf(s.plannedDate, s.completedDate, s.maintenanceFrequency).compliant),
+    ).length;
     const pmCompliance = pmSched.length ? pmDone / pmSched.length : null;
 
     const insSched = sched.filter((s) => s.activityType === "INS" && inMonth(s.plannedDate, key));

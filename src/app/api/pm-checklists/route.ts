@@ -17,6 +17,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { generateNextOccurrence } from "@/lib/schedule";
+import { adherenceOf } from "@/lib/maintenance/adherence";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
@@ -130,9 +131,19 @@ export async function POST(request: Request) {
       // Complete the linked schedule activity and spawn its next occurrence so
       // the PM programme perpetuates itself instead of emptying out.
       if (wo?.scheduleId) {
+        // Record HOW LATE, not just that it happened — a PM planned in January
+        // and done in June is not a compliant monthly PM.
+        const [before] = await tx
+          .select()
+          .from(maintenanceSchedule)
+          .where(eq(maintenanceSchedule.id, wo.scheduleId))
+          .limit(1);
+        const late = before
+          ? adherenceOf(before.plannedDate, today, before.maintenanceFrequency).daysLate
+          : null;
         await tx
           .update(maintenanceSchedule)
-          .set({ status: "COMPLETED", completedDate: today })
+          .set({ status: "COMPLETED", completedDate: today, daysLate: late })
           .where(eq(maintenanceSchedule.id, wo.scheduleId));
         const [schedRow] = await tx
           .select()

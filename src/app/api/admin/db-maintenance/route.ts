@@ -51,6 +51,9 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["isolation_points_permit_idx", "CREATE INDEX IF NOT EXISTS isolation_points_permit_idx ON isolation_points (permit_id)"],
+  // Phase 4b — schedule adherence, deferral register, failure taxonomy.
+  ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
+  ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
   ["equipment_asset_id_idx", "CREATE INDEX IF NOT EXISTS equipment_asset_id_idx ON equipment (asset_id)"],
   ["equipment_documents_equipment_idx", "CREATE INDEX IF NOT EXISTS equipment_documents_equipment_idx ON equipment_documents (equipment_id)"],
   ["maintenance_schedule_equipment_idx", "CREATE INDEX IF NOT EXISTS maintenance_schedule_equipment_idx ON maintenance_schedule (equipment_id)"],

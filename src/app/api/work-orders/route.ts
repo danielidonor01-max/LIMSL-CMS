@@ -13,6 +13,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { notify } from "@/lib/notifications";
+import { suggestedWoPriority } from "@/lib/maintenance/adherence";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
@@ -68,13 +69,22 @@ export async function POST(request: Request) {
     const id = nanoid();
     const workOrderNumber = await nextDocNumber("WO");
 
+    // Criticality was a badge colour consumed by nothing. A job on a machine
+    // that stops production should not default to the same priority as one on
+    // a bench grinder — the client can still override.
+    const [eqRow] = await db
+      .select({ criticality: equipment.criticality })
+      .from(equipment)
+      .where(eq(equipment.id, body.equipmentId))
+      .limit(1);
+
     const newWo = {
       id,
       workOrderNumber,
       type: body.type,
       equipmentId: body.equipmentId,
       scheduleId: body.scheduleId || null,
-      priority: body.priority || "MEDIUM",
+      priority: body.priority || suggestedWoPriority(eqRow?.criticality),
       status: "OPEN",
       title: body.title,
       description: body.description || "",

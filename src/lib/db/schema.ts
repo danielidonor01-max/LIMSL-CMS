@@ -99,6 +99,19 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   responsiblePersonName: text("responsible_person_name"),
   status: text("status").notNull().default("SCHEDULED"), // SCHEDULED | COMPLETED | OVERDUE | MISSED | RESCHEDULED
   completedDate: text("completed_date"),
+  // Schedule adherence. "Completed" alone says nothing about WHEN: a PM planned
+  // for January and done in June counted as fully compliant, which made the
+  // headline ISO metric unfalsifiable. daysLate is stamped at completion and
+  // compliance is judged against a frequency-scaled window.
+  daysLate: integer("days_late"),
+  // A deferral is a decision someone must own — a risk accepted, approved and
+  // reviewed. Without it, deferral happens by silence and never appears in any
+  // register. Status gains DEFERRED alongside SCHEDULED/COMPLETED/OVERDUE.
+  deferredReason: text("deferred_reason"),
+  deferredById: text("deferred_by_id"),
+  deferredByName: text("deferred_by_name"),
+  deferredAt: text("deferred_at"),
+  deferredReviewDate: text("deferred_review_date"),
   workOrderId: text("work_order_id"),
   remarks: text("remarks"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -279,6 +292,15 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   rcaTool: text("rca_tool"), // FIVE_WHYS | FISHBONE | FTA | FMEA | PROCESS_MAPPING
   rcaAnalysis: text("rca_analysis"), // JSON structured analysis
   rootCauseCategory: text("root_cause_category"), // MECHANICAL | ELECTRICAL | HUMAN | PROCEDURAL | ENVIRONMENTAL | DESIGN
+  // Failure taxonomy (ISO 14224-lite). Without these, every failure was one of
+  // eight fault types on a machine-level record: you could not see that the
+  // same contactor keeps welding shut across three welding sets, or that one
+  // CNC has a recurring hydraulic-pump pattern. Two coded fields plus a link to
+  // the component registry buy the entire reliability capability — a full
+  // five-level hierarchy would be bloat for 33 assets.
+  failureMode: text("failure_mode"), // coded — see lib/maintenance/failure-codes.ts
+  detectionMethod: text("detection_method"), // OPERATOR | PM_INSPECTION | BREAKDOWN | CONDITION_MONITORING | CALIBRATION | AUDIT
+  componentId: text("component_id").references(() => componentRegistry.id),
   verifiedRootCause: text("verified_root_cause"),
   // Corrective Actions
   correctiveActions: text("corrective_actions"), // JSON [{action, responsible, deadline, status}]

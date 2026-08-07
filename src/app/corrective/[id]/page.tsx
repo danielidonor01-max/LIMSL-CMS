@@ -23,6 +23,7 @@ import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
+import { failureModesFor, DETECTION_METHODS } from "@/lib/maintenance/failure-codes";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +46,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [why4, setWhy4] = useState("");
   const [why5, setWhy5] = useState("");
   const [rootCauseCategory, setRootCauseCategory] = useState("MECHANICAL");
+  const [failureMode, setFailureMode] = useState("");
+  const [detectionMethod, setDetectionMethod] = useState("");
   const [verifiedRootCause, setVerifiedRootCause] = useState("");
 
   // Corrective Actions (CATL)
@@ -89,6 +92,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             setWhy5(parsed.why5 || "");
           }
           if (data.rootCauseCategory) setRootCauseCategory(data.rootCauseCategory);
+          if (data.failureMode) setFailureMode(data.failureMode);
+          if (data.detectionMethod) setDetectionMethod(data.detectionMethod);
           if (data.verifiedRootCause) setVerifiedRootCause(data.verifiedRootCause);
 
           // Load Actions
@@ -159,7 +164,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   // doesn't cost the whole investigation.
   const { draft, clearDraft, dismissDraft } = useDraft(
     recordId ? `rca:${recordId}` : null,
-    { why1, why2, why3, why4, why5, rootCauseCategory, verifiedRootCause, actions },
+    { why1, why2, why3, why4, why5, rootCauseCategory, failureMode, detectionMethod, verifiedRootCause, actions },
   );
   const restoreDraft = () => {
     if (!draft) return;
@@ -169,6 +174,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     setWhy4(draft.why4);
     setWhy5(draft.why5);
     setRootCauseCategory(draft.rootCauseCategory);
+    setFailureMode(draft.failureMode);
+    setDetectionMethod(draft.detectionMethod);
     setVerifiedRootCause(draft.verifiedRootCause);
     setActions(draft.actions);
     dismissDraft();
@@ -182,6 +189,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     rcaTool,
     rcaAnalysis: { why1, why2, why3, why4, why5 },
     rootCauseCategory,
+    failureMode,
+    detectionMethod,
     verifiedRootCause,
     correctiveActions: actions,
   });
@@ -415,6 +424,31 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   placeholder="Fifth level root cause..."
                   className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
+              </div>
+            </div>
+
+            {/* Coded failure taxonomy. Free-text root cause describes ONE
+                event; codes let the same failure be counted across the fleet. */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase">Failure Mode</span>
+                <Select value={failureMode} onChange={(v) => setFailureMode(v)} className="w-full" ariaLabel="Failure mode">
+                  <option value="">Select the failure mode…</option>
+                  {failureModesFor(record?.faultType).map((m) => (
+                    <option key={m.code} value={m.code}>{m.label}</option>
+                  ))}
+                </Select>
+                <p className="text-[11px] text-slate-400">Required at close-out — this is what makes recurring failures visible.</p>
+              </div>
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase">How was it detected?</span>
+                <Select value={detectionMethod} onChange={(v) => setDetectionMethod(v)} className="w-full" ariaLabel="Detection method">
+                  <option value="">Select…</option>
+                  {DETECTION_METHODS.map((d) => (
+                    <option key={d.code} value={d.code}>{d.label}</option>
+                  ))}
+                </Select>
+                <p className="text-[11px] text-slate-400">Shows whether the PM programme is catching faults before they stop the machine.</p>
               </div>
             </div>
 

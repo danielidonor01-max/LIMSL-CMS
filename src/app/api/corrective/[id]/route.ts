@@ -80,6 +80,17 @@ export async function PATCH(
           { status: 409 },
         );
       }
+      const failureMode = String(body.failureMode ?? record.failureMode ?? "").trim();
+      if (!failureMode) {
+        return NextResponse.json(
+          {
+            error:
+              "Select the failure mode before close-out — a coded mode is what lets recurring failures " +
+              "be seen across the fleet. Choose \"Not determined\" if it genuinely could not be established.",
+          },
+          { status: 400 },
+        );
+      }
       const rootCause = String(body.verifiedRootCause ?? record.verifiedRootCause ?? "").trim();
       if (!rootCause) {
         return NextResponse.json(
@@ -139,6 +150,11 @@ export async function PATCH(
       rcaTool: body.rcaTool ?? record.rcaTool,
       rcaAnalysis: body.rcaAnalysis ? JSON.stringify(body.rcaAnalysis) : record.rcaAnalysis,
       rootCauseCategory: body.rootCauseCategory ?? record.rootCauseCategory,
+      // Coded failure taxonomy — free text can't aggregate. These are what make
+      // "how many bearing failures across the CNC fleet this year" answerable.
+      failureMode: body.failureMode ?? record.failureMode,
+      detectionMethod: body.detectionMethod ?? record.detectionMethod,
+      componentId: body.componentId ?? record.componentId,
       verifiedRootCause: body.verifiedRootCause ?? record.verifiedRootCause,
       
       // Corrective & Preventive actions (CATL)
