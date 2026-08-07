@@ -19,6 +19,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import Select from "@/components/Select";
+import SignoffChain from "@/components/SignoffChain";
 
 export default function NonConformityRegister() {
   const { data: ncList, loading, refresh } = useApi<any[]>("/api/non-conformities", []);
@@ -64,14 +65,18 @@ export default function NonConformityRegister() {
         }),
       });
 
-      if (res.ok) {
-        setActiveNc(null);
-        setRootCause("");
-        setCorrectiveAction("");
-        loadNCs();
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Couldn't close the non-conformity.");
+        return;
       }
-    } catch (err) {
-      console.error(err);
+      toast.success("Non-conformity closed out.");
+      setActiveNc(null);
+      setRootCause("");
+      setCorrectiveAction("");
+      loadNCs();
+    } catch {
+      toast.error("Couldn't close the non-conformity — check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -210,8 +215,12 @@ export default function NonConformityRegister() {
                       <FileCheck className="w-5 h-5 flex-shrink-0" />
                       <span>Non-Conformity Resolved</span>
                     </div>
-                    <p className="text-[11px] text-slate-500">**Root Cause Identified:** {activeNc.rootCause}</p>
-                    <p className="text-[11px] text-slate-500">**Corrective Action Implemented:** {activeNc.correctiveAction}</p>
+                    <p className="text-[11px] text-slate-500">
+                      <span className="font-semibold text-slate-600">Root cause identified:</span> {activeNc.rootCause}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      <span className="font-semibold text-slate-600">Corrective action implemented:</span> {activeNc.correctiveAction}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
@@ -243,10 +252,18 @@ export default function NonConformityRegister() {
                       disabled={saving || !rootCause || !correctiveAction}
                       className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
                     >
-                      Resolve & Close Non-Conformity
+                      Resolve &amp; Close Non-Conformity
                     </button>
                   </div>
                 )}
+
+                {/* CAPA sign-off — close-out is gated on this chain completing,
+                    including the independent effectiveness verification. */}
+                <SignoffChain
+                  entityType={activeNc.type === "SAFETY_INCIDENT" ? "SAFETY_INCIDENT" : "NON_CONFORMITY"}
+                  entityId={activeNc.id}
+                  title={activeNc.type === "SAFETY_INCIDENT" ? "Incident Investigation Sign-off" : "Corrective Action Sign-off"}
+                />
               </div>
             ) : (
               <p className="text-xs text-slate-500 text-center py-12">

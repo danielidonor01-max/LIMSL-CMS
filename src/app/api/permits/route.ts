@@ -1,7 +1,7 @@
 // src/app/api/permits/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, users } from "@/lib/db/schema";
+import { permits, equipment, users, wmsDocuments, isolationPoints } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -43,17 +43,30 @@ export async function reconcilePermits() {
       continue;
     }
 
-    if (p.status === "ACTIVE") {
+    // A permit that WAS authorised (approvedAt set) put real isolation on real
+    // machinery. If it then lapses, that isolation still exists in the field and
+    // someone still has to sign "isolation removed, safe to re-energise" — so an
+    // EXPIRED permit must remain closable. Previously only ACTIVE permits were
+    // checked, which left the HSE de-isolation step permanently unsignable and
+    // equipment isolated with no record of who removed the locks.
+    if (p.status === "ACTIVE" || (p.status === "EXPIRED" && p.approvedAt)) {
       const closeout = await getSignoffChain("PERMIT_CLOSEOUT", p.id);
       if (closeout.length && chainSummary(closeout).complete) {
         await db
           .update(permits)
-          .set({ status: "CLOSED", closedAt: new Date().toISOString() })
+          // CLOSED_LATE is honest: the work was closed out, but after the
+          // permit's validity window — an auditable distinction.
+          .set({
+            status: p.status === "EXPIRED" ? "CLOSED_LATE" : "CLOSED",
+            closedAt: new Date().toISOString(),
+          })
           .where(eq(permits.id, p.id));
         continue;
       }
-      if (lapsed) {
+      if (lapsed && p.status === "ACTIVE") {
         await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
+        // Keep the close-out chain available on the now-expired permit.
+        await ensureSignoffChain("PERMIT_CLOSEOUT", p.id);
       }
     }
   }
@@ -119,6 +132,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Permit holder not found." }, { status: 400 });
     }
 
+    // ISO 45001 6.1.2: a permit with no hazards and no controls is a signature
+    // ritual. The JHA was optional, so a permit could be raised, fully signed
+    // and made ACTIVE carrying zero hazard content.
+    const jha = Array.isArray(body.jha)
+      ? body.jha.filter((r: { task?: string; hazard?: string; control?: string }) => r?.hazard?.trim() && r?.control?.trim())
+      : [];
+    if (jha.length === 0 && !String(body.hazardsIdentified ?? "").trim()) {
+      return NextResponse.json(
+        {
+          error:
+            "Identify at least one hazard and its control measure before raising the permit — " +
+            "a permit without hazard content cannot authorise work (ISO 45001 6.1.2).",
+        },
+        { status: 400 },
+      );
+    }
+
+    // The UI filters the WMS list to APPROVED client-side only; a direct API
+    // call could attach a DRAFT or REJECTED method statement, undermining the
+    // WMS approval chain. Verify server-side.
+    if (body.wmsId) {
+      const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, body.wmsId)).limit(1);
+      if (!wms) return NextResponse.json({ error: "The selected Work Method Statement was not found." }, { status: 400 });
+      if (wms.status !== "APPROVED") {
+        return NextResponse.json(
+          { error: `WMS ${wms.wmsNumber} is ${String(wms.status).toLowerCase().replace(/_/g, " ")} — only an APPROVED method statement may back a permit.` },
+          { status: 409 },
+        );
+      }
+    }
+
     const permitNumber = await nextDocNumber("PTW");
 
     // Fixed one-working-day validity — permits are re-raised, never renewed.
@@ -133,7 +177,7 @@ export async function POST(request: Request) {
       hazardsIdentified: body.hazardsIdentified || "",
       controlMeasures: body.controlMeasures || "",
       wmsId: body.wmsId || null,
-      jha: Array.isArray(body.jha) && body.jha.length ? JSON.stringify(body.jha) : null,
+      jha: jha.length ? JSON.stringify(jha) : null,
       lotoApplied: body.lotoApplied || false,
       ppeRequired: body.ppeRequired ? JSON.stringify(body.ppeRequired) : "[]",
       areaBarricaded: body.areaBarricaded || false,
@@ -147,6 +191,41 @@ export async function POST(request: Request) {
     };
 
     await db.insert(permits).values(newPermit);
+
+    // The isolation register: each energy source made safe, its device and
+    // lock/tag, and who applied it. "lotoApplied: true" alone is not an
+    // isolation certificate for a machine with electrical, hydraulic,
+    // pneumatic, stored and gravitational energy on it.
+    const points = Array.isArray(body.isolationPoints) ? body.isolationPoints : [];
+    const validPoints = points.filter(
+      (p: { energySource?: string; isolationDevice?: string }) => p?.energySource?.trim() && p?.isolationDevice?.trim(),
+    );
+    if (newPermit.lotoApplied && validPoints.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "LOTO is marked as applied — list the isolation points (energy source, isolating device and lock/tag) " +
+            "so the de-isolation can be verified at close-out (ISO 45001 8.1.2).",
+        },
+        { status: 400 },
+      );
+    }
+    if (validPoints.length) {
+      await db.insert(isolationPoints).values(
+        validPoints.map((p: Record<string, string>) => ({
+          id: nanoid(),
+          permitId: newPermit.id,
+          energySource: String(p.energySource).slice(0, 40),
+          isolationDevice: String(p.isolationDevice).slice(0, 120),
+          lockTagNumber: p.lockTagNumber ? String(p.lockTagNumber).slice(0, 60) : null,
+          appliedByName: gate.actor?.name ?? null,
+          appliedById: gate.actor?.id ?? null,
+          appliedAt: new Date().toISOString(),
+          verifiedZeroEnergy: false,
+        })),
+      );
+    }
+
     await ensureSignoffChain("PERMIT", newPermit.id, newPermit.permitNumber);
 
     return NextResponse.json(newPermit, { status: 201 });

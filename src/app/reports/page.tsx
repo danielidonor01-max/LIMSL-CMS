@@ -1,7 +1,7 @@
 // src/app/reports/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FileBarChart,
   Loader2,
@@ -11,9 +11,13 @@ import {
   Clock,
   AlertTriangle,
   Layers,
+  History,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { downloadCSV } from "@/lib/export";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
@@ -26,11 +30,18 @@ const EVIDENCE_REPORTS = [
 ];
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [equipment, setEquipment] = useState<any[]>([]);
   const [schedule, setSchedule] = useState<any[]>([]);
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [kpi, setKpi] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Per-asset dossier picker. Defaults to the current year — the range an
+  // auditor asks for first.
+  const [dossierAsset, setDossierAsset] = useState("");
+  const [dossierFrom, setDossierFrom] = useState(`${new Date().getFullYear()}-01-01`);
+  const [dossierTo, setDossierTo] = useState(new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     Promise.all([
@@ -110,7 +121,32 @@ export default function ReportsPage() {
       })),
     );
 
+  const assetOptions = useMemo(
+    () =>
+      [...equipment]
+        .sort((a, b) => String(a.assetId).localeCompare(String(b.assetId)))
+        .map((e) => ({ value: e.assetId as string, label: `${e.assetId} · ${e.name}` })),
+    [equipment],
+  );
+
+  const openDossier = () => {
+    if (!dossierAsset) {
+      toast.error("Choose an asset first.");
+      return;
+    }
+    if (dossierFrom && dossierTo && dossierFrom > dossierTo) {
+      toast.error("The start date is after the end date.");
+      return;
+    }
+    const qs = new URLSearchParams({ assetId: dossierAsset });
+    if (dossierFrom) qs.set("from", dossierFrom);
+    if (dossierTo) qs.set("to", dossierTo);
+    router.push(`/reports/print/asset-history?${qs.toString()}`);
+  };
+
   const reportCard = "bg-white border border-slate-200 rounded-xl p-5";
+  const dateField =
+    "bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -197,6 +233,52 @@ export default function ReportsPage() {
                     </div>
                   </Link>
                 ))}
+              </div>
+            </div>
+
+            {/* Per-asset maintenance dossier */}
+            <div className={reportCard}>
+              <h3 className="text-sm font-semibold text-slate-900 mb-1 flex items-center gap-2">
+                <History className="w-4 h-4 text-emerald-600" /> Per-Asset Maintenance Dossier
+              </h3>
+              <p className="text-[11px] text-slate-500 mb-4">
+                One machine, one date range, one document: identity, every work order, PM checklist, breakdown,
+                non-conformity, calibration and document — with downtime and availability for the period.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                <div className="flex flex-col gap-1 lg:col-span-2">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Asset</span>
+                  <Select
+                    value={dossierAsset}
+                    onChange={setDossierAsset}
+                    options={assetOptions}
+                    ariaLabel="Choose an asset"
+                    placeholder="Choose an asset…"
+                  />
+                </div>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">From</span>
+                  <input
+                    type="date"
+                    value={dossierFrom}
+                    onChange={(e) => setDossierFrom(e.target.value)}
+                    className={dateField}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">To</span>
+                  <input
+                    type="date"
+                    value={dossierTo}
+                    onChange={(e) => setDossierTo(e.target.value)}
+                    className={dateField}
+                  />
+                </label>
+              </div>
+              <div className="mt-4">
+                <Button icon={Printer} onClick={openDossier}>
+                  Open dossier
+                </Button>
               </div>
             </div>
 

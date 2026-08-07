@@ -380,14 +380,78 @@ export const calibrationRecords = pgTable("calibration_records", {
   certificateNumber: text("certificate_number"),
   certificateUrl: text("certificate_url"),
   status: text("status").default("CURRENT"), // CURRENT | DUE_SOON | OVERDUE | OUT_OF_SERVICE
+  // ISO 9001 7.1.5.2(a): measurement traceability. "Calibrated by: Ade" is not
+  // traceability — the standard the instrument was measured against, and the
+  // accredited body that did it, are the evidence an auditor asks for.
+  traceableTo: text("traceable_to"), // e.g. "NMI / NIST via ref std SN-4471"
+  referenceStandardId: text("reference_standard_id"),
+  labName: text("lab_name"),
+  labAccreditationNo: text("lab_accreditation_no"),
+  accreditationBody: text("accreditation_body"), // e.g. UKAS, NACL, DAkkS
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
+
+// Every calibration EVENT, retained forever. calibration_records is the
+// instrument master; rolling an instrument forward used to UPDATE that row,
+// overwriting the previous date, certificate and result — so a 3-year history
+// could never be produced (ISO 9001 7.5.3 + 7.1.5.2). Events are append-only.
+export const calibrationEvents = pgTable(
+  "calibration_events",
+  {
+    id: text("id").primaryKey(),
+    instrumentId: text("instrument_id").notNull().references(() => calibrationRecords.id),
+    calibrationDate: text("calibration_date").notNull(),
+    nextCalibrationDate: text("next_calibration_date"),
+    // 7.1.5.2: as-found is what proves whether PREVIOUS results were valid.
+    asFound: text("as_found"), // IN_TOLERANCE | OUT_OF_TOLERANCE | NOT_CHECKED
+    asLeft: text("as_left"), // IN_TOLERANCE | ADJUSTED | REJECTED
+    verdict: text("verdict").notNull().default("PASS"), // PASS | FAIL
+    readings: text("readings"), // JSON [{point, nominal, measured, tolerance}]
+    calibratedBy: text("calibrated_by"),
+    calibratedById: text("calibrated_by_id"),
+    certificateNumber: text("certificate_number"),
+    certificateFileKey: text("certificate_file_key"), // stored via lib/storage
+    traceableTo: text("traceable_to"),
+    labName: text("lab_name"),
+    labAccreditationNo: text("lab_accreditation_no"),
+    notes: text("notes"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("calibration_events_instrument_idx").on(t.instrumentId, t.calibrationDate)],
+);
+
+// ISO 45001 8.1.2: an isolation is a list of energy sources made safe, each
+// with a lock/tag and a named person who applied and removed it. It was one
+// boolean (permits.lotoApplied) — indefensible for a shop with electrical,
+// hydraulic, pneumatic, stored and gravitational energy on the same machine.
+export const isolationPoints = pgTable(
+  "isolation_points",
+  {
+    id: text("id").primaryKey(),
+    permitId: text("permit_id").notNull().references(() => permits.id),
+    energySource: text("energy_source").notNull(), // ELECTRICAL | HYDRAULIC | PNEUMATIC | MECHANICAL | THERMAL | CHEMICAL | GRAVITY | STORED
+    isolationDevice: text("isolation_device").notNull(), // e.g. "MCB DB-3/12", "Valve V-207"
+    lockTagNumber: text("lock_tag_number"),
+    appliedByName: text("applied_by_name"),
+    appliedById: text("applied_by_id"),
+    appliedAt: text("applied_at"),
+    verifiedZeroEnergy: boolean("verified_zero_energy").notNull().default(false),
+    removedByName: text("removed_by_name"),
+    removedById: text("removed_by_id"),
+    removedAt: text("removed_at"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("isolation_points_permit_idx").on(t.permitId)],
+);
 
 // ─── Non-Conformities ────────────────────────────────────────────────────────
 export const nonConformities = pgTable("non_conformities", {
   id: text("id").primaryKey(),
   ncNumber: text("nc_number").notNull().unique(),
-  type: text("type").notNull(), // MISSED_PM | KPI_BREACH | SAFETY_INCIDENT | OVERDUE_CA | OVERDUE_CALIBRATION | AUDIT_FINDING
+  // MISSED_PM | KPI_BREACH | SAFETY_INCIDENT | OVERDUE_CA | OVERDUE_CALIBRATION
+  // | CALIBRATION_FAILURE (instrument found out of tolerance — distinct from
+  // being merely overdue; triggers the 7.1.5.2 validity assessment) | AUDIT_FINDING
+  type: text("type").notNull(),
   severity: text("severity").notNull().default("MEDIUM"), // LOW | MEDIUM | HIGH | CRITICAL
   detectedDate: text("detected_date").notNull(),
   detectedBy: text("detected_by"),

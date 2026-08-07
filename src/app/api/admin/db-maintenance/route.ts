@@ -16,6 +16,41 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 // additive column migrations (IF NOT EXISTS — idempotent, data-safe).
 const INDEXES: [string, string][] = [
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
+  // Phase 1 — ISO evidence tables and columns (additive, data-safe).
+  ["calibration_records.traceability", "ALTER TABLE calibration_records ADD COLUMN IF NOT EXISTS traceable_to text, ADD COLUMN IF NOT EXISTS reference_standard_id text, ADD COLUMN IF NOT EXISTS lab_name text, ADD COLUMN IF NOT EXISTS lab_accreditation_no text, ADD COLUMN IF NOT EXISTS accreditation_body text"],
+  [
+    "calibration_events",
+    `CREATE TABLE IF NOT EXISTS calibration_events (
+      id text PRIMARY KEY,
+      instrument_id text NOT NULL REFERENCES calibration_records(id),
+      calibration_date text NOT NULL,
+      next_calibration_date text,
+      as_found text, as_left text,
+      verdict text NOT NULL DEFAULT 'PASS',
+      readings text,
+      calibrated_by text, calibrated_by_id text,
+      certificate_number text, certificate_file_key text,
+      traceable_to text, lab_name text, lab_accreditation_no text,
+      notes text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["calibration_events_instrument_idx", "CREATE INDEX IF NOT EXISTS calibration_events_instrument_idx ON calibration_events (instrument_id, calibration_date)"],
+  [
+    "isolation_points",
+    `CREATE TABLE IF NOT EXISTS isolation_points (
+      id text PRIMARY KEY,
+      permit_id text NOT NULL REFERENCES permits(id),
+      energy_source text NOT NULL,
+      isolation_device text NOT NULL,
+      lock_tag_number text,
+      applied_by_name text, applied_by_id text, applied_at text,
+      verified_zero_energy boolean NOT NULL DEFAULT false,
+      removed_by_name text, removed_by_id text, removed_at text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["isolation_points_permit_idx", "CREATE INDEX IF NOT EXISTS isolation_points_permit_idx ON isolation_points (permit_id)"],
   ["equipment_asset_id_idx", "CREATE INDEX IF NOT EXISTS equipment_asset_id_idx ON equipment (asset_id)"],
   ["equipment_documents_equipment_idx", "CREATE INDEX IF NOT EXISTS equipment_documents_equipment_idx ON equipment_documents (equipment_id)"],
   ["maintenance_schedule_equipment_idx", "CREATE INDEX IF NOT EXISTS maintenance_schedule_equipment_idx ON maintenance_schedule (equipment_id)"],

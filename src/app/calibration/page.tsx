@@ -3,9 +3,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useApi } from "@/lib/api-cache";
-import { Gauge, Loader2, CheckCircle2, Clock, AlertTriangle, Plus, RotateCw } from "lucide-react";
+import { invalidateApi, useApi } from "@/lib/api-cache";
+import {
+  Gauge,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Plus,
+  RotateCw,
+  History,
+  ShieldCheck,
+} from "lucide-react";
 import { Badge } from "@/components/Badge";
+import Button from "@/components/Button";
+import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -23,12 +35,34 @@ type Cal = {
   calibratedBy: string | null;
   certificateNumber: string | null;
   status: string | null;
+  traceableTo: string | null;
+  referenceStandardId: string | null;
+  labName: string | null;
+  labAccreditationNo: string | null;
+  accreditationBody: string | null;
+};
+
+type CalEvent = {
+  id: string;
+  calibrationDate: string;
+  nextCalibrationDate: string | null;
+  asFound: string | null;
+  asLeft: string | null;
+  verdict: string;
+  calibratedBy: string | null;
+  certificateNumber: string | null;
+  traceableTo: string | null;
+  labName: string | null;
+  labAccreditationNo: string | null;
+  notes: string | null;
+  createdAt: string | null;
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const inputCls =
   "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none";
 const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
+const sectionCls = "text-[11px] font-mono uppercase tracking-wider text-slate-500";
 
 const STATUS_BADGE: Record<string, string> = {
   CURRENT: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
@@ -41,6 +75,17 @@ const STATUS_LABEL: Record<string, string> = {
   DUE_SOON: "Due Soon",
   OVERDUE: "Overdue",
   OUT_OF_SERVICE: "Out of Service",
+};
+
+const AS_FOUND_LABEL: Record<string, string> = {
+  IN_TOLERANCE: "As-found: in tolerance",
+  OUT_OF_TOLERANCE: "As-found: OUT of tolerance",
+  NOT_CHECKED: "As-found: not checked",
+};
+const AS_LEFT_LABEL: Record<string, string> = {
+  IN_TOLERANCE: "As-left: in tolerance",
+  ADJUSTED: "As-left: adjusted",
+  REJECTED: "As-left: rejected",
 };
 
 const daysUntil = (d: string | null) =>
@@ -57,16 +102,37 @@ export default function CalibrationPage() {
   const [saving, setSaving] = useState(false);
   // null = closed; {} = new instrument; {id,...} = recalibrate existing
   const [editing, setEditing] = useState<Partial<Cal> | null>(null);
+  const [asFound, setAsFound] = useState("NOT_CHECKED");
+  const [asLeft, setAsLeft] = useState("IN_TOLERANCE");
+  const [verdict, setVerdict] = useState("PASS");
+  const [history, setHistory] = useState<Cal | null>(null);
 
-  const loadData = () => {
-    refresh();
-  };
+  const { data: events, loading: eventsLoading } = useApi<CalEvent[]>(
+    history ? `/api/calibration/${history.id}/events` : null,
+    [],
+  );
 
   useEffect(() => setMounted(true), []);
+
+  function openForm(row: Partial<Cal>) {
+    setAsFound("NOT_CHECKED");
+    setAsLeft("IN_TOLERANCE");
+    setVerdict("PASS");
+    setEditing(row);
+  }
 
   async function submitCalibration(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const traceableTo = String(fd.get("traceableTo") ?? "").trim();
+    const labName = String(fd.get("labName") ?? "").trim();
+    // Mirrors the server rule so the user is told before the round trip.
+    if (!traceableTo && !labName) {
+      toast.error(
+        "Traceability is required (ISO 9001 7.1.5.2) — name the standard traced to, or the calibration laboratory.",
+      );
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/calibration", {
@@ -78,16 +144,34 @@ export default function CalibrationPage() {
           serialNumber: fd.get("serialNumber"),
           make: fd.get("make"),
           model: fd.get("model"),
-          lastCalibrationDate: fd.get("lastCalibrationDate") || TODAY,
+          calibrationDate: fd.get("calibrationDate") || TODAY,
           calibrationInterval: fd.get("calibrationInterval") ? Number(fd.get("calibrationInterval")) : 365,
           calibratedBy: fd.get("calibratedBy"),
           certificateNumber: fd.get("certificateNumber"),
+          asFound,
+          asLeft,
+          verdict,
+          traceableTo,
+          referenceStandardId: fd.get("referenceStandardId"),
+          labName,
+          labAccreditationNo: fd.get("labAccreditationNo"),
+          accreditationBody: fd.get("accreditationBody"),
+          notes: fd.get("notes"),
         }),
       });
       if (res.ok) {
-        toast.success(editing?.id ? "Calibration recorded — dates rolled forward." : "Instrument registered.");
+        const saved = await res.json().catch(() => null);
+        const nc = saved?.nonConformity?.ncNumber as string | undefined;
+        if (nc) {
+          toast.warning(
+            `Out of tolerance — ${nc} raised. The instrument is out of service; measurements taken since the last passing calibration must be assessed.`,
+          );
+        } else {
+          toast.success(editing?.id ? "Calibration event recorded." : "Instrument registered.");
+        }
         setEditing(null);
-        await loadData();
+        invalidateApi("/api/calibration");
+        refresh();
       } else {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error || "Failed to record calibration.");
@@ -114,17 +198,14 @@ export default function CalibrationPage() {
             <div>
               <h2 className="text-xl font-bold tracking-tight">Calibration Management</h2>
               <p className="text-xs text-slate-500 font-mono">
-                Measuring instrument register · semi-annual / annual cycle
+                Measuring instrument register · traceable calibration history
               </p>
             </div>
           </div>
           {canWrite && (
-            <button
-              onClick={() => setEditing({})}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-            >
-              <Plus className="w-4 h-4" /> Record Calibration
-            </button>
+            <Button icon={Plus} onClick={() => openForm({})}>
+              Record Calibration
+            </Button>
           )}
         </div>
 
@@ -158,14 +239,28 @@ export default function CalibrationPage() {
                       <th className="py-3 px-4 font-medium">Last Cal.</th>
                       <th className="py-3 px-4 font-medium">Next Cal.</th>
                       <th className="py-3 px-4 font-medium">Interval</th>
-                      <th className="py-3 px-4 font-medium">Certificate</th>
+                      <th className="py-3 px-4 font-medium">Certificate / Traceability</th>
                       <th className="py-3 px-4 font-medium">Status</th>
-                      {canWrite && <th className="py-3 px-4 font-medium"></th>}
+                      <th className="py-3 px-4 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
+                    {rows.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="py-16 text-center text-slate-500">
+                          <Gauge className="w-5 h-5 mx-auto mb-2 text-slate-400" />
+                          <p className="text-xs">No measuring instruments registered yet.</p>
+                          {canWrite && (
+                            <p className="text-[11px] text-slate-400 mt-1">
+                              Register the first one to start a traceable calibration history.
+                            </p>
+                          )}
+                        </td>
+                      </tr>
+                    )}
                     {rows.map((r) => {
                       const d = daysUntil(r.nextCalibrationDate);
+                      const traceability = r.traceableTo || r.labName;
                       return (
                         <tr key={r.id} className="hover:bg-slate-50">
                           <td className="py-3 px-5">
@@ -187,22 +282,42 @@ export default function CalibrationPage() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-slate-500">{r.calibrationInterval ?? "—"} d</td>
-                          <td className="py-3 px-4 font-mono text-slate-500">{r.certificateNumber ?? "—"}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-mono text-slate-500">{r.certificateNumber ?? "—"}</div>
+                            {traceability ? (
+                              <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="truncate max-w-[14rem]">{traceability}</span>
+                              </div>
+                            ) : (
+                              <div className="text-[10px] text-amber-600 flex items-center gap-1 mt-0.5">
+                                <AlertTriangle className="w-3.5 h-3.5" /> No traceability on record
+                              </div>
+                            )}
+                          </td>
                           <td className="py-3 px-4">
                             <Badge className={STATUS_BADGE[r.status ?? "CURRENT"]}>
-                              {STATUS_LABEL[r.status ?? "CURRENT"]}
+                              {STATUS_LABEL[r.status ?? "CURRENT"] ?? r.status}
                             </Badge>
                           </td>
-                          {canWrite && (
-                            <td className="py-3 px-4">
-                              <button
-                                onClick={() => setEditing(r)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                icon={History}
+                                onClick={() => setHistory(r)}
+                                title={`Calibration history for ${r.instrumentName}`}
                               >
-                                <RotateCw className="w-3.5 h-3.5" /> Recalibrate
-                              </button>
-                            </td>
-                          )}
+                                History
+                              </Button>
+                              {canWrite && (
+                                <Button variant="ghost" size="sm" icon={RotateCw} onClick={() => openForm(r)}>
+                                  Recalibrate
+                                </Button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
@@ -218,7 +333,7 @@ export default function CalibrationPage() {
         open={editing !== null}
         onClose={() => setEditing(null)}
         title={editing?.id ? "Record Calibration" : "Register Instrument"}
-        subtitle={editing?.id ? `Roll ${editing.instrumentName ?? "instrument"} forward` : "New measuring instrument"}
+        subtitle={editing?.id ? `New calibration event for ${editing.instrumentName ?? "instrument"}` : "New measuring instrument"}
       >
         <form onSubmit={submitCalibration} className="space-y-4">
           <div className="space-y-1.5">
@@ -232,7 +347,7 @@ export default function CalibrationPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Certificate No.</label>
-              <input name="certificateNumber" defaultValue={editing?.certificateNumber ?? ""} className={inputCls} />
+              <input name="certificateNumber" defaultValue="" className={inputCls} />
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Make</label>
@@ -244,27 +359,210 @@ export default function CalibrationPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Calibration Date</label>
-              <input name="lastCalibrationDate" type="date" defaultValue={TODAY} className={inputCls} />
+              <input name="calibrationDate" type="date" defaultValue={TODAY} className={inputCls} />
             </div>
             <div className="space-y-1.5">
               <label className={labelCls}>Interval (days)</label>
               <input name="calibrationInterval" type="number" defaultValue={editing?.calibrationInterval ?? 365} className={inputCls} />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Calibrated By</label>
-            <input name="calibratedBy" defaultValue={editing?.calibratedBy ?? ""} className={inputCls} placeholder="Lab / technician" />
+
+          <div className="pt-1 space-y-3">
+            <p className={sectionCls}>Result</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className={labelCls}>As Found</label>
+                <Select value={asFound} onChange={setAsFound} ariaLabel="As-found condition">
+                  <option value="NOT_CHECKED">Not checked</option>
+                  <option value="IN_TOLERANCE">In tolerance</option>
+                  <option value="OUT_OF_TOLERANCE">Out of tolerance</option>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>As Left</label>
+                <Select value={asLeft} onChange={setAsLeft} ariaLabel="As-left condition">
+                  <option value="IN_TOLERANCE">In tolerance</option>
+                  <option value="ADJUSTED">Adjusted</option>
+                  <option value="REJECTED">Rejected</option>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Verdict</label>
+                <Select value={verdict} onChange={setVerdict} ariaLabel="Calibration verdict">
+                  <option value="PASS">Pass</option>
+                  <option value="FAIL">Fail</option>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Calibrated By</label>
+                <input name="calibratedBy" defaultValue={editing?.calibratedBy ?? ""} className={inputCls} placeholder="Lab / technician" />
+              </div>
+            </div>
+            {(verdict === "FAIL" || asFound === "OUT_OF_TOLERANCE" || asLeft === "REJECTED") && (
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-700 text-[11px]">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
+                <span>
+                  Saving this will mark the instrument out of service and raise a non-conformity covering every
+                  measurement taken since its last passing calibration.
+                </span>
+              </div>
+            )}
           </div>
+
+          <div className="pt-1 space-y-3">
+            <p className={sectionCls}>Traceability · ISO 9001 7.1.5.2</p>
+            <p className="text-[11px] text-slate-500">
+              Record the standard this calibration was traced to, or the laboratory that performed it. One of the two
+              is required.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className={labelCls}>Traceable To</label>
+                <input
+                  name="traceableTo"
+                  defaultValue={editing?.traceableTo ?? ""}
+                  className={inputCls}
+                  placeholder="NIST via ref std SN-4471"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Reference Standard ID</label>
+                <input name="referenceStandardId" defaultValue={editing?.referenceStandardId ?? ""} className={inputCls} />
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Lab Name</label>
+                <input name="labName" defaultValue={editing?.labName ?? ""} className={inputCls} />
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Lab Accreditation No.</label>
+                <input name="labAccreditationNo" defaultValue={editing?.labAccreditationNo ?? ""} className={inputCls} />
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Accreditation Body</label>
+                <input
+                  name="accreditationBody"
+                  defaultValue={editing?.accreditationBody ?? ""}
+                  className={inputCls}
+                  placeholder="UKAS / NACL / DAkkS"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className={labelCls}>Notes</label>
+            <textarea name="notes" rows={2} className={inputCls} placeholder="Deviations found, adjustments made…" />
+          </div>
+
           <div className="flex gap-3 justify-end pt-2">
-            <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all">
+            <Button type="button" variant="secondary" onClick={() => setEditing(null)}>
               Cancel
-            </button>
-            <button type="submit" disabled={saving} className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-60">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save Calibration
-            </button>
+            </Button>
+            <Button type="submit" loading={saving}>
+              Save Calibration
+            </Button>
           </div>
         </form>
       </Modal>
+
+      <Modal
+        open={history !== null}
+        onClose={() => setHistory(null)}
+        title="Calibration History"
+        subtitle={history ? `${history.instrumentName}${history.serialNumber ? ` · S/N ${history.serialNumber}` : ""}` : ""}
+      >
+        {eventsLoading ? (
+          <div className="py-10 flex justify-center items-center text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+            <span className="text-xs ml-2 font-mono">Loading history…</span>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="py-10 text-center text-slate-500">
+            <History className="w-5 h-5 mx-auto mb-2 text-slate-400" />
+            <p className="text-xs">No calibration events recorded for this instrument yet.</p>
+            {history?.lastCalibrationDate && (
+              <p className="text-[11px] text-slate-400 mt-1">
+                The register shows a last calibration of {formatDate(history.lastCalibrationDate)}, recorded before
+                event history was kept. The next calibration you record will start the history.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {events.map((ev) => {
+              const failed = ev.verdict === "FAIL" || ev.asFound === "OUT_OF_TOLERANCE";
+              return (
+                <div
+                  key={ev.id}
+                  className={`rounded-xl border p-4 space-y-2 ${failed ? "border-rose-500/30 bg-rose-500/5" : "border-slate-200 bg-white"}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-mono text-xs font-semibold text-slate-900">
+                      {formatDate(ev.calibrationDate)}
+                    </span>
+                    <Badge
+                      className={
+                        ev.verdict === "FAIL"
+                          ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      }
+                    >
+                      {ev.verdict}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ev.asFound && (
+                      <Badge
+                        className={
+                          ev.asFound === "OUT_OF_TOLERANCE"
+                            ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                            : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                        }
+                      >
+                        {AS_FOUND_LABEL[ev.asFound] ?? ev.asFound}
+                      </Badge>
+                    )}
+                    {ev.asLeft && (
+                      <Badge
+                        className={
+                          ev.asLeft === "REJECTED"
+                            ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                            : ev.asLeft === "ADJUSTED"
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                              : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                        }
+                      >
+                        {AS_LEFT_LABEL[ev.asLeft] ?? ev.asLeft}
+                      </Badge>
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                    <Meta label="Certificate" value={ev.certificateNumber} mono />
+                    <Meta label="Next due" value={ev.nextCalibrationDate ? formatDate(ev.nextCalibrationDate) : null} mono />
+                    <Meta label="Traceable to" value={ev.traceableTo} />
+                    <Meta
+                      label="Laboratory"
+                      value={ev.labName ? `${ev.labName}${ev.labAccreditationNo ? ` (${ev.labAccreditationNo})` : ""}` : null}
+                    />
+                    <Meta label="Calibrated by" value={ev.calibratedBy} />
+                    <Meta label="Recorded" value={ev.createdAt ? formatDate(ev.createdAt) : null} mono />
+                  </dl>
+                  {ev.notes && <p className="text-[11px] text-slate-600 border-t border-slate-200 pt-2">{ev.notes}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function Meta({ label, value, mono = false }: { label: string; value: string | null; mono?: boolean }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{label}</dt>
+      <dd className={`text-slate-700 ${mono ? "font-mono" : ""}`}>{value || "—"}</dd>
     </div>
   );
 }

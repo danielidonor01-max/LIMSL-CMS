@@ -70,7 +70,31 @@ export const PTW_CLOSEOUT_CHAIN: ChainStep[] = [
   { role: "HSE", roleLabel: "Isolation removed, safe to re-energise (HSE)", required: true },
 ];
 
+// Non-conformity / CAPA close-out (ISO 9001 10.2.2, ISO 45001 10.2).
+// An NC used to close on a single status change — less rigour than a machine
+// breakdown, which demands five signatures. The clause requires evidence of the
+// action taken AND of its effectiveness, reviewed by someone other than the
+// person who performed it.
+// Each step is a DIFFERENT role: one person per role is the norm in a shop this
+// size, and segregation of duties forbids the same person signing twice — a
+// chain that named one role twice could never be completed here.
+export const NC_CHAIN: ChainStep[] = [
+  { role: "QA_QC", roleLabel: "Investigation & root cause (QA/QC)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Corrective action approved (Maintenance Manager)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Effectiveness verified & closed (Factory Manager)", required: true },
+];
+
+// Safety incidents are investigated by HSE, not quality — and the Factory
+// Manager owns the close-out because incidents carry legal weight.
+export const SAFETY_INCIDENT_CHAIN: ChainStep[] = [
+  { role: "HSE", roleLabel: "Investigation & root cause (HSE)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Controls implemented (Maintenance Manager)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Close-out approved (Factory Manager)", required: true },
+];
+
 export const CHAINS: Record<string, ChainStep[]> = {
+  NON_CONFORMITY: NC_CHAIN,
+  SAFETY_INCIDENT: SAFETY_INCIDENT_CHAIN,
   PM_CHECKLIST: PM_CHAIN,
   CORRECTIVE: CM_CHAIN,
   WMS: WMS_CHAIN,

@@ -76,9 +76,30 @@ Sequenced so that **things that are actively wrong** are fixed before things tha
 
 **1.3 Permit & isolation discipline.** Define **when** a permit is required (rule keyed on work class/equipment category) and block `IN_PROGRESS` without it. Add an `isolation_points` child table (energy source, device, lock/tag number, applied-by, removed-by, verified-by). **Allow close-out on EXPIRED permits** (`CLOSED_LATE`) so de-isolation can always be signed. Require ≥1 JHA row with hazard + control. Validate WMS is `APPROVED` server-side. *Closes the 45001 major.*
 
-**1.4 Competency gates.** The competency matrix is populated and consulted by nothing. Attach `requiredCompetency` to chain steps and WO types; block signing/assignment on missing or expired competency; snapshot the competency onto the signature row.
+**1.4 Competency gates — DEFERRED to Phase 1b.** The competency matrix is populated and consulted by nothing. Attach `requiredCompetency` to chain steps and WO types; block signing/assignment on missing or expired competency; snapshot the competency onto the signature row. *Deferred deliberately: it changes who can sign, and doing that in the same release as the new NC/permit gates risks locking people out of records mid-flight. Ship after the gates have been exercised on real data.*
 
 **1.5 Evidence retrieval.** Date/entity/user filters + CSV export on the audit log (currently capped at 100 rows, unfilterable). Add `/reports/print/asset-history?assetId=&from=&to=` — the single most common auditor request, currently unanswerable. Soft-supersede signatures instead of deleting them.
+
+---
+
+### Phase 1 — status: SHIPPED (except 1.4)
+Delivered: NC/CAPA close-out gate + safety-incident chain (1.1) · calibration
+event history, traceability, as-found/as-left and the out-of-tolerance auto-NC
+(1.2) · permit isolation register, lapsed-permit close-out as CLOSED_LATE,
+mandatory JHA content and server-side WMS-approved check (1.3) · audit-trail
+filtering/CSV and the per-asset maintenance dossier (1.5). 169 tests green.
+
+**Follow-ups logged during Phase 1 (do not lose these):**
+- Legacy-imported instruments have no calibration *events* until their next
+  calibration — their history modal is empty and says so. Backfill one seed
+  event per imported instrument from its master row.
+- `src/lib/import/legacy.ts` writes the calibration master directly; it should
+  emit an event like every other writer.
+- CSV formula injection was fixed in the shared exporter (a cell opening with
+  `= + - @` executes in Excel). Any NEW export path must go through
+  `toCSV`/`escapeCell`, never hand-roll a join.
+- The dossier's availability figure is an upper bound where breakdowns lack a
+  downtime window; it prints how many are missing. Tightens once R31 lands.
 
 ---
 
