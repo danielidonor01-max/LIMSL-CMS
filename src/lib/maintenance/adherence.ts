@@ -21,8 +21,13 @@ export const ADHERENCE_WINDOW_DAYS: Record<string, number> = {
 
 const DEFAULT_WINDOW_DAYS = 14;
 
+// Frequencies reach us in mixed case — legacy Excel imports carry "Weekly", and
+// equipment created before the enum was settled carries "Quarterly". Matching
+// them literally sent every one of those to the 14-day default, which quietly
+// made a weekly PM twelve days late "compliant". Normalise like nextPlannedDate
+// already does.
 export const adherenceWindowFor = (frequency: string | null | undefined): number =>
-  ADHERENCE_WINDOW_DAYS[frequency ?? ""] ?? DEFAULT_WINDOW_DAYS;
+  ADHERENCE_WINDOW_DAYS[(frequency ?? "").toUpperCase().trim()] ?? DEFAULT_WINDOW_DAYS;
 
 // Whole days between two ISO dates (completed − planned). Negative means early.
 export function daysBetween(plannedDate: string, completedDate: string): number {
@@ -76,11 +81,13 @@ export const CRITICALITY_LEAD_DAYS: Record<string, number> = {
   LOW: 2,
 };
 
+const key = (criticality: string | null | undefined) => (criticality ?? "").toUpperCase().trim();
+
 export const suggestedPmFrequency = (criticality: string | null | undefined): string =>
-  CRITICALITY_PM_FREQUENCY[criticality ?? ""] ?? "QUARTERLY";
+  CRITICALITY_PM_FREQUENCY[key(criticality)] ?? "QUARTERLY";
 
 export const suggestedWoPriority = (criticality: string | null | undefined): string =>
-  CRITICALITY_WO_PRIORITY[criticality ?? ""] ?? "MEDIUM";
+  CRITICALITY_WO_PRIORITY[key(criticality)] ?? "MEDIUM";
 
 export const escalationLeadDaysFor = (criticality: string | null | undefined): number =>
-  CRITICALITY_LEAD_DAYS[criticality ?? ""] ?? 3;
+  CRITICALITY_LEAD_DAYS[key(criticality)] ?? 3;

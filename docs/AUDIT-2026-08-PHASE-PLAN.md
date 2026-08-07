@@ -193,7 +193,7 @@ belongs with the PWA work in Phase 6, where a service worker can own it.
 
 ---
 
-### Phase 4 — status: PARTIALLY SHIPPED
+### Phase 4a — status: SHIPPED
 Delivered: **PM job plans** per equipment category (`lib/maintenance/job-plans.ts`)
 — eight bespoke plans plus a named general fallback, each task carrying
 acceptance criteria and, where the answer is a number, a unit; nothing arrives
@@ -219,16 +219,39 @@ a real estimate. 175 tests green.
   PM frequency, work-order priority and escalation lead all derive from it
   instead of it being a badge colour. Clients can still override.
 
-**Still open in Phase 4 — not done, do not assume:**
-- Remaining KPI definitions: two contradictory Availability figures on one page,
-  planned (PM) downtime still excluded from availability, the PTW-compliance
-  metric that cannot go down, and real labour hours (so backlog stops being an
-  assumption).
-- Deferred-maintenance register: schema and approval fields exist
-  (`deferredReason`/`deferredBy`/`deferredReviewDate`, status `DEFERRED`) but
-  **no UI or API writes them yet** — deferral still happens by silence.
-- `suggestedPmFrequency` is not yet applied at equipment create/schedule
-  generation (only priority is wired).
+### Phase 4c — status: SHIPPED · Phase 4 now COMPLETE
+- **One Availability, and it counts all lost production.** Planned PM downtime
+  now reduces availability (`lib/kpi/formulas.ts`), so a machine stopped eight
+  hours for a PM no longer reads as 100% available — and the figure can no
+  longer be improved by reclassifying breakdown work as preventive. The two
+  same-named tiles that meant different things are resolved: the asset-headcount
+  figure on the dashboard and KPI board is now **"Assets Available Now"**, and
+  the time-based series keeps the plain name with a subtitle saying what it
+  measures.
+- **A PTW metric that can fail.** The old "approved ÷ raised" trended to 100% by
+  construction, since a permit can only become ACTIVE through a fully signed
+  chain. It now measures close-out discipline — properly closed ÷ permits that
+  actually authorised work — and the tile shows how many went late and how many
+  were never closed.
+- **Real labour hours.** Completing a work order captures hours spent; where an
+  open work order carries no estimate the backlog falls back to *this
+  workshop's* median completed job rather than a fixed 2 hours, and the tile
+  prints how much of the total is estimate versus inference.
+- **Deferred-maintenance register.** Deferral is now an action with a gate
+  (`lib/maintenance/deferral.ts`): a stated risk in the user's own words and a
+  future review date, recorded against the person accepting it, with its own tab
+  on the schedule. Critically, **a deferral expires** — `reconcileSchedule`
+  returns it to OVERDUE on the review date, so the register cannot become a
+  permanent hiding place.
+- **Criticality reaches the plan.** `suggestedPmFrequency` now backs both
+  equipment creation and schedule creation, so a CRITICAL asset never silently
+  lands on the same interval as a spare bench grinder.
+
+**Found and fixed while doing it:** frequency and criticality lookups matched
+case-sensitively, so legacy-imported `"Weekly"` and equipment created with the
+old `"Quarterly"` default fell through to the 14-day window — a weekly PM twelve
+days late scored as compliant. Both now normalise, and the equipment default is
+a real enum value. 204 tests green.
 
 ---
 

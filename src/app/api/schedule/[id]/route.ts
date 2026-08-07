@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { validateDeferral } from "@/lib/maintenance/deferral";
 
 // Reschedule an activity (move its planned date) or adjust its remarks. Completion
 // is intentionally NOT done here — it flows through the work order + PM checklist
@@ -44,6 +45,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       set.month = d.getMonth() + 1;
       set.status = "RESCHEDULED";
     }
+    // ── Deferral ──────────────────────────────────────────────────────────
+    // A deferral is a RISK ACCEPTED, and someone must own it. Until now there
+    // was no legitimate deferral path at all, so real deferrals happened by
+    // silence: the activity simply went overdue and stayed there, with no
+    // justification, no approver and no date anyone had agreed to revisit.
+    if (body.action === "defer") {
+      const check = validateDeferral({
+        reason: body.deferredReason,
+        reviewDate: body.deferredReviewDate,
+        today: new Date().toISOString().slice(0, 10),
+      });
+      if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+
+      set.status = "DEFERRED";
+      set.deferredReason = check.reason;
+      set.deferredById = gate.actor?.id ?? null;
+      set.deferredByName = gate.actor?.name ?? null;
+      set.deferredAt = new Date().toISOString();
+      set.deferredReviewDate = check.reviewDate;
+    }
+
     if (typeof body.remarks === "string") set.remarks = body.remarks;
     if (body.responsiblePersonName !== undefined) set.responsiblePersonName = body.responsiblePersonName || null;
 
@@ -60,9 +82,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       action: "UPDATE",
       entityType: "maintenance_schedule",
       entityId: id,
-      entityDescription: set.plannedDate
-        ? `Activity rescheduled to ${set.plannedDate}`
-        : `Activity updated`,
+      entityDescription: set.status === "DEFERRED"
+        ? `Activity DEFERRED to review ${set.deferredReviewDate} — ${set.deferredReason}`
+        : set.plannedDate
+          ? `Activity rescheduled to ${set.plannedDate}`
+          : `Activity updated`,
     });
 
     const [updated] = await db.select().from(maintenanceSchedule).where(eq(maintenanceSchedule.id, id)).limit(1);

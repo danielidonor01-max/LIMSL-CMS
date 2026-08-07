@@ -63,6 +63,9 @@ type Kpi = {
   tone: Tone;
   trend?: Trend;
   trendGood?: "up" | "down"; // which direction is good
+  // Says what the number does NOT cover, where the underlying data is partial.
+  // A caveated figure can be argued with; a bare one gets believed.
+  note?: string;
 };
 
 const pct = (n: number | null | undefined) =>
@@ -103,7 +106,7 @@ export default function KpiPage() {
 
     const reliability: Kpi[] = [
       { label: "MTBF", value: l.mtbf == null ? "—" : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
-      { label: "Equipment Availability", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
+      { label: "Assets Available Now", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
       { label: "Breakdown Frequency", value: `${lastMo}/mo`, target: "≤ 2/mo", tone: lastMo <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
       { label: "Failure Rate", value: `${(l.failureRate ?? 0).toFixed(2)}/asset·mo`, target: "declining", tone: (l.failureRate ?? 0) <= 0.2 ? "good" : "warning" },
       { label: "Active Breakdowns", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
@@ -112,7 +115,16 @@ export default function KpiPage() {
       { label: "MTTR", value: l.mttr == null ? "—" : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
       { label: "PM Compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: (l.pmCompliance ?? 0) >= 0.95 ? "good" : (l.pmCompliance ?? 0) >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
       { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
-      { label: "Maintenance Backlog", value: `${l.maintenanceBacklog ?? 0} MH`, target: "≤ 40 MH", tone: (l.maintenanceBacklog ?? 0) <= 40 ? "good" : "warning" },
+      {
+        label: "Maintenance Backlog",
+        value: `${l.maintenanceBacklog ?? 0} MH`,
+        target: "≤ 40 MH",
+        tone: (l.maintenanceBacklog ?? 0) <= 40 ? "good" : "warning",
+        note:
+          l.openWosTotal
+            ? `${l.backlogEstimated ?? 0} of ${l.openWosTotal} estimated; rest at ${l.medianJobHours ?? 2}h median`
+            : undefined,
+      },
       { label: "Open Work Orders", value: String(l.openWos), target: "monitor", tone: "neutral" },
     ];
     const throughput: Kpi[] = [
@@ -123,7 +135,15 @@ export default function KpiPage() {
       { label: "Maint. Cost", value: "Not tracked", target: "—", tone: "neutral" },
     ];
     const safety: Kpi[] = [
-      { label: "PTW Compliance", value: pct(l.ptwCompliance), target: "≥ 98%", tone: l.ptwCompliance == null ? "neutral" : l.ptwCompliance >= 0.98 ? "good" : "warning" },
+      {
+        label: "PTW Close-out",
+        value: pct(l.ptwCompliance),
+        target: "≥ 98%",
+        tone: l.ptwCompliance == null ? "neutral" : l.ptwCompliance >= 0.98 ? "good" : "warning",
+        note: l.ptwWentToWork
+          ? `${l.ptwWentToWork} authorised · ${l.ptwClosedLate ?? 0} late · ${l.ptwNotClosed ?? 0} never closed`
+          : "No permits have authorised work yet",
+      },
       { label: "Safety Incidents", value: String(l.safetyIncidents ?? 0), target: "0", tone: (l.safetyIncidents ?? 0) === 0 ? "good" : "danger" },
       { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning" },
       { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
@@ -198,6 +218,9 @@ export default function KpiPage() {
                         </div>
                         <div className={`text-xl font-bold mt-2 ${toneText[k.tone]}`}>{k.value}</div>
                         <p className="text-[10px] text-slate-500 mt-1">Target {k.target}</p>
+                        {k.note && (
+                          <p className="text-[10px] text-slate-500 mt-1 leading-snug">{k.note}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -207,7 +230,7 @@ export default function KpiPage() {
 
             {/* Trend charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ChartCard title="Equipment Availability & Compliance (%)">
+              <ChartCard title="Equipment Availability over time (%) — production hours lost to all maintenance">
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>

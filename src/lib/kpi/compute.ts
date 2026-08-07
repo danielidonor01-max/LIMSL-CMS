@@ -23,6 +23,7 @@ import { getWorkSettings } from "@/lib/settings";
 import { plannedHoursForMonth } from "@/lib/worktime";
 import { adherenceOf } from "@/lib/maintenance/adherence";
 import { reconcileSchedule } from "@/lib/schedule";
+import { availabilityOf, ptwComplianceOf, medianJobHoursOf, backlogHoursOf } from "@/lib/kpi/formulas";
 
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
@@ -83,8 +84,21 @@ export async function computeKpis(now = new Date()) {
     const inspectionCompliance = insSched.length ? insDone / insSched.length : null;
 
     const plannedHours = totalAssets * plannedHoursForMonth(key, workSettings);
-    const availability = plannedHours > 0 ? Math.max(0, (plannedHours - downtimeHours) / plannedHours) : null;
-    const uptime = Math.max(0, plannedHours - downtimeHours);
+    // Planned downtime counts. A machine down eight hours for a PM was 100%
+    // available, which both overstated the number and made it gameable by
+    // classifying work as preventive. Reported alongside the unplanned split so
+    // the two causes stay distinguishable.
+    const plannedDown = wos
+      .filter(
+        (w) =>
+          (w.type === "PREVENTIVE" || w.type === "INSPECTION") &&
+          w.status === "COMPLETED" &&
+          inMonth(w.completionDate, key),
+      )
+      .reduce((a, w) => a + (w.actualDuration ?? 0), 0);
+    const totalDown = downtimeHours + plannedDown;
+    const availability = availabilityOf(plannedHours, downtimeHours, plannedDown);
+    const uptime = Math.max(0, plannedHours - totalDown);
     const mtbf = breakdowns.length ? uptime / breakdowns.length : null;
 
     return {
@@ -135,19 +149,25 @@ export async function computeKpis(now = new Date()) {
 
   const openWoList = wos.filter((w) => w.status === "OPEN" || w.status === "IN_PROGRESS");
   const openWos = openWoList.length;
-  // Backlog in man-hours. estimatedDuration is written by no create path today,
-  // so this is largely openWOs x 2h — reported alongside how many rows carried a
-  // real estimate, so nobody presents an assumption as a measurement.
-  const backlogEstimated = openWoList.filter((w) => (w.estimatedDuration ?? 0) > 0).length;
-  const maintenanceBacklog = Math.round(openWoList.reduce((a, w) => a + (w.estimatedDuration ?? 2), 0));
+  // Backlog in man-hours. Where a work order carries no estimate we fall back to
+  // this workshop's own median completed job rather than a hardcoded 2 hours, so
+  // the assumption is at least drawn from evidence. `backlogEstimated` reports
+  // how many rows carried a real estimate, so nobody mistakes the figure for a
+  // measurement when most of it is inference.
+  const medianJobHours = medianJobHoursOf(wos.map((w) => w.actualDuration));
+  const backlog = backlogHoursOf(openWoList, medianJobHours);
+  const backlogEstimated = backlog.estimated;
+  const maintenanceBacklog = backlog.hours;
   const completedWo = wos.filter((w) => w.status === "COMPLETED").length;
   const woCompletionRate = wos.length ? completedWo / wos.length : null;
 
-  // PTW compliance: of permits that went to work (not cancelled), how many were
-  // properly signed off (reached ACTIVE/CLOSED) rather than left pending/expired.
-  const decidablePerms = perms.filter((p) => p.status !== "CANCELLED");
-  const signedPerms = perms.filter((p) => p.status === "ACTIVE" || p.status === "CLOSED");
-  const ptwCompliance = decidablePerms.length ? signedPerms.length / decidablePerms.length : null;
+  // PTW close-out discipline. The old metric asked "of permits raised, how many
+  // got approved" — and since a permit can ONLY become ACTIVE via a fully signed
+  // chain, it trended to 100% by construction: a safety KPI that could not go
+  // down. What actually matters is whether authorised work was closed out
+  // properly, so the isolation was signed off inside the permit's validity.
+  const ptw = ptwComplianceOf(perms);
+  const ptwCompliance = ptw.compliance;
 
   // Safety incidents: open safety non-conformities.
   const safetyIncidents = ncs.filter((n) => n.type === "SAFETY_INCIDENT").length;
@@ -207,6 +227,12 @@ export async function computeKpis(now = new Date()) {
       maintenanceBacklog,
       woCompletionRate,
       ptwCompliance,
+      ptwWentToWork: ptw.wentToWork,
+      ptwClosedLate: ptw.closedLate,
+      ptwNotClosed: ptw.notClosed,
+      backlogEstimated,
+      openWosTotal: openWoList.length,
+      medianJobHours,
       safetyIncidents,
       breakdownsWindow: windowCms.length,
       failureRate,

@@ -125,7 +125,15 @@ export async function PATCH(
     if (body.status === "IN_PROGRESS" && !body.startDate) {
       updates.startDate = new Date().toISOString().slice(0, 10);
     }
-    if (completing) updates.completionDate = new Date().toISOString().slice(0, 10);
+    if (completing) {
+      updates.completionDate = new Date().toISOString().slice(0, 10);
+      // Real labour hours. actualDuration was written by NO path, so the
+      // maintenance backlog KPI was openWOs x 2h — an assumption presented as
+      // a man-hour measurement in management review. Optional but requested at
+      // completion, and now the only thing that makes backlog-vs-capacity real.
+      const hours = Number(body.actualDuration);
+      if (Number.isFinite(hours) && hours > 0) updates.actualDuration = hours;
+    }
     if (body.priority) updates.priority = body.priority;
     if (body.technicianId !== undefined) updates.technicianId = body.technicianId;
     if (body.technicianName !== undefined) updates.technicianName = body.technicianName;

@@ -41,11 +41,17 @@ export async function GET() {
 
     const stats = [
       {
-        title: "Equipment Availability",
+        // Two different figures used to share the label "Equipment
+        // Availability": this asset headcount, and the time-based availability
+        // on the KPI page. Same words, different metric, same screen — the
+        // first thing an auditor asks is which one management reviews. This
+        // tile is now explicitly the right-now headcount; the time-based
+        // measure keeps the plain name on the KPI page.
+        title: "Assets Available Now",
         value: `${availPct.toFixed(1)}%`,
         target: "≥90.0%",
         status: availPct >= 90 ? "success" : availPct >= 80 ? "warning" : "danger",
-        desc: brokenDown > 0 ? `${brokenDown} asset(s) down` : "All machinery available",
+        desc: brokenDown > 0 ? `${brokenDown} of ${totalAssets} asset(s) down right now` : "All machinery available",
         code: "AVAILABILITY",
       },
       {

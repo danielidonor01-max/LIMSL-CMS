@@ -65,6 +65,10 @@ type ScheduleRow = {
   category: string | null;
   criticality: string | null;
   location: string | null;
+  deferredReason: string | null;
+  deferredByName: string | null;
+  deferredAt: string | null;
+  deferredReviewDate: string | null;
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -81,7 +85,7 @@ const emptyCreate = {
 export default function SchedulePage() {
   const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
   const rows = Array.isArray(rowsData) ? rowsData : [];
-  const [tab, setTab] = useState<"upcoming" | "all">("upcoming");
+  const [tab, setTab] = useState<"upcoming" | "all" | "deferred">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -97,6 +101,9 @@ export default function SchedulePage() {
   const [createForm, setCreateForm] = useState(emptyCreate);
   const [saving, setSaving] = useState(false);
   const [reschedule, setReschedule] = useState<{ row: ScheduleRow; date: string } | null>(null);
+  const [defer, setDefer] = useState<{ row: ScheduleRow; reason: string; reviewDate: string } | null>(
+    null,
+  );
 
   const load = () => {
     refresh();
@@ -155,6 +162,34 @@ export default function SchedulePage() {
     }
   };
 
+  const submitDefer = async () => {
+    if (!defer) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/schedule/${defer.row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "defer",
+          deferredReason: defer.reason,
+          deferredReviewDate: defer.reviewDate,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Failed to defer.");
+        return;
+      }
+      toast.success("Deferral recorded against your name — it returns to overdue on the review date.");
+      setDefer(null);
+      load();
+    } catch {
+      toast.error("Failed to defer.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── KPI summary (PM only) ──────────────────────────────────────────────
   const summary = useMemo(() => {
     const pm = rows.filter((r) => r.activityType === "PM");
@@ -178,6 +213,9 @@ export default function SchedulePage() {
         (r) => r.status !== "COMPLETED" && r.plannedDate >= TODAY && r.plannedDate <= in60,
       );
       out = [...out].sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+    } else if (tab === "deferred") {
+      out = out.filter((r) => r.status === "DEFERRED");
+      out = [...out].sort((a, b) => (a.deferredReviewDate ?? "").localeCompare(b.deferredReviewDate ?? ""));
     } else {
       out = [...out].sort((a, b) => b.plannedDate.localeCompare(a.plannedDate));
     }
@@ -195,6 +233,8 @@ export default function SchedulePage() {
     }
     return out;
   }, [rows, tab, typeFilter, statusFilter, quarterFilter, q]);
+
+  const deferredCount = rows.filter((r) => r.status === "DEFERRED").length;
 
   const filtersActive =
     q.trim() !== "" || typeFilter !== "ALL" || statusFilter !== "ALL" || quarterFilter !== "ALL";
@@ -305,7 +345,7 @@ export default function SchedulePage() {
         {/* Tabs + filters */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
-            {(["upcoming", "all"] as const).map((t) => (
+            {(["upcoming", "all", "deferred"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -315,7 +355,11 @@ export default function SchedulePage() {
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                {t === "upcoming" ? "Upcoming (60 days)" : "All Activities"}
+                {t === "upcoming"
+                  ? "Upcoming (60 days)"
+                  : t === "all"
+                    ? "All Activities"
+                    : `Deferred${deferredCount ? ` (${deferredCount})` : ""}`}
               </button>
             ))}
           </div>
@@ -370,6 +414,14 @@ export default function SchedulePage() {
                 }
                 actionLabel="Clear filters"
                 onAction={clearFilters}
+              />
+            ) : tab === "deferred" ? (
+              <EmptyState
+                icon={ShieldCheck}
+                title="Nothing is being deferred"
+                message="No maintenance has been formally put off. When work has to wait, defer it here rather than letting it run overdue — the reason, the person accepting the risk and the review date are all recorded."
+                actionLabel="View all activities"
+                onAction={() => setTab("all")}
               />
             ) : tab === "upcoming" ? (
               <EmptyState
@@ -443,6 +495,15 @@ export default function SchedulePage() {
                         <Badge className={SCHEDULE_STATUS_BADGE[r.status]}>
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
+                        {r.status === "DEFERRED" && (
+                          <div className="mt-1.5 max-w-[280px] text-[10px] leading-relaxed text-slate-500">
+                            <span className="text-violet-700 font-medium">
+                              {r.deferredByName ?? "—"}
+                            </span>
+                            {r.deferredReviewDate ? ` · review ${formatDate(r.deferredReviewDate)}` : ""}
+                            {r.deferredReason ? <div className="text-slate-500">{r.deferredReason}</div> : null}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
@@ -452,6 +513,22 @@ export default function SchedulePage() {
                               className="text-slate-500 hover:text-slate-900 hover:underline"
                             >
                               Reschedule
+                            </button>
+                          )}
+                          {r.status !== "COMPLETED" && r.status !== "DEFERRED" && (
+                            <button
+                              onClick={() =>
+                                setDefer({
+                                  row: r,
+                                  reason: "",
+                                  reviewDate: new Date(Date.now() + 30 * 864e5)
+                                    .toISOString()
+                                    .slice(0, 10),
+                                })
+                              }
+                              className="text-violet-600 hover:text-violet-700 hover:underline"
+                            >
+                              Defer
                             </button>
                           )}
                           {r.workOrderId ? (
@@ -583,6 +660,48 @@ export default function SchedulePage() {
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setReschedule(null)}>Cancel</Button>
                 <Button type="button" loading={saving} onClick={submitReschedule}>Reschedule</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Deferral — a recorded, owned, time-boxed risk acceptance */}
+        <Modal
+          open={!!defer}
+          onClose={() => setDefer(null)}
+          title="Defer this activity"
+          subtitle={defer ? `${defer.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[defer.row.activityType] ?? defer.row.activityType}` : ""}
+        >
+          {defer && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500">
+                Planned for <span className="font-mono text-slate-700">{formatDate(defer.row.plannedDate)}</span>.
+                Deferring records a risk you are accepting, against your name. It does not close the
+                activity — on the review date it returns to the overdue list.
+              </p>
+              <Field label="Reason and risk accepted" htmlFor="defer-reason">
+                <textarea
+                  id="defer-reason"
+                  rows={3}
+                  value={defer.reason}
+                  onChange={(e) => setDefer((d) => (d ? { ...d, reason: e.target.value } : d))}
+                  placeholder="e.g. Spare bearing on order, ETA 3 weeks. Machine derated to 60% and inspected weekly in the interim."
+                  className={`${FIELD_CLASS} resize-none`}
+                />
+              </Field>
+              <Field label="Review date" htmlFor="defer-review">
+                <input
+                  id="defer-review"
+                  type="date"
+                  value={defer.reviewDate}
+                  min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)}
+                  onChange={(e) => setDefer((d) => (d ? { ...d, reviewDate: e.target.value } : d))}
+                  className={FIELD_CLASS}
+                />
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setDefer(null)}>Cancel</Button>
+                <Button type="button" loading={saving} onClick={submitDefer}>Record deferral</Button>
               </div>
             </div>
           )}

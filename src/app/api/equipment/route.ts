@@ -5,6 +5,7 @@ import { equipment } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
 
 export async function GET() {
   try {
@@ -33,7 +34,9 @@ export async function POST(request: Request) {
       serialNumber: body.serialNumber || "",
       commissioningDate: body.commissioningDate || "",
       status: body.status || "OPERATIONAL",
-      maintenanceFrequency: body.maintenanceFrequency || "Quarterly",
+      // The old literal "Quarterly" matched none of the uppercase frequency
+      // keys the adherence window and recurrence tables use.
+      maintenanceFrequency: body.maintenanceFrequency || suggestedPmFrequency(body.criticality),
       criticality: body.criticality || "MEDIUM",
     };
 

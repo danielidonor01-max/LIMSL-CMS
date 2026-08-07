@@ -50,6 +50,7 @@ export default function WorkOrderDetailPage() {
   const [acting, setActing] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
+  const [actualHours, setActualHours] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -89,7 +90,11 @@ export default function WorkOrderDetailPage() {
       toast.error("Describe the work performed.");
       return;
     }
-    const ok = await patch({ status: "COMPLETED", completionNotes: completionNotes.trim() });
+    const ok = await patch({
+      status: "COMPLETED",
+      completionNotes: completionNotes.trim(),
+      actualDuration: actualHours ? Number(actualHours) : undefined,
+    });
     if (ok) {
       toast.success("Work order completed and logged to the machine history.");
       setCompleteOpen(false);
@@ -343,6 +348,21 @@ export default function WorkOrderDetailPage() {
               placeholder="What was done, parts used, condition on hand-back…"
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 resize-none"
             />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Labour hours spent <span className="text-slate-400 normal-case font-normal">(optional)</span>
+            </label>
+            <input
+              value={actualHours}
+              onChange={(e) => setActualHours(e.target.value)}
+              inputMode="decimal"
+              placeholder="e.g. 2.5"
+              className="w-full sm:w-40 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+            />
+            <p className="text-[11px] text-slate-400">
+              Feeds the maintenance backlog figure — without it, backlog is an assumption rather than a measurement.
+            </p>
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="secondary" onClick={() => setCompleteOpen(false)}>Cancel</Button>

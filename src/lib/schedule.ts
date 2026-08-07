@@ -74,6 +74,22 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
         lt(maintenanceSchedule.plannedDate, today),
       ),
     );
+
+  // A deferral is a time-boxed risk acceptance, not an exemption. Once the
+  // agreed review date passes the activity returns to OVERDUE and re-enters the
+  // compliance denominator — otherwise deferring would be a permanent place to
+  // hide work, which is exactly the behaviour the register exists to stop. The
+  // justification and approver stay on the row.
+  await db
+    .update(maintenanceSchedule)
+    .set({ status: "OVERDUE" })
+    .where(
+      and(
+        eq(maintenanceSchedule.status, "DEFERRED"),
+        isNull(maintenanceSchedule.completedDate),
+        lt(maintenanceSchedule.deferredReviewDate, today),
+      ),
+    );
 }
 
 // Keep the PM PROGRAMME alive independently of completions.

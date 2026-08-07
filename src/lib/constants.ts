@@ -55,6 +55,7 @@ export const SCHEDULE_STATUS_LABELS: Record<string, string> = {
   OVERDUE: "Overdue",
   MISSED: "Missed",
   RESCHEDULED: "Rescheduled",
+  DEFERRED: "Deferred",
 };
 
 export const SCHEDULE_STATUS_BADGE: Record<string, string> = {
@@ -63,6 +64,7 @@ export const SCHEDULE_STATUS_BADGE: Record<string, string> = {
   OVERDUE: "bg-rose-500/10 text-rose-700 border-rose-500/20",
   MISSED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
   RESCHEDULED: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  DEFERRED: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
 // ─── Work orders ────────────────────────────────────────────────────────────

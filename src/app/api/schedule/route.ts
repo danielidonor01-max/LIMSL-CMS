@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcileSchedule } from "@/lib/schedule";
+import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
 
 // Returns every scheduled activity for the year, joined with its equipment.
 export async function GET() {
@@ -29,6 +30,10 @@ export async function GET() {
         status: maintenanceSchedule.status,
         completedDate: maintenanceSchedule.completedDate,
         workOrderId: maintenanceSchedule.workOrderId,
+        deferredReason: maintenanceSchedule.deferredReason,
+        deferredByName: maintenanceSchedule.deferredByName,
+        deferredAt: maintenanceSchedule.deferredAt,
+        deferredReviewDate: maintenanceSchedule.deferredReviewDate,
         equipmentName: equipment.name,
         assetId: equipment.assetId,
         category: equipment.category,
@@ -81,7 +86,11 @@ export async function POST(request: Request) {
       plannedDate: body.plannedDate.slice(0, 10),
       activityType: body.activityType,
       taskDescription: body.taskDescription || null,
-      maintenanceFrequency: body.maintenanceFrequency || eq0.maintenanceFrequency || null,
+      // Falls back to the machine's own frequency, then to what its criticality
+      // implies — so a CRITICAL asset never quietly lands on the same interval
+      // as a spare bench grinder just because nobody chose one.
+      maintenanceFrequency:
+        body.maintenanceFrequency || eq0.maintenanceFrequency || suggestedPmFrequency(eq0.criticality),
       responsiblePersonId: body.responsiblePersonId || null,
       responsiblePersonName: body.responsiblePersonName || null,
       status: "SCHEDULED",
