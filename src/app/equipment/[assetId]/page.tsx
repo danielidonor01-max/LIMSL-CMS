@@ -92,7 +92,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono text-xs gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-450" /> Loading twin telemetry...
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" /> Loading twin telemetry...
       </div>
     );
   }
@@ -349,7 +349,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                             <span className="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono text-[9px] font-bold text-emerald-600">
                               {comp.componentTag}
                             </span>
-                            <h4 className="text-xs font-bold text-slate-250 mt-1">{comp.name}</h4>
+                            <h4 className="text-xs font-bold text-slate-900 mt-1">{comp.name}</h4>
                           </div>
                           <span className="text-[9px] uppercase font-mono text-slate-500">{comp.type}</span>
                         </div>

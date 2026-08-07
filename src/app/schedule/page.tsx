@@ -31,6 +31,7 @@ import {
   MONTH_NAMES,
 } from "@/lib/constants";
 import { CalendarDays, List } from "lucide-react";
+import LoadError from "@/components/LoadError";
 
 const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "One-off (no recurrence)" },
@@ -75,7 +76,7 @@ const emptyCreate = {
 };
 
 export default function SchedulePage() {
-  const { data: rowsData, loading, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
+  const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
   const rows = Array.isArray(rowsData) ? rowsData : [];
   const [tab, setTab] = useState<"upcoming" | "all">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -349,7 +350,9 @@ export default function SchedulePage() {
 
         {/* Table */}
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          {loading ? (
+          {error && !loading ? (
+            <LoadError what="the maintenance schedule" onRetry={refresh} />
+          ) : loading ? (
             <div className="py-16 flex justify-center items-center text-slate-500">
               <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               <span className="text-xs ml-2 font-mono">Loading schedule…</span>

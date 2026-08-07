@@ -225,7 +225,7 @@ export default function NewWms() {
               <button
                 type="button"
                 onClick={addStepField}
-                className="text-[11px] text-emerald-600 hover:text-emerald-350 flex items-center gap-1 transition-all"
+                className="text-[11px] text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-all"
               >
                 + Add Step
               </button>

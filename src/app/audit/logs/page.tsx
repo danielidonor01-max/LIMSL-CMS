@@ -30,7 +30,7 @@ export default function AuditTrailLogs() {
           </div>
         </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
             <List className="w-4 h-4 text-emerald-600" />
             <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Historical Audit Logs</h2>

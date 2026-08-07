@@ -46,6 +46,23 @@ export async function POST(
           { status: 409 },
         );
       }
+      // Segregation of duties: a multi-level chain means multiple PEOPLE.
+      // Seniority lets a manager cover a junior step, which previously let one
+      // senior sign an entire chain alone — including the HSE safety step —
+      // collapsing the control the chain exists to provide.
+      const alreadySigned = chain.find(
+        (s) => s.id !== step.id && s.status === "SIGNED" && s.signedById && s.signedById === user.id,
+      );
+      if (alreadySigned) {
+        return NextResponse.json(
+          {
+            error:
+              `You already signed "${alreadySigned.roleLabel}" on this record. ` +
+              `Each step must be signed by a different person — ask the responsible ${step.roleLabel} to sign.`,
+          },
+          { status: 409 },
+        );
+      }
       if (!body.signatureData) {
         return NextResponse.json({ error: "A drawn signature is required." }, { status: 400 });
       }

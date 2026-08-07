@@ -153,25 +153,33 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     );
   };
 
+  // The RCA fields as the API expects them. Close-out sends these TOO — a
+  // technician who fills the 5 Whys and closes out without first pressing
+  // "Save RCA Analysis" used to lose the entire analysis silently.
+  const rcaPayload = () => ({
+    rcaTool,
+    rcaAnalysis: { why1, why2, why3, why4, why5 },
+    rootCauseCategory,
+    verifiedRootCause,
+    correctiveActions: actions,
+  });
+
   const handleSaveRca = async () => {
     setSaving(true);
     try {
       const res = await fetch(`/api/corrective/${recordId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rcaTool,
-          rcaAnalysis: { why1, why2, why3, why4, why5 },
-          rootCauseCategory,
-          verifiedRootCause,
-          correctiveActions: actions,
-        }),
+        body: JSON.stringify(rcaPayload()),
       });
-      if (res.ok) {
-        toast.success("RCA and corrective actions saved.");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Couldn't save the RCA — check your connection and try again.");
+        return;
       }
-    } catch (err) {
-      console.error(err);
+      toast.success("RCA and corrective actions saved.");
+    } catch {
+      toast.error("Couldn't save the RCA — check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -201,6 +209,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // The RCA rides along so closing out can never discard it.
+          ...rcaPayload(),
           status: "CLOSED",
           technicianSignature: techSign,
           // technicianName is stamped from the session server-side — the client
@@ -217,11 +227,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         }),
       });
 
-      if (res.ok) {
-        router.push("/corrective");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Couldn't close out the record — your entries are still here, try again.");
+        return;
       }
-    } catch (err) {
-      console.error(err);
+      toast.success("Breakdown closed out.");
+      router.push("/corrective");
+    } catch {
+      toast.error("Couldn't close out the record — your entries are still here, try again.");
     } finally {
       setSaving(false);
     }
@@ -420,7 +434,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 <div key={i} className="p-3 bg-slate-100 rounded-lg border border-slate-200 text-xs space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-slate-900">{act.action}</span>
-                    <button type="button" onClick={() => removeAction(i)} className="text-rose-600 hover:text-rose-350">
+                    <button type="button" onClick={() => removeAction(i)} className="text-rose-600 hover:text-rose-700">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>

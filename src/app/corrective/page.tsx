@@ -4,6 +4,7 @@
 import React from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
+import LoadError from "@/components/LoadError";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function CorrectiveMaintenanceList() {
-  const { data: records, loading } = useApi<any[]>("/api/corrective", []);
+  const { data: records, loading, error, refresh } = useApi<any[]>("/api/corrective", []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -71,8 +72,10 @@ export default function CorrectiveMaintenanceList() {
         </div>
 
         {/* Breakdown Records List */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
-          {loading ? (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          {error && !loading ? (
+            <LoadError what="breakdown records" onRetry={refresh} />
+          ) : loading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
               <p className="text-xs font-mono">Loading Corrective Maintenance Database...</p>
@@ -101,7 +104,7 @@ export default function CorrectiveMaintenanceList() {
                             {isClosed ? "Resolved" : isRcaPending ? "RCA Investigation" : "Open Breakdown"}
                           </span>
                           {rec.urgency === "CRITICAL" && (
-                            <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-700 border border-rose-900 text-[8px] font-black uppercase">
+                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 border border-rose-500/20 text-[10px] font-semibold uppercase">
                               Production Stop
                             </span>
                           )}

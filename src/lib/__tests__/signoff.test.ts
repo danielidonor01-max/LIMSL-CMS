@@ -194,3 +194,36 @@ test("every declared chain unlocks strictly in declaration order", () => {
     assert.equal(chainSummary(materialise(chain, statuses)).complete, true, `${entityType} never completes`);
   }
 });
+
+// ── Segregation of duties ────────────────────────────────────────────────────
+// A multi-level chain means multiple PEOPLE. Rank-seniority lets a manager cover
+// a junior step, which without this rule let ONE senior sign an entire chain
+// alone — including the HSE safety step — collapsing the control the chain
+// exists to provide. Mirrors the guard in POST /api/signoffs/[id].
+const alreadySignedByMe = (
+  chain: Array<{ id: string; status: string; signedById: string | null }>,
+  stepId: string,
+  userId: string,
+) => chain.find((s) => s.id !== stepId && s.status === "SIGNED" && s.signedById && s.signedById === userId);
+
+test("one person cannot sign two steps of the same chain", () => {
+  const chain = [
+    { id: "s1", status: "SIGNED", signedById: "u-boss" },
+    { id: "s2", status: "PENDING", signedById: null },
+  ];
+  assert.ok(alreadySignedByMe(chain, "s2", "u-boss"), "same signer must be blocked on a later step");
+  assert.equal(alreadySignedByMe(chain, "s2", "u-other"), undefined, "a different person must be allowed");
+});
+
+test("re-signing your own rejected step is not blocked by the segregation rule", () => {
+  const chain = [{ id: "s1", status: "REJECTED", signedById: "u-a" }];
+  assert.equal(alreadySignedByMe(chain, "s1", "u-a"), undefined);
+});
+
+test("an unsigned earlier step never blocks a later signer", () => {
+  const chain = [
+    { id: "s1", status: "PENDING", signedById: null },
+    { id: "s2", status: "PENDING", signedById: null },
+  ];
+  assert.equal(alreadySignedByMe(chain, "s2", "u-a"), undefined);
+});

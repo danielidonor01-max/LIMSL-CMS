@@ -8,6 +8,7 @@ import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
+import LoadError from "@/components/LoadError";
 import {
   WO_STATUS_BADGE,
   WO_STATUS_LABELS,
@@ -33,7 +34,7 @@ type WorkOrder = {
 };
 
 export default function WorkOrdersPage() {
-  const { data: rowsData, loading } = useApi<WorkOrder[]>("/api/work-orders", []);
+  const { data: rowsData, loading, error, refresh } = useApi<WorkOrder[]>("/api/work-orders", []);
   const rows = Array.isArray(rowsData) ? rowsData : [];
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -119,7 +120,9 @@ export default function WorkOrdersPage() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          {loading ? (
+          {error && !loading ? (
+            <LoadError what="work orders" onRetry={refresh} />
+          ) : loading ? (
             <div className="py-16 flex justify-center items-center text-slate-500">
               <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               <span className="text-xs ml-2 font-mono">Loading work orders…</span>

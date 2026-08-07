@@ -22,9 +22,10 @@ import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { useApi } from "@/lib/api-cache";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
+import LoadError from "@/components/LoadError";
 
 export default function EquipmentList() {
-  const { data: equipmentList, loading } = useApi<any[]>("/api/equipment", []);
+  const { data: equipmentList, loading, error, refresh } = useApi<any[]>("/api/equipment", []);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -160,8 +161,10 @@ export default function EquipmentList() {
         </div>
 
         {/* Data Table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
-          {loading ? (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          {error && !loading ? (
+            <LoadError what="the equipment register" onRetry={refresh} />
+          ) : loading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
               <p className="text-xs font-mono">Loading Sealed Assets Twin Database...</p>
@@ -219,9 +222,9 @@ export default function EquipmentList() {
                             <span
                               className={`px-1.5 py-0.5 rounded ${
                                 eq.criticality === "HIGH"
-                                  ? "bg-rose-950/40 text-rose-700 border border-rose-900/40"
+                                  ? "bg-rose-500/10 text-rose-700 border border-rose-500/20"
                                   : eq.criticality === "MEDIUM"
-                                  ? "bg-amber-950/40 text-amber-700 border border-amber-900/40"
+                                  ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                                   : "bg-slate-100 text-slate-500 border border-slate-200"
                               }`}
                             >

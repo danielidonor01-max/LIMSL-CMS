@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
 import Select from "@/components/Select";
 
@@ -67,11 +68,16 @@ export default function NewCorrectiveRequest() {
         }),
       });
 
-      if (res.ok) {
-        router.push("/corrective");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Couldn't log the fault — check your connection and try again.");
+        return;
       }
-    } catch (err) {
-      console.error("Failed to log fault:", err);
+      toast.success("Fault logged. Maintenance leadership and HSE have been notified.");
+      router.push("/corrective");
+    } catch {
+      // On workshop wifi a dropped request used to look exactly like success.
+      toast.error("Couldn't log the fault — check your connection and try again.");
     } finally {
       setSaving(false);
     }

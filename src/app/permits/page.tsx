@@ -90,7 +90,7 @@ export default function PermitsList() {
           <Stat label="Total Permits" value={records.length} text="text-slate-900" />
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />

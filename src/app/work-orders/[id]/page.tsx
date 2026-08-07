@@ -50,6 +50,7 @@ export default function WorkOrderDetailPage() {
   const [acting, setActing] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -197,7 +198,7 @@ export default function WorkOrderDetailPage() {
               )}
               {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
                 <button
-                  onClick={() => patch({ status: "CANCELLED" })}
+                  onClick={() => setCancelOpen(true)}
                   disabled={acting}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold disabled:opacity-60"
                 >
@@ -290,6 +291,38 @@ export default function WorkOrderDetailPage() {
           />
         )}
       </main>
+
+      {/* Cancelling is irreversible and frees the schedule occurrence — confirm. */}
+      <Modal
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        title="Cancel this work order?"
+        subtitle={`${wo.workOrderNumber} · this cannot be undone`}
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-slate-600">
+            The work order will be marked <strong>cancelled</strong> and its scheduled activity released so a
+            replacement can be raised. Any work already recorded against it stays in the machine&apos;s history.
+          </p>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="secondary" onClick={() => setCancelOpen(false)}>Keep it open</Button>
+            <Button
+              type="button"
+              loading={acting}
+              icon={XCircle}
+              onClick={async () => {
+                const ok = await patch({ status: "CANCELLED" });
+                if (ok) {
+                  toast.success("Work order cancelled.");
+                  setCancelOpen(false);
+                }
+              }}
+            >
+              Cancel work order
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Non-PM completion — the summary becomes the machine-history entry. */}
       <Modal
