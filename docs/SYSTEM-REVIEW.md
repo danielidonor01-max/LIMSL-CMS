@@ -147,8 +147,20 @@ chains, numbering, history, AI knowledge base). Remaining work is convergence.
        in equipment create/edit and the transfer form.
        REMAINING: userId-first for internal actors (text only for external
        parties) — the last piece of this item.
-3. [ ] (M) Regression test suite for the compliance engine (sign-off chains,
-       close-out gates, doc numbering, notification routing).
+3. [x] (M) Regression suite for the compliance engine — 153 pure tests via
+       `npm test` (Node's built-in runner through tsx; NO new dependency, no DB,
+       runs offline in ~3s). Covers: sign-off sequencing & completeness, status
+       derivation incl. sticky manual states, notification routing overlay, AI
+       guardrails (invented-evidence stripping, unverified tags, LOTO
+       injection), production-hours downtime, recurrence month-end clamping,
+       legacy-import classifiers/date parsing, and role/path permissions.
+       It caught three real defects, all fixed in the same pass:
+         - canSignStep failed OPEN on an unknown role (a chain typo became a
+           step almost anyone could sign) — now fails closed.
+         - Legacy date parsing lost a day at UTC+1 (our timezone) for
+           month-name strings and local-midnight cells — now timezone-safe.
+         - The history classifier missed "preventative", importing PMs as
+           notes — now tolerant of the log's real spellings.
 4. [ ] (M) Shared DataTable (extract the users-table pattern) + batch
        operations (schedule assignment, notification triage first).
 5. [ ] (L) Shop-floor PWA/offline tolerance (queue checklist submissions and

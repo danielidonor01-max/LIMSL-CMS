@@ -80,7 +80,13 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
   if (!userRole) return false;
   if (userRole === "SUPER_ADMIN") return true;
   if (userRole === stepRole) return true;
-  return (ROLE_RANK[userRole] ?? 0) > (ROLE_RANK[stepRole] ?? 0);
+  // Fail CLOSED on roles this module doesn't know: an unrecognised step role
+  // (a typo in a chain definition) must never become a step almost anyone
+  // outranks, and an unrecognised user role must never outrank anything.
+  const userRank = ROLE_RANK[userRole];
+  const stepRank = ROLE_RANK[stepRole];
+  if (userRank === undefined || stepRank === undefined) return false;
+  return userRank > stepRank;
 }
 
 // ── Path-based access control ─────────────────────────────────────────────────

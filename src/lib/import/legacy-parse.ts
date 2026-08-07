@@ -51,9 +51,22 @@ function checkYear(iso: string): ParsedDate {
   return OK(iso);
 }
 
+// The calendar date a Date OBJECT represents, without a timezone shift.
+// ExcelJS hands back UTC-midnight dates, while Date.parse of a hand-typed
+// string ("March 5, 2026") yields LOCAL midnight — reading UTC components off
+// the latter loses a day everywhere east of Greenwich (LIMSL runs at UTC+1).
+// Whichever midnight it actually sits on is the one that names the day.
+function calendarIso(d: Date): string {
+  const isUtcMidnight = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+  const y = isUtcMidnight ? d.getUTCFullYear() : d.getFullYear();
+  const m = (isUtcMidnight ? d.getUTCMonth() : d.getMonth()) + 1;
+  const day = isUtcMidnight ? d.getUTCDate() : d.getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function parseLegacyDate(v: ExcelJS.CellValue): ParsedDate {
   if (v == null) return EMPTY;
-  if (v instanceof Date) return checkYear(v.toISOString().slice(0, 10));
+  if (v instanceof Date) return checkYear(calendarIso(v));
   if (typeof v === "object") {
     const o = v as { result?: unknown; text?: unknown; error?: unknown };
     if (o.result != null) return parseLegacyDate(o.result as ExcelJS.CellValue);
@@ -80,7 +93,7 @@ export function parseLegacyDate(v: ExcelJS.CellValue): ParsedDate {
   }
   if (/^\d{1,2}[\/.\-]\d{1,2}$/.test(s)) return BAD(`Date "${s}" has no year`);
   const t = Date.parse(s);
-  if (!Number.isNaN(t)) return checkYear(new Date(t).toISOString().slice(0, 10));
+  if (!Number.isNaN(t)) return checkYear(calendarIso(new Date(t)));
   return BAD(`Could not read "${s}" as a date`);
 }
 
@@ -215,9 +228,10 @@ export const HISTORY_TICK_CATEGORY: Record<string, string> = {
 
 export function classifyHistoryText(description: string): string {
   const d = description.toLowerCase();
-  if (/preventive/.test(d)) return "PM";
-  if (/corrective|broken|repair/.test(d)) return "CM";
-  if (/accident/.test(d)) return "ACCIDENT";
+  // Both spellings appear in the hand-typed logs ("preventative" is common).
+  if (/preventive|preventative|\bpm\b|servicing/.test(d)) return "PM";
+  if (/corrective|broken|repair|fault|fix(ed|ing)?\b|replac/.test(d)) return "CM";
+  if (/accident|incident/.test(d)) return "ACCIDENT";
   if (/calibrat/.test(d)) return "CALIBRATION";
   return "NOTE";
 }

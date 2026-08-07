@@ -16,6 +16,23 @@ import { and, eq, ne } from "drizzle-orm";
 
 export const STICKY_MANUAL_STATUSES = ["DECOMMISSIONED", "AWAITING_PARTS"] as const;
 
+// The decision itself, free of the database so it can be exercised directly.
+// currentStatus is what the register holds now; openCmUrgencies are the
+// urgencies of every non-closed corrective record on the machine.
+export function decideStatus(
+  currentStatus: string,
+  openCmUrgencies: string[],
+  hasActiveWorkOrder: boolean,
+): string {
+  if ((STICKY_MANUAL_STATUSES as readonly string[]).includes(currentStatus)) return currentStatus;
+  if (openCmUrgencies.length > 0) {
+    const severe = openCmUrgencies.some((u) => u === "CRITICAL" || u === "HIGH");
+    return severe ? "BROKEN_DOWN" : "UNDER_MAINTENANCE";
+  }
+  if (hasActiveWorkOrder) return "UNDER_MAINTENANCE";
+  return "OPERATIONAL";
+}
+
 export async function deriveEquipmentStatus(equipmentId: string): Promise<string | null> {
   const [eqRow] = await db
     .select({ status: equipment.status })
@@ -29,19 +46,16 @@ export async function deriveEquipmentStatus(equipmentId: string): Promise<string
     .select({ urgency: correctiveMaintenance.urgency })
     .from(correctiveMaintenance)
     .where(and(eq(correctiveMaintenance.equipmentId, equipmentId), ne(correctiveMaintenance.status, "CLOSED")));
-  if (openCms.length > 0) {
-    const severe = openCms.some((c) => c.urgency === "CRITICAL" || c.urgency === "HIGH");
-    return severe ? "BROKEN_DOWN" : "UNDER_MAINTENANCE";
-  }
 
-  const [activeWo] = await db
-    .select({ id: workOrders.id })
-    .from(workOrders)
-    .where(and(eq(workOrders.equipmentId, equipmentId), eq(workOrders.status, "IN_PROGRESS")))
-    .limit(1);
-  if (activeWo) return "UNDER_MAINTENANCE";
+  const [activeWo] = openCms.length > 0
+    ? [undefined]
+    : await db
+        .select({ id: workOrders.id })
+        .from(workOrders)
+        .where(and(eq(workOrders.equipmentId, equipmentId), eq(workOrders.status, "IN_PROGRESS")))
+        .limit(1);
 
-  return "OPERATIONAL";
+  return decideStatus(eqRow.status, openCms.map((c) => c.urgency ?? ""), !!activeWo);
 }
 
 // Compute and persist. Best-effort at call sites: a derivation failure must
