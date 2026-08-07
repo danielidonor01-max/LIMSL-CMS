@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Loader2, Trash2 } from "lucide-react";
+import { ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Select from "@/components/Select";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
 import { ROLE_LABELS } from "@/lib/roles";
 
 function NewPermitForm() {
@@ -137,25 +138,14 @@ function NewPermitForm() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Form Content */}
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/permits" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Raise Permit-to-Work</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">PTW Generator</p>
-          </div>
-        </div>
-        </div>
+      <main className="flex-1 p-6 max-w-2xl w-full mx-auto space-y-6">
+        <PageHeader
+          icon={ShieldCheck}
+          title="Raise Permit-to-Work"
+          subtitle="Declare the work, its hazards and its controls before isolation begins"
+          backHref="/permits"
+          backLabel="Permits to Work"
+        />
         <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Permit-to-Work Safe Isolation Request
@@ -388,19 +378,12 @@ function NewPermitForm() {
 
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-3">
-            <Link
-              href="/permits"
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all"
-            >
+            <Button variant="secondary" href="/permits">
               Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-md shadow-emerald-950/20"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />} Issue Permit-to-Work
-            </button>
+            </Button>
+            <Button type="submit" disabled={saving} loading={saving}>
+              Issue Permit-to-Work
+            </Button>
           </div>
         </form>
       </main>

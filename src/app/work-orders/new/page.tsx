@@ -3,9 +3,11 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { ClipboardList, Loader2, ArrowLeft, Save } from "lucide-react";
+import { ClipboardList, Loader2, Save } from "lucide-react";
 import Select from "@/components/Select";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import {
   WO_TYPE_LABELS,
   WO_TYPE_OPTIONS,
@@ -127,32 +129,21 @@ function NewWorkOrderForm() {
     }
   };
 
-  const field = "w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40";
-  const labelCls = "block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
-        <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-            <ClipboardList className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">New Work Order</h2>
-            <p className="text-xs text-slate-500 font-mono">
-              {scheduleId ? "Raised from a scheduled activity" : "Manual work order"}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon={ClipboardList}
+          title="New Work Order"
+          subtitle={scheduleId ? "Raised from a scheduled activity" : "Manually raised work order"}
+          backHref="/work-orders"
+          backLabel="Back to work orders"
+        />
 
         {loading ? (
           <div className="py-16 flex justify-center items-center text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading…</span>
+            <span className="text-xs ml-2">Loading…</span>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-5 bg-white border border-slate-200 rounded-xl p-6">
@@ -163,7 +154,7 @@ function NewWorkOrderForm() {
             )}
 
             <div>
-              <label className={labelCls}>Equipment *</label>
+              <label className={LABEL_CLASS}>Equipment *</label>
               <Select
                 value={form.equipmentId}
                 onChange={(v) => onEquipmentChange(v)}
@@ -181,7 +172,7 @@ function NewWorkOrderForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Type *</label>
+                <label className={LABEL_CLASS}>Type *</label>
                 <Select
                   value={form.type}
                   onChange={(v) =>
@@ -195,7 +186,7 @@ function NewWorkOrderForm() {
                 </Select>
               </div>
               <div>
-                <label className={labelCls}>Priority</label>
+                <label className={LABEL_CLASS}>Priority</label>
                 <Select
                   value={form.priority}
                   onChange={(v) => setForm((f) => ({ ...f, priority: v }))}
@@ -209,28 +200,28 @@ function NewWorkOrderForm() {
             </div>
 
             <div>
-              <label className={labelCls}>Title *</label>
+              <label className={LABEL_CLASS}>Title *</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="e.g. Quarterly PM — Sertom Plate Rolling Machine"
-                className={field}
+                className={FIELD_CLASS}
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Planned Date</label>
+                <label className={LABEL_CLASS}>Planned Date</label>
                 <input
                   type="date"
                   value={form.plannedDate}
                   onChange={(e) => setForm((f) => ({ ...f, plannedDate: e.target.value }))}
-                  className={field}
+                  className={FIELD_CLASS}
                 />
               </div>
               <div>
-                <label className={labelCls}>Assigned Technician</label>
+                <label className={LABEL_CLASS}>Assigned Technician</label>
                 <Select
                   value={form.technicianId}
                   onChange={(v) => setForm((f) => ({ ...f, technicianId: v }))}
@@ -247,31 +238,23 @@ function NewWorkOrderForm() {
             </div>
 
             <div>
-              <label className={labelCls}>Description</label>
+              <label className={LABEL_CLASS}>Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={3}
                 placeholder="Scope of work, notes…"
-                className={field}
+                className={FIELD_CLASS}
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Link
-                href="/work-orders"
-                className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-100"
-              >
+              <Button variant="secondary" href="/work-orders">
                 Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-all"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              </Button>
+              <Button type="submit" icon={Save} disabled={saving} loading={saving}>
                 {saving ? "Creating…" : "Create Work Order"}
-              </button>
+              </Button>
             </div>
           </form>
         )}

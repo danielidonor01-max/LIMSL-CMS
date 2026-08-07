@@ -6,10 +6,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import {
-  ArrowLeft,
   ShieldCheck,
   ShieldAlert,
-  Loader2,
   PlusCircle,
   Clock,
   User,
@@ -17,6 +15,10 @@ import {
   AlertTriangle,
   ChevronRight,
 } from "lucide-react";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 
 type Permit = {
@@ -57,31 +59,20 @@ export default function PermitsList() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-slate-900">Permits to Work</h1>
-              <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">
-                PTW Register · signed & approved before work begins
-              </p>
-            </div>
-          </div>
-
-          {canIssue && (
-            <Link
-              href="/permits/new"
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-            >
-              <PlusCircle className="w-5 h-5" /> Raise PTW
-            </Link>
-          )}
-        </div>
+        <PageHeader
+          icon={ShieldCheck}
+          title="Permits to Work"
+          subtitle="Every permit is signed and approved before work begins"
+          backHref="/"
+          backLabel="Dashboard"
+          actions={
+            canIssue ? (
+              <Button href="/permits/new" icon={PlusCircle}>
+                Raise PTW
+              </Button>
+            ) : undefined
+          }
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Stat label="Awaiting Sign-off" value={awaiting} text="text-amber-600" />
@@ -92,14 +83,15 @@ export default function PermitsList() {
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-              <p className="text-xs font-mono">Loading permit register...</p>
-            </div>
+            <TableSkeleton rows={5} cols={4} />
           ) : records.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
-              No permits raised yet. A PTW must be signed and approved before isolation work begins.
-            </div>
+            <EmptyState
+              icon={ShieldCheck}
+              title="No permits raised yet"
+              message="A permit to work must be signed and approved before isolation work begins. Raise one against the equipment being worked on."
+              actionLabel={canIssue ? "Raise PTW" : undefined}
+              actionHref={canIssue ? "/permits/new" : undefined}
+            />
           ) : (
             <div className="divide-y divide-slate-200">
               {records.map((rec) => {
@@ -129,13 +121,14 @@ export default function PermitsList() {
                         {rec.equipmentName || "Equipment"}
                       </h3>
                       <p className="text-xs text-slate-600 max-w-xl line-clamp-1">{rec.workDescription}</p>
-                      <div className="flex flex-wrap gap-4 text-[11px] text-slate-500 font-mono">
+                      <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
                         <div className="flex items-center gap-1">
                           <User className="w-3.5 h-3.5" /> Holder: {rec.permitHolderName || "—"}
                         </div>
                         {rec.expiryDate && (
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" /> Expires {new Date(rec.expiryDate).toLocaleString()}
+                            <Clock className="w-3.5 h-3.5" /> Expires{" "}
+                            <span className="font-mono">{new Date(rec.expiryDate).toLocaleString()}</span>
                           </div>
                         )}
                       </div>

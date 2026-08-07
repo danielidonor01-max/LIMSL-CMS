@@ -18,6 +18,10 @@ import {
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -59,9 +63,6 @@ type CalEvent = {
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
-const inputCls =
-  "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none";
-const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
 const sectionCls = "text-[11px] font-mono uppercase tracking-wider text-slate-500";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -190,43 +191,36 @@ export default function CalibrationPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <Gauge className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Calibration Management</h2>
-              <p className="text-xs text-slate-500 font-mono">
-                Measuring instrument register · traceable calibration history
-              </p>
-            </div>
-          </div>
-          {canWrite && (
-            <Button icon={Plus} onClick={() => openForm({})}>
-              Record Calibration
-            </Button>
-          )}
-        </div>
+        <PageHeader
+          icon={Gauge}
+          title="Calibration Management"
+          subtitle="Measuring instrument register with traceable calibration history"
+          actions={
+            canWrite ? (
+              <Button icon={Plus} onClick={() => openForm({})}>
+                Record Calibration
+              </Button>
+            ) : undefined
+          }
+        />
 
         {loading ? (
-          <div className="py-24 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading calibration register…</span>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={6} cols={7} />
           </div>
         ) : (
           <>
             {summary.OVERDUE > 0 && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-700 text-xs">
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs">
                 <AlertTriangle className="w-4 h-4 animate-pulse" />
                 {summary.OVERDUE} instrument{summary.OVERDUE > 1 ? "s are" : " is"} overdue for calibration — raise a non-conformity and schedule immediately.
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-4">
-              <Stat icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="Current" value={summary.CURRENT ?? 0} tone="border-emerald-500/15 bg-emerald-500/5" />
-              <Stat icon={<Clock className="w-4 h-4 text-amber-600" />} label="Due Soon" value={summary.DUE_SOON ?? 0} tone="border-amber-500/15 bg-amber-500/5" />
-              <Stat icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-rose-500/15 bg-rose-500/5" />
+              <Stat icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label="Current" value={summary.CURRENT ?? 0} tone="border-emerald-200 bg-emerald-50" />
+              <Stat icon={<Clock className="w-4 h-4 text-amber-600" />} label="Due Soon" value={summary.DUE_SOON ?? 0} tone="border-amber-200 bg-amber-50" />
+              <Stat icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-rose-200 bg-rose-50" />
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -247,14 +241,14 @@ export default function CalibrationPage() {
                   <tbody className="divide-y divide-slate-200">
                     {rows.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="py-16 text-center text-slate-500">
-                          <Gauge className="w-5 h-5 mx-auto mb-2 text-slate-400" />
-                          <p className="text-xs">No measuring instruments registered yet.</p>
-                          {canWrite && (
-                            <p className="text-[11px] text-slate-400 mt-1">
-                              Register the first one to start a traceable calibration history.
-                            </p>
-                          )}
+                        <td colSpan={8}>
+                          <EmptyState
+                            icon={Gauge}
+                            title="No measuring instruments registered"
+                            message="Register the first instrument to start a traceable calibration history and get due-date reminders."
+                            actionLabel={canWrite ? "Record Calibration" : undefined}
+                            onAction={canWrite ? () => openForm({}) : undefined}
+                          />
                         </td>
                       </tr>
                     )}
@@ -336,70 +330,70 @@ export default function CalibrationPage() {
         subtitle={editing?.id ? `New calibration event for ${editing.instrumentName ?? "instrument"}` : "New measuring instrument"}
       >
         <form onSubmit={submitCalibration} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Instrument Name</label>
-            <input name="instrumentName" required defaultValue={editing?.instrumentName ?? ""} className={inputCls} />
+          <div>
+            <label className={LABEL_CLASS}>Instrument Name</label>
+            <input name="instrumentName" required defaultValue={editing?.instrumentName ?? ""} className={FIELD_CLASS} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className={labelCls}>Serial Number</label>
-              <input name="serialNumber" defaultValue={editing?.serialNumber ?? ""} className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Serial Number</label>
+              <input name="serialNumber" defaultValue={editing?.serialNumber ?? ""} className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Certificate No.</label>
-              <input name="certificateNumber" defaultValue="" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Certificate No.</label>
+              <input name="certificateNumber" defaultValue="" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Make</label>
-              <input name="make" defaultValue={editing?.make ?? ""} className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Make</label>
+              <input name="make" defaultValue={editing?.make ?? ""} className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Model</label>
-              <input name="model" defaultValue={editing?.model ?? ""} className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Model</label>
+              <input name="model" defaultValue={editing?.model ?? ""} className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Calibration Date</label>
-              <input name="calibrationDate" type="date" defaultValue={TODAY} className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Calibration Date</label>
+              <input name="calibrationDate" type="date" defaultValue={TODAY} className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Interval (days)</label>
-              <input name="calibrationInterval" type="number" defaultValue={editing?.calibrationInterval ?? 365} className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Interval (days)</label>
+              <input name="calibrationInterval" type="number" defaultValue={editing?.calibrationInterval ?? 365} className={FIELD_CLASS} />
             </div>
           </div>
 
           <div className="pt-1 space-y-3">
             <p className={sectionCls}>Result</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className={labelCls}>As Found</label>
+              <div>
+                <label className={LABEL_CLASS}>As Found</label>
                 <Select value={asFound} onChange={setAsFound} ariaLabel="As-found condition">
                   <option value="NOT_CHECKED">Not checked</option>
                   <option value="IN_TOLERANCE">In tolerance</option>
                   <option value="OUT_OF_TOLERANCE">Out of tolerance</option>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>As Left</label>
+              <div>
+                <label className={LABEL_CLASS}>As Left</label>
                 <Select value={asLeft} onChange={setAsLeft} ariaLabel="As-left condition">
                   <option value="IN_TOLERANCE">In tolerance</option>
                   <option value="ADJUSTED">Adjusted</option>
                   <option value="REJECTED">Rejected</option>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Verdict</label>
+              <div>
+                <label className={LABEL_CLASS}>Verdict</label>
                 <Select value={verdict} onChange={setVerdict} ariaLabel="Calibration verdict">
                   <option value="PASS">Pass</option>
                   <option value="FAIL">Fail</option>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Calibrated By</label>
-                <input name="calibratedBy" defaultValue={editing?.calibratedBy ?? ""} className={inputCls} placeholder="Lab / technician" />
+              <div>
+                <label className={LABEL_CLASS}>Calibrated By</label>
+                <input name="calibratedBy" defaultValue={editing?.calibratedBy ?? ""} className={FIELD_CLASS} placeholder="Lab / technician" />
               </div>
             </div>
             {(verdict === "FAIL" || asFound === "OUT_OF_TOLERANCE" || asLeft === "REJECTED") && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-700 text-[11px]">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px]">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
                 <span>
                   Saving this will mark the instrument out of service and raise a non-conformity covering every
@@ -416,42 +410,42 @@ export default function CalibrationPage() {
               is required.
             </p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className={labelCls}>Traceable To</label>
+              <div>
+                <label className={LABEL_CLASS}>Traceable To</label>
                 <input
                   name="traceableTo"
                   defaultValue={editing?.traceableTo ?? ""}
-                  className={inputCls}
+                  className={FIELD_CLASS}
                   placeholder="NIST via ref std SN-4471"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Reference Standard ID</label>
-                <input name="referenceStandardId" defaultValue={editing?.referenceStandardId ?? ""} className={inputCls} />
+              <div>
+                <label className={LABEL_CLASS}>Reference Standard ID</label>
+                <input name="referenceStandardId" defaultValue={editing?.referenceStandardId ?? ""} className={FIELD_CLASS} />
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Lab Name</label>
-                <input name="labName" defaultValue={editing?.labName ?? ""} className={inputCls} />
+              <div>
+                <label className={LABEL_CLASS}>Lab Name</label>
+                <input name="labName" defaultValue={editing?.labName ?? ""} className={FIELD_CLASS} />
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Lab Accreditation No.</label>
-                <input name="labAccreditationNo" defaultValue={editing?.labAccreditationNo ?? ""} className={inputCls} />
+              <div>
+                <label className={LABEL_CLASS}>Lab Accreditation No.</label>
+                <input name="labAccreditationNo" defaultValue={editing?.labAccreditationNo ?? ""} className={FIELD_CLASS} />
               </div>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Accreditation Body</label>
+              <div>
+                <label className={LABEL_CLASS}>Accreditation Body</label>
                 <input
                   name="accreditationBody"
                   defaultValue={editing?.accreditationBody ?? ""}
-                  className={inputCls}
+                  className={FIELD_CLASS}
                   placeholder="UKAS / NACL / DAkkS"
                 />
               </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className={labelCls}>Notes</label>
-            <textarea name="notes" rows={2} className={inputCls} placeholder="Deviations found, adjustments made…" />
+          <div>
+            <label className={LABEL_CLASS}>Notes</label>
+            <textarea name="notes" rows={2} className={FIELD_CLASS} placeholder="Deviations found, adjustments made…" />
           </div>
 
           <div className="flex gap-3 justify-end pt-2">
@@ -474,19 +468,18 @@ export default function CalibrationPage() {
         {eventsLoading ? (
           <div className="py-10 flex justify-center items-center text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading history…</span>
+            <span className="text-xs ml-2">Loading history…</span>
           </div>
         ) : events.length === 0 ? (
-          <div className="py-10 text-center text-slate-500">
-            <History className="w-5 h-5 mx-auto mb-2 text-slate-400" />
-            <p className="text-xs">No calibration events recorded for this instrument yet.</p>
-            {history?.lastCalibrationDate && (
-              <p className="text-[11px] text-slate-400 mt-1">
-                The register shows a last calibration of {formatDate(history.lastCalibrationDate)}, recorded before
-                event history was kept. The next calibration you record will start the history.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            icon={History}
+            title="No calibration events recorded yet"
+            message={
+              history?.lastCalibrationDate
+                ? `The register shows a last calibration of ${formatDate(history.lastCalibrationDate)}, recorded before event history was kept. The next calibration you record will start the history.`
+                : "Nothing has been recorded against this instrument. The next calibration you record will start its history."
+            }
+          />
         ) : (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {events.map((ev) => {
@@ -494,7 +487,7 @@ export default function CalibrationPage() {
               return (
                 <div
                   key={ev.id}
-                  className={`rounded-xl border p-4 space-y-2 ${failed ? "border-rose-500/30 bg-rose-500/5" : "border-slate-200 bg-white"}`}
+                  className={`rounded-xl border p-4 space-y-2 ${failed ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-white"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-mono text-xs font-semibold text-slate-900">

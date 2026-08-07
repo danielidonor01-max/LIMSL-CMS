@@ -2,24 +2,24 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import {
   Layers,
   Search,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ArrowLeft,
   QrCode,
   Eye,
   History,
   Pencil,
-  Loader2,
   Plus,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useApi } from "@/lib/api-cache";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 import LoadError from "@/components/LoadError";
@@ -31,6 +31,13 @@ export default function EquipmentList() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  const filtersActive = search.trim() !== "" || categoryFilter !== "ALL" || statusFilter !== "ALL";
+  const clearFilters = () => {
+    setSearch("");
+    setCategoryFilter("ALL");
+    setStatusFilter("ALL");
+  };
 
   // Filtering
   const filteredEquipment = equipmentList.filter((eq) => {
@@ -93,29 +100,19 @@ export default function EquipmentList() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Content */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Equipment Registry</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">Digital Twins Database</p>
-          </div>
-        </div>
-
-        <Button href="/equipment/new" icon={Plus}>
-          Add New Equipment
-        </Button>
-        </div>
+        <PageHeader
+          icon={Layers}
+          title="Equipment Registry"
+          subtitle="Every machine on the register, with status, criticality and location"
+          backHref="/"
+          backLabel="Dashboard"
+          actions={
+            <Button href="/equipment/new" icon={Plus}>
+              Add New Equipment
+            </Button>
+          }
+        />
         {/* Filters Panel */}
         <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:max-w-xs">
@@ -165,10 +162,7 @@ export default function EquipmentList() {
           {error && !loading ? (
             <LoadError what="the equipment register" onRetry={refresh} />
           ) : loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-              <p className="text-xs font-mono">Loading Sealed Assets Twin Database...</p>
-            </div>
+            <TableSkeleton rows={8} cols={7} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
@@ -202,7 +196,7 @@ export default function EquipmentList() {
                         <tr key={eq.id} className="hover:bg-slate-50 text-slate-600 transition-colors">
                           <td className="py-3.5 px-4 font-semibold text-slate-900">{eq.name}</td>
                           <td className="py-3.5 px-4 font-mono text-slate-500">{eq.assetId}</td>
-                          <td className="py-3.5 px-4 text-[10px] uppercase font-mono">{EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}</td>
+                          <td className="py-3.5 px-4">{EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}</td>
                           <td className="py-3.5 px-4">{eq.oem || "—"}</td>
                           <td className="py-3.5 px-4 text-slate-500">{eq.location || "—"}</td>
                           <td className="py-3.5 px-4">
@@ -249,8 +243,24 @@ export default function EquipmentList() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-slate-500">
-                        No machinery matches your search filters.
+                      <td colSpan={8}>
+                        {filtersActive ? (
+                          <EmptyState
+                            icon={Search}
+                            title="No equipment matches these filters"
+                            message="Nothing on the register matches the current search, category and status. Clear the filters to see every machine."
+                            actionLabel="Clear filters"
+                            onAction={clearFilters}
+                          />
+                        ) : (
+                          <EmptyState
+                            icon={Layers}
+                            title="No equipment registered yet"
+                            message="The asset register is empty. Add your first machine to start raising work orders against it."
+                            actionLabel="Add New Equipment"
+                            actionHref="/equipment/new"
+                          />
+                        )}
                       </td>
                     </tr>
                   )}

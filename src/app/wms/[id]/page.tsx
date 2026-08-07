@@ -5,12 +5,12 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   FileText,
   Loader2,
   ShieldCheck,
 } from "lucide-react";
 import SignoffChain from "@/components/SignoffChain";
+import PageHeader from "@/components/PageHeader";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -77,24 +77,16 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Grid */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/wms" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">{wms.wmsNumber}</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">Method Statement & Quality Plan</p>
-          </div>
-        </div>
+        <div className="lg:col-span-3">
+          <PageHeader
+            icon={FileText}
+            title="Work Method Statement"
+            subtitle="How the job is to be done safely, with its quality plan and approvals"
+            code={wms.wmsNumber}
+            backHref="/wms"
+            backLabel="Work Method Statements"
+          />
         </div>
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-6">

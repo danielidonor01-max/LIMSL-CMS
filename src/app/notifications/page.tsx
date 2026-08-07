@@ -2,11 +2,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bell,
-  Loader2,
   CheckCheck,
   ShieldCheck,
   AlertTriangle,
@@ -15,6 +13,10 @@ import {
   ClipboardCheck,
   MessageCircle,
 } from "lucide-react";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -97,35 +99,30 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <Bell className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Notifications</h2>
-              <p className="text-xs text-slate-500 font-mono">
-                {unread > 0 ? `${unread} unread` : "All caught up"} · alerts also sent to WhatsApp when configured
-              </p>
-            </div>
-          </div>
-          {unread > 0 && (
-            <button
-              onClick={markAll}
-              className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold"
-            >
-              <CheckCheck className="w-4 h-4" /> Mark all read
-            </button>
-          )}
-        </div>
+        <PageHeader
+          icon={Bell}
+          title="Notifications"
+          subtitle={`${unread > 0 ? `${unread} unread` : "All caught up"} · alerts are also sent to WhatsApp when configured`}
+          actions={
+            unread > 0 ? (
+              <Button variant="secondary" icon={CheckCheck} onClick={markAll}>
+                Mark all read
+              </Button>
+            ) : undefined
+          }
+        />
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="py-20 flex justify-center text-slate-500">
-              <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-            </div>
+            <TableSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-sm">No notifications yet.</div>
+            <EmptyState
+              icon={Bell}
+              title="Nothing to read"
+              message="Sign-off requests, breakdown alerts and expiry reminders will appear here as they are raised."
+              actionLabel="Go to Dashboard"
+              actionHref="/"
+            />
           ) : (
             <div className="divide-y divide-slate-200">
               {rows.map((n) => {
@@ -147,8 +144,8 @@ export default function NotificationsPage() {
                         <p className={`text-sm ${n.readAt ? "font-medium text-slate-700" : "font-bold text-slate-900"}`}>{n.title}</p>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">{n.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] font-mono text-slate-400">
-                        <span>{formatDate(n.createdAt)}</span>
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400">
+                        <span className="font-mono">{formatDate(n.createdAt)}</span>
                         <span className="inline-flex items-center gap-1">
                           <MessageCircle className="w-3 h-3" />
                           <span className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? ""}`}>

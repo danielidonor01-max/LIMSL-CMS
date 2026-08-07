@@ -4,7 +4,6 @@
 import React, { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Wrench,
   CheckCircle2,
   AlertTriangle,
@@ -26,6 +25,8 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
 import EquipmentLog from "@/components/EquipmentLog";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -124,55 +125,35 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-      {/* Main Grid */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/equipment" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <Wrench className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">{eq.name}</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">Asset Twin ID: {eq.assetId}</p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <Link
-            href={`/corrective/new?equipmentId=${eq.id}`}
-            className="p-2 hover:bg-rose-50 text-rose-600 hover:text-rose-700 rounded-lg border border-rose-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
-          >
-            <AlertTriangle className="w-4 h-4" /> Report Fault
-          </Link>
-          <Link
-            href={`/equipment/${assetIdKey}/edit`}
-            className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </Link>
-          <Link
-            href={`/equipment/${assetIdKey}/history`}
-            className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
-          >
-            <History className="w-4 h-4" /> History
-          </Link>
-          <Link
-            href={`/equipment/qr/${assetIdKey}`}
-            className="p-2 hover:bg-slate-200 text-emerald-600 hover:text-emerald-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-semibold"
-          >
-            <QrCode className="w-4 h-4" /> Print QR
-          </Link>
-        </div>
-        </div>
+        <PageHeader
+          icon={Wrench}
+          title={eq.name}
+          subtitle="Digital twin — specification, status, documents and maintenance history"
+          code={eq.assetId}
+          backHref="/equipment"
+          backLabel="Equipment Registry"
+          actions={
+            <>
+              <Button variant="danger" size="sm" href={`/corrective/new?equipmentId=${eq.id}`} icon={AlertTriangle}>
+                Report Fault
+              </Button>
+              <Button variant="secondary" size="sm" href={`/equipment/${assetIdKey}/edit`} icon={Pencil}>
+                Edit
+              </Button>
+              <Button variant="secondary" size="sm" href={`/equipment/${assetIdKey}/history`} icon={History}>
+                History
+              </Button>
+              <Button variant="secondary" size="sm" href={`/equipment/qr/${assetIdKey}`} icon={QrCode}>
+                Print QR
+              </Button>
+            </>
+          }
+        />
         {/* Status Highlight Banner */}
         <div
           className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
-            isBroken ? "bg-rose-500/5 border-rose-500/20" : "bg-emerald-500/5 border-emerald-500/20"
+            isBroken ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"
           }`}
         >
           <div className="flex items-center gap-4">
@@ -370,7 +351,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             {/* Right Column: Step-by-step diagnostic hint card blocks */}
             <div className="space-y-6">
               {isBroken && guides.length > 0 ? (
-                <div className="p-5 bg-rose-500/5 border border-rose-500/25 rounded-xl space-y-4">
+                <div className="p-5 bg-rose-50 border border-rose-200 rounded-xl space-y-4">
                   <div className="flex items-center gap-2 text-rose-600">
                     <ShieldAlert className="w-5 h-5 animate-pulse" />
                     <h3 className="text-sm font-bold tracking-wide">Suggested Diagnostic Path</h3>

@@ -141,7 +141,7 @@ export default function Home() {
         {brokenDown.map((eq) => (
           <div
             key={eq.id}
-            className="relative overflow-hidden rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-xl border border-rose-200 bg-rose-50 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3 relative z-10">
               <div className="p-2 bg-rose-500/20 text-rose-600 rounded-lg">
@@ -171,7 +171,7 @@ export default function Home() {
         {loading ? (
           <div className="py-12 flex justify-center items-center">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-            <span className="text-xs text-slate-500 ml-2 font-mono">Loading live metrics…</span>
+            <span className="text-xs text-slate-500 ml-2">Loading live metrics…</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -181,10 +181,10 @@ export default function Home() {
               const isWarning = stat.status === "warning";
               const colorClass = isDanger ? "text-rose-600" : isWarning ? "text-amber-600" : "text-emerald-600";
               const bgClass = isDanger
-                ? "bg-rose-500/5 border-rose-500/15"
+                ? "bg-rose-50 border-rose-200"
                 : isWarning
-                  ? "bg-amber-500/5 border-amber-500/15"
-                  : "bg-emerald-500/5 border-emerald-500/15";
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-emerald-50 border-emerald-200";
               return (
                 <div key={i} className={`p-5 rounded-xl border ${bgClass} backdrop-blur-sm flex flex-col justify-between`}>
                   <div className="flex items-center justify-between">

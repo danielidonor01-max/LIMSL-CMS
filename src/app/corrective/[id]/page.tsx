@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  ArrowLeft,
   AlertTriangle,
   Loader2,
   Calendar,
@@ -21,6 +20,7 @@ import {
 import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
 import { toast } from "sonner";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 
@@ -260,24 +260,17 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Grid */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Work Order: {record.cmrfNumber}</h1>
-            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">Fault & RCA Lifecycle</p>
-          </div>
-        </div>
+        <div className="lg:col-span-3">
+          <PageHeader
+            icon={AlertTriangle}
+            tone="rose"
+            title="Breakdown Record"
+            subtitle="Fault report, root-cause analysis and close-out"
+            code={record.cmrfNumber}
+            backHref="/corrective"
+            backLabel="Corrective Maintenance"
+          />
         </div>
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-6">

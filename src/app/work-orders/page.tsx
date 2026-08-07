@@ -4,9 +4,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
-import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
+import { ClipboardList, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { formatDate } from "@/lib/utils";
 import LoadError from "@/components/LoadError";
 import {
@@ -63,29 +67,26 @@ export default function WorkOrdersPage() {
     return out;
   }, [rows, statusFilter, typeFilter, q]);
 
+  const filtersActive = q.trim() !== "" || statusFilter !== "ALL" || typeFilter !== "ALL";
+  const clearFilters = () => {
+    setQ("");
+    setStatusFilter("ALL");
+    setTypeFilter("ALL");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <ClipboardList className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Work Orders</h2>
-              <p className="text-xs text-slate-500 font-mono">
-                {counts.OPEN ?? 0} open · {counts.IN_PROGRESS ?? 0} in progress ·{" "}
-                {counts.COMPLETED ?? 0} completed
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/work-orders/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
-          >
-            <Plus className="w-4 h-4" /> New Work Order
-          </Link>
-        </div>
+        <PageHeader
+          icon={ClipboardList}
+          title="Work Orders"
+          subtitle={`${counts.OPEN ?? 0} open · ${counts.IN_PROGRESS ?? 0} in progress · ${counts.COMPLETED ?? 0} completed`}
+          actions={
+            <Button href="/work-orders/new" icon={Plus}>
+              New Work Order
+            </Button>
+          }
+        />
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
@@ -123,14 +124,25 @@ export default function WorkOrdersPage() {
           {error && !loading ? (
             <LoadError what="work orders" onRetry={refresh} />
           ) : loading ? (
-            <div className="py-16 flex justify-center items-center text-slate-500">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-              <span className="text-xs ml-2 font-mono">Loading work orders…</span>
-            </div>
+            <TableSkeleton rows={7} cols={7} />
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 text-sm">
-              No work orders match the current filters.
-            </div>
+            filtersActive ? (
+              <EmptyState
+                icon={Search}
+                title="No work orders match these filters"
+                message="There are work orders on file, but none match the current search, status and type."
+                actionLabel="Clear filters"
+                onAction={clearFilters}
+              />
+            ) : (
+              <EmptyState
+                icon={ClipboardList}
+                title="No work orders yet"
+                message="Planned and corrective jobs will appear here once the first work order is raised."
+                actionLabel="New Work Order"
+                actionHref="/work-orders/new"
+              />
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">

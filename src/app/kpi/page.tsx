@@ -22,13 +22,14 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Loader2,
   Activity,
   Wrench,
   DollarSign,
   ShieldCheck,
   Gauge,
 } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import TableSkeleton from "@/components/TableSkeleton";
 import { MONTH_NAMES } from "@/lib/constants";
 
 type Monthly = {
@@ -144,9 +145,9 @@ export default function KpiPage() {
   }, [data]);
 
   const toneCls: Record<Tone, string> = {
-    good: "border-emerald-500/20 bg-emerald-500/5",
-    warning: "border-amber-500/20 bg-amber-500/5",
-    danger: "border-rose-500/20 bg-rose-500/5",
+    good: "border-emerald-200 bg-emerald-50",
+    warning: "border-amber-200 bg-amber-50",
+    danger: "border-rose-200 bg-rose-50",
     neutral: "border-slate-200 bg-slate-50",
   };
   const toneText: Record<Tone, string> = {
@@ -166,22 +167,15 @@ export default function KpiPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">KPI Dashboard</h2>
-            <p className="text-xs text-slate-500 font-mono">
-              Computed live from work orders, breakdowns, PM &amp; permits · last 6 months
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon={TrendingUp}
+          title="KPI Dashboard"
+          subtitle="Computed live from work orders, breakdowns, PM and permits over the last 6 months"
+        />
 
         {loading || !data ? (
-          <div className="py-24 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading KPIs…</span>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
           <>
@@ -203,7 +197,7 @@ export default function KpiPage() {
                           {trendIcon(k)}
                         </div>
                         <div className={`text-xl font-bold mt-2 ${toneText[k.tone]}`}>{k.value}</div>
-                        <p className="text-[10px] text-slate-500 mt-1 font-mono">Target {k.target}</p>
+                        <p className="text-[10px] text-slate-500 mt-1">Target {k.target}</p>
                       </div>
                     ))}
                   </div>

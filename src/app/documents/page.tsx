@@ -4,9 +4,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
-import { FolderOpen, Loader2, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
+import { FolderOpen, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import { formatDate } from "@/lib/utils";
 
 type Doc = {
@@ -93,32 +96,32 @@ export default function DocumentsPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [filtered]);
 
+  const filtersActive = q.trim() !== "" || typeFilter !== "ALL" || statusFilter !== "ALL";
+  const clearFilters = () => {
+    setQ("");
+    setTypeFilter("ALL");
+    setStatusFilter("ALL");
+  };
+
   return (
     <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
-          <FolderOpen className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">Document Register</h2>
-          <p className="text-xs text-slate-500 font-mono">
-            Schematics · manuals · SOPs · calibration · premob — per machine
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={FolderOpen}
+        title="Document Register"
+        subtitle="Schematics, manuals, SOPs, calibration and load-test reports held against each machine"
+      />
 
       {loading ? (
-        <div className="py-24 flex justify-center items-center text-slate-500">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-          <span className="text-xs ml-2 font-mono">Loading documents…</span>
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <TableSkeleton rows={6} cols={4} />
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat label="Doc Compliance" value={`${summary.compliance}%`} tone="border-emerald-500/15 bg-emerald-500/5" text="text-emerald-600" icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} />
+            <Stat label="Doc Compliance" value={`${summary.compliance}%`} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} />
             <Stat label="On File" value={String(summary.available)} tone="border-slate-200 bg-white" text="text-slate-900" icon={<FolderOpen className="w-4 h-4 text-slate-400" />} />
-            <Stat label="Missing" value={String(summary.missing)} tone="border-rose-500/15 bg-rose-500/5" text="text-rose-600" icon={<FileWarning className="w-4 h-4 text-rose-600" />} />
-            <Stat label="Expired" value={String(summary.expired)} tone="border-amber-500/15 bg-amber-500/5" text="text-amber-600" icon={<Clock className="w-4 h-4 text-amber-600" />} />
+            <Stat label="Missing" value={String(summary.missing)} tone="border-rose-200 bg-rose-50" text="text-rose-600" icon={<FileWarning className="w-4 h-4 text-rose-600" />} />
+            <Stat label="Expired" value={String(summary.expired)} tone="border-amber-200 bg-amber-50" text="text-amber-600" icon={<Clock className="w-4 h-4 text-amber-600" />} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -146,7 +149,23 @@ export default function DocumentsPage() {
           {/* Accordion: one row per machine, expand to reveal its documents */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200">
             {groups.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-xs">No documents match.</div>
+              filtersActive ? (
+                <EmptyState
+                  icon={Search}
+                  title="No documents match these filters"
+                  message="Nothing in the register matches the current search, type and status."
+                  actionLabel="Clear filters"
+                  onAction={clearFilters}
+                />
+              ) : (
+                <EmptyState
+                  icon={FolderOpen}
+                  title="No documents on file"
+                  message="Schematics, manuals, SOPs and certificates are attached to a machine from its equipment record."
+                  actionLabel="Go to Equipment Registry"
+                  actionHref="/equipment"
+                />
+              )
             ) : (
               groups.map((g) => {
                 const isOpen = expanded.has(g.id);

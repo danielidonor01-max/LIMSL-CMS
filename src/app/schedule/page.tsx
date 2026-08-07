@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
 import {
   Calendar,
-  Loader2,
   ShieldCheck,
   AlertTriangle,
   Clock,
@@ -20,6 +19,10 @@ import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import Field, { FIELD_CLASS } from "@/components/Field";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
 import { formatDate } from "@/lib/utils";
 import {
@@ -193,6 +196,15 @@ export default function SchedulePage() {
     return out;
   }, [rows, tab, typeFilter, statusFilter, quarterFilter, q]);
 
+  const filtersActive =
+    q.trim() !== "" || typeFilter !== "ALL" || statusFilter !== "ALL" || quarterFilter !== "ALL";
+  const clearFilters = () => {
+    setQ("");
+    setTypeFilter("ALL");
+    setStatusFilter("ALL");
+    setQuarterFilter("ALL");
+  };
+
   const stat = (
     label: string,
     value: string,
@@ -215,48 +227,40 @@ export default function SchedulePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Annual Maintenance Schedule</h2>
-              <p className="text-xs text-slate-500 font-mono">
-                LIMSL-MAIN-PLN-013 · {new Date().getFullYear()} plan
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
-              <button
-                onClick={() => setView("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  view === "list" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <List className="w-3.5 h-3.5" /> List
-              </button>
-              <button
-                onClick={() => setView("calendar")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  view === "calendar" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <CalendarDays className="w-3.5 h-3.5" /> Calendar
-              </button>
-            </div>
-            <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
-              Schedule PM
-            </Button>
-            <Link
-              href="/work-orders/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
-            >
-              <Plus className="w-4 h-4" /> New Work Order
-            </Link>
-          </div>
-        </div>
+        <PageHeader
+          icon={Calendar}
+          title="Annual Maintenance Schedule"
+          subtitle={`Planned preventive work for ${new Date().getFullYear()}, with due dates and adherence`}
+          code="LIMSL-MAIN-PLN-013"
+          actions={
+            <>
+              <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
+                <button
+                  onClick={() => setView("list")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    view === "list" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" /> List
+                </button>
+                <button
+                  onClick={() => setView("calendar")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    view === "calendar" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <CalendarDays className="w-3.5 h-3.5" /> Calendar
+                </button>
+              </div>
+              <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
+                Schedule PM
+              </Button>
+              <Button href="/work-orders/new" icon={Plus}>
+                New Work Order
+              </Button>
+            </>
+          }
+        />
 
         {/* Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -265,31 +269,31 @@ export default function SchedulePage() {
             `${summary.compliance}%`,
             <ShieldCheck className="w-4 h-4 text-emerald-600" />,
             summary.compliance >= 95
-              ? "bg-emerald-500/5 border-emerald-500/15"
+              ? "bg-emerald-50 border-emerald-200"
               : summary.compliance >= 50
-                ? "bg-amber-500/5 border-amber-500/15"
-                : "bg-rose-500/5 border-rose-500/15",
+                ? "bg-amber-50 border-amber-200"
+                : "bg-rose-50 border-rose-200",
             "Completed ÷ due PM · target ≥95%",
           )}
           {stat(
             "Overdue",
             String(summary.overdue),
             <AlertTriangle className="w-4 h-4 text-rose-600" />,
-            "bg-rose-500/5 border-rose-500/15",
+            "bg-rose-50 border-rose-200",
             "Activities past their planned date",
           )}
           {stat(
             "Upcoming",
             String(summary.upcoming),
             <Clock className="w-4 h-4 text-sky-600" />,
-            "bg-sky-500/5 border-sky-500/15",
+            "bg-sky-50 border-sky-200",
             "Scheduled activities still ahead",
           )}
           {stat(
             "Completed",
             String(summary.completed),
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
-            "bg-emerald-500/5 border-emerald-500/15",
+            "bg-emerald-50 border-emerald-200",
             "PM activities signed off this year",
           )}
         </div>
@@ -353,14 +357,39 @@ export default function SchedulePage() {
           {error && !loading ? (
             <LoadError what="the maintenance schedule" onRetry={refresh} />
           ) : loading ? (
-            <div className="py-16 flex justify-center items-center text-slate-500">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-              <span className="text-xs ml-2 font-mono">Loading schedule…</span>
-            </div>
+            <TableSkeleton rows={7} cols={7} />
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 text-sm">
-              No activities match the current filters.
-            </div>
+            filtersActive ? (
+              <EmptyState
+                icon={Search}
+                title="No activities match these filters"
+                message={
+                  tab === "upcoming"
+                    ? "Nothing in the next 60 days matches the current search, type, status and quarter."
+                    : "No scheduled activity matches the current search, type, status and quarter."
+                }
+                actionLabel="Clear filters"
+                onAction={clearFilters}
+              />
+            ) : tab === "upcoming" ? (
+              <EmptyState
+                icon={Calendar}
+                title="Nothing due in the next 60 days"
+                message="No preventive activity falls inside the next 60 days. Switch to All Activities to see the rest of the plan."
+                actionLabel="Schedule PM"
+                onAction={() => setShowCreate(true)}
+                secondaryLabel="View all activities"
+                onSecondary={() => setTab("all")}
+              />
+            ) : (
+              <EmptyState
+                icon={Calendar}
+                title="No maintenance scheduled"
+                message="The annual plan is empty. Schedule preventive maintenance against a machine to start building it."
+                actionLabel="Schedule PM"
+                onAction={() => setShowCreate(true)}
+              />
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -458,8 +487,7 @@ export default function SchedulePage() {
         {/* Schedule a new activity */}
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Schedule Maintenance Activity" subtitle="Recurring activities regenerate automatically on completion">
           <form onSubmit={submitCreate} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className={modalLabel}>Equipment</label>
+            <Field label="Equipment" required>
               <Select
                 value={createForm.equipmentId}
                 onChange={(v) => setCreateForm((f) => ({ ...f, equipmentId: v }))}
@@ -473,20 +501,19 @@ export default function SchedulePage() {
                   </option>
                 ))}
               </Select>
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className={modalLabel}>Planned date</label>
+              <Field label="Planned date" htmlFor="schedule-planned-date" required>
                 <input
+                  id="schedule-planned-date"
                   type="date"
                   value={createForm.plannedDate}
                   onChange={(e) => setCreateForm((f) => ({ ...f, plannedDate: e.target.value }))}
-                  className={modalField}
+                  className={FIELD_CLASS}
                   required
                 />
-              </div>
-              <div className="space-y-1.5">
-                <label className={modalLabel}>Activity type</label>
+              </Field>
+              <Field label="Activity type">
                 <Select
                   value={createForm.activityType}
                   onChange={(v) => setCreateForm((f) => ({ ...f, activityType: v }))}
@@ -496,10 +523,9 @@ export default function SchedulePage() {
                     <option key={k} value={k}>{v}</option>
                   ))}
                 </Select>
-              </div>
+              </Field>
             </div>
-            <div className="space-y-1.5">
-              <label className={modalLabel}>Frequency</label>
+            <Field label="Frequency">
               <Select
                 value={createForm.maintenanceFrequency}
                 onChange={(v) => setCreateForm((f) => ({ ...f, maintenanceFrequency: v }))}
@@ -509,27 +535,27 @@ export default function SchedulePage() {
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className={modalLabel}>Task description</label>
+            </Field>
+            <Field label="Task description" htmlFor="schedule-task">
               <input
+                id="schedule-task"
                 type="text"
                 value={createForm.taskDescription}
                 onChange={(e) => setCreateForm((f) => ({ ...f, taskDescription: e.target.value }))}
                 placeholder="e.g. Monthly lubrication & belt inspection"
-                className={modalField}
+                className={FIELD_CLASS}
               />
-            </div>
-            <div className="space-y-1.5">
-              <label className={modalLabel}>Responsible (optional)</label>
+            </Field>
+            <Field label="Responsible (optional)" htmlFor="schedule-responsible">
               <input
+                id="schedule-responsible"
                 type="text"
                 value={createForm.responsiblePersonName}
                 onChange={(e) => setCreateForm((f) => ({ ...f, responsiblePersonName: e.target.value }))}
                 placeholder="Assigned technician / team"
-                className={modalField}
+                className={FIELD_CLASS}
               />
-            </div>
+            </Field>
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="secondary" onClick={() => setShowCreate(false)}>Cancel</Button>
               <Button type="submit" loading={saving} icon={CalendarPlus}>Schedule</Button>
@@ -544,16 +570,16 @@ export default function SchedulePage() {
               <p className="text-xs text-slate-500">
                 Currently planned for <span className="font-mono text-slate-700">{formatDate(reschedule.row.plannedDate)}</span>.
               </p>
-              <div className="space-y-1.5">
-                <label className={modalLabel}>New planned date</label>
+              <Field label="New planned date" htmlFor="schedule-new-date">
                 <input
+                  id="schedule-new-date"
                   type="date"
                   value={reschedule.date}
                   min={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setReschedule((r) => (r ? { ...r, date: e.target.value } : r))}
-                  className={modalField}
+                  className={FIELD_CLASS}
                 />
-              </div>
+              </Field>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setReschedule(null)}>Cancel</Button>
                 <Button type="button" loading={saving} onClick={submitReschedule}>Reschedule</Button>
@@ -565,10 +591,6 @@ export default function SchedulePage() {
     </div>
   );
 }
-
-const modalLabel = "text-[11px] font-semibold text-slate-500 uppercase tracking-wide";
-const modalField =
-  "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40";
 
 function FilterSelect({
   value,

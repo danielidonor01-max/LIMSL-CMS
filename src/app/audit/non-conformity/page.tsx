@@ -2,24 +2,21 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { useApi } from "@/lib/api-cache";
 import {
-  ArrowLeft,
-  Loader2,
   ShieldAlert,
-  AlertTriangle,
   Play,
   FileCheck,
-  CheckCircle2,
-  Clock,
   Search,
-  Filter,
-  UserCheck,
 } from "lucide-react";
 import Select from "@/components/Select";
 import SignoffChain from "@/components/SignoffChain";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 
 export default function NonConformityRegister() {
   const { data: ncList, loading, refresh } = useApi<any[]>("/api/non-conformities", []);
@@ -91,32 +88,20 @@ export default function NonConformityRegister() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Grid */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <ShieldAlert className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Non-Conformity Registry</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">ISO 9001 Compliance</p>
-          </div>
-        </div>
-
-        <button
-          onClick={triggerAuditScan}
-          disabled={scanning}
-          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-        >
-          {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} Trigger Compliance Audit Scan
-        </button>
+        <div className="lg:col-span-3">
+          <PageHeader
+            icon={ShieldAlert}
+            title="Non-Conformity Registry"
+            subtitle="Where the system fell short of the standard, and what was done about it"
+            backHref="/"
+            backLabel="Dashboard"
+            actions={
+              <Button icon={Play} onClick={triggerAuditScan} disabled={scanning} loading={scanning}>
+                Trigger Compliance Audit Scan
+              </Button>
+            }
+          />
         </div>
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
@@ -128,7 +113,7 @@ export default function NonConformityRegister() {
                 placeholder="Search by code or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg py-2 pl-10 pr-4 text-xs placeholder-slate-500 focus:outline-none transition-all"
+                className={`${FIELD_CLASS} pl-10`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -146,10 +131,7 @@ export default function NonConformityRegister() {
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-                <p className="text-xs font-mono">Loading compliance registry...</p>
-              </div>
+              <TableSkeleton rows={6} cols={3} />
             ) : (
               <div className="divide-y divide-slate-200">
                 {filteredNCs.length > 0 ? (
@@ -175,18 +157,35 @@ export default function NonConformityRegister() {
                             >
                               {nc.status}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">Detected: {nc.detectedDate}</span>
+                            <span className="text-[10px] text-slate-500">
+                              Detected: <span className="font-mono">{nc.detectedDate}</span>
+                            </span>
                           </div>
                           <p className="text-slate-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
-                          <p className="text-[10px] text-slate-500 font-mono">Source: {nc.detectedBy}</p>
+                          <p className="text-[10px] text-slate-500">Source: {nc.detectedBy}</p>
                         </div>
                       </div>
                     );
                   })
+                ) : search.trim() || statusFilter !== "ALL" ? (
+                  <EmptyState
+                    icon={Search}
+                    title="No non-conformities match these filters"
+                    message="Nothing in the registry matches the current search and status filter."
+                    actionLabel="Clear filters"
+                    onAction={() => {
+                      setSearch("");
+                      setStatusFilter("ALL");
+                    }}
+                  />
                 ) : (
-                  <div className="py-12 text-center text-slate-500 text-xs">
-                    No compliance non-conformities found.
-                  </div>
+                  <EmptyState
+                    icon={ShieldAlert}
+                    title="No non-conformities recorded"
+                    message="Nothing has been raised against the standard. Run a compliance audit scan to check the system for gaps."
+                    actionLabel="Trigger Compliance Audit Scan"
+                    onAction={triggerAuditScan}
+                  />
                 )}
               </div>
             )}
@@ -203,7 +202,7 @@ export default function NonConformityRegister() {
             {activeNc ? (
               <div className="space-y-4">
                 <div className="space-y-1 text-xs">
-                  <span className="text-[10px] text-slate-500 uppercase font-mono block">NC Description</span>
+                  <span className={LABEL_CLASS}>NC Description</span>
                   <p className="bg-slate-100 p-3 rounded border border-slate-200 text-slate-600 leading-relaxed font-semibold">
                     {activeNc.description}
                   </p>
@@ -224,36 +223,39 @@ export default function NonConformityRegister() {
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
-                    <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Investigated Root Cause</span>
+                    <div>
+                      <label htmlFor="nc-root-cause" className={LABEL_CLASS}>Investigated Root Cause</label>
                       <textarea
+                        id="nc-root-cause"
                         required
                         placeholder="Log why the non-conformity or missed PM schedule took place..."
                         value={rootCause}
                         onChange={(e) => setRootCause(e.target.value)}
-                        className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-900"
+                        className={`${FIELD_CLASS} h-16 resize-none`}
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Corrective / Preventive Action taken</span>
+                    <div>
+                      <label htmlFor="nc-corrective-action" className={LABEL_CLASS}>Corrective / Preventive Action taken</label>
                       <textarea
+                        id="nc-corrective-action"
                         required
                         placeholder="Describe exact actions taken to resolve the NC and prevent recurrence..."
                         value={correctiveAction}
                         onChange={(e) => setCorrectiveAction(e.target.value)}
-                        className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none text-slate-900"
+                        className={`${FIELD_CLASS} h-16 resize-none`}
                       />
                     </div>
 
-                    <button
+                    <Button
                       type="button"
+                      fullWidth
                       onClick={() => handleCloseNc(activeNc.id)}
                       disabled={saving || !rootCause || !correctiveAction}
-                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+                      loading={saving}
                     >
                       Resolve &amp; Close Non-Conformity
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -266,9 +268,11 @@ export default function NonConformityRegister() {
                 />
               </div>
             ) : (
-              <p className="text-xs text-slate-500 text-center py-12">
-                Select a non-conformity item from the registry list to initiate correction logging or view details.
-              </p>
+              <EmptyState
+                icon={FileCheck}
+                title="No non-conformity selected"
+                message="Pick one from the registry to record its root cause and corrective action, or to review the sign-off chain."
+              />
             )}
           </div>
         </div>

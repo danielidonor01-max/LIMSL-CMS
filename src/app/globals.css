@@ -11,6 +11,29 @@
   --color-foreground: var(--foreground);
 }
 
+/* ── Focus visibility ──────────────────────────────────────────────────────
+   Components clear the browser outline (focus:outline-none) to style their own
+   focus, but most never replaced it — keyboard users could tab through the app
+   with nothing to show where they were. One :focus-visible ring restores it
+   everywhere, without showing a ring on mouse clicks. */
+:where(a, button, input, textarea, select, summary, [role="switch"], [role="tab"], [role="option"], [tabindex]):focus-visible {
+  outline: 2px solid #059669; /* emerald-600 */
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ── Touch input sizing ────────────────────────────────────────────────────
+   iOS Safari auto-zooms any focused input under 16px and does not zoom back
+   out, so a technician was pinching after every field. Applies only to touch
+   pointers, so the desktop type scale is untouched. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

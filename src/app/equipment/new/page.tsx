@@ -3,10 +3,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Save, Layers, RefreshCw } from "lucide-react";
+import { Loader2, Save, Layers, RefreshCw } from "lucide-react";
 import Select from "@/components/Select";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import LocationField from "@/components/LocationField";
 import {
   EQUIPMENT_CATEGORY_LABELS,
@@ -74,35 +76,26 @@ export default function NewEquipmentPage() {
     router.push(`/equipment/${form.assetId.replace(/\//g, "-")}`);
   };
 
-  const field = "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40";
-  const label = "block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
-
   return (
     <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
-      <Link href="/equipment" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to registry
-      </Link>
-
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
-          <Layers className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">Add New Equipment</h2>
-          <p className="text-xs text-slate-500 font-mono">Asset ID is auto-generated — edit if needed</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Layers}
+        title="Add New Equipment"
+        subtitle="The asset ID is generated for you — edit it before saving if you need to"
+        backHref="/equipment"
+        backLabel="Back to registry"
+      />
 
       <form onSubmit={submit} className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         {/* Auto-generated Asset ID */}
         <div>
-          <label className={label}>Asset ID (auto-generated)</label>
+          <label className={LABEL_CLASS}>Asset ID (auto-generated)</label>
           <div className="flex gap-2">
             <input
               value={form.assetId}
               onChange={(e) => set("assetId", e.target.value)}
               placeholder="LEE/PE/0000"
-              className={`${field} font-mono`}
+              className={`${FIELD_CLASS} font-mono`}
               required
             />
             <button
@@ -120,55 +113,55 @@ export default function NewEquipmentPage() {
         </div>
 
         <div>
-          <label className={label}>Equipment Name *</label>
-          <input value={form.name} onChange={(e) => set("name", e.target.value)} className={field} required />
+          <label className={LABEL_CLASS}>Equipment Name *</label>
+          <input value={form.name} onChange={(e) => set("name", e.target.value)} className={FIELD_CLASS} required />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={label}>Category</label>
+            <label className={LABEL_CLASS}>Category</label>
             <Select value={form.category} onChange={(v) => set("category", v)} className="w-full">
               {Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Select>
           </div>
           <div>
-            <label className={label}>Status</label>
+            <label className={LABEL_CLASS}>Status</label>
             <Select value={form.status} onChange={(v) => set("status", v)} className="w-full">
               {Object.entries(EQUIPMENT_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Select>
           </div>
           <div>
-            <label className={label}>Location</label>
+            <label className={LABEL_CLASS}>Location</label>
             <LocationField value={form.location} onChange={(v) => set("location", v)} />
           </div>
           <div>
-            <label className={label}>Bay</label>
-            <input value={form.bay} onChange={(e) => set("bay", e.target.value)} className={field} />
+            <label className={LABEL_CLASS}>Bay</label>
+            <input value={form.bay} onChange={(e) => set("bay", e.target.value)} className={FIELD_CLASS} />
           </div>
           <div>
-            <label className={label}>OEM / Vendor</label>
-            <input value={form.oem} onChange={(e) => set("oem", e.target.value)} className={field} />
+            <label className={LABEL_CLASS}>OEM / Vendor</label>
+            <input value={form.oem} onChange={(e) => set("oem", e.target.value)} className={FIELD_CLASS} />
           </div>
           <div>
-            <label className={label}>Model</label>
-            <input value={form.model} onChange={(e) => set("model", e.target.value)} className={field} />
+            <label className={LABEL_CLASS}>Model</label>
+            <input value={form.model} onChange={(e) => set("model", e.target.value)} className={FIELD_CLASS} />
           </div>
           <div>
-            <label className={label}>Serial Number</label>
-            <input value={form.serialNumber} onChange={(e) => set("serialNumber", e.target.value)} className={field} />
+            <label className={LABEL_CLASS}>Serial Number</label>
+            <input value={form.serialNumber} onChange={(e) => set("serialNumber", e.target.value)} className={FIELD_CLASS} />
           </div>
           <div>
-            <label className={label}>Commissioning Date</label>
-            <input type="date" value={form.commissioningDate} onChange={(e) => set("commissioningDate", e.target.value)} className={field} />
+            <label className={LABEL_CLASS}>Commissioning Date</label>
+            <input type="date" value={form.commissioningDate} onChange={(e) => set("commissioningDate", e.target.value)} className={FIELD_CLASS} />
           </div>
           <div>
-            <label className={label}>Maintenance Frequency</label>
+            <label className={LABEL_CLASS}>Maintenance Frequency</label>
             <Select value={form.maintenanceFrequency} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
               {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{fq.replace(/_/g, " ")}</option>)}
             </Select>
           </div>
           <div>
-            <label className={label}>Criticality</label>
+            <label className={LABEL_CLASS}>Criticality</label>
             <Select value={form.criticality} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </Select>
@@ -176,13 +169,12 @@ export default function NewEquipmentPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href="/equipment" className="px-4 py-2 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100">
+          <Button variant="secondary" href="/equipment">
             Cancel
-          </Link>
-          <button type="submit" disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          </Button>
+          <Button type="submit" icon={Save} disabled={saving} loading={saving}>
             Add Equipment
-          </button>
+          </Button>
         </div>
       </form>
     </div>

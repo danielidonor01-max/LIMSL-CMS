@@ -122,6 +122,27 @@ filtering/CSV and the per-asset maintenance dossier (1.5). 169 tests green.
 
 ---
 
+### Phase 2 — status: SHIPPED
+Foundations: `:focus-visible` ring app-wide (78 elements had cleared the outline
+with no replacement) · coarse-pointer 16px inputs (iOS zoomed on every field
+tap) · `PageHeader`, `Field`, `EmptyState`, `TableSkeleton` built · `Modal` given
+dialog semantics, Escape, focus trap + restore and scroll lock · `KebabMenu`
+given menu semantics, Escape and 44px rows · badges 11px at the `-700` text tone
+(the old formula measured 2.95–4.26:1, below AA) · `Button` md/lg at 44px.
+
+Adoption across 26 module pages: headers migrated with plain-English subtitles
+and document codes moved to their own slot, empty states that distinguish
+"filtered out" from "nothing exists" (with Clear-filters wired), table
+skeletons replacing full-page spinners, and the invisible `/5` tint tier
+retired. 169 tests green.
+
+**Residual drift (small, deliberate):** 7 hand-rolled emerald primaries and 2
+local field-class declarations remain, in `permits/new` and `wms/new` — long
+forms (JHA table, PPE grid, dynamic rows) where a half-migration is worse than
+none. Migrate them when those forms are next touched for real work.
+
+---
+
 ## PHASE 3 — The technician *(≈1 week)*
 *All three failing journeys belong to this persona. Highest daily-life return in the product.*
 

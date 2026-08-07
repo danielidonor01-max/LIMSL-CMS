@@ -2,9 +2,13 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Loader2, ShieldCheck, AlertTriangle, Search, Info } from "lucide-react";
+import { ShieldCheck, Search } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 
 export default function RiskRegister() {
   const { data: risks, loading, refresh } = useApi<any[]>("/api/risks", []);
@@ -54,24 +58,15 @@ export default function RiskRegister() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Grid */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3 flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Maintenance Risk Log</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">FMEA & Mitigation</p>
-          </div>
-        </div>
+        <div className="lg:col-span-3">
+          <PageHeader
+            icon={ShieldCheck}
+            title="Maintenance Risk Log"
+            subtitle="Identified risks, how likely and how severe they are, and the controls put in place"
+            backHref="/"
+            backLabel="Dashboard"
+          />
         </div>
         {/* Risk Register List */}
         <div className="lg:col-span-2 space-y-4">
@@ -83,17 +78,30 @@ export default function RiskRegister() {
                 placeholder="Search by risk number or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg py-2 pl-10 pr-4 text-xs placeholder-slate-500 focus:outline-none transition-all"
+                className={`${FIELD_CLASS} pl-10`}
               />
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-                <p className="text-xs font-mono">Loading risk log...</p>
-              </div>
+              <TableSkeleton rows={6} cols={3} />
+            ) : filteredRisks.length === 0 ? (
+              search.trim() ? (
+                <EmptyState
+                  icon={Search}
+                  title="No risks match your search"
+                  message="Nothing in the risk log matches that risk number or description."
+                  actionLabel="Clear search"
+                  onAction={() => setSearch("")}
+                />
+              ) : (
+                <EmptyState
+                  icon={ShieldCheck}
+                  title="No risks recorded"
+                  message="The risk log is empty. Risks raised against maintenance processes will appear here for mitigation and sign-off."
+                />
+              )
             ) : (
               <div className="divide-y divide-slate-200">
                 {filteredRisks.map((risk) => {
@@ -123,7 +131,7 @@ export default function RiskRegister() {
                           </span>
                         </div>
                         <p className="text-slate-900 text-xs font-semibold leading-relaxed">{risk.identifiedRisk}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">Affects: {risk.affectedProcess}</p>
+                        <p className="text-[10px] text-slate-500">Affects: {risk.affectedProcess}</p>
                       </div>
                     </div>
                   );
@@ -157,29 +165,28 @@ export default function RiskRegister() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Mitigation Measure Plan</label>
+                <div>
+                  <label htmlFor="mitigation-plan" className={LABEL_CLASS}>Mitigation Measure Plan</label>
                   <textarea
+                    id="mitigation-plan"
                     required
                     value={mitigationAction}
                     onChange={(e) => setMitigationAction(e.target.value)}
                     placeholder="Describe specific engineering or operational steps taken to reduce this risk..."
-                    className="w-full h-32 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
+                    className={`${FIELD_CLASS} h-32 resize-none`}
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={saving || !mitigationAction}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />} Update Risk Mitigation Controls
-                </button>
+                <Button type="submit" fullWidth disabled={saving || !mitigationAction} loading={saving}>
+                  Update Risk Mitigation Controls
+                </Button>
               </form>
             ) : (
-              <p className="text-xs text-slate-500 text-center py-12">
-                Select a risk item from the registry list to log mitigation controls or evaluate likelihood scores.
-              </p>
+              <EmptyState
+                icon={ShieldCheck}
+                title="No risk selected"
+                message="Pick a risk from the list to record the controls put in place, or to review its likelihood and consequence scores."
+              />
             )}
           </div>
         </div>

@@ -2,9 +2,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileText, Loader2, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
 
 export default function NewWms() {
   const router = useRouter();
@@ -111,25 +112,14 @@ export default function NewWms() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 max-w-3xl w-full mx-auto">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/wms" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Draft WMS</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">Method Statement Creator</p>
-          </div>
-        </div>
-        </div>
+      <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
+        <PageHeader
+          icon={FileText}
+          title="Draft a Work Method Statement"
+          subtitle="Set out how the job will be done safely, step by step, for review and approval"
+          backHref="/wms"
+          backLabel="Work Method Statements"
+        />
         <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Create Work Method Statement (WMS)
@@ -295,19 +285,12 @@ export default function NewWms() {
 
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-3">
-            <Link
-              href="/wms"
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-all"
-            >
+            <Button variant="secondary" href="/wms">
               Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-md shadow-emerald-950/20"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />} Save Draft WMS
-            </button>
+            </Button>
+            <Button type="submit" disabled={saving} loading={saving}>
+              Save Draft WMS
+            </Button>
           </div>
         </form>
       </main>

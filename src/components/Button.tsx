@@ -14,10 +14,13 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition-all " +
   "disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none whitespace-nowrap";
 
+// md and lg carry a 44px minimum height — the platform touch-target floor. A
+// technician wearing gloves cannot reliably hit the 32px these used to be.
+// sm stays compact for dense table rows, where taps are rarer and deliberate.
 const SIZES: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-xs",
-  md: "px-4 py-2 text-xs",
-  lg: "px-5 py-2.5 text-sm",
+  md: "px-4 py-2 text-xs min-h-11",
+  lg: "px-5 py-2.5 text-sm min-h-11",
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {

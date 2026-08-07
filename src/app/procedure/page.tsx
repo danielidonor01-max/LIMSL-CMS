@@ -18,6 +18,9 @@ import {
 import Markdown from "@/components/Markdown";
 import SignoffChain from "@/components/SignoffChain";
 import { Badge } from "@/components/Badge";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import { FIELD_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 
 type Rev = {
@@ -100,31 +103,28 @@ export default function ProcedurePage() {
   return (
     <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
       {/* Header (hidden on print) */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <BookText className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">Equipment Maintenance Procedure</h2>
-            <p className="text-xs text-slate-500 font-mono">
-              {current?.code} · Rev {current?.revision} · controlled document
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowHistory((s) => !s)} className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold">
-            <History className="w-4 h-4" /> History
-          </button>
-          <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold">
-            <Printer className="w-4 h-4" /> Print
-          </button>
-          {canPropose && !pending && (
-            <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">
-              <FilePlus2 className="w-4 h-4" /> Propose Revision
-            </button>
-          )}
-        </div>
+      <div className="no-print">
+        <PageHeader
+          icon={BookText}
+          title="Equipment Maintenance Procedure"
+          subtitle="The controlled, signed-off method for maintaining equipment"
+          code={current ? `${current.code} · Rev ${current.revision}` : undefined}
+          actions={
+            <>
+              <Button variant="secondary" icon={History} onClick={() => setShowHistory((s) => !s)}>
+                History
+              </Button>
+              <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
+                Print
+              </Button>
+              {canPropose && !pending && (
+                <Button icon={FilePlus2} onClick={startEdit}>
+                  Propose Revision
+                </Button>
+              )}
+            </>
+          }
+        />
       </div>
 
       {/* Revision history */}
@@ -152,7 +152,7 @@ export default function ProcedurePage() {
       {/* Pending revision approval */}
       {pending && (
         <div className="no-print space-y-4">
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-800 text-sm">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm">
             <Clock className="w-4 h-4" />
             Revision {pending.revision} is pending sign-off. It becomes effective once QA/QC, Maintenance Manager, Factory Manager and COO have signed.
           </div>
@@ -170,20 +170,20 @@ export default function ProcedurePage() {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             placeholder="Summary of amendment…"
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40"
+            className={FIELD_CLASS}
           />
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={18}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500/40"
+            className={`${FIELD_CLASS} text-xs font-mono`}
           />
           <p className="text-[10px] text-slate-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setEditing(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100">Cancel</button>
-            <button onClick={propose} disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilePlus2 className="w-4 h-4" />} Submit for approval
-            </button>
+            <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button icon={FilePlus2} onClick={propose} disabled={saving} loading={saving}>
+              Submit for approval
+            </Button>
           </div>
         </div>
       )}

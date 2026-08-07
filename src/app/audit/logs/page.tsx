@@ -5,13 +5,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Download,
   Filter,
-  Loader2,
   RotateCcw,
   Search,
   Shield,
@@ -21,6 +18,10 @@ import {
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS } from "@/components/Field";
 import LoadError from "@/components/LoadError";
 
 type AuditRow = {
@@ -174,46 +175,33 @@ export default function AuditTrailLogs() {
     [from, to, entityType, action, entityId, q],
   );
 
-  const dateField =
-    "bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15";
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all"
-              aria-label="Back to dashboard"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-slate-900">System Audit Log</h1>
-              <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">
-                Compliance Trail · ISO 9001 7.5.3
-              </p>
-            </div>
-          </div>
-          <Button variant="secondary" icon={Download} onClick={exportCsv}>
-            Export CSV
-          </Button>
-        </div>
+        <PageHeader
+          icon={Shield}
+          title="System Audit Log"
+          subtitle="Every recorded change — who did it, when, and to which record"
+          code="ISO 9001 7.5.3"
+          backHref="/"
+          backLabel="Dashboard"
+          actions={
+            <Button variant="secondary" icon={Download} onClick={exportCsv}>
+              Export CSV
+            </Button>
+          }
+        />
 
         {/* Filter bar */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">From</span>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={dateField} />
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={FIELD_CLASS} />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">To</span>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={dateField} />
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={FIELD_CLASS} />
             </label>
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Record type</span>
@@ -246,7 +234,7 @@ export default function AuditTrailLogs() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Asset, document no., description…"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-9 pr-3 text-xs placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                  className={`${FIELD_CLASS} pl-9`}
                 />
               </div>
             </label>
@@ -280,17 +268,26 @@ export default function AuditTrailLogs() {
             <LoadError what="the audit trail" onRetry={() => setReloadKey((k) => k + 1)} />
           </div>
         ) : loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-            <p className="text-xs font-mono">Loading system logs…</p>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={8} cols={5} />
           </div>
         ) : rows.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl py-16 text-center">
-            <Shield className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-            <p className="text-sm font-semibold text-slate-600">No entries match</p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {filtered ? "Widen the date range or clear a filter." : "No activity has been recorded yet."}
-            </p>
+          <div className="bg-white border border-slate-200 rounded-xl">
+            {filtered ? (
+              <EmptyState
+                icon={Search}
+                title="No entries match these filters"
+                message="Nothing in the trail falls inside the current date range, record type, action and search."
+                actionLabel="Clear filters"
+                onAction={reset}
+              />
+            ) : (
+              <EmptyState
+                icon={Shield}
+                title="No activity recorded yet"
+                message="Every create, update, sign-off and approval lands here automatically as people start using the system."
+              />
+            )}
           </div>
         ) : (
           <>
@@ -365,13 +362,13 @@ export default function AuditTrailLogs() {
                     <p className="text-xs text-slate-700 mt-2">
                       {log.entityDescription || "No description recorded."}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-slate-500 font-mono">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-slate-500">
                       <span className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5" /> {log.userName || "System"}
                       </span>
                       <span className="truncate">
                         {titleise(log.entityType)}
-                        {log.entityId ? ` · ${log.entityId}` : ""}
+                        {log.entityId ? <span className="font-mono"> · {log.entityId}</span> : ""}
                       </span>
                     </div>
                   </div>

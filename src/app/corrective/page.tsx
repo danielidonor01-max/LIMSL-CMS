@@ -2,18 +2,17 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
 import LoadError from "@/components/LoadError";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import {
   AlertTriangle,
-  ArrowLeft,
-  Loader2,
   Calendar,
   User,
   PlusCircle,
-  FileCheck,
-  CheckCircle2,
   Clock,
   ChevronRight,
 } from "lucide-react";
@@ -23,47 +22,35 @@ export default function CorrectiveMaintenanceList() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Content */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Corrective Maintenance</h1>
-            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">CMRF & RCA Log</p>
-          </div>
-        </div>
-
-        <Link
-          href="/corrective/new"
-          className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-rose-950/20"
-        >
-          <PlusCircle className="w-5 h-5" /> Report Machinery Fault
-        </Link>
-        </div>
+        <PageHeader
+          icon={AlertTriangle}
+          tone="rose"
+          title="Corrective Maintenance"
+          subtitle="Breakdown reports, root-cause analysis and close-out"
+          backHref="/"
+          backLabel="Dashboard"
+          actions={
+            <Button variant="danger" href="/corrective/new" icon={PlusCircle}>
+              Report Machinery Fault
+            </Button>
+          }
+        />
         {/* Statistics or Status Panel */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-rose-500/5 border border-rose-500/15 rounded-xl">
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Breakdowns</p>
             <h2 className="text-2xl font-bold text-rose-600 mt-2">
               {records.filter((r) => r.status === "OPEN" || r.status === "IN_PROGRESS" || r.status === "PENDING_RCA").length}
             </h2>
           </div>
-          <div className="p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Supervisor Review</p>
             <h2 className="text-2xl font-bold text-amber-600 mt-2">
               {records.filter((r) => r.status === "PENDING_APPROVAL").length}
             </h2>
           </div>
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Closed Breakdowns (2026)</p>
             <h2 className="text-2xl font-bold text-emerald-600 mt-2">
               {records.filter((r) => r.status === "CLOSED").length}
@@ -76,10 +63,7 @@ export default function CorrectiveMaintenanceList() {
           {error && !loading ? (
             <LoadError what="breakdown records" onRetry={refresh} />
           ) : loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
-              <p className="text-xs font-mono">Loading Corrective Maintenance Database...</p>
-            </div>
+            <TableSkeleton rows={5} cols={4} />
           ) : (
             <div className="divide-y divide-slate-200">
               {records.length > 0 ? (
@@ -110,32 +94,35 @@ export default function CorrectiveMaintenanceList() {
                           )}
                         </div>
                         <h3 className="text-sm font-bold text-slate-900">{rec.faultDescription || "Unnamed Fault"}</h3>
-                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500 font-mono">
+                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-500" /> Reported: {rec.reportedDate}
+                            <Clock className="w-3.5 h-3.5 text-slate-500" /> Reported:{" "}
+                            <span className="font-mono">{rec.reportedDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <User className="w-3.5 h-3.5 text-slate-500" /> By: {rec.reportedByName}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500" /> Breakdown ID: {rec.breakdownId || "N/A"}
+                            <Calendar className="w-3.5 h-3.5 text-slate-500" /> Breakdown ID:{" "}
+                            <span className="font-mono">{rec.breakdownId || "N/A"}</span>
                           </div>
                         </div>
                       </div>
 
-                      <Link
-                        href={`/corrective/${rec.id}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition-all group"
-                      >
-                        Action Log <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-900 transition-colors" />
-                      </Link>
+                      <Button variant="subtle" size="sm" href={`/corrective/${rec.id}`} iconRight={ChevronRight}>
+                        Action Log
+                      </Button>
                     </div>
                   );
                 })
               ) : (
-                <div className="py-12 text-center text-slate-500 text-xs">
-                  No machinery breakdowns or corrective reports currently logged.
-                </div>
+                <EmptyState
+                  icon={AlertTriangle}
+                  title="No breakdowns logged"
+                  message="Nothing has been reported as broken down. When a machine fails, report it here so the fault, its root cause and the repair are on record."
+                  actionLabel="Report Machinery Fault"
+                  actionHref="/corrective/new"
+                />
               )}
             </div>
           )}

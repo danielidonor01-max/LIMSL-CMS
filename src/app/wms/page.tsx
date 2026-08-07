@@ -2,17 +2,15 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
 import {
   FileText,
-  ArrowLeft,
-  Loader2,
-  Calendar,
   User,
   PlusCircle,
-  FileCheck,
-  CheckCircle2,
   Clock,
   ChevronRight,
 } from "lucide-react";
@@ -22,32 +20,19 @@ export default function WmsList() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Main Content */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Work Method Statements</h1>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider uppercase">WMS Library</p>
-          </div>
-        </div>
-
-        <Link
-          href="/wms/new"
-          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-        >
-          <PlusCircle className="w-5 h-5" /> Draft New WMS
-        </Link>
-        </div>
+        <PageHeader
+          icon={FileText}
+          title="Work Method Statements"
+          subtitle="How each job is to be carried out safely — drafted, reviewed and approved"
+          backHref="/"
+          backLabel="Dashboard"
+          actions={
+            <Button href="/wms/new" icon={PlusCircle}>
+              Draft New WMS
+            </Button>
+          }
+        />
         {/* Status Tracker */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-slate-100 border border-slate-200 rounded-xl">
@@ -71,10 +56,7 @@ export default function WmsList() {
         {/* WMS Documents List */}
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-              <p className="text-xs font-mono">Loading WMS Database...</p>
-            </div>
+            <TableSkeleton rows={5} cols={4} />
           ) : (
             <div className="divide-y divide-slate-200">
               {records.length > 0 ? (
@@ -100,9 +82,10 @@ export default function WmsList() {
                           <span className="text-[10px] text-slate-500 font-mono">Rev {rec.revision}</span>
                         </div>
                         <h3 className="text-sm font-bold text-slate-900">{rec.title}</h3>
-                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500 font-mono">
+                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-500" /> Prepared: {rec.preparedDate}
+                            <Clock className="w-3.5 h-3.5 text-slate-500" /> Prepared:{" "}
+                            <span className="font-mono">{rec.preparedDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <User className="w-3.5 h-3.5 text-slate-500" /> Prepared By: {rec.preparedByName}
@@ -111,20 +94,21 @@ export default function WmsList() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Link
-                          href={`/wms/${rec.id}`}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition-all group"
-                        >
-                          View Document <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-900 transition-colors" />
-                        </Link>
+                        <Button variant="subtle" size="sm" href={`/wms/${rec.id}`} iconRight={ChevronRight}>
+                          View Document
+                        </Button>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div className="py-12 text-center text-slate-500 text-xs">
-                  No Work Method Statements logged.
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="No work method statements yet"
+                  message="A WMS sets out how a job is to be done safely and must be approved before the work starts. Draft the first one here."
+                  actionLabel="Draft New WMS"
+                  actionHref="/wms/new"
+                />
               )}
             </div>
           )}

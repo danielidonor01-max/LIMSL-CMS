@@ -2,11 +2,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import Select from "@/components/Select";
+import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
+import Field, { FIELD_CLASS } from "@/components/Field";
 
 export default function NewCorrectiveRequest() {
   const router = useRouter();
@@ -103,36 +105,26 @@ export default function NewCorrectiveRequest() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Header */}
-
-
-      {/* Form Content */}
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto">
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-3">
-          <Link href="/corrective" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900">Log Fault (CMRF)</h1>
-            <p className="text-[10px] text-rose-600 font-mono tracking-wider uppercase">LIMSL-MAIN-015</p>
-          </div>
-        </div>
-        </div>
+      <main className="flex-1 p-6 max-w-2xl w-full mx-auto space-y-6">
+        <PageHeader
+          icon={AlertTriangle}
+          tone="rose"
+          title="Report a Machinery Fault"
+          subtitle="Raise a corrective maintenance request against a machine"
+          code="LIMSL-MAIN-015"
+          backHref="/corrective"
+          backLabel="Corrective Maintenance"
+        />
         <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Corrective Maintenance Request Form
           </h2>
 
           {/* Machine Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Select Broken Equipment</label>
+          <Field label="Select Broken Equipment" required>
             {loadingEq ? (
               <div className="flex items-center text-xs text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin text-rose-600 mr-2" /> Loading equipment list...
+                <Loader2 className="w-4 h-4 animate-spin text-rose-600 mr-2" /> Loading equipment list…
               </div>
             ) : (
               <Select
@@ -148,12 +140,11 @@ export default function NewCorrectiveRequest() {
                 ))}
               </Select>
             )}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Fault Nature */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Nature of Fault</label>
+            <Field label="Nature of Fault">
               <Select
                 value={faultType}
                 onChange={(v) => setFaultType(v)}
@@ -165,11 +156,10 @@ export default function NewCorrectiveRequest() {
                   </option>
                 ))}
               </Select>
-            </div>
+            </Field>
 
             {/* Urgency */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Urgency Level</label>
+            <Field label="Urgency Level">
               <Select
                 value={urgency}
                 onChange={(v) => setUrgency(v)}
@@ -181,25 +171,24 @@ export default function NewCorrectiveRequest() {
                   </option>
                 ))}
               </Select>
-            </div>
+            </Field>
           </div>
 
           {/* Fault Description */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Fault Description / Observed Symptom</label>
+          <Field label="Fault Description / Observed Symptom" htmlFor="fault-description" required>
             <textarea
+              id="fault-description"
               placeholder="Describe the noise, vibration, failed startup sequence, burnt smell, or error codes observed..."
               value={faultDescription}
               onChange={(e) => setFaultDescription(e.target.value)}
-              className="w-full h-24 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
+              className={`${FIELD_CLASS} h-24 resize-none`}
               required
             />
-          </div>
+          </Field>
 
           {/* Additional details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Operating Status at Failure</label>
+            <Field label="Operating Status at Failure">
               <Select
                 value={operatingStatusAtFailure}
                 onChange={(v) => setOperatingStatusAtFailure(v)}
@@ -210,46 +199,39 @@ export default function NewCorrectiveRequest() {
                 <option value="STARTUP">Startup Sequence</option>
                 <option value="SHUTDOWN">Shutdown Sequence</option>
               </Select>
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Error Codes (if any)</label>
+            <Field label="Error Codes (if any)" htmlFor="error-codes">
               <input
+                id="error-codes"
                 type="text"
                 placeholder="e.g. E-041, Spindle Overload"
                 value={errorCodes}
                 onChange={(e) => setErrorCodes(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+                className={FIELD_CLASS}
               />
-            </div>
+            </Field>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Environmental / Load Conditions</label>
+          <Field label="Environmental / Load Conditions" htmlFor="environmental-condition">
             <input
+              id="environmental-condition"
               type="text"
               placeholder="e.g. 35°C Room Temp, 80% Max Machine Load"
               value={environmentalCondition}
               onChange={(e) => setEnvironmentalCondition(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none"
+              className={FIELD_CLASS}
             />
-          </div>
+          </Field>
 
           {/* Form Actions */}
           <div className="flex gap-3 justify-end pt-3">
-            <Link
-              href="/corrective"
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
-            >
+            <Button variant="secondary" href="/corrective">
               Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-md shadow-rose-950/20"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />} Submit Request
-            </button>
+            </Button>
+            <Button variant="danger" type="submit" disabled={saving} loading={saving}>
+              Submit Request
+            </Button>
           </div>
         </form>
       </main>

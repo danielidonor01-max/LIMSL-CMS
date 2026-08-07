@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   FileBarChart,
-  Loader2,
   Download,
   Printer,
   ShieldCheck,
@@ -18,6 +17,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS } from "@/components/Field";
 import { downloadCSV } from "@/lib/export";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
@@ -145,33 +147,24 @@ export default function ReportsPage() {
   };
 
   const reportCard = "bg-white border border-slate-200 rounded-xl p-5";
-  const dateField =
-    "bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <FileBarChart className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Reports & Data Export</h2>
-              <p className="text-xs text-slate-500 font-mono">
-                Compliance · downtime · cost · equipment status
-              </p>
-            </div>
-          </div>
-          <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
-            Print
-          </Button>
-        </div>
+        <PageHeader
+          icon={FileBarChart}
+          title="Reports & Data Export"
+          subtitle="Printable compliance registers, per-asset dossiers and CSV extracts"
+          actions={
+            <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
+              Print
+            </Button>
+          }
+        />
 
         {loading || !kpi ? (
-          <div className="py-24 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Compiling reports…</span>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={6} cols={4} />
           </div>
         ) : (
           <>
@@ -262,7 +255,7 @@ export default function ReportsPage() {
                     type="date"
                     value={dossierFrom}
                     onChange={(e) => setDossierFrom(e.target.value)}
-                    className={dateField}
+                    className={FIELD_CLASS}
                   />
                 </label>
                 <label className="flex flex-col gap-1">
@@ -271,7 +264,7 @@ export default function ReportsPage() {
                     type="date"
                     value={dossierTo}
                     onChange={(e) => setDossierTo(e.target.value)}
-                    className={dateField}
+                    className={FIELD_CLASS}
                   />
                 </label>
               </div>

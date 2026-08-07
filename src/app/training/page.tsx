@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import {
   GraduationCap,
-  Loader2,
   Plus,
   ClipboardCheck,
   AlertTriangle,
@@ -19,6 +18,10 @@ import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { TRAINING_WRITE_ROLES, ROLE_LABELS } from "@/lib/roles";
 import { toast } from "sonner";
 
@@ -58,9 +61,6 @@ const LEVEL_CLS = [
 ];
 
 const TODAY = new Date().toISOString().slice(0, 10);
-const inputCls =
-  "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none";
-const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
 
 const isRecertDue = (c: Competency) =>
   !!c.expiryDate && new Date(c.expiryDate).getTime() < Date.now() + 30 * 864e5;
@@ -190,55 +190,51 @@ export default function TrainingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Training & Competency</h2>
-              <p className="text-xs text-slate-500 font-mono">Skills matrix · competency gaps · training register</p>
-            </div>
-          </div>
-          {canWrite && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setAssessCategory("TECHNICAL");
-                  setAssessLevel("2");
-                  setAssessRequiredLevel("2");
-                  setShowAssess(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
-              >
-                <ClipboardCheck className="w-4 h-4" /> Record Assessment
-              </button>
-              <button
-                onClick={() => {
-                  setTrainCategory("TECHNICAL");
-                  setTrainType("INTERNAL");
-                  setShowTraining(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-              >
-                <Plus className="w-4 h-4" /> Schedule Training
-              </button>
-            </div>
-          )}
-        </div>
+        <PageHeader
+          icon={GraduationCap}
+          title="Training & Competency"
+          subtitle="Who is qualified to do what, where the gaps are, and what training is booked"
+          actions={
+            canWrite ? (
+              <>
+                <Button
+                  variant="secondary"
+                  icon={ClipboardCheck}
+                  onClick={() => {
+                    setAssessCategory("TECHNICAL");
+                    setAssessLevel("2");
+                    setAssessRequiredLevel("2");
+                    setShowAssess(true);
+                  }}
+                >
+                  Record Assessment
+                </Button>
+                <Button
+                  icon={Plus}
+                  onClick={() => {
+                    setTrainCategory("TECHNICAL");
+                    setTrainType("INTERNAL");
+                    setShowTraining(true);
+                  }}
+                >
+                  Schedule Training
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
 
         {loading ? (
-          <div className="py-24 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading training data…</span>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={6} cols={6} />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat label="Competency Gaps" value={summary.gaps} tone="border-rose-500/15 bg-rose-500/5" text="text-rose-600" />
-              <Stat label="Recert Due ≤30d" value={summary.recerts} tone="border-amber-500/15 bg-amber-500/5" text="text-amber-600" />
-              <Stat label="Planned Training" value={summary.planned} tone="border-sky-500/15 bg-sky-500/5" text="text-sky-600" />
-              <Stat label="Completed" value={summary.completed} tone="border-emerald-500/15 bg-emerald-500/5" text="text-emerald-600" />
+              <Stat label="Competency Gaps" value={summary.gaps} tone="border-rose-200 bg-rose-50" text="text-rose-600" />
+              <Stat label="Recert Due ≤30d" value={summary.recerts} tone="border-amber-200 bg-amber-50" text="text-amber-600" />
+              <Stat label="Planned Training" value={summary.planned} tone="border-sky-200 bg-sky-50" text="text-sky-600" />
+              <Stat label="Completed" value={summary.completed} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" />
             </div>
 
             {/* Competency Matrix */}
@@ -254,7 +250,22 @@ export default function TrainingPage() {
                 </div>
               </div>
               {people.length === 0 ? (
-                <div className="py-10 text-center text-slate-500 text-sm">No competency assessments recorded.</div>
+                <EmptyState
+                  icon={ClipboardCheck}
+                  title="No competency assessments recorded"
+                  message="The skills matrix builds itself from assessments. Record the first one to see who is qualified for what, and where the gaps are."
+                  actionLabel={canWrite ? "Record Assessment" : undefined}
+                  onAction={
+                    canWrite
+                      ? () => {
+                          setAssessCategory("TECHNICAL");
+                          setAssessLevel("2");
+                          setAssessRequiredLevel("2");
+                          setShowAssess(true);
+                        }
+                      : undefined
+                  }
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
@@ -317,7 +328,21 @@ export default function TrainingPage() {
                 <h3 className="text-sm font-semibold text-slate-900">Training Register</h3>
               </div>
               {trainings.length === 0 ? (
-                <div className="py-10 text-center text-slate-500 text-sm">No training records.</div>
+                <EmptyState
+                  icon={CalendarClock}
+                  title="No training booked or completed"
+                  message="Schedule training against a person to close a competency gap and keep certificates current."
+                  actionLabel={canWrite ? "Schedule Training" : undefined}
+                  onAction={
+                    canWrite
+                      ? () => {
+                          setTrainCategory("TECHNICAL");
+                          setTrainType("INTERNAL");
+                          setShowTraining(true);
+                        }
+                      : undefined
+                  }
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -391,22 +416,22 @@ export default function TrainingPage() {
       <Modal open={showAssess} onClose={() => setShowAssess(false)} title="Record Competency Assessment" subtitle="Person × skill area proficiency">
         <form onSubmit={submitAssessment} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className={labelCls}>Employee Name</label>
-              <input name="employeeName" required className={inputCls} list="people-list" defaultValue="" />
+            <div>
+              <label className={LABEL_CLASS}>Employee Name</label>
+              <input name="employeeName" required className={FIELD_CLASS} list="people-list" defaultValue="" />
               <datalist id="people-list">
                 {people.map((p) => <option key={p} value={p} />)}
               </datalist>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Skill Area</label>
-              <input name="skillArea" required className={inputCls} list="skills-list" defaultValue="" />
+            <div>
+              <label className={LABEL_CLASS}>Skill Area</label>
+              <input name="skillArea" required className={FIELD_CLASS} list="skills-list" defaultValue="" />
               <datalist id="skills-list">
                 {skills.map((s) => <option key={s} value={s} />)}
               </datalist>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Category</label>
+            <div>
+              <label className={LABEL_CLASS}>Category</label>
               <Select value={assessCategory} onChange={setAssessCategory} className="w-full">
                 <option value="TECHNICAL">Technical</option>
                 <option value="HSE">HSE</option>
@@ -414,21 +439,21 @@ export default function TrainingPage() {
                 <option value="OEM">OEM</option>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Assessed Level</label>
+            <div>
+              <label className={LABEL_CLASS}>Assessed Level</label>
               <Select value={assessLevel} onChange={setAssessLevel} className="w-full">
                 {LEVELS.map((l, i) => <option key={l} value={i}>{i} · {l}</option>)}
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Required Level</label>
+            <div>
+              <label className={LABEL_CLASS}>Required Level</label>
               <Select value={assessRequiredLevel} onChange={setAssessRequiredLevel} className="w-full">
                 {LEVELS.map((l, i) => <option key={l} value={i}>{i} · {l}</option>)}
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Recert Due (optional)</label>
-              <input name="expiryDate" type="date" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Recert Due (optional)</label>
+              <input name="expiryDate" type="date" className={FIELD_CLASS} />
             </div>
           </div>
           <SubmitRow saving={saving} onCancel={() => setShowAssess(false)} label="Save Assessment" />
@@ -438,21 +463,21 @@ export default function TrainingPage() {
       {/* Schedule Training modal */}
       <Modal open={showTraining} onClose={() => setShowTraining(false)} title="Schedule Training" subtitle="Add to the training register">
         <form onSubmit={submitTraining} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Training Title</label>
-            <input name="trainingTitle" required className={inputCls} />
+          <div>
+            <label className={LABEL_CLASS}>Training Title</label>
+            <input name="trainingTitle" required className={FIELD_CLASS} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className={labelCls}>Attendee</label>
-              <input name="employeeName" required className={inputCls} list="people-list" />
+            <div>
+              <label className={LABEL_CLASS}>Attendee</label>
+              <input name="employeeName" required className={FIELD_CLASS} list="people-list" />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Trainer</label>
-              <input name="trainer" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Trainer</label>
+              <input name="trainer" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Category</label>
+            <div>
+              <label className={LABEL_CLASS}>Category</label>
               <Select value={trainCategory} onChange={setTrainCategory} className="w-full">
                 <option value="TECHNICAL">Technical</option>
                 <option value="HSE">HSE</option>
@@ -460,21 +485,21 @@ export default function TrainingPage() {
                 <option value="OEM">OEM</option>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Type</label>
+            <div>
+              <label className={LABEL_CLASS}>Type</label>
               <Select value={trainType} onChange={setTrainType} className="w-full">
                 <option value="INTERNAL">Internal</option>
                 <option value="EXTERNAL">External</option>
                 <option value="OEM">OEM</option>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Planned Date</label>
-              <input name="plannedDate" type="date" className={inputCls} defaultValue={TODAY} />
+            <div>
+              <label className={LABEL_CLASS}>Planned Date</label>
+              <input name="plannedDate" type="date" className={FIELD_CLASS} defaultValue={TODAY} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Duration</label>
-              <input name="duration" className={inputCls} placeholder="e.g. 1 day" />
+            <div>
+              <label className={LABEL_CLASS}>Duration</label>
+              <input name="duration" className={FIELD_CLASS} placeholder="e.g. 1 day" />
             </div>
           </div>
           <SubmitRow saving={saving} onCancel={() => setShowTraining(false)} label="Schedule Training" />

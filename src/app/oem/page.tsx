@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import {
   Building2,
-  Loader2,
   ShieldCheck,
   ShieldX,
   Phone,
@@ -23,6 +22,10 @@ import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
 
@@ -59,10 +62,6 @@ type Equip = { id: string; name: string; assetId: string; location?: string };
 const TODAY = new Date().toISOString().slice(0, 10);
 const daysUntil = (d: string | null) =>
   d ? Math.round((new Date(d).getTime() - Date.now()) / 864e5) : null;
-
-const inputCls =
-  "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none";
-const labelCls = "text-[11px] font-semibold text-slate-500 uppercase";
 
 export default function OemPage() {
   const { data: session } = useSession();
@@ -193,60 +192,69 @@ export default function OemPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">OEM & Warranty Management</h2>
-              <p className="text-xs text-slate-500 font-mono">Vendors · warranty · spare-part lead times</p>
-            </div>
-          </div>
-          {canWrite && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setIntOemId("");
-                  setIntEquipmentId("");
-                  setIntWarrantyStatus("OUT");
-                  setShowIntervention(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all"
-              >
-                <Wrench className="w-4 h-4" /> Log Intervention
-              </button>
-              <button
-                onClick={() => {
-                  setVendorEquipmentId("");
-                  setShowVendor(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-              >
-                <Plus className="w-4 h-4" /> Add Vendor
-              </button>
-            </div>
-          )}
-        </div>
+        <PageHeader
+          icon={Building2}
+          title="OEM & Warranty Management"
+          subtitle="Machine suppliers, what is still under warranty, and how fast they respond"
+          actions={
+            canWrite ? (
+              <>
+                <Button
+                  variant="secondary"
+                  icon={Wrench}
+                  onClick={() => {
+                    setIntOemId("");
+                    setIntEquipmentId("");
+                    setIntWarrantyStatus("OUT");
+                    setShowIntervention(true);
+                  }}
+                >
+                  Log Intervention
+                </Button>
+                <Button
+                  icon={Plus}
+                  onClick={() => {
+                    setVendorEquipmentId("");
+                    setShowVendor(true);
+                  }}
+                >
+                  Add Vendor
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
 
         {loading ? (
-          <div className="py-24 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-            <span className="text-xs ml-2 font-mono">Loading OEM data…</span>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Stat label="Vendors" value={String(summary.total)} tone="border-slate-200 bg-slate-50" text="text-slate-900" />
-              <Stat label="Active Warranty" value={String(summary.active)} tone="border-emerald-500/15 bg-emerald-500/5" text="text-emerald-600" />
-              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-amber-500/15 bg-amber-500/5" text="text-amber-600" />
-              <Stat label="Expired" value={String(summary.expired)} tone="border-rose-500/15 bg-rose-500/5" text="text-rose-600" />
+              <Stat label="Active Warranty" value={String(summary.active)} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" />
+              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-amber-200 bg-amber-50" text="text-amber-600" />
+              <Stat label="Expired" value={String(summary.expired)} tone="border-rose-200 bg-rose-50" text="text-rose-600" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {vendors.length === 0 && (
-                <div className="lg:col-span-2 py-10 text-center text-slate-500 text-sm bg-white border border-slate-200 rounded-xl">
-                  No vendors registered yet.
+                <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl">
+                  <EmptyState
+                    icon={Building2}
+                    title="No vendors registered"
+                    message="Register the supplier behind each machine to track warranty cover, response times and spare-part lead times."
+                    actionLabel={canWrite ? "Add Vendor" : undefined}
+                    onAction={
+                      canWrite
+                        ? () => {
+                            setVendorEquipmentId("");
+                            setShowVendor(true);
+                          }
+                        : undefined
+                    }
+                  />
                 </div>
               )}
               {vendors.map((v) => {
@@ -257,8 +265,8 @@ export default function OemPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900">{v.vendorName}</h3>
-                        <p className="text-[11px] font-mono text-slate-500 mt-0.5">
-                          {v.equipmentName} · {v.assetId}
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {v.equipmentName} · <span className="font-mono">{v.assetId}</span>
                         </p>
                       </div>
                       {active ? (
@@ -299,7 +307,22 @@ export default function OemPage() {
                 <h3 className="text-sm font-semibold text-slate-900">OEM Intervention Log</h3>
               </div>
               {interventions.length === 0 ? (
-                <div className="py-10 text-center text-slate-500 text-sm">No OEM interventions logged.</div>
+                <EmptyState
+                  icon={Wrench}
+                  title="No OEM interventions logged"
+                  message="Log each vendor call-out and warranty claim here so response times and warranty performance can be evidenced."
+                  actionLabel={canWrite ? "Log Intervention" : undefined}
+                  onAction={
+                    canWrite
+                      ? () => {
+                          setIntOemId("");
+                          setIntEquipmentId("");
+                          setIntWarrantyStatus("OUT");
+                          setShowIntervention(true);
+                        }
+                      : undefined
+                  }
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -353,8 +376,8 @@ export default function OemPage() {
       {/* Add Vendor modal */}
       <Modal open={showVendor} onClose={() => setShowVendor(false)} title="Register OEM / Vendor" subtitle="Warranty & support terms">
         <form onSubmit={submitVendor} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Equipment</label>
+          <div>
+            <label className={LABEL_CLASS}>Equipment</label>
             <Select value={vendorEquipmentId} onChange={setVendorEquipmentId} required className="w-full">
               <option value="" disabled>Select equipment…</option>
               {equipmentList.map((e) => (
@@ -362,47 +385,47 @@ export default function OemPage() {
               ))}
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Vendor / OEM Name</label>
-            <input name="vendorName" required className={inputCls} placeholder="e.g. Amada, Trumpf, Lincoln Electric" />
+          <div>
+            <label className={LABEL_CLASS}>Vendor / OEM Name</label>
+            <input name="vendorName" required className={FIELD_CLASS} placeholder="e.g. Amada, Trumpf, Lincoln Electric" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className={labelCls}>Contact Person</label>
-              <input name="contactPerson" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Contact Person</label>
+              <input name="contactPerson" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Country</label>
-              <input name="country" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Country</label>
+              <input name="country" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Phone</label>
-              <input name="phone" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Phone</label>
+              <input name="phone" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Email</label>
-              <input name="email" type="email" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Email</label>
+              <input name="email" type="email" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Warranty Start</label>
-              <input name="warrantyStart" type="date" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Warranty Start</label>
+              <input name="warrantyStart" type="date" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Warranty End</label>
-              <input name="warrantyEnd" type="date" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Warranty End</label>
+              <input name="warrantyEnd" type="date" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Avg Response (hrs)</label>
-              <input name="avgResponseTimeHrs" type="number" step="0.5" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Avg Response (hrs)</label>
+              <input name="avgResponseTimeHrs" type="number" step="0.5" className={FIELD_CLASS} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Spare Lead (days)</label>
-              <input name="avgSpareLeadTimeDays" type="number" step="1" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Spare Lead (days)</label>
+              <input name="avgSpareLeadTimeDays" type="number" step="1" className={FIELD_CLASS} />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Warranty Scope</label>
-            <input name="warrantyScope" className={inputCls} placeholder="e.g. Parts & labour, on-site" />
+          <div>
+            <label className={LABEL_CLASS}>Warranty Scope</label>
+            <input name="warrantyScope" className={FIELD_CLASS} placeholder="e.g. Parts & labour, on-site" />
           </div>
           <SubmitRow saving={saving} onCancel={() => setShowVendor(false)} label="Register Vendor" />
         </form>
@@ -411,8 +434,8 @@ export default function OemPage() {
       {/* Log Intervention modal */}
       <Modal open={showIntervention} onClose={() => setShowIntervention(false)} title="Log OEM Intervention" subtitle="Vendor call-out / warranty claim">
         <form onSubmit={submitIntervention} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Vendor (optional)</label>
+          <div>
+            <label className={LABEL_CLASS}>Vendor (optional)</label>
             <Select value={intOemId} onChange={setIntOemId} className="w-full">
               <option value="">— No linked vendor —</option>
               {vendors.map((v) => (
@@ -420,8 +443,8 @@ export default function OemPage() {
               ))}
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Equipment (if no vendor)</label>
+          <div>
+            <label className={LABEL_CLASS}>Equipment (if no vendor)</label>
             <Select value={intEquipmentId} onChange={setIntEquipmentId} className="w-full">
               <option value="">— Select equipment —</option>
               {equipmentList.map((e) => (
@@ -430,32 +453,32 @@ export default function OemPage() {
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className={labelCls}>Intervention Date</label>
-              <input name="interventionDate" type="date" className={inputCls} defaultValue={TODAY} />
+            <div>
+              <label className={LABEL_CLASS}>Intervention Date</label>
+              <input name="interventionDate" type="date" className={FIELD_CLASS} defaultValue={TODAY} />
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Warranty Status</label>
+            <div>
+              <label className={LABEL_CLASS}>Warranty Status</label>
               <Select value={intWarrantyStatus} onChange={setIntWarrantyStatus} className="w-full">
                 <option value="IN">In Warranty</option>
                 <option value="OUT">Out of Warranty</option>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={labelCls}>Response Time (hrs)</label>
-              <input name="responseTimeHrs" type="number" step="0.5" className={inputCls} />
+            <div>
+              <label className={LABEL_CLASS}>Response Time (hrs)</label>
+              <input name="responseTimeHrs" type="number" step="0.5" className={FIELD_CLASS} />
             </div>
             <label className="flex items-center gap-2 text-xs text-slate-600 self-end pb-2">
               <input name="closed" type="checkbox" className="rounded border-slate-300 text-emerald-500" /> Already resolved
             </label>
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Problem Description</label>
-            <textarea name="problemDescription" required className={`${inputCls} h-20 resize-none`} />
+          <div>
+            <label className={LABEL_CLASS}>Problem Description</label>
+            <textarea name="problemDescription" required className={`${FIELD_CLASS} h-20 resize-none`} />
           </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Resolution Summary</label>
-            <textarea name="resolutionSummary" className={`${inputCls} h-16 resize-none`} />
+          <div>
+            <label className={LABEL_CLASS}>Resolution Summary</label>
+            <textarea name="resolutionSummary" className={`${FIELD_CLASS} h-16 resize-none`} />
           </div>
           <SubmitRow saving={saving} onCancel={() => setShowIntervention(false)} label="Log Intervention" />
         </form>
