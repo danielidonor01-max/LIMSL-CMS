@@ -76,6 +76,42 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
     );
 }
 
+// Keep the PM PROGRAMME alive independently of completions.
+//
+// generateNextOccurrence only fires when a PM is completed, so an activity that
+// is never done never spawns its successor: a neglected machine's occurrences
+// dry up, its missed PMs age out of the compliance denominator, and PM
+// compliance RISES the longer you ignore it. That is a self-concealing failure
+// mode — the metric improves as the maintenance stops.
+//
+// A plan is a plan: every recurring series must always own at least one future
+// dated occurrence, whether or not the last one was done. Idempotent.
+export async function ensureFutureOccurrences(now = new Date()): Promise<number> {
+  const today = now.toISOString().slice(0, 10);
+  const all = await db.select().from(maintenanceSchedule);
+
+  // One series per machine + activity type. Non-recurring one-offs are skipped.
+  const series = new Map<string, ScheduleRow[]>();
+  for (const row of all) {
+    if (!row.maintenanceFrequency) continue;
+    const key = `${row.equipmentId}|${row.activityType}`;
+    series.set(key, [...(series.get(key) ?? []), row]);
+  }
+
+  let created = 0;
+  for (const rows of series.values()) {
+    if (rows.some((r) => r.plannedDate >= today && r.status !== "COMPLETED")) continue;
+    // Roll forward from the most recent planned date in the series.
+    const latest = [...rows].sort((a, b) => b.plannedDate.localeCompare(a.plannedDate))[0];
+    try {
+      if (await generateNextOccurrence(latest, now)) created++;
+    } catch (err) {
+      console.warn("ensureFutureOccurrences: could not extend a series", err);
+    }
+  }
+  return created;
+}
+
 type ScheduleRow = typeof maintenanceSchedule.$inferSelect;
 // Accepts either the global client or an in-flight transaction, so the PM
 // completion flow can spawn the next occurrence atomically with the rest.

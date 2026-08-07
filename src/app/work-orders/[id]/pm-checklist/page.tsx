@@ -19,46 +19,18 @@ import Select from "@/components/Select";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
+import { jobPlanFor, hasBespokePlan, type JobTask } from "@/lib/maintenance/job-plans";
 
-type Item = { item: string; status: string; remarks: string };
+type Item = { item: string; status: string; remarks: string; criteria?: string; unit?: string; value?: string };
 type User = { id: string; name: string; role: string };
 
 const STATUS_OPTIONS = ["OK", "NOT_OK", "NA"];
 
-const DEFAULTS: Record<string, string[]> = {
-  visual: [
-    "General cleanliness & housekeeping",
-    "Structural frame / guards intact",
-    "Fasteners & mounting secure",
-    "Leaks (oil / coolant / air)",
-    "Labels & warning signage legible",
-    "Cables & hoses condition",
-  ],
-  functional: [
-    "Startup / shutdown sequence",
-    "Controls & indicators respond",
-    "Movement / travel smooth",
-    "Limit switches / interlocks",
-    "Emergency stop functional",
-    "Abnormal noise / vibration",
-  ],
-  lubrication: [
-    "Gearbox oil level & condition",
-    "Grease points serviced",
-    "Hydraulic fluid level",
-    "Filters inspected / cleaned",
-  ],
-  electrical: [
-    "Panel tightness & cleanliness",
-    "Contactors / relays condition",
-    "Earthing continuity",
-    "Motor condition & temperature",
-    "Indicator lamps operational",
-  ],
-};
-
-const mkItems = (labels: string[]): Item[] =>
-  labels.map((l) => ({ item: l, status: "OK", remarks: "" }));
+// Nothing starts ticked. Every item arrived pre-set to "OK", so a "complete"
+// checklist could be filed without a single line being read — the PM record
+// became a formality. A deliberate answer per item is the whole point.
+const mkItems = (tasks: JobTask[]): Item[] =>
+  tasks.map((t) => ({ item: t.item, status: "", remarks: "", criteria: t.criteria, unit: t.unit, value: "" }));
 
 export default function PMChecklistPage() {
   const { id } = useParams<{ id: string }>();
@@ -71,10 +43,12 @@ export default function PMChecklistPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [safety, setSafety] = useState({ ptwIssued: false, lotoApplied: false, ppeWorn: false, areaSafe: false });
-  const [visual, setVisual] = useState<Item[]>(mkItems(DEFAULTS.visual));
-  const [functional, setFunctional] = useState<Item[]>(mkItems(DEFAULTS.functional));
-  const [lubrication, setLubrication] = useState<Item[]>(mkItems(DEFAULTS.lubrication));
-  const [electrical, setElectrical] = useState<Item[]>(mkItems(DEFAULTS.electrical));
+  const [visual, setVisual] = useState<Item[]>([]);
+  const [functional, setFunctional] = useState<Item[]>([]);
+  const [lubrication, setLubrication] = useState<Item[]>([]);
+  const [electrical, setElectrical] = useState<Item[]>([]);
+  const [planTitle, setPlanTitle] = useState("");
+  const [planIsGeneric, setPlanIsGeneric] = useState(false);
 
   const [observations, setObservations] = useState("");
   const [correctiveActionRequired, setCorrectiveActionRequired] = useState(false);
@@ -121,6 +95,21 @@ export default function PMChecklistPage() {
       setWo(woData);
       setUsers(Array.isArray(userData) ? userData : []);
       if (woData?.technicianName) setTechnicianName(woData.technicianName);
+
+      // The checklist is the machine's OWN task list. A crane gets brake-wear
+      // and rope checks; a compressor gets separator dP; an earthing system
+      // gets loop impedance — instead of all three getting "gearbox oil level".
+      const category = woData?.equipment?.category ?? null;
+      const plan = jobPlanFor(category);
+      setPlanTitle(plan.title);
+      setPlanIsGeneric(!hasBespokePlan(category));
+      for (const section of plan.sections) {
+        const items = mkItems(section.tasks);
+        if (section.key === "visual") setVisual(items);
+        else if (section.key === "functional") setFunctional(items);
+        else if (section.key === "lubrication") setLubrication(items);
+        else if (section.key === "electrical") setElectrical(items);
+      }
       // Default next PM ~ +90 days
       setNextPMDate(new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10));
       setLoading(false);
@@ -150,6 +139,17 @@ export default function PMChecklistPage() {
     }
     if (!technicianName.trim() || !technicianSignature) {
       setError("Technician name and signature are required.");
+      return;
+    }
+    // Every task needs a deliberate answer. An unanswered item is not "OK" —
+    // it is a task nobody performed, and filing it as complete would be a
+    // false record.
+    const unanswered = [...visual, ...functional, ...lubrication, ...electrical].filter((i) => !i.status);
+    if (unanswered.length) {
+      setError(
+        `${unanswered.length} task${unanswered.length === 1 ? " has" : "s have"} no result recorded — ` +
+        `mark each OK, NOT OK or NA. First: "${unanswered[0].item}".`,
+      );
       return;
     }
     setAttested(false);
@@ -261,6 +261,22 @@ export default function PMChecklistPage() {
             >
               Start fresh
             </button>
+          </div>
+        )}
+
+        {/* Name the task list in use, and be honest when it's the generic
+            fallback rather than a plan written for this machine type. */}
+        {planTitle && (
+          <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-xs ${
+            planIsGeneric ? "border-amber-200 bg-amber-50 text-amber-900" : "border-sky-100 bg-sky-50 text-sky-900"
+          }`}>
+            <ClipboardCheck className="w-4 h-4 mt-0.5 shrink-0" />
+            <p>
+              Task list: <strong>{planTitle}</strong>.
+              {planIsGeneric
+                ? " No plan is defined for this equipment category yet, so the general machine list is in use — record anything type-specific under observations."
+                : " Tasks and acceptance criteria are specific to this equipment category."}
+            </p>
           </div>
         )}
 
@@ -512,8 +528,23 @@ function ChecklistEditor({
             22px tall and 4px apart. Full-width segmented control at the touch
             floor, stacked on small screens. */}
         {items.map((it, i) => (
-          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
-            <span className="text-sm sm:text-xs text-slate-700 flex-1">{it.item}</span>
+          <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-2 py-2 border-b border-slate-100 last:border-0">
+            <div className="flex-1 min-w-0">
+              <span className="text-sm sm:text-xs text-slate-700">{it.item}</span>
+              {/* What "OK" actually means — a tick against an unstated standard
+                  is not evidence. */}
+              {it.criteria && <p className="text-[11px] text-slate-400 mt-0.5">{it.criteria}</p>}
+            </div>
+            {it.unit && (
+              <input
+                value={it.value ?? ""}
+                onChange={(e) => onChange(i, { value: e.target.value })}
+                inputMode="decimal"
+                placeholder={it.unit}
+                aria-label={`Measured value for ${it.item} in ${it.unit}`}
+                className="w-full sm:w-24 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm sm:text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+              />
+            )}
             <div
               className="flex gap-1 w-full sm:w-auto shrink-0"
               role="group"
@@ -532,7 +563,9 @@ function ChecklistEditor({
                         : s === "NOT_OK"
                           ? "bg-rose-600 text-white border-rose-600"
                           : "bg-slate-600 text-white border-slate-600"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                      : it.status
+                        ? "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                        : "bg-white text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-700"
                   }`}
                 >
                   {s === "NOT_OK" ? "NOT OK" : s}

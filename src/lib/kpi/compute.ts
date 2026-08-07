@@ -60,8 +60,12 @@ export async function computeKpis(now = new Date()) {
   const monthly = months.map((key) => {
     const breakdowns = cms.filter((c) => inMonth(c.reportedDate, key));
     const downtimeHours = breakdowns.reduce((a, c) => a + (c.totalDowntimeHours ?? 0), 0);
-    const repaired = breakdowns.filter((c) => (c.totalDowntimeHours ?? 0) > 0);
-    const mttr = repaired.length ? downtimeHours / repaired.length : null;
+    // Denominator is EVERY breakdown in the period, not just those with a
+    // downtime window recorded — leaving the window blank used to delete a bad
+    // repair from MTTR altogether. Records missing a window are counted and
+    // surfaced so the number can be read honestly.
+    const missingWindow = breakdowns.filter((c) => (c.totalDowntimeHours ?? 0) <= 0).length;
+    const mttr = breakdowns.length ? downtimeHours / breakdowns.length : null;
 
     const pmSched = sched.filter((s) => s.activityType === "PM" && inMonth(s.plannedDate, key));
     const pmDone = pmSched.filter((s) => s.status === "COMPLETED").length;
@@ -103,10 +107,18 @@ export async function computeKpis(now = new Date()) {
   const mttr = windowRepaired.length ? windowDowntime / windowRepaired.length : null;
 
   // ── Snapshot / live ───────────────────────────────────────────────────────
-  const brokenDown = equip.filter((e) => e.status === "BROKEN_DOWN").length;
-  const underMaint = equip.filter((e) => e.status === "UNDER_MAINTENANCE").length;
-  const operational = totalAssets - brokenDown - underMaint;
-  const availability = totalAssets ? (totalAssets - brokenDown) / totalAssets : null;
+  // A decommissioned asset is not part of the fleet and must not sit in the
+  // denominator of every metric forever; a machine parked awaiting parts is
+  // NOT available, however calmly it is labelled.
+  const activeFleet = equip.filter((e) => e.status !== "DECOMMISSIONED");
+  const fleetSize = activeFleet.length || 1;
+  const brokenDown = activeFleet.filter((e) => e.status === "BROKEN_DOWN").length;
+  const underMaint = activeFleet.filter((e) => e.status === "UNDER_MAINTENANCE").length;
+  const awaitingParts = activeFleet.filter((e) => e.status === "AWAITING_PARTS").length;
+  const operational = fleetSize - brokenDown - underMaint - awaitingParts;
+  const availability = activeFleet.length
+    ? (fleetSize - brokenDown - awaitingParts) / fleetSize
+    : null;
 
   const pmDueAll = sched.filter((s) => s.activityType === "PM" && s.plannedDate <= todayStr);
   const pmCompliance = pmDueAll.length ? pmDueAll.filter((s) => s.status === "COMPLETED").length / pmDueAll.length : null;
@@ -116,7 +128,10 @@ export async function computeKpis(now = new Date()) {
 
   const openWoList = wos.filter((w) => w.status === "OPEN" || w.status === "IN_PROGRESS");
   const openWos = openWoList.length;
-  // Backlog in man-hours = estimated effort still open.
+  // Backlog in man-hours. estimatedDuration is written by no create path today,
+  // so this is largely openWOs x 2h — reported alongside how many rows carried a
+  // real estimate, so nobody presents an assumption as a measurement.
+  const backlogEstimated = openWoList.filter((w) => (w.estimatedDuration ?? 0) > 0).length;
   const maintenanceBacklog = Math.round(openWoList.reduce((a, w) => a + (w.estimatedDuration ?? 2), 0));
   const completedWo = wos.filter((w) => w.status === "COMPLETED").length;
   const woCompletionRate = wos.length ? completedWo / wos.length : null;

@@ -193,6 +193,31 @@ belongs with the PWA work in Phase 6, where a service worker can own it.
 
 ---
 
+### Phase 4 — status: PARTIALLY SHIPPED
+Delivered: **PM job plans** per equipment category (`lib/maintenance/job-plans.ts`)
+— eight bespoke plans plus a named general fallback, each task carrying
+acceptance criteria and, where the answer is a number, a unit; nothing arrives
+pre-ticked and an unanswered task blocks submission · **PM plan no longer
+self-conceals** (`ensureFutureOccurrences`, run daily) — a series that is never
+completed still spawns its next occurrence, so neglect stays visible instead of
+inflating compliance · **KPI honesty**: MTTR now divides by every breakdown in
+the period (a blank downtime window used to delete a bad repair from the
+metric), DECOMMISSIONED assets leave the availability denominator,
+AWAITING_PARTS counts as unavailable, and backlog reports how many rows carried
+a real estimate. 175 tests green.
+
+**Still open in Phase 4 — not done, do not assume:**
+- 4.2 schedule *adherence* (`daysLate`, ±N-day compliance window). Compliance is
+  still pass/fail on completion, so a PM done six months late counts as met.
+- 4.3 failure coding + `componentId` on corrective records (the two fields that
+  buy reliability analysis).
+- 4.4 remaining KPI work: the two contradictory Availability definitions on one
+  page, planned downtime excluded from availability, the PTW-compliance metric
+  that cannot go down, and capturing real labour hours.
+- 4.5 deferred-maintenance register · 4.6 criticality driving frequency/priority.
+
+---
+
 ## PHASE 5 — Product polish *(≈1 week)*
 **5.1 PE/SYS asset-type selector** — first control on the add-equipment form, driving prefix, category filter and helper text; `next-id` takes a `?prefix=`. **Today SYS assets can only be created by hand-typing an ID and hoping it's free.**
 **5.2 Equipment registry** — mobile cards, PE/SYS segment, asset count + export, "needs attention" view, visible primary action.

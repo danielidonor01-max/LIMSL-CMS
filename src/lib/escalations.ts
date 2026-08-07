@@ -18,7 +18,7 @@ import {
 } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { notify } from "@/lib/notifications";
-import { reconcileSchedule } from "@/lib/schedule";
+import { reconcileSchedule, ensureFutureOccurrences } from "@/lib/schedule";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 
@@ -65,6 +65,12 @@ async function recentlyEscalated(
 export async function runEscalations(now = new Date()): Promise<EscalationSummary> {
   // Make statuses current before deciding what's overdue.
   await reconcileSchedule(now);
+  // Keep every recurring series stocked with a future occurrence, so a machine
+  // that stops being maintained keeps showing up as due instead of quietly
+  // vanishing from the plan (and inflating PM compliance).
+  await ensureFutureOccurrences(now).catch((err) =>
+    console.warn("escalations: could not extend the PM plan", err),
+  );
   await reconcilePermits();
 
   const summary: EscalationSummary = {
