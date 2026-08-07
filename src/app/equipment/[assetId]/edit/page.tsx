@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, Save, Pencil } from "lucide-react";
 import Select from "@/components/Select";
 import Toggle from "@/components/Toggle";
+import LocationField from "@/components/LocationField";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
@@ -127,7 +128,7 @@ export default function EquipmentEditPage() {
           </div>
           <div>
             <label className={label}>Location</label>
-            <input value={form.location ?? ""} onChange={(e) => set("location", e.target.value)} className={field} />
+            <LocationField value={form.location ?? ""} onChange={(v) => set("location", v)} />
           </div>
           <div>
             <label className={label}>OEM / Vendor</label>

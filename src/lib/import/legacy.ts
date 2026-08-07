@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ACTIVITY_TYPE_LABELS } from "@/lib/constants";
 import { summarize, type PreviewRow, type ProcessResult, type ImportAction } from "./entities";
+import { syncEquipmentCalibration } from "@/lib/calibration";
 import {
   loadWorkbook,
   normName,

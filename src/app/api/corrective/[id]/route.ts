@@ -10,6 +10,7 @@ import { productionDowntimeHours } from "@/lib/worktime";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
+import { applyDerivedStatus } from "@/lib/equipment-status";
 
 export async function GET(
   request: Request,
@@ -170,25 +171,13 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
-    // If closing out, restore equipment to OPERATIONAL — but only when NO other
-    // corrective record is still open on this machine. Closing one of two faults
-    // must not present a still-broken machine as fit for service.
+    // Closing out advances the machine's service date; its STATUS is derived
+    // after the record itself is closed (see below) so the derivation sees the
+    // true set of open faults.
     if (body.status === "CLOSED" && record.equipmentId) {
-      const otherOpen = await db
-        .select({ id: correctiveMaintenance.id })
-        .from(correctiveMaintenance)
-        .where(
-          and(
-            eq(correctiveMaintenance.equipmentId, record.equipmentId),
-            ne(correctiveMaintenance.id, record.id),
-            ne(correctiveMaintenance.status, "CLOSED"),
-          ),
-        )
-        .limit(1);
       await db
         .update(equipment)
         .set({
-          ...(otherOpen.length === 0 ? { status: "OPERATIONAL" } : {}),
           lastMaintenanceDate: new Date().toISOString().split("T")[0],
           updatedAt: new Date().toISOString(),
         })
@@ -219,6 +208,16 @@ export async function PATCH(
       .set(updateFields)
       .where(eq(correctiveMaintenance.id, resolvedParams.id))
       .returning();
+
+    // Now that this record's own state is persisted, let the single writer
+    // recompute the machine's status from every open fault and job.
+    if (record.equipmentId) {
+      try {
+        await applyDerivedStatus(record.equipmentId);
+      } catch (err) {
+        console.warn("corrective PATCH: status derivation failed (non-fatal)", err);
+      }
+    }
 
     return NextResponse.json(updated[0] || { success: true });
   } catch (error: any) {

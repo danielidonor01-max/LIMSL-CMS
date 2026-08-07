@@ -1,11 +1,12 @@
 // src/app/api/calibration/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { calibrationRecords, equipment, auditLog } from "@/lib/db/schema";
+import { calibrationRecords, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { syncEquipmentCalibration } from "@/lib/calibration";
 
 function addDays(iso: string, days: number) {
   const d = new Date(iso);
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
         .from(calibrationRecords)
         .where(eq(calibrationRecords.id, body.id))
         .limit(1);
+      if (updated?.equipmentId) await syncEquipmentCalibration(updated.equipmentId);
       await db.insert(auditLog).values({
         id: nanoid(),
         userId: gate.actor?.id ?? null,
@@ -103,13 +105,8 @@ export async function POST(request: Request) {
 
     await db.insert(calibrationRecords).values(record);
 
-    // Flag the linked equipment as requiring calibration for traceability.
-    if (body.equipmentId) {
-      await db
-        .update(equipment)
-        .set({ requiresCalibration: true, updatedAt: new Date().toISOString() })
-        .where(eq(equipment.id, body.equipmentId));
-    }
+    // The equipment flag is derived from the records — single calibration truth.
+    if (body.equipmentId) await syncEquipmentCalibration(body.equipmentId);
 
     await db.insert(auditLog).values({
       id: nanoid(),

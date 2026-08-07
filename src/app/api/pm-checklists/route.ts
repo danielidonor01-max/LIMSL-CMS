@@ -18,6 +18,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { generateNextOccurrence } from "@/lib/schedule";
 import { logEquipmentEvent } from "@/lib/equipment-log";
+import { applyDerivedStatus } from "@/lib/equipment-status";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { notifyNextSigner } from "@/lib/notifications";
 
@@ -150,15 +151,19 @@ export async function POST(request: Request) {
         .set({
           lastMaintenanceDate: today,
           nextMaintenanceDate: recurredDate || body.nextPMDate || null,
-          ...(body.correctiveActionRequired
-            ? { status: "UNDER_MAINTENANCE" }
-            : openCm
-              ? {}
-              : { status: "OPERATIONAL" }),
           updatedAt: new Date().toISOString(),
         })
         .where(eq(equipment.id, body.equipmentId));
     });
+
+    // Status comes from the single writer once the WO is COMPLETED and any
+    // follow-up fault exists — a PM sign-off never declares a machine fit for
+    // service while corrective work is open on it.
+    try {
+      await applyDerivedStatus(body.equipmentId);
+    } catch (err) {
+      console.warn("pm-checklists: status derivation failed (non-fatal)", err);
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),

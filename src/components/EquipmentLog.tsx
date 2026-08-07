@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
+import LocationField from "@/components/LocationField";
 
 type Event = {
   id: string;
@@ -209,7 +210,7 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
           {form.category === "TRANSFER" && (
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-500 uppercase">New location (updates the asset)</label>
-              <input value={form.newLocation} onChange={(e) => setForm((f) => ({ ...f, newLocation: e.target.value }))} placeholder="e.g. Bay 3" className={field} />
+              <LocationField value={form.newLocation} onChange={(v) => setForm((f) => ({ ...f, newLocation: v }))} />
             </div>
           )}
           <div className="space-y-1">

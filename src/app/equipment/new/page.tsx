@@ -7,6 +7,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Layers, RefreshCw } from "lucide-react";
 import Select from "@/components/Select";
+import LocationField from "@/components/LocationField";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
@@ -138,7 +139,7 @@ export default function NewEquipmentPage() {
           </div>
           <div>
             <label className={label}>Location</label>
-            <input value={form.location} onChange={(e) => set("location", e.target.value)} className={field} />
+            <LocationField value={form.location} onChange={(v) => set("location", v)} />
           </div>
           <div>
             <label className={label}>Bay</label>

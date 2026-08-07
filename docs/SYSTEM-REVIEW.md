@@ -135,10 +135,18 @@ chains, numbering, history, AI knowledge base). Remaining work is convergence.
 1. [x] (S) Prefill + quick-report: corrective/new accepts ?equipmentId=; wired
        from the digital twin ("Report Fault" quick action) and the dashboard
        breakdown CTA — a fault report no longer re-picks the machine.
-2. [ ] (M) Canonical-identity pass: userId-first for internal actors (text only
-       for external parties); calibrationRecords as the one calibration truth
-       (derive equipment.requiresCalibration / next-due); equipment.status
-       derived from open CMs + WOs with a single writer; locations lookup.
+2. [x] (M) Canonical-identity pass — DONE except the actor-identity sweep:
+       calibrationRecords is the one calibration truth (lib/calibration.ts;
+       equipment.requiresCalibration derived, synced by the calibration API and
+       the legacy import); equipment.status has ONE writer
+       (lib/equipment-status.ts — derived from open correctives + in-progress
+       jobs, with DECOMMISSIONED/AWAITING_PARTS sticky as manual decisions),
+       replacing the direct flips in corrective create/close-out and PM
+       completion; locations are a picklist derived from the register
+       (/api/equipment/locations + LocationField with an "Other" escape hatch)
+       in equipment create/edit and the transfer form.
+       REMAINING: userId-first for internal actors (text only for external
+       parties) — the last piece of this item.
 3. [ ] (M) Regression test suite for the compliance engine (sign-off chains,
        close-out gates, doc numbering, notification routing).
 4. [ ] (M) Shared DataTable (extract the users-table pattern) + batch
