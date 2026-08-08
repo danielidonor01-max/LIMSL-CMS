@@ -217,8 +217,10 @@ export default function AppSettingsPage() {
   };
 
   const [dbMaintBusy, setDbMaintBusy] = useState(false);
+  const [dbMaintResult, setDbMaintResult] = useState<any>(null);
   const runDbMaintenance = async () => {
     setDbMaintBusy(true);
+    setDbMaintResult(null);
     try {
       const res = await fetch("/api/admin/db-maintenance", { method: "POST" });
       const d = await res.json();
@@ -226,8 +228,11 @@ export default function AppSettingsPage() {
         toast.error(d.error || "Maintenance failed.");
         return;
       }
-      if (d.ok) toast.success(`Indexes verified/applied (${d.applied.length}).`);
-      else toast.error(`${d.applied.length} applied, ${d.failed.length} failed — see server logs.`);
+      // A toast disappears; which statement failed is the one thing worth
+      // keeping on screen, since the alternative is reading server logs.
+      setDbMaintResult(d);
+      if (d.ok) toast.success(`Database up to date — ${d.applied.length} statements verified.`);
+      else toast.error(`${d.applied.length} applied, ${d.failed.length} failed.`);
     } finally {
       setDbMaintBusy(false);
     }
@@ -914,13 +919,39 @@ export default function AppSettingsPage() {
             <h3 className="text-sm font-semibold text-slate-900">Database maintenance</h3>
           </div>
           <p className="text-xs text-slate-500 leading-snug">
-            Applies the performance indexes this version of the app expects (equipment lookups, per-machine
-            documents/components/history, audit queries). Safe to run any time — it only creates what&apos;s missing
-            and never touches data. Run once after updating the app.
+            Brings the database up to what this version of the app expects — new tables, new columns and performance
+            indexes. Every statement only creates what is missing and never touches existing data, so it is safe to
+            run repeatedly. <strong>Run it once after each deployment</strong>; features added in that release will
+            error against the database until you do.
           </p>
           <Button variant="secondary" icon={RefreshCw} loading={dbMaintBusy} onClick={runDbMaintenance}>
-            Apply performance indexes
+            Update database
           </Button>
+          {dbMaintResult && (
+            <div
+              className={`rounded-lg border p-3 text-xs ${
+                dbMaintResult.failed?.length
+                  ? "bg-rose-50 border-rose-200 text-rose-800"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-800"
+              }`}
+            >
+              <p className="font-semibold">
+                {dbMaintResult.failed?.length
+                  ? `${dbMaintResult.applied.length} applied, ${dbMaintResult.failed.length} failed`
+                  : `Database is up to date — ${dbMaintResult.applied.length} statements verified.`}
+              </p>
+              {dbMaintResult.failed?.length > 0 && (
+                <ul className="mt-1.5 space-y-1.5 text-[11px]">
+                  {dbMaintResult.failed.map((f: any) => (
+                    <li key={f.name}>
+                      <span className="font-mono font-semibold">{f.name}</span>
+                      <span className="block text-rose-700/80">{f.error}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </section>
       </div>
       )}
