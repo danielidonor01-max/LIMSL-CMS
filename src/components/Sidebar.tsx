@@ -33,6 +33,7 @@ import {
   ChevronsUpDown,
   Package,
   Siren,
+  HardHat,
 } from "lucide-react";
 import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
 
@@ -66,6 +67,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/wms", label: "WMS", icon: FileText },
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
       { href: "/emergency", label: "Emergency Prep", icon: Siren },
+      { href: "/contractors", label: "Contractors", icon: HardHat },
       { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
       { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },
       { href: "/audit/logs", label: "Audit Log", icon: ScrollText },

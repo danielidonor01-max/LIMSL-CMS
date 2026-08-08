@@ -54,6 +54,45 @@ const INDEXES: [string, string][] = [
   // Phase 4b — schedule adherence, deferral register, failure taxonomy.
   ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
   ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
+  // Phase 6e — contractor control (ISO 45001 8.1.4.2).
+  [
+    "contractors",
+    `CREATE TABLE IF NOT EXISTS contractors (
+      id text PRIMARY KEY,
+      company_name text NOT NULL,
+      trade_specialty text,
+      contact_person text,
+      phone text,
+      email text,
+      insurance_provider text,
+      insurance_policy_number text,
+      insurance_expiry_date text,
+      insurance_cover_amount text,
+      induction_date text,
+      induction_valid_until text,
+      induction_by_name text,
+      status text NOT NULL DEFAULT 'ACTIVE',
+      suspension_reason text,
+      notes text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      updated_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  [
+    "contractor_personnel",
+    `CREATE TABLE IF NOT EXISTS contractor_personnel (
+      id text PRIMARY KEY,
+      contractor_id text NOT NULL,
+      name text NOT NULL,
+      job_title text,
+      induction_date text,
+      induction_valid_until text,
+      competency_notes text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["contractor_personnel_contractor_idx", "CREATE INDEX IF NOT EXISTS contractor_personnel_contractor_idx ON contractor_personnel (contractor_id)"],
+  ["permits.contractor", "ALTER TABLE permits ADD COLUMN IF NOT EXISTS contractor_id text"],
   // Phase 6c — emergency preparedness (ISO 45001 8.2).
   [
     "emergency_equipment",

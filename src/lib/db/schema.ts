@@ -248,6 +248,9 @@ export const permits = pgTable("permits", {
   // fields, superseded by these; kept only so the migration stays additive.)
   permitHolderId: text("permit_holder_id").references(() => users.id),
   permitHolderName: text("permit_holder_name"),
+  // Set when the work is being done by an outside company; insurance and
+  // induction are verified against the contractor register before issue.
+  contractorId: text("contractor_id"),
   issuedToId: text("issued_to_id").references(() => users.id),
   issuedToName: text("issued_to_name"),
   issuedDate: text("issued_date"),
@@ -380,6 +383,44 @@ export const oemRegistry = pgTable("oem_registry", {
   notes: text("notes"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
+
+// ─── Contractor control (ISO 45001 8.1.4.2) ─────────────────────────────────
+// A contractor register that does not stop anybody working is a spreadsheet.
+// The obligation is not to hold certificates; it is to not let someone onto a
+// live machine without them — so these rows gate permit issue.
+export const contractors = pgTable("contractors", {
+  id: text("id").primaryKey(),
+  companyName: text("company_name").notNull(),
+  tradeSpecialty: text("trade_specialty"),
+  contactPerson: text("contact_person"),
+  phone: text("phone"),
+  email: text("email"),
+  insuranceProvider: text("insurance_provider"),
+  insurancePolicyNumber: text("insurance_policy_number"),
+  insuranceExpiryDate: text("insurance_expiry_date"),
+  insuranceCoverAmount: text("insurance_cover_amount"),
+  inductionDate: text("induction_date"),
+  inductionValidUntil: text("induction_valid_until"),
+  inductionByName: text("induction_by_name"),
+  status: text("status").notNull().default("ACTIVE"),          // ACTIVE | SUSPENDED
+  suspensionReason: text("suspension_reason"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
+// Individuals. A new hire sent to site by an otherwise compliant contractor is
+// exactly the case a company-level record misses.
+export const contractorPersonnel = pgTable("contractor_personnel", {
+  id: text("id").primaryKey(),
+  contractorId: text("contractor_id").notNull().references(() => contractors.id),
+  name: text("name").notNull(),
+  jobTitle: text("job_title"),
+  inductionDate: text("induction_date"),
+  inductionValidUntil: text("induction_valid_until"),
+  competencyNotes: text("competency_notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("contractor_personnel_contractor_idx").on(t.contractorId)]);
 
 // ─── Emergency preparedness (ISO 45001 8.2) ─────────────────────────────────
 // The register exists to stop "we have forty fire extinguishers" standing in for
@@ -1011,6 +1052,9 @@ export type NewWorkOrder = typeof workOrders.$inferInsert;
 export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
+export type Contractor = typeof contractors.$inferSelect;
+export type NewContractor = typeof contractors.$inferInsert;
+export type ContractorPerson = typeof contractorPersonnel.$inferSelect;
 export type EmergencyEquipment = typeof emergencyEquipment.$inferSelect;
 export type NewEmergencyEquipment = typeof emergencyEquipment.$inferInsert;
 export type EmergencyInspection = typeof emergencyInspections.$inferSelect;

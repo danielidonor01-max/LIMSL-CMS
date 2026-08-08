@@ -233,6 +233,12 @@ test("HSE and QA/QC can reach the emergency register", () => {
   assert.equal(canAccessPath("VIEWER", "/emergency"), false);
 });
 
+test("HSE and QA/QC can reach the contractor register", () => {
+  assert.equal(canAccessPath("HSE", "/contractors"), true);
+  assert.equal(canAccessPath("QA_QC", "/contractors"), true);
+  assert.equal(canAccessPath("VIEWER", "/contractors"), false);
+});
+
 test("user administration is the Super Admin's alone", () => {
   for (const role of ROLES) {
     assert.equal(canManageUsers(role), role === "SUPER_ADMIN", `${role} user management`);

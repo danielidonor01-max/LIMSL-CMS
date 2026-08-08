@@ -1,7 +1,7 @@
 // src/app/api/permits/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, users, wmsDocuments, isolationPoints } from "@/lib/db/schema";
+import { permits, equipment, users, wmsDocuments, isolationPoints, contractors } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -9,6 +9,7 @@ import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
+import { assessContractor, blockReason } from "@/lib/hse/contractors";
 
 // A Permit-to-Work is valid for one working day. It must be re-raised the next
 // day, never renewed — this is fixed policy, not a per-permit setting.
@@ -132,6 +133,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Permit holder not found." }, { status: 400 });
     }
 
+    // ISO 45001 8.1.4.2. Where the work is being done by an outside company, the
+    // gate is here or it is nowhere: a contractor register that never stops
+    // anybody working is a spreadsheet. Insurance and induction both lapse
+    // silently — nobody is emailed by their insurer's expiry date — so the check
+    // has to happen at the moment a permit is raised.
+    if (body.contractorId) {
+      const [contractor] = await db
+        .select()
+        .from(contractors)
+        .where(eq(contractors.id, body.contractorId))
+        .limit(1);
+      if (!contractor) {
+        return NextResponse.json({ error: "Contractor not found on the register." }, { status: 400 });
+      }
+      const eligibility = assessContractor(contractor);
+      if (!eligibility.eligible) {
+        return NextResponse.json(
+          { error: blockReason(contractor.companyName, eligibility), reasons: eligibility.reasons },
+          { status: 409 },
+        );
+      }
+    }
+
     // ISO 45001 6.1.2: a permit with no hazards and no controls is a signature
     // ritual. The JHA was optional, so a permit could be raised, fully signed
     // and made ACTIVE carrying zero hazard content.
@@ -184,6 +208,9 @@ export async function POST(request: Request) {
       issuedById: gate.actor?.id ?? null,
       permitHolderId: holder.id,
       permitHolderName: holder.name,
+      // Recorded so the permit itself shows who was on site, not just which of
+      // our own people signed for them.
+      contractorId: body.contractorId || null,
       issuedDate: new Date().toISOString(),
       expiryDate,
       // Raised unapproved — work may not begin until the chain is fully signed.

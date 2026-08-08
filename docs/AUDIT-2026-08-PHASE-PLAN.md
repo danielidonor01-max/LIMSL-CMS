@@ -396,9 +396,26 @@ again and Discard. Deliberately **not** a service worker: Safari/iOS has no
 Background Sync, so a localStorage outbox with flush-on-reconnect works on every
 phone in the workshop rather than only the Android ones.
 
-**Still open in Phase 6 — not started:** contractor induction and insurance
-expiry; condition monitoring; app-shell caching for offline *page* loads (this
-phase queues submissions, it does not make the app open with no signal).
+### Phase 6e — status: SHIPPED (contractor control, ISO 45001 8.1.4.2)
+A contractor register that does not stop anybody working is a spreadsheet. The
+obligation is not to *hold* insurance certificates and induction records, it is
+to not let someone onto a live machine without them — so the whole feature is
+the gate, and **the gate is in the permit route**: raising a permit that names a
+contractor with lapsed insurance, lapsed induction, or a suspension is refused
+with a message naming what to fix.
+
+Both dates lapse silently — nobody is emailed by their insurer's expiry date —
+which is exactly why this belongs in the system that issues permits rather than
+in a folder. A **blank date blocks**: "we never checked" and "we checked and it
+is valid" must not look the same to whoever is at the gate. Individual induction
+is tracked separately from the company's, because a new hire sent to site by an
+otherwise compliant contractor is the case a company-level record misses.
+Suspension requires a stated reason, and reinstating does not make expired
+paperwork valid — it says so rather than letting a green tick imply it.
+
+**Still open in Phase 6 — not started:** condition monitoring (thermography,
+vibration); app-shell caching for offline *page* loads (Phase 6d queues
+submissions, it does not make the app open with no signal).
 
 ---
 
