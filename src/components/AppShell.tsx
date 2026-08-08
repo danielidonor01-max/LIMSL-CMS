@@ -34,6 +34,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      {/* A keyboard user was tabbing through every sidebar link on every page
+          load before reaching the content. Visible only on focus. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to main content
+      </a>
       <Sidebar mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
       <div className="flex-1 min-w-0 flex flex-col">
         <OfflineBanner />
@@ -62,7 +70,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <AccountMenu />
           </div>
         </header>
-        <div className="flex-1 min-w-0">
+        <div id="main-content" tabIndex={-1} className="flex-1 min-w-0">
           {allowed ? (
             children
           ) : (

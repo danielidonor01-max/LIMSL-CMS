@@ -18,6 +18,13 @@ const TYPE_COLOR: Record<string, string> = {
   "Work Order": "text-sky-700 bg-sky-50",
   Corrective: "text-rose-700 bg-rose-50",
   WMS: "text-violet-700 bg-violet-50",
+  Permit: "text-amber-700 bg-amber-50",
+  Spare: "text-cyan-700 bg-cyan-50",
+  Instrument: "text-teal-700 bg-teal-50",
+  Emergency: "text-orange-700 bg-orange-50",
+  Contractor: "text-indigo-700 bg-indigo-50",
+  "Non-conformity": "text-rose-700 bg-rose-50",
+  Training: "text-slate-700 bg-slate-100",
 };
 
 export default function GlobalSearch() {

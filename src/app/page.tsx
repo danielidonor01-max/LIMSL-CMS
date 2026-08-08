@@ -22,6 +22,15 @@ import {
   EQUIPMENT_STATUS_LABELS,
 } from "@/lib/constants";
 
+type AttentionItem = {
+  key: string;
+  severity: "danger" | "warning";
+  title: string;
+  detail: string;
+  href: string;
+  cta: string;
+};
+
 const TILE_PANEL: Record<string, string> = {
   danger: "bg-rose-50 border-rose-200",
   warning: "bg-amber-50 border-amber-200",
@@ -94,6 +103,8 @@ export default function Home() {
   // Stale-while-revalidate: cached data paints instantly on revisit, then
   // refreshes in the background — the four dashboard reads no longer block.
   const { data: stats, loading: statsLoading } = useApi<Stat[]>("/api/dashboard/stats", []);
+  const { data: attentionData } = useApi<{ items: AttentionItem[] } | null>("/api/dashboard/attention", null);
+  const attention = attentionData?.items ?? [];
   const { data: equipment } = useApi<Equip[]>("/api/equipment", []);
   const { data: activity } = useApi<Audit[]>("/api/audit", []);
   const { data: mine } = useApi<{ items: SignoffItem[] }>("/api/signoffs/mine", { items: [] });
@@ -140,6 +151,51 @@ export default function Home() {
               <p className="text-xs text-slate-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
             </div>
           </div>
+        )}
+
+        {/* Needs attention — Phase 6 added four registers that each compute a
+            "this is not right" figure, and none of them reached anywhere a
+            person would look. A register nobody visits is a register nobody
+            acts on. Renders nothing at all when everything is clean, because a
+            panel that is always present stops being read. */}
+        {attention.length > 0 && (
+          <section
+            aria-labelledby="attention-heading"
+            className="rounded-xl border border-slate-200 bg-white overflow-hidden"
+          >
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <h3 id="attention-heading" className="text-sm font-bold text-slate-900">
+                Needs attention
+              </h3>
+              <span className="text-xs text-slate-500">{attention.length}</span>
+            </div>
+            <ul className="divide-y divide-slate-100">
+              {attention.map((a) => (
+                <li key={a.key}>
+                  <Link
+                    href={a.href}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors"
+                  >
+                    <span
+                      className={`w-1.5 h-8 rounded-full shrink-0 ${
+                        a.severity === "danger" ? "bg-rose-500" : "bg-amber-500"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-slate-900">{a.title}</span>
+                      <span className="block text-xs text-slate-500 mt-0.5">{a.detail}</span>
+                    </span>
+                    <span className="hidden sm:inline text-xs font-semibold text-emerald-700 shrink-0">
+                      {a.cta}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* Your jobs — the technician's dashboard used to be an executive KPI

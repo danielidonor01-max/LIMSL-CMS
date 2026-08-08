@@ -300,7 +300,7 @@ export default function EquipmentList() {
               {sortedEquipment.map((eq) => {
                 const urlParam = (eq.assetId || "").replace(/\//g, "-");
                 return (
-                  <div key={eq.id} className="bg-white border border-slate-200 rounded-xl p-4">
+                  <div key={eq.id} data-list-card className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/equipment/${urlParam}`} className="min-w-0">
                         <p className="font-semibold text-slate-900 text-sm leading-snug">{eq.name}</p>

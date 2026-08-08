@@ -474,7 +474,7 @@ export default function EmergencyPage() {
             ) : (
               <div className="divide-y divide-slate-200">
                 {data.drills.map((d: any) => (
-                  <div key={d.id} className="p-4 space-y-2">
+                  <div key={d.id} data-list-card className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">

@@ -285,6 +285,7 @@ export default function ContractorsPage() {
             {filtered.map((c) => (
               <div
                 key={c.id}
+                data-list-card
                 className={`bg-white border rounded-xl p-4 space-y-3 ${
                   c.eligibility.eligible ? "border-slate-200" : "border-rose-200"
                 }`}

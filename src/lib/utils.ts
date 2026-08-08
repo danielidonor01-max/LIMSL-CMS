@@ -13,12 +13,21 @@ export function isoSeconds(d: Date = new Date()): string {
   return d.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
+// en-GB, matching how Nigeria writes dates (day first) — formatCurrency was
+// already localised to en-NG while dates were rendering US-format.
+//
+// The month stays spelled out deliberately. A purely numeric date is ambiguous
+// between conventions (03/04/2026 is two different days), and in a system whose
+// records are read by auditors and insurers that ambiguity is a liability, not
+// a preference.
+export const DATE_LOCALE = "en-GB";
+
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return "N/A";
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(DATE_LOCALE, {
       year: "numeric",
       month: "short",
       day: "numeric",

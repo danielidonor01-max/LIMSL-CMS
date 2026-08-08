@@ -230,7 +230,11 @@ export default function KpiPage() {
 
             {/* Trend charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ChartCard title="Equipment Availability over time (%) — production hours lost to all maintenance">
+              <ChartCard
+                title="Equipment Availability over time (%) — production hours lost to all maintenance"
+                data={chartData}
+                series={[{ key: "availability", label: "Availability %" }]}
+              >
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
@@ -251,7 +255,11 @@ export default function KpiPage() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="MTBF (hrs) vs MTTR (hrs)">
+              <ChartCard
+                title="MTBF (hrs) vs MTTR (hrs)"
+                data={chartData}
+                series={[{ key: "mtbf", label: "MTBF (hrs)" }, { key: "mttr", label: "MTTR (hrs)" }]}
+              >
                 <ResponsiveContainer width="100%" height={240}>
                   <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -266,7 +274,11 @@ export default function KpiPage() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Breakdowns & Downtime (hrs)">
+              <ChartCard
+                title="Breakdowns & Downtime (hrs)"
+                data={chartData}
+                series={[{ key: "breakdowns", label: "Breakdowns" }, { key: "downtime", label: "Downtime (hrs)" }]}
+              >
                 <ResponsiveContainer width="100%" height={240}>
                   <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -281,7 +293,11 @@ export default function KpiPage() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="PM Compliance (%)">
+              <ChartCard
+                title="PM Compliance (%)"
+                data={chartData}
+                series={[{ key: "pm", label: "PM %" }, { key: "inspection", label: "Inspection %" }]}
+              >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -345,11 +361,64 @@ const tooltipStyle = {
   color: "#0f172a",
 };
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({
+  title,
+  children,
+  series,
+  data,
+}: {
+  title: string;
+  children: React.ReactNode;
+  // The same numbers the chart draws, as a table. A trend line conveys its
+  // meaning by shape alone — nothing at all for a screen reader, and nothing on
+  // a greyscale print, which is how these get attached to an audit pack. The
+  // figures exist; withholding them was the only problem.
+  series?: { key: string; label: string }[];
+  data?: Record<string, string | number>[];
+}) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
       <h3 className="text-sm font-semibold text-slate-900 mb-4">{title}</h3>
-      {children}
+      <div role="img" aria-label={`${title}. The same figures are given in the table below.`}>
+        {children}
+      </div>
+
+      {series && data && data.length > 0 && (
+        <details className="mt-3 group">
+          <summary className="cursor-pointer text-[11px] text-slate-500 hover:text-slate-900 select-none">
+            Show these figures as a table
+          </summary>
+          <div className="overflow-x-auto mt-2">
+            <table className="w-full text-left text-[11px]">
+              <caption className="sr-only">{title}</caption>
+              <thead>
+                <tr className="text-slate-500 border-b border-slate-200">
+                  <th scope="col" className="py-1.5 pr-3 font-semibold">Month</th>
+                  {series.map((s) => (
+                    <th key={s.key} scope="col" className="py-1.5 px-3 font-semibold text-right">
+                      {s.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.map((row, i) => (
+                  <tr key={i}>
+                    <th scope="row" className="py-1.5 pr-3 font-medium text-slate-700">
+                      {row.name}
+                    </th>
+                    {series.map((s) => (
+                      <td key={s.key} className="py-1.5 px-3 text-right tabular-nums text-slate-600">
+                        {row[s.key] ?? "—"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

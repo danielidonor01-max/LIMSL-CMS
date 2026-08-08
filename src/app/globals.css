@@ -84,6 +84,16 @@ select[size]:not([size="1"]) {
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
 }
+/* The setting is labelled "List density", and several lists are cards rather
+   than tables — the registry below md, contractors, the drill log. Those
+   ignored the preference entirely, so it appeared to do nothing on exactly the
+   screens where space is tightest. Cards opt in with data-list-card. */
+:root[data-density="compact"] [data-list-card] {
+  padding: 0.75rem;
+}
+:root[data-density="compact"] [data-list-card] + [data-list-card] {
+  margin-top: -0.25rem;
+}
 
 /* Print: drop app chrome (sidebar + top bar + marked controls), print content only. */
 @media print {
