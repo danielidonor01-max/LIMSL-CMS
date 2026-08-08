@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { useUserPrefs } from "@/components/PreferencesProvider";
+import Tooltip from "@/components/Tooltip";
 
 // Topbar bell showing the current user's unread notification count. Polls
 // lightly and refreshes on navigation. Renders nothing until mounted so the
@@ -100,24 +101,28 @@ export default function NotificationBell() {
   if (!mounted) return null;
 
   return (
-    <Link
-      href="/notifications"
-      title="Notifications"
-      // The count is carried in colour and position only; a screen reader
-      // otherwise hears "Notifications" whether there are none or nine.
-      aria-label={
-        prefs.notifyInApp && unread > 0
-          ? `Notifications — ${unread} unread`
-          : "Notifications — none unread"
-      }
-      className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
-    >
-      <Bell className="w-5 h-5" />
-      {prefs.notifyInApp && unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
-          {unread > 9 ? "9+" : unread}
-        </span>
-      )}
-    </Link>
+    // The native `title` waited a second, could not be styled, never appeared
+    // on touch, and was not announced — on an icon-only control that was the
+    // only label, delivered late and to some users only.
+    <Tooltip label={unread > 0 ? `${unread} unread` : "Notifications"}>
+      <Link
+        href="/notifications"
+        // The count is carried in colour and position only; a screen reader
+        // otherwise hears "Notifications" whether there are none or nine.
+        aria-label={
+          prefs.notifyInApp && unread > 0
+            ? `Notifications — ${unread} unread`
+            : "Notifications — none unread"
+        }
+        className="relative grid place-items-center w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+      >
+        <Bell className="w-5 h-5" />
+        {prefs.notifyInApp && unread > 0 && (
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </Link>
+    </Tooltip>
   );
 }

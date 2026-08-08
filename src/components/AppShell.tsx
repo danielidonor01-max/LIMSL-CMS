@@ -10,6 +10,7 @@ import OfflineBanner from "./OfflineBanner";
 import OutboxTray from "./OutboxTray";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
+import AccountMenu from "./AccountMenu";
 import QuickActions from "./QuickActions";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
@@ -37,7 +38,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 min-w-0 flex flex-col">
         <OfflineBanner />
         <OutboxTray />
-        <div className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-2 px-4 lg:px-6">
+        {/* Search anchors left, actions anchor right. Everything used to sit in
+            one left-hugging run with no spacer, so on a wide screen the content
+            clustered into the first third and the rest of the bar was void —
+            which is what read as disorganised. The right cluster is grouped and
+            separated from the passive indicator by a rule, so a primary action,
+            a notification and an account control are not three equal things. */}
+        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-3 px-4 lg:px-6">
           <button
             onClick={() => setNavOpen(true)}
             className="lg:hidden p-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
@@ -45,10 +52,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Menu className="w-5 h-5" />
           </button>
+
           <GlobalSearch />
-          <QuickActions />
-          <NotificationBell />
-        </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <QuickActions />
+            <span className="hidden sm:block w-px h-6 bg-slate-200" aria-hidden="true" />
+            <NotificationBell />
+            <AccountMenu />
+          </div>
+        </header>
         <div className="flex-1 min-w-0">
           {allowed ? (
             children

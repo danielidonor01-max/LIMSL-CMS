@@ -1,13 +1,21 @@
 // src/components/QuickActions.tsx
-// Top-bar quick-action menu: the common "create" actions, role-aware, in one
-// icon. Replaces the dashboard tiles that duplicated the sidebar.
+// The app's primary "create" affordance in the top bar, role-aware.
+//
+// It used to be an icon-only ⚡ button with the same visual weight as the
+// notification bell — a primary action and a passive indicator rendered
+// identically. Worse, a lightning bolt is genuinely ambiguous in THIS product:
+// the app is full of electrical panels, earthing systems and ELECTRICAL fault
+// types, so the icon reads as a domain object rather than as "create". It is
+// now a labelled "New" button, which is the convention every user already
+// knows, and it is the only element in the bar carrying primary weight.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
-  Zap,
+  Plus,
+  ChevronDown,
   ClipboardList,
   AlertTriangle,
   ShieldCheck,
@@ -17,11 +25,11 @@ import {
 import { MAINTENANCE_WRITE_ROLES, PERMIT_ISSUE_ROLES, WMS_WRITE_ROLES } from "@/lib/roles";
 
 const ACTIONS = [
-  { href: "/work-orders/new", label: "New Work Order", icon: ClipboardList, roles: MAINTENANCE_WRITE_ROLES },
-  { href: "/corrective/new", label: "Report Breakdown / RCA", icon: AlertTriangle, roles: MAINTENANCE_WRITE_ROLES },
-  { href: "/permits/new", label: "Raise Permit (PTW)", icon: ShieldCheck, roles: PERMIT_ISSUE_ROLES },
-  { href: "/wms/new", label: "Draft WMS", icon: FileText, roles: WMS_WRITE_ROLES },
-  { href: "/equipment/new", label: "Add Equipment", icon: Layers, roles: MAINTENANCE_WRITE_ROLES },
+  { href: "/work-orders/new", label: "Work order", icon: ClipboardList, roles: MAINTENANCE_WRITE_ROLES },
+  { href: "/corrective/new", label: "Fault report", icon: AlertTriangle, roles: MAINTENANCE_WRITE_ROLES },
+  { href: "/permits/new", label: "Permit to work", icon: ShieldCheck, roles: PERMIT_ISSUE_ROLES },
+  { href: "/wms/new", label: "Work method statement", icon: FileText, roles: WMS_WRITE_ROLES },
+  { href: "/equipment/new", label: "Asset", icon: Layers, roles: MAINTENANCE_WRITE_ROLES },
 ];
 
 export default function QuickActions() {
@@ -38,8 +46,13 @@ export default function QuickActions() {
     const onClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   if (!mounted) return null;
@@ -50,19 +63,23 @@ export default function QuickActions() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        title="Quick actions"
-        aria-label="Quick actions"
-        className={`p-2 rounded-lg transition-all ${
-          open ? "bg-emerald-50 text-emerald-600" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-        }`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 pl-3 pr-2 min-h-10 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 transition-colors"
       >
-        <Zap className="w-5 h-5" />
+        <Plus className="w-4 h-4" />
+        <span className="hidden sm:inline">New</span>
+        <ChevronDown className={`w-3.5 h-3.5 opacity-80 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
-          <div className="px-3 py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-            Quick actions
+        <div
+          role="menu"
+          aria-label="Create"
+          className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50"
+        >
+          <div className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+            Create
           </div>
           {actions.map((a) => {
             const Icon = a.icon;
@@ -70,10 +87,11 @@ export default function QuickActions() {
               <Link
                 key={a.href}
                 href={a.href}
+                role="menuitem"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                className="flex items-center gap-3 px-3 min-h-11 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
               >
-                <Icon className="w-4 h-4 text-emerald-600" />
+                <Icon className="w-4 h-4 text-emerald-600 shrink-0" />
                 {a.label}
               </Link>
             );
