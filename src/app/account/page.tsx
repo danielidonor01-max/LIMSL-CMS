@@ -19,6 +19,7 @@ import { Badge } from "@/components/Badge";
 import { ROLE_BADGE } from "@/lib/roles";
 import { useUserPrefs } from "@/components/PreferencesProvider";
 import { DEFAULT_PREFS, LANDING_OPTIONS, type UserPrefs } from "@/lib/user-prefs";
+import PageSkeleton from "@/components/Skeleton";
 
 type Me = {
   name: string; email: string; phone: string; whatsapp: string;
@@ -90,9 +91,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-      </div>
+      <PageSkeleton variant="form" label="Loading your account" />
     );
   }
 

@@ -1,0 +1,18 @@
+{
+  "name": "LIMSL CMS — Maintenance",
+  "short_name": "LIMSL CMS",
+  "description": "Computerized Maintenance Management System for Lee International Machinery and Services Limited.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

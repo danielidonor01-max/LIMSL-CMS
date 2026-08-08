@@ -4,7 +4,11 @@
 // Credentials provider that touches the database.
 import type { NextAuthConfig } from "next-auth";
 
-const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr"];
+// `/offline` is served by the service worker when there is no connection. It is
+// public because the session cannot be checked with the network down — and
+// redirecting to /login at that moment would show a sign-in form that cannot
+// possibly submit.
+const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr", "/offline"];
 
 export const authConfig = {
   pages: { signIn: "/login" },

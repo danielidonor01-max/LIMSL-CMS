@@ -35,8 +35,10 @@ import PageHeader from "@/components/PageHeader";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
 import EquipmentLog from "@/components/EquipmentLog";
 import MeterCard from "@/components/MeterCard";
+import ConditionCard from "@/components/ConditionCard";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
+import PageSkeleton from "@/components/Skeleton";
 
 // A diagnostic-guide's steps column is JSON that may hold plain strings or
 // {step, description} objects. Coerce every element to a string so it can never
@@ -99,9 +101,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono text-xs gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" /> Loading twin telemetry...
-      </div>
+      <PageSkeleton variant="detail" label="Loading equipment" />
     );
   }
 
@@ -283,6 +283,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <MeterCard equipmentId={eq.id} canWrite={canWrite} />
+              <ConditionCard equipmentId={eq.id} canWrite={canWrite} />
 
               {/* General Specs */}
               <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">

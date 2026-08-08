@@ -54,6 +54,39 @@ const INDEXES: [string, string][] = [
   // Phase 4b — schedule adherence, deferral register, failure taxonomy.
   ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
   ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
+  // Phase 6f — condition monitoring.
+  [
+    "condition_points",
+    `CREATE TABLE IF NOT EXISTS condition_points (
+      id text PRIMARY KEY,
+      equipment_id text NOT NULL,
+      name text NOT NULL,
+      kind text NOT NULL,
+      unit text,
+      alert_limit real,
+      alarm_limit real,
+      interval_days real,
+      last_reading_date text,
+      notes text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["condition_points_equipment_idx", "CREATE INDEX IF NOT EXISTS condition_points_equipment_idx ON condition_points (equipment_id)"],
+  [
+    "condition_readings",
+    `CREATE TABLE IF NOT EXISTS condition_readings (
+      id text PRIMARY KEY,
+      point_id text NOT NULL,
+      value real NOT NULL,
+      taken_on text NOT NULL,
+      verdict text NOT NULL,
+      notes text,
+      taken_by_id text,
+      taken_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["condition_readings_point_idx", "CREATE INDEX IF NOT EXISTS condition_readings_point_idx ON condition_readings (point_id)"],
   // Phase 6e — contractor control (ISO 45001 8.1.4.2).
   [
     "contractors",

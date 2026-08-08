@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
 import { failureModesFor, DETECTION_METHODS } from "@/lib/maintenance/failure-codes";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
+import PageSkeleton from "@/components/Skeleton";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -284,9 +285,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono text-xs gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-rose-500" /> Loading report detail logs...
-      </div>
+      <PageSkeleton variant="detail" label="Loading corrective record" />
     );
   }
 

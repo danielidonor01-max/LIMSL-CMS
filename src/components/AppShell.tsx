@@ -21,7 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const role = (session?.user as { role?: string })?.role;
   const mustChange = (session?.user as { mustChangePassword?: boolean })?.mustChangePassword;
-  const bare = pathname === "/login" || (status === "authenticated" && mustChange && pathname === "/change-password");
+  const bare = pathname === "/offline" || pathname === "/login" || (status === "authenticated" && mustChange && pathname === "/change-password");
 
   const [navOpen, setNavOpen] = useState(false);
   // Close the mobile drawer whenever the route changes.

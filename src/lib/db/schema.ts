@@ -478,6 +478,35 @@ export const emergencyDrills = pgTable("emergency_drills", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Condition monitoring ───────────────────────────────────────────────────
+// A measurement point on a machine — "motor drive-end bearing", "main panel
+// busbar" — with the two thresholds that make a reading actionable.
+export const conditionPoints = pgTable("condition_points", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(),                    // TEMPERATURE | VIBRATION | CURRENT | ...
+  unit: text("unit"),
+  alertLimit: real("alert_limit"),
+  alarmLimit: real("alarm_limit"),
+  intervalDays: real("interval_days"),
+  lastReadingDate: text("last_reading_date"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("condition_points_equipment_idx").on(t.equipmentId)]);
+
+export const conditionReadings = pgTable("condition_readings", {
+  id: text("id").primaryKey(),
+  pointId: text("point_id").notNull().references(() => conditionPoints.id),
+  value: real("value").notNull(),
+  takenOn: text("taken_on").notNull(),
+  verdict: text("verdict").notNull(),
+  notes: text("notes"),
+  takenById: text("taken_by_id"),
+  takenByName: text("taken_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("condition_readings_point_idx").on(t.pointId)]);
+
 // Every meter reading, so the usage rate is observed rather than assumed.
 export const meterReadings = pgTable("meter_readings", {
   id: text("id").primaryKey(),
@@ -1059,6 +1088,8 @@ export type EmergencyEquipment = typeof emergencyEquipment.$inferSelect;
 export type NewEmergencyEquipment = typeof emergencyEquipment.$inferInsert;
 export type EmergencyInspection = typeof emergencyInspections.$inferSelect;
 export type EmergencyDrill = typeof emergencyDrills.$inferSelect;
+export type ConditionPoint = typeof conditionPoints.$inferSelect;
+export type ConditionReading = typeof conditionReadings.$inferSelect;
 export type MeterReading = typeof meterReadings.$inferSelect;
 export type SparePart = typeof spareParts.$inferSelect;
 export type NewSparePart = typeof spareParts.$inferInsert;

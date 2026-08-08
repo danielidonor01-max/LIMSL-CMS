@@ -413,9 +413,38 @@ otherwise compliant contractor is the case a company-level record misses.
 Suspension requires a stated reason, and reinstating does not make expired
 paperwork valid — it says so rather than letting a green tick imply it.
 
-**Still open in Phase 6 — not started:** condition monitoring (thermography,
-vibration); app-shell caching for offline *page* loads (Phase 6d queues
-submissions, it does not make the app open with no signal).
+### Phase 6f — status: SHIPPED · PHASE 6 COMPLETE
+**Wireframe preloaders.** A spinner collapses the page to a dot and says nothing
+about what is coming. Detail screens now render a wireframe in the shape of the
+real layout, so nothing jumps when data lands — and, deliberately, it renders
+from client JS with no server round-trip, which is what lets it appear instantly
+once the shell is cached.
+
+**App-shell caching** (`public/sw.js`). The rule the file exists to enforce:
+**cache the shell, never the data.** In a maintenance system a cached API
+response is not a convenience but a safety problem — a machine that read
+OPERATIONAL an hour ago may be isolated and locked out now. Static assets are
+cache-first, navigations network-first with a cached fallback, `/api/*` is
+network-only, and a test asserts that policy against the file so a future
+"let's cache the API, it'll feel faster" change fails loudly. Also fixed: the
+auth matcher did not exclude `/sw.js`, so the worker was redirected to `/login`
+and would never have registered.
+
+**Condition monitoring.** Deliberately small — two thresholds (alert means plan,
+alarm means stop), a least-squares trend over irregular reading intervals, and a
+projected date for crossing the alarm. The number worth the feature is the one
+where *every reading so far is within limits* and the bearing is still visibly
+heating up. Fewer than three readings returns UNKNOWN rather than a trend, and
+a register that is mostly overdue reports itself as not kept up rather than as a
+predictive capability.
+
+**A recurring bug worth naming:** `Number(null) === 0` bit for the third time
+this session — a null alarm limit became a limit of zero, so every reading was
+an ALARM. Same root cause as the meter's "no reading yet" reading as within
+interval, and the frequency-casing miss in Phase 4c. Absence has to be checked
+before coercion, not after.
+
+**Phase 6 is complete.** 337 tests green.
 
 ---
 
