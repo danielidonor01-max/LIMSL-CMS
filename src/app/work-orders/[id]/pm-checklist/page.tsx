@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
 import { jobPlanFor, hasBespokePlan, type JobTask } from "@/lib/maintenance/job-plans";
 import { FREQUENCY_LABELS } from "@/lib/constants";
+import { submitOrQueue } from "@/lib/offline/use-outbox";
 
 type Item = { item: string; status: string; remarks: string; criteria?: string; unit?: string; value?: string };
 type User = { id: string; name: string; role: string };
@@ -162,10 +163,14 @@ export default function PMChecklistPage() {
     setShowConfirm(false);
     setSaving(true);
     try {
-      const res = await fetch("/api/pm-checklists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // Signal drops in the workshop. Rather than failing in front of someone
+      // who has just filled in a 21-item checklist twice, park it and send it
+      // when the connection returns.
+      const outcome = await submitOrQueue({
+        url: "/api/pm-checklists",
+        label: `PM checklist — ${wo?.equipment?.assetId ?? "work order"} ${wo?.workOrderNumber ?? ""}`.trim(),
+        dedupeKey: `pm-checklist:${id}`,
+        body: {
           workOrderId: id,
           equipmentId: wo.equipmentId,
           date: new Date().toISOString().slice(0, 10),
@@ -184,10 +189,21 @@ export default function PMChecklistPage() {
           supervisorName,
           technicianSignature,
           supervisorSignature,
-        }),
+        },
       });
-      if (!res.ok) {
-        const d = await res.json();
+
+      if (!outcome.ok) throw new Error(outcome.error);
+
+      if (!outcome.sent) {
+        // Keep the draft: nothing is filed until the queue drains, and the
+        // outbox tray is now carrying it.
+        toast.success("Saved on this phone — it will file itself once you have signal.");
+        router.push(`/work-orders/${id}`);
+        return;
+      }
+
+      if (!outcome.response.ok) {
+        const d = await outcome.response.json().catch(() => ({}));
         throw new Error(d.error || "Submit failed");
       }
       clearDraft();

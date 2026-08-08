@@ -368,10 +368,37 @@ Drill log alongside it, judged on **interval** rather than on whether one ever
 happened, and flagging drills that recorded deficiencies with no corrective
 action against them — the first thing an auditor probes.
 
+### Phase 6d — status: SHIPPED (offline submit queueing)
+Deferred twice — from Phase 3 and again from the start of Phase 6. Drafts and
+the honest offline banner already meant nothing typed was lost, but a technician
+who pressed Submit with no bars still watched it fail and had to remember to
+come back. Submissions are now parked on the device and sent when the connection
+returns, wired into the two things filed from the floor: the PM checklist and
+the fault report.
+
+**Built around refusing to swallow failures**, because the dangerous version of
+this feature is the one that hides a rejection behind an optimistic tick:
+- **4xx is terminal.** A validation error, a lapsed permit, someone else closing
+  the record first — none of these get better on retry, so the entry is parked as
+  FAILED and shown, with the server's own message.
+- 5xx and network failures retry with capped backoff; past five attempts the
+  entry is parked, never dropped and never retried forever.
+- Storage that cannot accept an entry **says so** rather than evicting an older
+  one — a queue that silently loses work is worse than no queue, because the user
+  believes the job is done.
+- A `dedupeKey` means double-tapping Submit on a laggy phone replaces rather
+  than duplicates.
+- Corrupt storage reads as empty instead of taking the page down.
+
+The tray sits under the offline banner and stays visible until the queue drains,
+listing what is waiting and — separately, in red — anything refused, with Try
+again and Discard. Deliberately **not** a service worker: Safari/iOS has no
+Background Sync, so a localStorage outbox with flush-on-reconnect works on every
+phone in the workshop rather than only the Android ones.
+
 **Still open in Phase 6 — not started:** contractor induction and insurance
-expiry; condition monitoring; PWA/service-worker offline submit queueing
-(deferred from Phase 3, where drafts and the offline banner shipped but a POST
-attempted with no connection still fails and must be retried by hand).
+expiry; condition monitoring; app-shell caching for offline *page* loads (this
+phase queues submissions, it does not make the app open with no signal).
 
 ---
 

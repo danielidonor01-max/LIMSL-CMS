@@ -9,6 +9,7 @@ import Select from "@/components/Select";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import Field, { FIELD_CLASS } from "@/components/Field";
+import { submitOrQueue } from "@/lib/offline/use-outbox";
 
 export default function NewCorrectiveRequest() {
   const router = useRouter();
@@ -55,10 +56,13 @@ export default function NewCorrectiveRequest() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/corrective", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // Reporting a fault is the one thing that must never be lost to a dead
+      // spot — it is usually being done standing next to a stopped machine.
+      const machine = equipmentList.find((e: any) => e.id === equipmentId);
+      const outcome = await submitOrQueue({
+        url: "/api/corrective",
+        label: `Fault report — ${machine?.assetId ?? "equipment"}${machine?.name ? ` (${machine.name})` : ""}`,
+        body: {
           equipmentId,
           faultType,
           urgency,
@@ -67,18 +71,28 @@ export default function NewCorrectiveRequest() {
           observedFault,
           errorCodes,
           environmentalCondition,
-        }),
+        },
       });
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
+      if (!outcome.ok) {
+        toast.error(outcome.error);
+        return;
+      }
+
+      if (!outcome.sent) {
+        toast.success("Saved on this phone — the fault will be logged as soon as you have signal.");
+        router.push("/corrective");
+        return;
+      }
+
+      if (!outcome.response.ok) {
+        const d = await outcome.response.json().catch(() => ({}));
         toast.error(d.error || "Couldn't log the fault — check your connection and try again.");
         return;
       }
       toast.success("Fault logged. Maintenance leadership and HSE have been notified.");
       router.push("/corrective");
     } catch {
-      // On workshop wifi a dropped request used to look exactly like success.
       toast.error("Couldn't log the fault — check your connection and try again.");
     } finally {
       setSaving(false);
