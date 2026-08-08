@@ -448,6 +448,45 @@ before coercion, not after.
 
 ---
 
+## POST-PHASE-6 UI/UX REVIEW — status: ADDRESSED (7 of 8)
+
+A design review of the whole product after Phase 6, focused on real-world use
+and accessibility. Rated **7.5/10** overall: strong compliance architecture and
+an unusually honest metrics culture, held back by capability having outrun the
+surfaces that expose it.
+
+| # | Finding | Outcome |
+|---|---|---|
+| 1 | The four Phase 6 registers reached nowhere anyone would look | **Fixed** — `/api/dashboard/attention` feeds one role-filtered panel that renders only when something is wrong |
+| 2 | Global search covered 4 modules of ~18 | **Fixed** — 11 modules, plus a test that fails when a new module appears unconsidered |
+| 3 | Dates rendered `en-US` for a Nigerian workshop | **Fixed** — `en-GB`, month still spelled out |
+| 4 | No skip link — ~20 tab presses to reach content | **Fixed** |
+| 5 | No dark mode | **Deferred by decision** — see below |
+| 6 | Charts conveyed meaning by shape alone | **Fixed** — `role="img"` label + expandable data table |
+| 7 | Form errors not programmatically associated | **Fixed** in `Field`, so every form inherits it |
+| 8 | Density preference possibly not honoured | **Audited** — worked for tables and page padding; the Phase 6 card lists ignored it, now opted in |
+
+**Also found and fixed separately (`33f24d0`):** the Phase 2 global focus ring
+was written with `:where()` — zero specificity — so every local
+`focus:outline-none` beat it. **47 of 64** elements had no focus indicator at
+all. Phase 2 was marked shipped with that hole in it; the lesson is that a CSS
+fix which *looks* correct in the stylesheet can be silently inert, so it now has
+a test.
+
+### Dark mode — deferred, deliberately
+Measured before deciding: **1,768 hardcoded light-surface utilities across 77
+files, and one `dark:` variant in the whole codebase.** A real dark theme is a
+token migration plus a full sweep that has to be verified by eye on every
+screen. A half-migrated one is worse than none — white cards on dark
+backgrounds, invisible text, vanishing badges — which is the same reasoning that
+kept `permits/new` and `wms/new` out of the Phase 2 field migration.
+
+Consistent with `AGENTS.md`, which already scopes the light theme as the default
+and dark as a later phase. When it is taken on, the order is: semantic CSS
+variables first, then sweep module by module, verifying each before moving on.
+
+---
+
 ## Recommended sequencing
 
 **Ship Phase 0 immediately** — a day's work that removes every actively-wrong behaviour.
