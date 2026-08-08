@@ -20,7 +20,10 @@ import {
   Shield,
   Info,
   UserCog,
+  Download,
+  Printer,
 } from "lucide-react";
+import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
@@ -58,13 +61,14 @@ type User = {
 };
 
 // Write-permission sets, sourced from the canonical exports — never re-derived.
-const PERMISSION_SETS: { label: string; roles: string[] }[] = [
-  { label: "Maintenance write", roles: MAINTENANCE_WRITE_ROLES },
-  { label: "Permits (issue/close)", roles: PERMIT_WRITE_ROLES },
-  { label: "Training & competency", roles: TRAINING_WRITE_ROLES },
-  { label: "Compliance records", roles: COMPLIANCE_WRITE_ROLES },
-  { label: "WMS", roles: WMS_WRITE_ROLES },
-  { label: "App settings & users", roles: SETTINGS_WRITE_ROLES },
+// `short` is the column head in the matrix, where horizontal room is scarce.
+const PERMISSION_SETS: { label: string; short: string; roles: string[] }[] = [
+  { label: "Maintenance write", short: "Maintenance", roles: MAINTENANCE_WRITE_ROLES },
+  { label: "Permits (issue/close)", short: "Permits", roles: PERMIT_WRITE_ROLES },
+  { label: "Training & competency", short: "Training", roles: TRAINING_WRITE_ROLES },
+  { label: "Compliance records", short: "Compliance", roles: COMPLIANCE_WRITE_ROLES },
+  { label: "WMS", short: "WMS", roles: WMS_WRITE_ROLES },
+  { label: "App settings & users", short: "Admin", roles: SETTINGS_WRITE_ROLES },
 ];
 
 const MODULE_LABELS: Record<string, string> = {
@@ -126,6 +130,7 @@ export default function UsersAdminPage() {
   const [list, setList] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageTab, setPageTab] = useState<"users" | "roles">("users");
+  const [roleView, setRoleView] = useState<"cards" | "matrix">("cards");
 
   // Toolbar filters
   const [search, setSearch] = useState("");
@@ -291,6 +296,25 @@ export default function UsersAdminPage() {
     list.forEach((u) => (byRole[u.role] = [...(byRole[u.role] ?? []), u]));
     return byRole;
   }, [list]);
+
+  // The matrix is a compliance artefact — an auditor asks to keep a copy, so it
+  // leaves the app as a file rather than a screenshot.
+  const exportMatrix = () => {
+    downloadCSV(
+      `role-permission-matrix-${new Date().toISOString().slice(0, 10)}`,
+      ROLES.map((r) => {
+        const row: Record<string, unknown> = {
+          Role: ROLE_LABELS[r] ?? r,
+          Department: deptLabel(ROLE_DEPARTMENT[r]) ?? "—",
+          "Sign-off rank": ROLE_RANK[r] ?? 0,
+          "Active members": (membersByRole[r] ?? []).filter((m) => m.isActive !== false).length,
+        };
+        for (const p of PERMISSION_SETS) row[p.label] = p.roles.includes(r) ? "Yes" : "No";
+        row["Module access"] = (ROLE_ALLOWED_PATHS[r] ?? []).map(moduleLabel).join("; ") || "All modules";
+        return row;
+      }),
+    );
+  };
 
   // Departments offered in the edit form come from the canonical role→department
   // map, so the list can never drift from roles.ts.
@@ -576,7 +600,103 @@ export default function UsersAdminPage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          {/* Cards answer "what can this role do". The matrix answers "who can do
+              this thing" — the direction an auditor reads, and the artefact they
+              ask for by name. */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+              {(["cards", "matrix"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setRoleView(v)}
+                  className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
+                    roleView === v ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {v === "cards" ? "By role" : "Permission matrix"}
+                </button>
+              ))}
+            </div>
+            {roleView === "matrix" && (
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" icon={Download} onClick={exportMatrix}>
+                  Export CSV
+                </Button>
+                <Button variant="secondary" size="sm" icon={Printer} onClick={() => window.print()}>
+                  Print
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {roleView === "matrix" && (
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                      <th className="py-3 px-4 font-semibold sticky left-0 bg-slate-50 z-10">Role</th>
+                      <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">Members</th>
+                      <th className="py-3 px-3 font-semibold text-center whitespace-nowrap" title="Higher rank may sign any junior step">
+                        Sign-off rank
+                      </th>
+                      {PERMISSION_SETS.map((p) => (
+                        <th key={p.label} className="py-3 px-3 font-semibold text-center whitespace-nowrap" title={p.label}>
+                          {p.short}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {ROLES.map((r) => {
+                      const members = membersByRole[r] ?? [];
+                      const activeMembers = members.filter((m) => m.isActive !== false).length;
+                      return (
+                        <tr key={r} className="hover:bg-slate-50">
+                          <td className="py-3 px-4 sticky left-0 bg-white z-10">
+                            <Badge className={ROLE_BADGE[r] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                              {ROLE_LABELS[r]}
+                            </Badge>
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"}
+                            </p>
+                          </td>
+                          <td
+                            className={`py-3 px-3 text-center font-semibold ${
+                              activeMembers === 0 ? "text-amber-600" : "text-slate-700"
+                            }`}
+                            title={activeMembers === 0 ? "Nobody holds this role — any step requiring it cannot be signed" : undefined}
+                          >
+                            {activeMembers}
+                          </td>
+                          <td className="py-3 px-3 text-center text-slate-500 font-mono">{ROLE_RANK[r] ?? 0}</td>
+                          {PERMISSION_SETS.map((p) => {
+                            const has = p.roles.includes(r);
+                            return (
+                              <td key={p.label} className="py-3 px-3 text-center">
+                                {has ? (
+                                  <Check className="w-4 h-4 text-emerald-600 inline" aria-label="Yes" />
+                                ) : (
+                                  <span className="text-slate-300" aria-label="No">—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[11px] text-slate-500 px-4 py-3 border-t border-slate-200">
+                A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off —
+                QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
+                <span className="text-amber-600 font-semibold">0 members</span> blocks every chain step that requires it.
+              </p>
+            </div>
+          )}
+
+          <div className={`grid sm:grid-cols-2 gap-4 ${roleView === "matrix" ? "hidden" : ""}`}>
             {ROLES.map((r) => {
               const members = membersByRole[r] ?? [];
               const perms = PERMISSION_SETS.filter((p) => p.roles.includes(r));

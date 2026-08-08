@@ -34,6 +34,40 @@ export const EQUIPMENT_STATUS_BADGE: Record<string, string> = {
   DECOMMISSIONED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
+// Criticality is a business judgement, so it is spelled out rather than shown as
+// an enum: "HIGH" tells a new foreman nothing about what to do differently.
+export const CRITICALITY_LABELS: Record<string, string> = {
+  CRITICAL: "Critical — production stops",
+  HIGH: "High — major disruption",
+  MEDIUM: "Medium — work-around exists",
+  LOW: "Low — little impact",
+};
+
+export const CRITICALITY_SHORT: Record<string, string> = {
+  CRITICAL: "Critical",
+  HIGH: "High",
+  MEDIUM: "Medium",
+  LOW: "Low",
+};
+
+// The registry hand-rolled this and had no branch for CRITICAL, so the most
+// important level rendered in the same grey as the least.
+export const CRITICALITY_BADGE: Record<string, string> = {
+  CRITICAL: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  HIGH: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+  MEDIUM: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  LOW: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+};
+
+export const FREQUENCY_LABELS: Record<string, string> = {
+  WEEKLY: "Weekly",
+  MONTHLY: "Monthly",
+  BI_MONTHLY: "Every 2 months",
+  QUARTERLY: "Quarterly",
+  SEMI_ANNUAL: "Every 6 months",
+  ANNUAL: "Annually",
+};
+
 // ─── Maintenance schedule ───────────────────────────────────────────────────
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   PM: "Preventive Maintenance",
