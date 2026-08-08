@@ -15,10 +15,22 @@
    Components clear the browser outline (focus:outline-none) to style their own
    focus, but most never replaced it — keyboard users could tab through the app
    with nothing to show where they were. One :focus-visible ring restores it
-   everywhere, without showing a ring on mouse clicks. */
+   everywhere, without showing a ring on mouse clicks.
+
+   `!important` is deliberate, and this is the rare case that earns it. The rule
+   was previously written with :where(), which has ZERO specificity — so every
+   local `focus:outline-none` (Tailwind emits `.focus\:outline-none:focus`, a
+   class plus a pseudo-class) beat it, and 47 of the 64 elements that clear the
+   outline were left with no focus indicator at all. The fix silently did
+   nothing on the majority of the elements it was written for.
+
+   A visible focus indicator is a WCAG 2.4.7 requirement, not a style
+   preference. It must not be defeatable by a utility class added in passing.
+   Elements that also set their own `focus:ring-*` keep it; the soft ring reads
+   as a halo around this outline, which is the conventional pairing. */
 :where(a, button, input, textarea, select, summary, [role="switch"], [role="tab"], [role="option"], [tabindex]):focus-visible {
-  outline: 2px solid #059669; /* emerald-600 */
-  outline-offset: 2px;
+  outline: 2px solid #059669 !important; /* emerald-600 */
+  outline-offset: 2px !important;
   border-radius: 0.5rem;
 }
 
