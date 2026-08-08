@@ -34,6 +34,7 @@ import KebabMenu from "@/components/KebabMenu";
 import PageHeader from "@/components/PageHeader";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
 import EquipmentLog from "@/components/EquipmentLog";
+import MeterCard from "@/components/MeterCard";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
@@ -281,6 +282,8 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         {activeTab === "specs" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
+              <MeterCard equipmentId={eq.id} canWrite={canWrite} />
+
               {/* General Specs */}
               <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
                 <h3 className="text-sm font-bold tracking-wide text-slate-900">Equipment Specifications</h3>

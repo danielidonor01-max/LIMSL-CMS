@@ -39,6 +39,7 @@ const CATEGORY_META: Record<string, { label: string; icon: typeof Wrench; color:
   STATUS: { label: "Status", icon: Activity, color: "text-amber-600", ring: "bg-amber-50 border-amber-200" },
   CALIBRATION: { label: "Calibration", icon: Gauge, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
   DOCUMENT: { label: "Document", icon: FileText, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
+  METER: { label: "Meter", icon: Gauge, color: "text-cyan-600", ring: "bg-cyan-50 border-cyan-200" },
   NOTE: { label: "Note", icon: StickyNote, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
   OTHER: { label: "Other", icon: CircleDot, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
 };

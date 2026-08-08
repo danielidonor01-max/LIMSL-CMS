@@ -323,12 +323,34 @@ critical part that is entirely absent.** If the machine fails this afternoon the
 wait is identical whether or not a PO exists, and softening the grade would be
 the register telling a comfortable lie. A purchase order is not a spare.
 
-**Still open in Phase 6 — not started:** meter/runtime PM triggers (compressors
-and cranes are calendar-scheduled today, which is wrong for run-hours assets);
-contractor induction and insurance expiry; emergency-equipment register and
-drill log; condition monitoring; PWA/service-worker offline submit queueing
-(deferred from Phase 3, where drafts and the offline banner shipped but a POST
-attempted with no connection still fails and must be retried by hand).
+### Phase 6b — status: SHIPPED (meter / run-hours servicing)
+A compressor serviced "quarterly" is serviced on the same day whether it ran
+three shifts or sat idle for two months. `lib/maintenance/meters.ts` schedules on
+observed use instead: readings are a ledger, the usage rate is measured from at
+least two of them, and the due date is projected from that rate rather than
+assumed. Where there is only one reading it returns **no** rate and **no**
+projected date — a projection from a single point is a guess wearing a number's
+clothing. A replaced meter is recorded as a reset, so a reading that drops is
+never mistaken for negative usage (which would have deferred the service
+forever). Surfaced as a card on the digital twin, and meter reads join the
+machine history log.
+
+**Defect found while building it:** `Number(null)` is `0`, so an asset with a
+service interval set but **no reading ever taken** reported "Within interval" —
+a green tick for a machine nobody has measured. `NO_READING` is now a distinct
+state from `NOT_CONFIGURED`, because "nobody decided how often to service this"
+and "nobody has looked at it" need different actions and neither is fine.
+
+**Also shipped:** a staff-wide recipient deliverability audit in App Settings —
+with a consumer-domain sender an entire staff domain can be quarantined while
+every message is reported as sent, so this answers "who is affected" once
+instead of one confused support conversation at a time.
+
+**Still open in Phase 6 — not started:** contractor induction and insurance
+expiry; emergency-equipment register and drill log; condition monitoring;
+PWA/service-worker offline submit queueing (deferred from Phase 3, where drafts
+and the offline banner shipped but a POST attempted with no connection still
+fails and must be retried by hand).
 
 ---
 

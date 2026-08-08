@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle, Users2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -67,6 +67,8 @@ export default function AppSettingsPage() {
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
   const [diagnosis, setDiagnosis] = useState<any>(null);
+  const [auditing, setAuditing] = useState(false);
+  const [recipientAudit, setRecipientAudit] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
   type EmailStatus = {
     ready: boolean; reason: string | null; enabled: boolean; from: string;
@@ -330,6 +332,28 @@ export default function AppSettingsPage() {
       toast.error("Failed to send test email.");
     } finally {
       setSendingTest(false);
+    }
+  };
+
+  const auditRecipients = async () => {
+    setAuditing(true);
+    try {
+      const res = await fetch("/api/notifications/audit-recipients", { cache: "no-store" });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not check the staff list.");
+        return;
+      }
+      setRecipientAudit(d);
+      if (d.atRiskUsers > 0) {
+        toast.warning(`${d.atRiskUsers} of ${d.totalUsers} users are on a domain that will filter our mail.`);
+      } else {
+        toast.success("Every active user is on a domain that should receive our mail.");
+      }
+    } catch {
+      toast.error("Could not check the staff list.");
+    } finally {
+      setAuditing(false);
     }
   };
 
@@ -1027,6 +1051,63 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
               Send test
             </Button>
           </div>
+        </div>
+
+        {/* Who on the staff list will actually receive what we send. With a
+            consumer-domain sender an entire staff domain can be quarantined
+            while every message is reported as sent. */}
+        <div className="pt-3 border-t border-slate-100 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold text-slate-900">Who actually receives these</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Checks every active user&apos;s email domain against the mailbox the CMS sends from.
+              </p>
+            </div>
+            <Button variant="secondary" icon={Users2} loading={auditing} onClick={auditRecipients} disabled={!emailStatus?.ready}>
+              Check all staff
+            </Button>
+          </div>
+
+          {recipientAudit && (
+            <div className="space-y-2">
+              <p className="text-[11px] text-slate-600">
+                Sending as <span className="font-mono">{recipientAudit.sender}</span> ·{" "}
+                {recipientAudit.atRiskUsers > 0 ? (
+                  <span className="text-amber-700 font-semibold">
+                    {recipientAudit.atRiskUsers} of {recipientAudit.totalUsers} users are on a domain that will filter it
+                  </span>
+                ) : (
+                  <span className="text-emerald-700 font-semibold">all {recipientAudit.totalUsers} users should receive mail</span>
+                )}
+                {recipientAudit.withoutEmail > 0 && (
+                  <span className="text-slate-500"> · {recipientAudit.withoutEmail} with no email address on file</span>
+                )}
+              </p>
+
+              {recipientAudit.domains.map((d: any) => (
+                <div
+                  key={d.domain}
+                  className={`rounded-lg border p-3 ${
+                    d.severity === "fail"
+                      ? "bg-rose-50 border-rose-200"
+                      : d.severity === "warn"
+                        ? "bg-amber-50 border-amber-200"
+                        : "bg-emerald-50 border-emerald-200"
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <p className="text-xs font-semibold text-slate-900 font-mono">@{d.domain}</p>
+                    <p className="text-[11px] text-slate-600">
+                      {d.userCount} user{d.userCount === 1 ? "" : "s"} · {d.hostLabel}
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-slate-700 mt-1.5 leading-relaxed">{d.headline}</p>
+                  <p className="text-[10px] text-slate-500 mt-1.5">{d.people.join(", ")}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Where the mail actually goes. SMTP acceptance is not delivery, and a

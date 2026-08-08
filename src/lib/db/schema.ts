@@ -35,6 +35,14 @@ export const equipment = pgTable("equipment", {
   photoUrl: text("photo_url"),
   notes: text("notes"),
   criticality: text("criticality").default("MEDIUM"), // LOW | MEDIUM | HIGH | CRITICAL
+  // Run-hours servicing. A compressor serviced "quarterly" is serviced on the
+  // same day whether it ran three shifts or sat idle, which over-services the
+  // idle machine and under-services the hard-worked one.
+  meterUnit: text("meter_unit"),                              // HOURS | CYCLES | KM
+  currentMeter: real("current_meter"),
+  meterUpdatedAt: text("meter_updated_at"),
+  meterServiceInterval: real("meter_service_interval"),       // units between services
+  meterAtLastService: real("meter_at_last_service"),
   requiresCalibration: boolean("requires_calibration").default(false),
   requiresPremob: boolean("requires_premob").default(false),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -372,6 +380,21 @@ export const oemRegistry = pgTable("oem_registry", {
   notes: text("notes"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
+
+// Every meter reading, so the usage rate is observed rather than assumed.
+export const meterReadings = pgTable("meter_readings", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+  reading: real("reading").notNull(),
+  readingDate: text("reading_date").notNull(),
+  // A replaced meter reads lower than the last one; recorded explicitly so the
+  // drop is never mistaken for a data-entry error, or for negative usage.
+  isReset: boolean("is_reset").default(false),
+  notes: text("notes"),
+  recordedById: text("recorded_by_id"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("meter_readings_equipment_idx").on(t.equipmentId)]);
 
 // ─── Critical spares ────────────────────────────────────────────────────────
 // AWAITING_PARTS was a status the system could set and count as downtime, with
@@ -932,6 +955,7 @@ export type NewWorkOrder = typeof workOrders.$inferInsert;
 export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
+export type MeterReading = typeof meterReadings.$inferSelect;
 export type SparePart = typeof spareParts.$inferSelect;
 export type NewSparePart = typeof spareParts.$inferInsert;
 export type SparePartMovement = typeof sparePartMovements.$inferSelect;
