@@ -12,6 +12,7 @@ import {
   BookText,
   ClipboardCheck,
   MessageCircle,
+  Mail,
 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -29,7 +30,25 @@ type Notif = {
   readAt: string | null;
   channel: string;
   deliveryStatus: string;
+  deliveryError: string | null;
   createdAt: string;
+};
+
+// The row used to say "WhatsApp" whatever the channel actually was, so every
+// email notification reported itself as a WhatsApp message.
+const CHANNEL_LABELS: Record<string, string> = {
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  IN_APP: "In-app only",
+};
+
+const DELIVERY_LABELS: Record<string, string> = {
+  // "Sent" overstates it: SMTP acceptance is not delivery. The wording has to
+  // survive the case where the message was accepted and then quarantined.
+  SENT: "handed to the mail server",
+  QUEUED: "queued",
+  SKIPPED: "not sent — no contact or channel",
+  FAILED: "failed",
 };
 
 const EVENT_ICON: Record<string, React.ElementType> = {
@@ -144,15 +163,24 @@ export default function NotificationsPage() {
                         <p className={`text-sm ${n.readAt ? "font-medium text-slate-700" : "font-bold text-slate-900"}`}>{n.title}</p>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">{n.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400">
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 flex-wrap">
                         <span className="font-mono">{formatDate(n.createdAt)}</span>
                         <span className="inline-flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" />
-                          <span className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? ""}`}>
-                            WhatsApp {n.deliveryStatus}
+                          {n.channel === "EMAIL" ? <Mail className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                          <span
+                            className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? "bg-slate-100 text-slate-500 border-slate-200"}`}
+                          >
+                            {CHANNEL_LABELS[n.channel] ?? n.channel} ·{" "}
+                            {DELIVERY_LABELS[n.deliveryStatus] ?? n.deliveryStatus.toLowerCase()}
                           </span>
                         </span>
                       </div>
+                      {/* The reason was recorded and shown to nobody. */}
+                      {n.deliveryStatus === "FAILED" && n.deliveryError && (
+                        <p className="mt-1.5 text-[10px] text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1 leading-relaxed">
+                          {n.deliveryError}
+                        </p>
+                      )}
                     </div>
                   </button>
                 );

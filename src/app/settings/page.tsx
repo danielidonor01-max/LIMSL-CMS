@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -66,6 +66,7 @@ export default function AppSettingsPage() {
   const [escalating, setEscalating] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+  const [diagnosis, setDiagnosis] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
   type EmailStatus = {
     ready: boolean; reason: string | null; enabled: boolean; from: string;
@@ -305,6 +306,7 @@ export default function AppSettingsPage() {
 
   const sendTestEmail = async () => {
     setSendingTest(true);
+    setDiagnosis(null);
     try {
       const res = await fetch("/api/notifications/test", {
         method: "POST",
@@ -312,11 +314,18 @@ export default function AppSettingsPage() {
         body: JSON.stringify({ to: testEmail.trim() }),
       });
       const d = await res.json();
+      if (d.diagnosis) setDiagnosis({ ...d.diagnosis, smtpResponse: d.smtpResponse ?? null });
       if (!res.ok) {
         toast.error(d.error || "Failed to send test email.");
         return;
       }
-      toast.success(`Test email sent to ${d.to}. Check the inbox (and spam).`);
+      // "Accepted by the relay" is all we actually know. Saying "delivered"
+      // sends the admin looking in an inbox when the message is in quarantine.
+      if (d.diagnosis?.severity === "warn") {
+        toast.warning(`Handed to the mail server for ${d.to} — but it may be filtered. See the note below.`);
+      } else {
+        toast.success(`Test email sent to ${d.to}. Check the inbox (and spam).`);
+      }
     } catch {
       toast.error("Failed to send test email.");
     } finally {
@@ -1019,6 +1028,51 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
             </Button>
           </div>
         </div>
+
+        {/* Where the mail actually goes. SMTP acceptance is not delivery, and a
+            green tick against a quarantined message costs hours of looking in
+            the wrong place. */}
+        {diagnosis && (
+          <div
+            className={`rounded-lg border p-4 space-y-3 ${
+              diagnosis.severity === "fail"
+                ? "bg-rose-50 border-rose-200"
+                : diagnosis.severity === "warn"
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-emerald-50 border-emerald-200"
+            }`}
+          >
+            <div className="flex items-start gap-2.5">
+              {diagnosis.severity === "ok" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${diagnosis.severity === "fail" ? "text-rose-600" : "text-amber-600"}`}
+                />
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-slate-900">Delivery route for {diagnosis.recipient}</p>
+                <p className="text-xs text-slate-700 mt-1 leading-relaxed">{diagnosis.headline}</p>
+              </div>
+            </div>
+
+            {diagnosis.actions?.length > 0 && (
+              <ol className="space-y-1.5 pl-1">
+                {diagnosis.actions.map((a: string, i: number) => (
+                  <li key={i} className="flex gap-2 text-xs text-slate-700 leading-relaxed">
+                    <span className="font-mono text-slate-400 shrink-0">{i + 1}.</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            <div className="pt-2 border-t border-black/5 grid gap-1 text-[11px] text-slate-500 font-mono">
+              {diagnosis.mxHosts?.length > 0 && <p className="truncate">MX · {diagnosis.mxHosts.join(", ")}</p>}
+              {diagnosis.smtpResponse && <p className="truncate">SMTP · {diagnosis.smtpResponse}</p>}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Overdue escalations */}

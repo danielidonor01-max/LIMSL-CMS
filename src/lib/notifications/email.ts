@@ -5,7 +5,19 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import { config } from "@/lib/config";
 
-export type SendResult = { ok: boolean; messageId?: string; error?: string };
+export type SendResult = {
+  ok: boolean;
+  messageId?: string;
+  error?: string;
+  // What the relay actually said. `ok` only ever means "the relay accepted the
+  // message for delivery" — it is NOT proof of delivery. A receiver like
+  // Microsoft 365 accepts at the edge and then quarantines silently, and any
+  // later bounce goes to the authenticated mailbox, never back to this app.
+  // Recording the SMTP response is the only trace we get.
+  smtpResponse?: string;
+  accepted?: string[];
+  rejected?: string[];
+};
 
 let transporter: Transporter | null = null;
 function getTransport(): Transporter {
@@ -95,7 +107,27 @@ export async function sendEmail(to: string, title: string, body: string, linkPat
       text,
       html,
     });
-    return { ok: true, messageId: info.messageId };
+
+    const accepted = (info.accepted ?? []).map(String);
+    const rejected = (info.rejected ?? []).map(String);
+    // A relay can accept the envelope and still refuse this recipient. That used
+    // to be reported as a clean success.
+    if (rejected.length && !accepted.length) {
+      return {
+        ok: false,
+        error: `The mail server refused ${rejected.join(", ")}. ${info.response ?? ""}`.trim(),
+        smtpResponse: info.response,
+        accepted,
+        rejected,
+      };
+    }
+    return {
+      ok: true,
+      messageId: info.messageId,
+      smtpResponse: info.response,
+      accepted,
+      rejected,
+    };
   } catch (err) {
     return { ok: false, error: explainSmtpError(err) };
   }

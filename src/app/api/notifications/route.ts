@@ -2,15 +2,26 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
-import { and, eq, desc, isNull } from "drizzle-orm";
+import { and, eq, desc, isNull, count } from "drizzle-orm";
 import { auth } from "@/auth";
 
 // GET → the current user's in-app notifications (newest first) + unread count.
-export async function GET() {
+// `?countOnly=1` returns just the number: the topbar bell polls this once a
+// minute for every signed-in user, and it was pulling 100 full rows — body text,
+// delivery errors and all — to render a single integer.
+export async function GET(request: Request) {
   try {
     const session = await auth();
     const user = session?.user as { id?: string } | undefined;
     if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (new URL(request.url).searchParams.get("countOnly")) {
+      const [row] = await db
+        .select({ unread: count() })
+        .from(notifications)
+        .where(and(eq(notifications.userId, user.id), isNull(notifications.readAt)));
+      return NextResponse.json({ unread: row?.unread ?? 0 });
+    }
 
     const rows = await db
       .select()

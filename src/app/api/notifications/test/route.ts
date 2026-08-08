@@ -12,6 +12,7 @@ import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import { config, emailReady } from "@/lib/config";
 import { sendEmail, verifyEmail } from "@/lib/notifications/email";
+import { diagnoseRecipient } from "@/lib/notifications/deliverability";
 
 // Never returns passwords — only whether each field is present + safe metadata.
 function status() {
@@ -90,6 +91,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a valid recipient email address." }, { status: 400 });
   }
 
+  // Diagnose the route BEFORE sending. Where a message will be silently
+  // quarantined, a green "sent" tick is worse than no result at all — it sends
+  // the admin looking in the wrong place for hours.
+  const diagnosis = await diagnoseRecipient(to, config.smtpUser);
+  if (diagnosis.severity === "fail") {
+    return NextResponse.json(
+      { error: diagnosis.headline, diagnosis },
+      { status: 400 },
+    );
+  }
+
   const res = await sendEmail(
     to,
     "Test notification",
@@ -97,7 +109,18 @@ export async function POST(request: Request) {
     "/notifications",
   );
   if (!res.ok) {
-    return NextResponse.json({ error: `Send failed: ${res.error}` }, { status: 502 });
+    return NextResponse.json({ error: `Send failed: ${res.error}`, diagnosis }, { status: 502 });
   }
-  return NextResponse.json({ ok: true, to, messageId: res.messageId });
+
+  return NextResponse.json({
+    ok: true,
+    to,
+    messageId: res.messageId,
+    // Verbatim, because "250 2.0.0 OK" and "250 Queued" mean the same thing to
+    // the relay and nothing at all about whether a human will see it.
+    smtpResponse: res.smtpResponse ?? null,
+    accepted: res.accepted ?? [],
+    rejected: res.rejected ?? [],
+    diagnosis,
+  });
 }

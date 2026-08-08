@@ -65,7 +65,7 @@ export default function NotificationBell() {
     let alive = true;
     const fetchCount = async () => {
       try {
-        const res = await fetch("/api/notifications");
+        const res = await fetch("/api/notifications?countOnly=1");
         if (!res.ok) return;
         const d = await res.json();
         if (!alive) return;
@@ -81,9 +81,19 @@ export default function NotificationBell() {
     };
     fetchCount();
     const t = setInterval(fetchCount, 60_000);
+
+    // Coming back to the tab is the moment the count is most likely stale and
+    // the user is most likely to look at it; waiting up to a minute reads as the
+    // badge being wrong.
+    const onFocus = () => {
+      if (document.visibilityState === "visible") fetchCount();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+
     return () => {
       alive = false;
       clearInterval(t);
+      document.removeEventListener("visibilitychange", onFocus);
     };
   }, [mounted, pathname, prefs.notifyInApp]);
 
@@ -93,6 +103,13 @@ export default function NotificationBell() {
     <Link
       href="/notifications"
       title="Notifications"
+      // The count is carried in colour and position only; a screen reader
+      // otherwise hears "Notifications" whether there are none or nine.
+      aria-label={
+        prefs.notifyInApp && unread > 0
+          ? `Notifications — ${unread} unread`
+          : "Notifications — none unread"
+      }
       className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
     >
       <Bell className="w-5 h-5" />

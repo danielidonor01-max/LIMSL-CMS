@@ -116,6 +116,15 @@ export default function Sidebar({
   }, [menuOpen]);
   useEffect(() => setMenuOpen(false), [pathname]);
 
+  // The mobile drawer could only be dismissed by tapping the backdrop — no key
+  // closed it, which for a keyboard user is a dead end.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose?.();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileOpen, onClose]);
+
   // Filter each section by role, drop empty sections, and append an Admin section
   // for Super Admins.
   const sections: NavSection[] = NAV_SECTIONS
@@ -142,6 +151,9 @@ export default function Sidebar({
         <div className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" onClick={onClose} aria-hidden="true" />
       )}
       <aside
+        aria-label="Main navigation"
+        role={mobileOpen ? "dialog" : undefined}
+        aria-modal={mobileOpen ? true : undefined}
         className={`w-60 shrink-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50
           fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
           lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
@@ -153,17 +165,17 @@ export default function Sidebar({
         </div>
         <div>
           <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-none">LIMSL CMS</h1>
-          <p className="text-[8px] text-slate-400 font-mono tracking-widest uppercase mt-0.5">
+          <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">
             Maintenance Portal
           </p>
         </div>
       </Link>
 
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
+      <nav aria-label="Modules" className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
         {sections.map((s, si) => (
           <div key={s.section ?? `s-${si}`} className="space-y-0.5">
             {s.section && (
-              <p className="px-3 pt-1 pb-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                 {s.section}
               </p>
             )}
@@ -175,7 +187,8 @@ export default function Sidebar({
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 px-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm font-medium transition-all ${
                     active
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
@@ -193,25 +206,28 @@ export default function Sidebar({
       <div className="border-t border-slate-200 p-3 shrink-0">
         <div className="relative" ref={menuRef}>
           {menuOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50">
+            <div role="menu" aria-label="Account" className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50">
               <Link
                 href="/account"
                 onClick={onClose}
-                className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-100"
+                role="menuitem"
+                className="flex items-center gap-2.5 px-3 min-h-11 text-sm text-slate-700 hover:bg-slate-100"
               >
                 <UserCircle className="w-4 h-4 text-slate-400" /> Account &amp; preferences
               </Link>
               <Link
                 href="/change-password"
                 onClick={onClose}
-                className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-100"
+                role="menuitem"
+                className="flex items-center gap-2.5 px-3 min-h-11 text-sm text-slate-700 hover:bg-slate-100"
               >
                 <KeyRound className="w-4 h-4 text-slate-400" /> Change password
               </Link>
               <div className="my-1 border-t border-slate-100" />
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-rose-600 hover:bg-rose-50"
+                role="menuitem"
+                className="w-full flex items-center gap-2.5 px-3 min-h-11 text-sm text-rose-600 hover:bg-rose-50"
               >
                 <LogOut className="w-4 h-4" /> Sign out
               </button>
@@ -229,8 +245,8 @@ export default function Sidebar({
               <UserCircle className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs font-semibold text-slate-900 truncate">{(mounted && user?.name) || "Guest"}</p>
-              <p className="text-[9px] font-mono text-emerald-600 uppercase tracking-wider truncate">
+              <p className="text-sm font-semibold text-slate-900 truncate">{(mounted && user?.name) || "Guest"}</p>
+              <p className="text-[11px] font-medium text-emerald-700 truncate">
                 {ROLE_LABELS[role ?? ""] ?? role ?? "—"}
               </p>
             </div>
