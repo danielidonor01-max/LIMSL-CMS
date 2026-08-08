@@ -212,6 +212,18 @@ test("every scoped role in the path table is a canonical role", () => {
   }
 });
 
+// A new module reachable from the sidebar but absent from a scoped role's path
+// list renders "Access restricted" — the nav and the guard read the same table,
+// so the failure stays silent until someone with that role clicks it.
+test("the spares register is reachable by the roles that maintain machinery", () => {
+  for (const role of ["SUPER_ADMIN", "COO", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "FOREMAN", "TECHNICIAN", "QA_QC"]) {
+    assert.equal(canAccessPath(role, "/spares"), true, `${role} cannot reach /spares`);
+  }
+  // Read-only and safety-scoped roles keep their existing scope.
+  assert.equal(canAccessPath("VIEWER", "/spares"), false);
+  assert.equal(canAccessPath("HSE", "/spares"), false);
+});
+
 test("user administration is the Super Admin's alone", () => {
   for (const role of ROLES) {
     assert.equal(canManageUsers(role), role === "SUPER_ADMIN", `${role} user management`);

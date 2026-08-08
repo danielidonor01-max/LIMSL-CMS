@@ -373,6 +373,53 @@ export const oemRegistry = pgTable("oem_registry", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Critical spares ────────────────────────────────────────────────────────
+// AWAITING_PARTS was a status the system could set and count as downtime, with
+// nothing behind it: no record of which part, whether it was on order, or
+// whether one should have been on the shelf. For a critical machine, a spare
+// sitting below its minimum is a predicted outage with a known length — the
+// supplier's lead time — and that is the only thing here worth building.
+export const spareParts = pgTable("spare_parts", {
+  id: text("id").primaryKey(),
+  partNumber: text("part_number").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  // The machine this part is held for. Null means a general workshop consumable.
+  equipmentId: text("equipment_id").references(() => equipment.id),
+  quantityOnHand: real("quantity_on_hand").notNull().default(0),
+  minimumQuantity: real("minimum_quantity").notNull().default(0),
+  maximumQuantity: real("maximum_quantity"),
+  unit: text("unit").default("ea"),
+  binLocation: text("bin_location"),
+  supplierName: text("supplier_name"),
+  supplierPartNumber: text("supplier_part_number"),
+  // How long the machine stays down if this part is not on the shelf.
+  leadTimeDays: real("lead_time_days"),
+  unitCost: real("unit_cost"),
+  currency: text("currency").default("NGN"),
+  onOrder: boolean("on_order").default(false),
+  onOrderQuantity: real("on_order_quantity"),
+  expectedDate: text("expected_date"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("spare_parts_equipment_idx").on(t.equipmentId)]);
+
+// Every stock change, with who and why. A stock figure nobody can explain is a
+// stock figure nobody trusts.
+export const sparePartMovements = pgTable("spare_part_movements", {
+  id: text("id").primaryKey(),
+  sparePartId: text("spare_part_id").notNull().references(() => spareParts.id),
+  movementType: text("movement_type").notNull(), // ISSUE | RECEIPT | ADJUSTMENT
+  quantity: real("quantity").notNull(),          // signed: negative issues stock
+  balanceAfter: real("balance_after").notNull(),
+  reason: text("reason"),
+  workOrderId: text("work_order_id").references(() => workOrders.id),
+  performedById: text("performed_by_id"),
+  performedByName: text("performed_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("spare_movements_part_idx").on(t.sparePartId)]);
+
 export const oemInterventions = pgTable("oem_interventions", {
   id: text("id").primaryKey(),
   oemId: text("oem_id").references(() => oemRegistry.id),
@@ -885,6 +932,9 @@ export type NewWorkOrder = typeof workOrders.$inferInsert;
 export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
+export type SparePart = typeof spareParts.$inferSelect;
+export type NewSparePart = typeof spareParts.$inferInsert;
+export type SparePartMovement = typeof sparePartMovements.$inferSelect;
 export type NonConformity = typeof nonConformities.$inferSelect;
 export type EquipmentDocument = typeof equipmentDocuments.$inferSelect;
 export type NewEquipmentDocument = typeof equipmentDocuments.$inferInsert;

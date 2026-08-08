@@ -31,6 +31,7 @@ import {
   KeyRound,
   UserCircle,
   ChevronsUpDown,
+  Package,
 } from "lucide-react";
 import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
 
@@ -55,6 +56,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/schedule", label: "Schedule", icon: Calendar },
       { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
       { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
+      { href: "/spares", label: "Critical Spares", icon: Package },
     ],
   },
   {

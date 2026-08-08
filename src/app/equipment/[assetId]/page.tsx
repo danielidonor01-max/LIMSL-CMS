@@ -158,7 +158,9 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
       icon: "bg-orange-500/10 text-orange-600",
       Icon: PackageSearch,
       meaning: "Down waiting on a part — this counts as unavailable.",
-      action: { label: "See open work", href: `/work-orders?equipmentId=${eq.id}`, icon: ClipboardList },
+      // The spares register is the useful next step here, not the work-order
+      // list: the question is which part, and when it lands.
+      action: { label: "Check spares", href: `/spares?q=${encodeURIComponent(eq.name ?? "")}`, icon: PackageSearch },
     },
     DECOMMISSIONED: {
       panel: "bg-slate-100 border-slate-200",

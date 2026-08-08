@@ -306,6 +306,30 @@ green.
 ## PHASE 6 — Strategic *(later, optional)*
 Critical spares min/max for CRITICAL/HIGH machines (`AWAITING_PARTS` is currently invisible downtime); meter/runtime triggers for compressors and cranes; contractor induction + insurance expiry; emergency-equipment register + drill log; condition monitoring (thermography on panels, vibration on compressors). **Deliberately excluded as bloat at this scale:** full EAM purchasing, MES/OEE integration, RCM/FMEA suite, predictive analytics.
 
+### Phase 6a — status: SHIPPED (critical spares only)
+`AWAITING_PARTS` was a status the system set and counted as downtime with
+nothing behind it: no record of which part, whether it was on order, or whether
+one should have been on the shelf. The register (`lib/maintenance/spares.ts`)
+answers the only question worth asking of a parts list — **for a critical
+machine, a spare below its minimum is a predicted outage whose length is already
+known**, because the supplier lead time is the wait. The page leads with total
+production days already committed to across every machine with an empty shelf,
+and sorts worst-first. Stock moves through a ledger (issue / receive / count
+correction) that refuses to go negative and records who and why; a machine
+that is awaiting parts now links straight to its spares.
+
+One design decision worth keeping: **being on order does not downgrade a
+critical part that is entirely absent.** If the machine fails this afternoon the
+wait is identical whether or not a PO exists, and softening the grade would be
+the register telling a comfortable lie. A purchase order is not a spare.
+
+**Still open in Phase 6 — not started:** meter/runtime PM triggers (compressors
+and cranes are calendar-scheduled today, which is wrong for run-hours assets);
+contractor induction and insurance expiry; emergency-equipment register and
+drill log; condition monitoring; PWA/service-worker offline submit queueing
+(deferred from Phase 3, where drafts and the offline banner shipped but a POST
+attempted with no connection still fails and must be retried by hand).
+
 ---
 
 ## Recommended sequencing
