@@ -159,6 +159,14 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     );
   };
 
+  const whySteps = [
+    { key: "why-1", value: why1, set: setWhy1 },
+    { key: "why-2", value: why2, set: setWhy2 },
+    { key: "why-3", value: why3, set: setWhy3 },
+    { key: "why-4", value: why4, set: setWhy4 },
+    { key: "why-5", value: why5, set: setWhy5 },
+  ];
+
   // The 5 Whys plus an action list is a long sit-down on a phone or a laptop in
   // the workshop; keep a local draft so a dropped connection or a closed tab
   // doesn't cost the whole investigation.
@@ -365,67 +373,80 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
               <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-500">
-                {rcaTool.replace("_", " ")}
+                {rcaTool === "FIVE_WHYS" ? "5 Whys" : rcaTool.replace(/_/g, " ")}
               </span>
             </div>
 
-            {/* 5 Whys fields */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-slate-500 uppercase">1. Why did the machine fail?</span>
-                <input
-                  type="text"
-                  value={why1}
-                  onChange={(e) => setWhy1(e.target.value)}
-                  placeholder="First level cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                />
-              </div>
+            {/* The 5 Whys is a chain, and it was rendered as five identical
+                disconnected boxes — which is why they get filled in as five
+                unrelated statements. Each step now names the answer above it, so
+                the question you are actually answering is the one the technique
+                asks. */}
+            <ol className="space-y-0">
+              {whySteps.map((step, i) => {
+                const previous = i === 0 ? null : whySteps[i - 1].value.trim();
+                const isRoot = i === whySteps.length - 1;
+                const answered = step.value.trim().length > 0;
+                return (
+                  <li key={step.key} className="flex gap-3">
+                    {/* Rail: the numbered node and the line that connects it on */}
+                    <div className="flex flex-col items-center shrink-0">
+                      <span
+                        className={`w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold border-2 transition-colors ${
+                          isRoot && answered
+                            ? "bg-rose-600 border-rose-600 text-white"
+                            : answered
+                              ? "bg-emerald-600 border-emerald-600 text-white"
+                              : "bg-white border-slate-300 text-slate-400"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      {!isRoot && (
+                        <span
+                          className={`w-0.5 flex-1 min-h-8 ${answered ? "bg-emerald-300" : "bg-slate-200"}`}
+                          aria-hidden
+                        />
+                      )}
+                    </div>
 
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-slate-500 uppercase">2. Why did that happen?</span>
-                <input
-                  type="text"
-                  value={why2}
-                  onChange={(e) => setWhy2(e.target.value)}
-                  placeholder="Second level cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-slate-500 uppercase">3. Why was that?</span>
-                <input
-                  type="text"
-                  value={why3}
-                  onChange={(e) => setWhy3(e.target.value)}
-                  placeholder="Third level cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-slate-500 uppercase">4. Why?</span>
-                <input
-                  type="text"
-                  value={why4}
-                  onChange={(e) => setWhy4(e.target.value)}
-                  placeholder="Fourth level cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-slate-500 uppercase">5. Why? (Identified Root Cause)</span>
-                <input
-                  type="text"
-                  value={why5}
-                  onChange={(e) => setWhy5(e.target.value)}
-                  placeholder="Fifth level root cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
-                />
-              </div>
-            </div>
+                    <div className={`flex-1 ${isRoot ? "pb-1" : "pb-5"}`}>
+                      <label htmlFor={step.key} className="block text-xs font-semibold text-slate-700">
+                        {i === 0
+                          ? "Why did it fail?"
+                          : previous
+                            ? `Why did that happen — "${previous.length > 60 ? `${previous.slice(0, 60)}…` : previous}"?`
+                            : "Why did that happen?"}
+                        {isRoot && (
+                          <span className="ml-2 text-[10px] font-bold text-rose-700 uppercase tracking-wide">
+                            Root cause
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        id={step.key}
+                        type="text"
+                        value={step.value}
+                        onChange={(e) => step.set(e.target.value)}
+                        disabled={i > 0 && !previous}
+                        placeholder={
+                          i > 0 && !previous
+                            ? "Answer the step above first"
+                            : isRoot
+                              ? "The cause that, if fixed, stops this recurring"
+                              : "Because…"
+                        }
+                        className="mt-1.5 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 min-h-11 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="text-[11px] text-slate-500 -mt-1">
+              Stop early if you reach a cause you can actually act on — five levels is a guide, not a quota.
+              A root cause you cannot change is a sign the chain went one step too far.
+            </p>
 
             {/* Coded failure taxonomy. Free-text root cause describes ONE
                 event; codes let the same failure be counted across the fleet. */}

@@ -32,6 +32,7 @@ import {
   SCHEDULE_STATUS_LABELS,
   EQUIPMENT_CATEGORY_LABELS,
   MONTH_NAMES,
+  FREQUENCY_LABELS,
 } from "@/lib/constants";
 import { CalendarDays, List } from "lucide-react";
 import LoadError from "@/components/LoadError";
@@ -488,7 +489,7 @@ export default function SchedulePage() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-500">
-                        {r.maintenanceFrequency?.replace(/_/g, " ").toLowerCase() ?? "—"}
+                        {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "—"}
                       </td>
                       <td className="py-3 px-4 text-slate-700">{r.responsiblePersonName ?? "—"}</td>
                       <td className="py-3 px-4">

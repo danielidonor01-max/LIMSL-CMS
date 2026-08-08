@@ -22,6 +22,7 @@ import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import { FIELD_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
+import { DOC_STATUS_LABELS } from "@/lib/constants";
 
 type Rev = {
   id: string;
@@ -136,7 +137,7 @@ export default function ProcedurePage() {
               <div key={r.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-0">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-semibold text-slate-900">Rev {r.revision}</span>
-                  <Badge className={STATUS_BADGE[r.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>{r.status.replace(/_/g, " ")}</Badge>
+                  <Badge className={STATUS_BADGE[r.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>{DOC_STATUS_LABELS[r.status] ?? r.status}</Badge>
                   <span className="text-slate-500">{r.changeSummary}</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -196,7 +197,7 @@ export default function ProcedurePage() {
             <p className="text-xs font-semibold text-slate-900">{current?.code}</p>
           </div>
           <div className="text-right">
-            <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{(current?.status ?? "APPROVED").replace(/_/g, " ")}</Badge>
+            <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{DOC_STATUS_LABELS[current?.status ?? "APPROVED"] ?? current?.status}</Badge>
             <p className="text-[10px] text-slate-400 mt-1 font-mono">
               Rev {current?.revision} · effective {formatDate(current?.effectiveDate)}
             </p>

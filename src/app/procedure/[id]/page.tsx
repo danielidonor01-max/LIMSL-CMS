@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Printer } from "lucide-react";
 import Markdown from "@/components/Markdown";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
+import { DOC_STATUS_LABELS } from "@/lib/constants";
 
 export default function ProcedureRevisionPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,7 @@ export default function ProcedureRevisionPage() {
             <p className="text-xs font-semibold text-slate-900">{rev.code}</p>
           </div>
           <div className="text-right">
-            <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">{String(rev.status).replace(/_/g, " ")}</Badge>
+            <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">{DOC_STATUS_LABELS[String(rev.status)] ?? String(rev.status)}</Badge>
             <p className="text-[10px] text-slate-400 mt-1 font-mono">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
           </div>
         </div>

@@ -20,6 +20,7 @@ import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
 import { jobPlanFor, hasBespokePlan, type JobTask } from "@/lib/maintenance/job-plans";
+import { FREQUENCY_LABELS } from "@/lib/constants";
 
 type Item = { item: string; status: string; remarks: string; criteria?: string; unit?: string; value?: string };
 type User = { id: string; name: string; role: string };
@@ -287,7 +288,7 @@ export default function PMChecklistPage() {
             <Info label="Equipment" value={eq?.name} />
             <Info label="Asset ID" value={eq?.assetId} mono />
             <Info label="Location" value={eq?.location} />
-            <Info label="Frequency" value={eq?.maintenanceFrequency?.replace(/_/g, " ")} />
+            <Info label="Service interval" value={FREQUENCY_LABELS[eq?.maintenanceFrequency ?? ""] ?? eq?.maintenanceFrequency} />
             <Info label="OEM" value={eq?.oem} />
             <Info label="Serial" value={eq?.serialNumber} mono />
             <Info label="Date" value={formatDate(new Date().toISOString())} />

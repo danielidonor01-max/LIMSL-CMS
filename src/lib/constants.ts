@@ -101,6 +101,38 @@ export const SCHEDULE_STATUS_BADGE: Record<string, string> = {
   DEFERRED: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
+// ─── Permits ────────────────────────────────────────────────────────────────
+// CLOSED_LATE arrived with the lapsed-permit close-out and was missing from the
+// page-local badge map, so it rendered with no colour classes at all.
+export const PERMIT_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PENDING_APPROVAL: "Awaiting approval",
+  ACTIVE: "Active",
+  CLOSED: "Closed",
+  CLOSED_LATE: "Closed after expiry",
+  EXPIRED: "Expired — not closed",
+  CANCELLED: "Cancelled",
+};
+
+export const PERMIT_STATUS_BADGE: Record<string, string> = {
+  DRAFT: "bg-sky-500/10 text-sky-700 border-sky-500/20",
+  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  CLOSED: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  CLOSED_LATE: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+  EXPIRED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  CANCELLED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+};
+
+// ─── Controlled documents ───────────────────────────────────────────────────
+export const DOC_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PENDING_APPROVAL: "Awaiting approval",
+  APPROVED: "Approved",
+  SUPERSEDED: "Superseded",
+  REJECTED: "Rejected",
+};
+
 // ─── Work orders ────────────────────────────────────────────────────────────
 export const WO_TYPE_LABELS: Record<string, string> = {
   PREVENTIVE: "Preventive",

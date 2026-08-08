@@ -13,7 +13,12 @@ import { ArrowLeft, Download, Loader2, Printer, Wrench } from "lucide-react";
 import Button from "@/components/Button";
 import { downloadCSV } from "@/lib/export";
 import { formatDate } from "@/lib/utils";
-import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
+import {
+  EQUIPMENT_CATEGORY_LABELS,
+  EQUIPMENT_STATUS_LABELS,
+  FREQUENCY_LABELS,
+  CRITICALITY_SHORT,
+} from "@/lib/constants";
 
 type DossierEvent = {
   date: string;
@@ -113,10 +118,10 @@ function AssetHistoryDossier() {
     ["Model", String(eq.model ?? "—")],
     ["Serial number", String(eq.serialNumber ?? "—")],
     ["Location", [eq.location, eq.bay].filter(Boolean).join(" · ") || "—"],
-    ["Criticality", String(eq.criticality ?? "—")],
+    ["Criticality", CRITICALITY_SHORT[String(eq.criticality)] ?? String(eq.criticality ?? "—")],
     ["Commissioned", eq.commissioningDate ? formatDate(String(eq.commissioningDate)) : "—"],
     ["Warranty expiry", eq.warrantyExpiry ? formatDate(String(eq.warrantyExpiry)) : "—"],
-    ["PM frequency", String(eq.maintenanceFrequency ?? "—").replace(/_/g, " ")],
+    ["Service interval", FREQUENCY_LABELS[String(eq.maintenanceFrequency ?? "")] ?? String(eq.maintenanceFrequency ?? "—")],
     ["Current status", EQUIPMENT_STATUS_LABELS[String(eq.status)] ?? String(eq.status ?? "—")],
   ];
 

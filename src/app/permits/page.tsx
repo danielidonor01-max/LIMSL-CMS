@@ -20,6 +20,7 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
 
 type Permit = {
   id: string;
@@ -32,14 +33,6 @@ type Permit = {
   status: string;
   lotoApplied?: boolean;
   approval?: { total: number; signed: number; complete: boolean };
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  ACTIVE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  CLOSED: "bg-slate-200 text-slate-600 border-slate-300",
-  CANCELLED: "bg-slate-200 text-slate-500 border-slate-300",
-  EXPIRED: "bg-rose-500/10 text-rose-600 border-rose-500/20",
 };
 
 export default function PermitsList() {
@@ -107,8 +100,8 @@ export default function PermitsList() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-mono text-xs text-slate-500 font-semibold">{rec.permitNumber}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${STATUS_BADGE[rec.status]}`}>
-                          {rec.status.replace("_", " ")}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}`}>
+                          {PERMIT_STATUS_LABELS[rec.status] ?? rec.status}
                         </span>
                         {rec.lotoApplied && (
                           <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-sky-700 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">

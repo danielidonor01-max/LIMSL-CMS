@@ -1,7 +1,7 @@
 // src/app/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
@@ -21,6 +21,18 @@ import {
   EQUIPMENT_STATUS_BADGE,
   EQUIPMENT_STATUS_LABELS,
 } from "@/lib/constants";
+
+const TILE_PANEL: Record<string, string> = {
+  danger: "bg-rose-50 border-rose-200",
+  warning: "bg-amber-50 border-amber-200",
+  success: "bg-emerald-50 border-emerald-200",
+};
+
+const TILE_TEXT: Record<string, string> = {
+  danger: "text-rose-600",
+  warning: "text-amber-600",
+  success: "text-emerald-600",
+};
 
 type SignoffItem = {
   stepId: string;
@@ -92,6 +104,15 @@ export default function Home() {
   );
   const myJobs = myWork.items ?? [];
   const loading = statsLoading;
+
+  // Lead with whatever is worst. Where everything is green the first tile is
+  // still the leader — it just reads as reassurance rather than an alarm.
+  const { hero, rest } = useMemo(() => {
+    const order: Record<string, number> = { danger: 0, warning: 1, success: 2 };
+    const ranked = [...stats].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+    const lead = ranked[0];
+    return { hero: lead, rest: stats.filter((s) => s !== lead) };
+  }, [stats]);
 
 
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
@@ -235,35 +256,57 @@ export default function Home() {
             <span className="text-xs text-slate-500 ml-2">Loading live metrics…</span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat, i) => {
-              const Icon = iconMap[stat.code] || Activity;
-              const isDanger = stat.status === "danger";
-              const isWarning = stat.status === "warning";
-              const colorClass = isDanger ? "text-rose-600" : isWarning ? "text-amber-600" : "text-emerald-600";
-              const bgClass = isDanger
-                ? "bg-rose-50 border-rose-200"
-                : isWarning
-                  ? "bg-amber-50 border-amber-200"
-                  : "bg-emerald-50 border-emerald-200";
-              return (
-                <div key={i} className={`p-5 rounded-xl border ${bgClass} backdrop-blur-sm flex flex-col justify-between`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.title}</span>
-                    <div className={`p-2 rounded-lg bg-slate-100 ${colorClass}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold tracking-tight text-slate-900">{stat.value}</span>
-                      <span className="text-xs font-mono text-slate-500">/ {stat.target}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2 line-clamp-1">{stat.desc}</p>
+          // Four equal tiles asked the reader to work out which one mattered.
+          // The worst-status figure is promoted, so the board leads with the
+          // thing that needs a decision — and reads as reassurance only when
+          // everything genuinely is fine.
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {hero && (
+              <div className={`lg:col-span-1 p-6 rounded-xl border ${TILE_PANEL[hero.status] ?? TILE_PANEL.success} flex flex-col justify-between`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {hero.status === "success" ? "Best measure" : "Needs attention"}
+                  </span>
+                  <div className={`p-2 rounded-lg bg-white/70 ${TILE_TEXT[hero.status] ?? TILE_TEXT.success}`}>
+                    {React.createElement(iconMap[hero.code] || Activity, { className: "w-5 h-5" })}
                   </div>
                 </div>
-              );
-            })}
+                <div className="mt-5">
+                  <p className="text-sm font-semibold text-slate-700">{hero.title}</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-5xl font-bold tracking-tight text-slate-900">{hero.value}</span>
+                    <span className="text-xs font-mono text-slate-500">/ {hero.target}</span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-2">{hero.desc}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {rest.map((stat, i) => {
+                const Icon = iconMap[stat.code] || Activity;
+                return (
+                  <div
+                    key={i}
+                    className={`p-4 rounded-xl border ${TILE_PANEL[stat.status] ?? TILE_PANEL.success} flex flex-col justify-between`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider leading-tight">
+                        {stat.title}
+                      </span>
+                      <Icon className={`w-4 h-4 shrink-0 ${TILE_TEXT[stat.status] ?? TILE_TEXT.success}`} />
+                    </div>
+                    <div className="mt-4">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-bold tracking-tight text-slate-900">{stat.value}</span>
+                        <span className="text-[10px] font-mono text-slate-500">/ {stat.target}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1.5 line-clamp-2">{stat.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

@@ -11,6 +11,7 @@ import LocationField from "@/components/LocationField";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
+  FREQUENCY_LABELS,
 } from "@/lib/constants";
 
 const FREQUENCIES = ["MONTHLY", "BI_MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"];
@@ -146,7 +147,7 @@ export default function EquipmentEditPage() {
             <label className={label}>Maintenance Frequency</label>
             <Select value={form.maintenanceFrequency ?? ""} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
               <option value="">—</option>
-              {FREQUENCIES.map((f) => <option key={f} value={f}>{f.replace(/_/g, " ")}</option>)}
+              {FREQUENCIES.map((f) => <option key={f} value={f}>{FREQUENCY_LABELS[f] ?? f}</option>)}
             </Select>
           </div>
           <div>

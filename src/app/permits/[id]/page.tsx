@@ -23,6 +23,7 @@ import SignoffChain from "@/components/SignoffChain";
 import { useSession } from "next-auth/react";
 import { PERMIT_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
+import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
 
 type Permit = {
   id: string;
@@ -46,14 +47,6 @@ type Permit = {
 };
 
 type JhaRow = { task: string; hazards: string; controls: string; residualRisk: string };
-
-const STATUS_BADGE: Record<string, string> = {
-  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  ACTIVE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  CLOSED: "bg-slate-200 text-slate-600 border-slate-300",
-  CANCELLED: "bg-slate-200 text-slate-500 border-slate-300",
-  EXPIRED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-};
 
 function safeParse(v: string | null): string[] {
   if (!v) return [];
@@ -178,7 +171,7 @@ export default function PermitDetail() {
             <div>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-mono text-sm font-bold text-slate-900">{permit.permitNumber}</span>
-                <Badge className={STATUS_BADGE[permit.status]}>{permit.status.replace("_", " ")}</Badge>
+                <Badge className={PERMIT_STATUS_BADGE[permit.status] ?? PERMIT_STATUS_BADGE.DRAFT}>{PERMIT_STATUS_LABELS[permit.status] ?? permit.status}</Badge>
                 {permit.lotoApplied && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-700 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
                     <Lock className="w-3 h-3" /> LOTO

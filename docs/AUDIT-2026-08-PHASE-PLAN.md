@@ -266,6 +266,43 @@ a real enum value. 204 tests green.
 
 ---
 
+### Phase 5 — status: SHIPPED
+- **5.1 Asset numbering is a policy, not a string** (`lib/asset-id.ts`). The
+  generator only made PE codes, so a facility system was added by typing an ID
+  and hoping it was free — and with a unique constraint on the column, a
+  collision surfaced as a generic save failure. The two series are numbered
+  independently, `next-id` takes `?prefix=`, and the add form opens with the
+  choice, driving the category list, field labels and helper text. IDs
+  canonicalise on save; a real duplicate names the asset already holding it.
+- **5.2 Asset register** answers "what needs me today": machines/systems segment,
+  a needs-attention count, a total, CSV export, and cards below `md` (it was
+  table-only, so unusable on the floor).
+- **5.3 Role permission matrix** — roles × write-permissions with sign-off rank
+  and member counts, exportable and printable. Cards say what a role can do; the
+  matrix says who can do a thing, which is the direction an auditor reads. A role
+  with zero active members is flagged: it blocks every chain step requiring it.
+- **5.4 Digital twin** now has one primary action that follows the machine's
+  state, with housekeeping demoted to a menu — six actions used to compete.
+- **5.5 Dashboard leads with the worst figure** instead of four equal tiles.
+- **5.6 The 5 Whys is a chain again** — numbered, connected, each step quoting
+  the answer above it and locked until that answer exists. Five identical
+  disconnected boxes is why they were filled in as five unrelated statements.
+- **5.7 De-jargon** — plain-English labels for criticality, service interval,
+  permit and document status, replacing raw enums across nine pages.
+
+**Defects found while doing it, all verified in code:** the registry's
+criticality badge had no CRITICAL branch, so the most important level rendered in
+the same grey as the least; `AWAITING_PARTS` and `DECOMMISSIONED` both rendered
+green in the registry and on the twin, so real downtime read as healthy; the
+permit badge map had no `CLOSED_LATE` entry (added in Phase 1) and rendered with
+no colour at all; the dashboard's "Assets Available Now" tile preferred a stored
+monthly KPI over the live headcount, so a tile saying "now" could show last
+month's time-based number; and the equipment POST silently discarded the form's
+Bay and Notes, never validated the name, and wrote no audit-log entry. 213 tests
+green.
+
+---
+
 ## PHASE 6 — Strategic *(later, optional)*
 Critical spares min/max for CRITICAL/HIGH machines (`AWAITING_PARTS` is currently invisible downtime); meter/runtime triggers for compressors and cranes; contractor induction + insurance expiry; emergency-equipment register + drill log; condition monitoring (thermography on panels, vibration on compressors). **Deliberately excluded as bloat at this scale:** full EAM purchasing, MES/OEE integration, RCM/FMEA suite, predictive analytics.
 

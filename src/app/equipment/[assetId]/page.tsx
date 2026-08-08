@@ -23,13 +23,19 @@ import {
   Loader2,
   Info,
   BookOpen,
+  Stethoscope,
+  ClipboardList,
+  PackageSearch,
+  Archive,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Button from "@/components/Button";
+import KebabMenu from "@/components/KebabMenu";
 import PageHeader from "@/components/PageHeader";
 import EquipmentDocuments from "@/components/EquipmentDocuments";
 import EquipmentLog from "@/components/EquipmentLog";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
 // A diagnostic-guide's steps column is JSON that may hold plain strings or
 // {step, description} objects. Coerce every element to a string so it can never
@@ -109,6 +115,61 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   const isBroken = eq.status === "BROKEN_DOWN";
 
+  // What the status means in the workshop, and the single most useful next step
+  // from here. Says it in plain words rather than leaving an enum on screen.
+  const statusViews: Record<
+    string,
+    {
+      panel: string;
+      icon: string;
+      Icon: typeof AlertTriangle;
+      meaning: string;
+      action: { label: string; href: string; icon: typeof AlertTriangle; variant?: "primary" | "danger" | "secondary" };
+    }
+  > = {
+    OPERATIONAL: {
+      panel: "bg-emerald-50 border-emerald-200",
+      icon: "bg-emerald-500/10 text-emerald-600",
+      Icon: CheckCircle2,
+      meaning: "Available for production.",
+      action: { label: "Raise Work Order", href: `/work-orders/new?equipmentId=${eq.id}`, icon: ClipboardList },
+    },
+    UNDER_MAINTENANCE: {
+      panel: "bg-amber-50 border-amber-200",
+      icon: "bg-amber-500/10 text-amber-600",
+      Icon: Wrench,
+      meaning: "Work is in progress — not available for production.",
+      action: { label: "See open work", href: `/work-orders?equipmentId=${eq.id}`, icon: ClipboardList },
+    },
+    BROKEN_DOWN: {
+      panel: "bg-rose-50 border-rose-200",
+      icon: "bg-rose-500/10 text-rose-600",
+      Icon: AlertTriangle,
+      meaning: "Down and losing production time.",
+      action: {
+        label: "Troubleshoot the fault",
+        href: `/equipment/${assetIdKey}/troubleshoot`,
+        icon: Stethoscope,
+        variant: "danger",
+      },
+    },
+    AWAITING_PARTS: {
+      panel: "bg-orange-50 border-orange-200",
+      icon: "bg-orange-500/10 text-orange-600",
+      Icon: PackageSearch,
+      meaning: "Down waiting on a part — this counts as unavailable.",
+      action: { label: "See open work", href: `/work-orders?equipmentId=${eq.id}`, icon: ClipboardList },
+    },
+    DECOMMISSIONED: {
+      panel: "bg-slate-100 border-slate-200",
+      icon: "bg-slate-200 text-slate-500",
+      Icon: Archive,
+      meaning: "Retired from service — kept on the register for its history.",
+      action: { label: "View history", href: `/equipment/${assetIdKey}/history`, icon: History, variant: "secondary" },
+    },
+  };
+  const statusView = statusViews[eq.status] ?? statusViews.OPERATIONAL;
+
   // Safety guidance derived from the machine's real attributes — no fabricated,
   // machine-specific isolation points (those live in the machine's WMS / PTW).
   const safetyMeasures = [
@@ -134,69 +195,48 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           backHref="/equipment"
           backLabel="Equipment Registry"
           actions={
+            // One action carries weight here; the rest are housekeeping and were
+            // competing with it as four equal buttons.
             <>
               <Button variant="danger" size="sm" href={`/corrective/new?equipmentId=${eq.id}`} icon={AlertTriangle}>
                 Report Fault
               </Button>
-              <Button variant="secondary" size="sm" href={`/equipment/${assetIdKey}/edit`} icon={Pencil}>
-                Edit
-              </Button>
-              <Button variant="secondary" size="sm" href={`/equipment/${assetIdKey}/history`} icon={History}>
-                History
-              </Button>
-              <Button variant="secondary" size="sm" href={`/equipment/qr/${assetIdKey}`} icon={QrCode}>
-                Print QR
-              </Button>
+              <KebabMenu
+                ariaLabel={`More actions for ${eq.name}`}
+                items={[
+                  { label: "Troubleshoot", icon: Stethoscope, href: `/equipment/${assetIdKey}/troubleshoot` },
+                  { label: "History Log", icon: History, href: `/equipment/${assetIdKey}/history` },
+                  { label: "Raise Work Order", icon: ClipboardList, href: `/work-orders/new?equipmentId=${eq.id}` },
+                  { label: "Edit Details", icon: Pencil, href: `/equipment/${assetIdKey}/edit` },
+                  { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${assetIdKey}` },
+                ]}
+              />
             </>
           }
         />
-        {/* Status Highlight Banner */}
+        {/* Status banner. It used to be green for everything except BROKEN_DOWN,
+            so a machine awaiting parts — real, invisible downtime — read as
+            healthy at a glance. */}
         <div
-          className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
-            isBroken ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"
-          }`}
+          className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${statusView.panel}`}
         >
           <div className="flex items-center gap-4">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                isBroken ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
-              }`}
-            >
-              {isBroken ? <AlertTriangle className="w-6 h-6 animate-pulse" /> : <CheckCircle2 className="w-6 h-6" />}
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${statusView.icon}`}>
+              <statusView.Icon className={`w-6 h-6 ${isBroken ? "animate-pulse" : ""}`} />
             </div>
             <div>
-              <p className="text-xs uppercase font-mono tracking-wider text-slate-500">Current Status</p>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
-                {eq.status.replace("_", " ")}
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Current status</p>
+              <h2 className="text-lg font-bold text-slate-900">
+                {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
               </h2>
+              <p className="text-xs text-slate-600 mt-0.5">{statusView.meaning}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            {isBroken ? (
-              <>
-                <Link
-                  href={`/equipment/${assetIdKey}/troubleshoot`}
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-rose-950/20"
-                >
-                  Launch Troubleshooting Wizard
-                </Link>
-                <Link
-                  href={`/work-orders/new?equipmentId=${eq.id}`}
-                  className="px-4 py-2 bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-900 rounded-lg text-xs font-semibold transition-all"
-                >
-                  Create Work Order
-                </Link>
-              </>
-            ) : (
-              <Link
-                href={`/work-orders/new?equipmentId=${eq.id}`}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
-              >
-                Launch PM Checklist
-              </Link>
-            )}
-          </div>
+          {/* Exactly one primary action, and it follows the machine's state. */}
+          <Button href={statusView.action.href} icon={statusView.action.icon} variant={statusView.action.variant}>
+            {statusView.action.label}
+          </Button>
         </div>
 
         {/* Tab Headers */}

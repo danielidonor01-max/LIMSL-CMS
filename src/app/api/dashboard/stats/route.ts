@@ -5,9 +5,7 @@ import {
   equipment,
   maintenanceSchedule,
   workOrders,
-  kpiRecords,
 } from "@/lib/db/schema";
-import { isNull } from "drizzle-orm";
 import { reconcileSchedule } from "@/lib/schedule";
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -20,12 +18,19 @@ export async function GET() {
     const totalAssets = allEquip.length;
     const brokenDown = allEquip.filter((e) => e.status === "BROKEN_DOWN").length;
 
-    // Availability: prefer the latest recorded plant-wide KPI, else derive from status
-    const plantKpi = (await db.select().from(kpiRecords).where(isNull(kpiRecords.equipmentId)))
-      .sort((a, b) => (a.month > b.month ? 1 : -1));
-    const latest = plantKpi[plantKpi.length - 1];
-    const availability =
-      latest?.availability ?? (totalAssets ? (totalAssets - brokenDown) / totalAssets : 0);
+    // This figure is the live headcount and nothing else. It previously
+    // preferred the latest stored monthly KPI, so a tile saying "now" could show
+    // a time-based number from last month — the two definitions the KPI page was
+    // already confusing, leaking back in through the back door.
+    //
+    // Matches the fleet rule used in lib/kpi/compute.ts: a retired asset is not
+    // unavailable, it is not in the fleet; an asset waiting on a part IS down,
+    // however quietly.
+    const fleet = allEquip.filter((e) => e.status !== "DECOMMISSIONED");
+    const unavailable = fleet.filter(
+      (e) => e.status === "BROKEN_DOWN" || e.status === "AWAITING_PARTS",
+    ).length;
+    const availability = fleet.length ? (fleet.length - unavailable) / fleet.length : 0;
 
     // PM compliance: completed ÷ due PM activities (live from the schedule)
     const sched = await db.select().from(maintenanceSchedule);
@@ -51,7 +56,10 @@ export async function GET() {
         value: `${availPct.toFixed(1)}%`,
         target: "≥90.0%",
         status: availPct >= 90 ? "success" : availPct >= 80 ? "warning" : "danger",
-        desc: brokenDown > 0 ? `${brokenDown} of ${totalAssets} asset(s) down right now` : "All machinery available",
+        desc:
+          unavailable > 0
+            ? `${unavailable} of ${fleet.length} asset(s) down right now`
+            : "All machinery available",
         code: "AVAILABILITY",
       },
       {
