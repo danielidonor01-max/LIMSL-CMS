@@ -381,6 +381,62 @@ export const oemRegistry = pgTable("oem_registry", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Emergency preparedness (ISO 45001 8.2) ─────────────────────────────────
+// The register exists to stop "we have forty fire extinguishers" standing in for
+// "forty working fire extinguishers". Readiness, not headcount, is the number.
+export const emergencyEquipment = pgTable("emergency_equipment", {
+  id: text("id").primaryKey(),
+  tagNumber: text("tag_number").notNull(),
+  type: text("type").notNull(),
+  location: text("location").notNull(),
+  description: text("description"),
+  manufacturer: text("manufacturer"),
+  serialNumber: text("serial_number"),
+  capacity: text("capacity"),                                   // e.g. "9 kg", "6 L"
+  installedDate: text("installed_date"),
+  lastInspectionDate: text("last_inspection_date"),
+  inspectionIntervalDays: real("inspection_interval_days"),
+  // Charge/refill expiry for extinguishers, use-by for first-aid consumables,
+  // battery/pad expiry for an AED.
+  expiryDate: text("expiry_date"),
+  status: text("status").notNull().default("SERVICEABLE"),      // SERVICEABLE | DEFECTIVE | MISSING | REMOVED
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("emergency_equipment_type_idx").on(t.type)]);
+
+// Each inspection kept as its own row. Overwriting the last-inspected date is
+// what destroys the evidence trail an auditor actually asks to see.
+export const emergencyInspections = pgTable("emergency_inspections", {
+  id: text("id").primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => emergencyEquipment.id),
+  inspectionDate: text("inspection_date").notNull(),
+  verdict: text("verdict").notNull().default("PASS"),           // PASS | FAIL
+  findings: text("findings"),
+  actionTaken: text("action_taken"),
+  inspectedById: text("inspected_by_id"),
+  inspectedByName: text("inspected_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("emergency_inspections_equipment_idx").on(t.equipmentId)]);
+
+// Drill log. A drill that surfaced problems and closed none of them taught the
+// organisation nothing, so deficiencies and their actions live on the record.
+export const emergencyDrills = pgTable("emergency_drills", {
+  id: text("id").primaryKey(),
+  drillType: text("drill_type").notNull(),
+  drillDate: text("drill_date").notNull(),
+  location: text("location"),
+  scenario: text("scenario"),
+  participantCount: real("participant_count"),
+  evacuationMinutes: real("evacuation_minutes"),
+  observations: text("observations"),
+  deficiencies: text("deficiencies"),
+  correctiveActions: text("corrective_actions"),
+  conductedById: text("conducted_by_id"),
+  conductedByName: text("conducted_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
 // Every meter reading, so the usage rate is observed rather than assumed.
 export const meterReadings = pgTable("meter_readings", {
   id: text("id").primaryKey(),
@@ -955,6 +1011,10 @@ export type NewWorkOrder = typeof workOrders.$inferInsert;
 export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
+export type EmergencyEquipment = typeof emergencyEquipment.$inferSelect;
+export type NewEmergencyEquipment = typeof emergencyEquipment.$inferInsert;
+export type EmergencyInspection = typeof emergencyInspections.$inferSelect;
+export type EmergencyDrill = typeof emergencyDrills.$inferSelect;
 export type MeterReading = typeof meterReadings.$inferSelect;
 export type SparePart = typeof spareParts.$inferSelect;
 export type NewSparePart = typeof spareParts.$inferInsert;

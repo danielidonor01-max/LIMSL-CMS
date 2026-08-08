@@ -346,11 +346,32 @@ with a consumer-domain sender an entire staff domain can be quarantined while
 every message is reported as sent, so this answers "who is affected" once
 instead of one confused support conversation at a time.
 
+### Phase 6c — status: SHIPPED (emergency preparedness, ISO 45001 8.2)
+The register exists to stop one sentence being true: *"we have forty fire
+extinguishers."* An extinguisher that is present but discharged, expired, or
+last inspected three years ago is not a fire extinguisher — it is a red cylinder
+someone will reach for and find useless. So the headline is **readiness, not
+headcount**: an item counts only when it is serviceable AND in date AND
+inspected within its interval, and every failing reason is listed rather than
+just the first, because fixing one leaves the others.
+
+Per-type inspection intervals (eye wash weekly, extinguisher monthly, hose
+quarterly) with per-item override. Each inspection is its own row — overwriting
+a last-inspected date is what destroys the evidence trail. **A failed inspection
+takes the item out of service immediately** and requires a stated finding: a
+FAIL with no finding is a tick in a box, and leaving it SERVICEABLE would let a
+failure sit in the history while the headline still counted it as a working
+control. A withdrawn item leaves the denominator instead of counting as a
+failure, so nobody is pushed to delete records rather than retire them.
+
+Drill log alongside it, judged on **interval** rather than on whether one ever
+happened, and flagging drills that recorded deficiencies with no corrective
+action against them — the first thing an auditor probes.
+
 **Still open in Phase 6 — not started:** contractor induction and insurance
-expiry; emergency-equipment register and drill log; condition monitoring;
-PWA/service-worker offline submit queueing (deferred from Phase 3, where drafts
-and the offline banner shipped but a POST attempted with no connection still
-fails and must be retried by hand).
+expiry; condition monitoring; PWA/service-worker offline submit queueing
+(deferred from Phase 3, where drafts and the offline banner shipped but a POST
+attempted with no connection still fails and must be retried by hand).
 
 ---
 

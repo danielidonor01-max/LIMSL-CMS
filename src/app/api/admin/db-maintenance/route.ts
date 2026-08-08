@@ -54,6 +54,62 @@ const INDEXES: [string, string][] = [
   // Phase 4b — schedule adherence, deferral register, failure taxonomy.
   ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
   ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
+  // Phase 6c — emergency preparedness (ISO 45001 8.2).
+  [
+    "emergency_equipment",
+    `CREATE TABLE IF NOT EXISTS emergency_equipment (
+      id text PRIMARY KEY,
+      tag_number text NOT NULL,
+      type text NOT NULL,
+      location text NOT NULL,
+      description text,
+      manufacturer text,
+      serial_number text,
+      capacity text,
+      installed_date text,
+      last_inspection_date text,
+      inspection_interval_days real,
+      expiry_date text,
+      status text NOT NULL DEFAULT 'SERVICEABLE',
+      notes text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      updated_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["emergency_equipment_type_idx", "CREATE INDEX IF NOT EXISTS emergency_equipment_type_idx ON emergency_equipment (type)"],
+  [
+    "emergency_inspections",
+    `CREATE TABLE IF NOT EXISTS emergency_inspections (
+      id text PRIMARY KEY,
+      equipment_id text NOT NULL,
+      inspection_date text NOT NULL,
+      verdict text NOT NULL DEFAULT 'PASS',
+      findings text,
+      action_taken text,
+      inspected_by_id text,
+      inspected_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["emergency_inspections_equipment_idx", "CREATE INDEX IF NOT EXISTS emergency_inspections_equipment_idx ON emergency_inspections (equipment_id)"],
+  [
+    "emergency_drills",
+    `CREATE TABLE IF NOT EXISTS emergency_drills (
+      id text PRIMARY KEY,
+      drill_type text NOT NULL,
+      drill_date text NOT NULL,
+      location text,
+      scenario text,
+      participant_count real,
+      evacuation_minutes real,
+      observations text,
+      deficiencies text,
+      corrective_actions text,
+      conducted_by_id text,
+      conducted_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
   // Phase 6b — meter / run-hours servicing.
   ["equipment.meters", "ALTER TABLE equipment ADD COLUMN IF NOT EXISTS meter_unit text, ADD COLUMN IF NOT EXISTS current_meter real, ADD COLUMN IF NOT EXISTS meter_updated_at text, ADD COLUMN IF NOT EXISTS meter_service_interval real, ADD COLUMN IF NOT EXISTS meter_at_last_service real"],
   [

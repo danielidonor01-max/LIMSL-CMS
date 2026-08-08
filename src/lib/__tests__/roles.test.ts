@@ -224,6 +224,15 @@ test("the spares register is reachable by the roles that maintain machinery", ()
   assert.equal(canAccessPath("HSE", "/spares"), false);
 });
 
+// HSE owns emergency preparedness — a register they cannot open is not a
+// control they can maintain.
+test("HSE and QA/QC can reach the emergency register", () => {
+  assert.equal(canAccessPath("HSE", "/emergency"), true);
+  assert.equal(canAccessPath("QA_QC", "/emergency"), true);
+  assert.equal(canAccessPath("MAINTENANCE_MANAGER", "/emergency"), true);
+  assert.equal(canAccessPath("VIEWER", "/emergency"), false);
+});
+
 test("user administration is the Super Admin's alone", () => {
   for (const role of ROLES) {
     assert.equal(canManageUsers(role), role === "SUPER_ADMIN", `${role} user management`);

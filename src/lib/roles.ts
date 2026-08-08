@@ -94,8 +94,8 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
 // (SUPER_ADMIN + management + maintenance team) have full access. Drives both the
 // sidebar nav and the page-level guard so they never disagree.
 export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
-  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit", "/kpi", "/reports", "/training", "/spares"],
-  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit", "/calibration", "/permits", "/training"],
+  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency"],
+  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit", "/calibration", "/permits", "/training", "/emergency"],
   VIEWER: ["/", "/equipment", "/procedure", "/reports"],
 };
 
