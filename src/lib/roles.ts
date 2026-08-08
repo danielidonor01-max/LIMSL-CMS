@@ -159,6 +159,39 @@ export const COMPLIANCE_WRITE_ROLES = [
 // production calendar). Administration is the Super Admin's domain.
 export const SETTINGS_WRITE_ROLES = ["SUPER_ADMIN"];
 
+// ── Notification audiences ───────────────────────────────────────────────────
+// Who hears about an operational event. These were five separate hardcoded
+// arrays at the call sites plus a sixth copy in the Settings UI used only for
+// display — so the audience shown to an admin could differ from the audience
+// that actually received the message, and nothing would report the difference.
+//
+// SUPER_ADMIN is included deliberately. At LIMSL the account is held by the lead
+// maintenance supervisor and engineer, so it is an operational role and not only
+// an administrative one — and the system already lets that person sign any step
+// in any chain. Being able to act on everything while being told about nothing
+// was the contradiction these lists are correcting.
+export const BREAKDOWN_NOTIFY_ROLES = [
+  "SUPER_ADMIN",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "HSE",
+];
+
+export const MAINTENANCE_ESCALATION_ROLES = [
+  "SUPER_ADMIN",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "FACTORY_MANAGER",
+];
+
+// Calibration and competency expiry — QA/QC owns the record, maintenance owns
+// the instrument.
+export const COMPLIANCE_ESCALATION_ROLES = [
+  "SUPER_ADMIN",
+  "MAINTENANCE_MANAGER",
+  "QA_QC",
+];
+
 // Roles that participate in a Work Method Statement (prepare/review/approve).
 export const WMS_WRITE_ROLES = [
   "SUPER_ADMIN",

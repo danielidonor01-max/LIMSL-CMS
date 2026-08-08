@@ -9,12 +9,20 @@
 import { db } from "@/lib/db";
 import { appSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import {
+  BREAKDOWN_NOTIFY_ROLES,
+  MAINTENANCE_ESCALATION_ROLES,
+  COMPLIANCE_ESCALATION_ROLES,
+  PERMIT_ISSUE_ROLES,
+} from "@/lib/roles";
 
 export type EventRouting = { enabled: boolean; roles: string[] | null };
 export type RoutingMap = Record<string, EventRouting>;
 
-// The catalogue the Settings UI renders. defaultRoles is documentation of the
-// code default (shown as placeholder chips), not enforcement.
+// The catalogue the Settings UI renders. defaultRoles must reference the SAME
+// constants the dispatch sites use — it was a hand-copied duplicate, so the
+// audience shown to an admin could silently differ from the one that received
+// the message.
 export const NOTIFY_EVENTS: Array<{
   event: string;
   label: string;
@@ -22,8 +30,8 @@ export const NOTIFY_EVENTS: Array<{
   personal: boolean;
   defaultRoles: string[] | null;
 }> = [
-  { event: "BREAKDOWN", label: "Breakdown reported", desc: "A corrective fault is logged against a machine", personal: false, defaultRoles: ["MAINTENANCE_MANAGER", "FOREMAN", "HSE"] },
-  { event: "ESCALATION", label: "Escalation digests", desc: "Overdue/due-soon maintenance, lapsed permits, calibration & training expiry", personal: false, defaultRoles: ["MAINTENANCE_MANAGER", "FOREMAN", "FACTORY_MANAGER", "QA_QC", "HSE"] },
+  { event: "BREAKDOWN", label: "Breakdown reported", desc: "A corrective fault is logged against a machine", personal: false, defaultRoles: BREAKDOWN_NOTIFY_ROLES },
+  { event: "ESCALATION", label: "Escalation digests", desc: "Overdue/due-soon maintenance, lapsed permits, calibration & training expiry", personal: false, defaultRoles: [...new Set([...MAINTENANCE_ESCALATION_ROLES, ...COMPLIANCE_ESCALATION_ROLES, ...PERMIT_ISSUE_ROLES])] },
   { event: "PTW_SIGN_REQUEST", label: "Permit sign-off requests", desc: "A Permit-to-Work step is ready for signature", personal: false, defaultRoles: null },
   { event: "WMS_SIGN_REQUEST", label: "WMS sign-off requests", desc: "A Work Method Statement step is ready for signature", personal: false, defaultRoles: null },
   { event: "PM_SIGN_REQUEST", label: "PM sign-off requests", desc: "A PM checklist approval step is ready", personal: false, defaultRoles: null },

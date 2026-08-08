@@ -20,7 +20,11 @@ import { and, eq } from "drizzle-orm";
 import { notify } from "@/lib/notifications";
 import { reconcileSchedule, ensureFutureOccurrences } from "@/lib/schedule";
 import { reconcilePermits } from "@/app/api/permits/route";
-import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import {
+  PERMIT_ISSUE_ROLES,
+  MAINTENANCE_ESCALATION_ROLES,
+  COMPLIANCE_ESCALATION_ROLES,
+} from "@/lib/roles";
 
 // How many days ahead counts as "due soon" for a proactive reminder.
 const REMINDER_LEAD_DAYS = Number(process.env.REMINDER_LEAD_DAYS || 3);
@@ -140,7 +144,7 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
         linkPath: "/schedule",
         relatedEntityType: "escalation:schedule-all",
         relatedEntityId: "ALL",
-        roles: ["MAINTENANCE_MANAGER", "FOREMAN", "FACTORY_MANAGER"],
+        roles: MAINTENANCE_ESCALATION_ROLES,
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }
@@ -232,7 +236,7 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
         linkPath: "/calibration",
         relatedEntityType: "escalation:calibration",
         relatedEntityId: "ALL",
-        roles: ["MAINTENANCE_MANAGER", "QA_QC"],
+        roles: COMPLIANCE_ESCALATION_ROLES,
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }
@@ -262,7 +266,7 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
         linkPath: "/training",
         relatedEntityType: "escalation:training",
         relatedEntityId: "ALL",
-        roles: ["MAINTENANCE_MANAGER", "QA_QC"],
+        roles: COMPLIANCE_ESCALATION_ROLES,
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }

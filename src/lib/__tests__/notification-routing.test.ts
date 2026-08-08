@@ -5,6 +5,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { NOTIFY_EVENTS, applyRouting, type RoutingMap } from "@/lib/notifications/routing";
+import {
+  ROLES,
+  BREAKDOWN_NOTIFY_ROLES,
+  MAINTENANCE_ESCALATION_ROLES,
+  COMPLIANCE_ESCALATION_ROLES,
+} from "@/lib/roles";
 
 const DEFAULT_ROLES = ["MAINTENANCE_MANAGER", "FOREMAN", "HSE"];
 
@@ -121,5 +127,45 @@ test("the catalogue is well formed — unique events, labelled, personal flags s
     // Documented defaults are documentation only — but they must at least be a
     // role list or explicitly null, never an empty array pretending to be one.
     assert.ok(e.defaultRoles === null || e.defaultRoles.length > 0, `${e.event} documents an empty audience`);
+  }
+});
+
+// ── Audience canonicality ────────────────────────────────────────────────────
+// The audiences were five hardcoded arrays at the dispatch sites plus a sixth
+// copy in the Settings catalogue used only for display. Nothing compared them,
+// so the roles an admin saw on screen could differ from the roles that actually
+// received the message — and the drift would be invisible from both ends.
+test("the Settings catalogue shows the audience that actually dispatches", () => {
+  const breakdown = NOTIFY_EVENTS.find((e) => e.event === "BREAKDOWN");
+  assert.deepEqual(
+    breakdown?.defaultRoles,
+    BREAKDOWN_NOTIFY_ROLES,
+    "the chips shown for Breakdown must be the same list corrective/route.ts sends to",
+  );
+});
+
+// At LIMSL the Super Admin account is held by the lead maintenance supervisor
+// and engineer. The system already lets that person sign any step in any chain;
+// being able to act on everything while being told about nothing was the
+// contradiction.
+test("the Super Admin is an operational recipient, not only an administrator", () => {
+  assert.ok(
+    BREAKDOWN_NOTIFY_ROLES.includes("SUPER_ADMIN"),
+    "a machine going down must reach the maintenance lead",
+  );
+  assert.ok(MAINTENANCE_ESCALATION_ROLES.includes("SUPER_ADMIN"));
+  assert.ok(COMPLIANCE_ESCALATION_ROLES.includes("SUPER_ADMIN"));
+});
+
+test("every notification audience contains only canonical roles, without repeats", () => {
+  for (const [name, list] of [
+    ["BREAKDOWN_NOTIFY_ROLES", BREAKDOWN_NOTIFY_ROLES],
+    ["MAINTENANCE_ESCALATION_ROLES", MAINTENANCE_ESCALATION_ROLES],
+    ["COMPLIANCE_ESCALATION_ROLES", COMPLIANCE_ESCALATION_ROLES],
+  ] as const) {
+    for (const r of list) {
+      assert.ok((ROLES as readonly string[]).includes(r), `${name} contains "${r}", which is not a role`);
+    }
+    assert.equal(new Set(list).size, list.length, `${name} repeats a role`);
   }
 });

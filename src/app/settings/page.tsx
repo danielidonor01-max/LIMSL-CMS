@@ -1230,7 +1230,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                 </div>
                 {r.enabled !== false && !ev.personal && ev.defaultRoles && (
                   <div className="flex flex-wrap gap-1.5">
-                    {ROLES.filter((rk) => rk !== "SUPER_ADMIN").map((rk) => {
+                    {ROLES.map((rk) => {
                       const on = (activeRoles ?? []).includes(rk);
                       return (
                         <button

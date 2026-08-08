@@ -5,7 +5,7 @@ import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, BREAKDOWN_NOTIFY_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { notify } from "@/lib/notifications";
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         linkPath: `/corrective/${newCorrective.id}`,
         relatedEntityType: "corrective_maintenance",
         relatedEntityId: newCorrective.id,
-        roles: ["MAINTENANCE_MANAGER", "FOREMAN", "HSE"],
+        roles: BREAKDOWN_NOTIFY_ROLES,
       });
     } catch (err) {
       console.warn("corrective: breakdown notify failed", err);
