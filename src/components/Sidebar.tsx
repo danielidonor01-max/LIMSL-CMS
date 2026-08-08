@@ -1,10 +1,10 @@
 // src/components/Sidebar.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import {
   Wrench,
   LayoutDashboard,
@@ -27,15 +27,11 @@ import {
   Users,
   SlidersHorizontal,
   Database,
-  LogOut,
-  KeyRound,
-  UserCircle,
-  ChevronsUpDown,
   Package,
   Siren,
   HardHat,
 } from "lucide-react";
-import { ROLE_LABELS, isSuperAdmin, canAccessPath } from "@/lib/roles";
+import { isSuperAdmin, canAccessPath } from "@/lib/roles";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
 type NavSection = { section: string | null; items: NavItem[] };
@@ -103,24 +99,6 @@ export default function Sidebar({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const role = mounted ? (user as { role?: string })?.role : undefined;
-
-  // Account popover (profile / change password / sign out).
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
-  useEffect(() => setMenuOpen(false), [pathname]);
 
   // The mobile drawer could only be dismissed by tapping the backdrop — no key
   // closed it, which for a keyboard user is a dead end.
@@ -209,57 +187,6 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <div className="border-t border-slate-200 p-3 shrink-0">
-        <div className="relative" ref={menuRef}>
-          {menuOpen && (
-            <div role="menu" aria-label="Account" className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50">
-              <Link
-                href="/account"
-                onClick={onClose}
-                role="menuitem"
-                className="flex items-center gap-2.5 px-3 min-h-11 text-sm text-slate-700 hover:bg-slate-100"
-              >
-                <UserCircle className="w-4 h-4 text-slate-400" /> Account &amp; preferences
-              </Link>
-              <Link
-                href="/change-password"
-                onClick={onClose}
-                role="menuitem"
-                className="flex items-center gap-2.5 px-3 min-h-11 text-sm text-slate-700 hover:bg-slate-100"
-              >
-                <KeyRound className="w-4 h-4 text-slate-400" /> Change password
-              </Link>
-              <div className="my-1 border-t border-slate-100" />
-              <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                role="menuitem"
-                className="w-full flex items-center gap-2.5 px-3 min-h-11 text-sm text-rose-600 hover:bg-rose-50"
-              >
-                <LogOut className="w-4 h-4" /> Sign out
-              </button>
-            </div>
-          )}
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-colors ${
-              menuOpen ? "bg-slate-100" : "hover:bg-slate-100"
-            }`}
-          >
-            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-200 shrink-0">
-              <UserCircle className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="text-sm font-semibold text-slate-900 truncate">{(mounted && user?.name) || "Guest"}</p>
-              <p className="text-[11px] font-medium text-emerald-700 truncate">
-                {ROLE_LABELS[role ?? ""] ?? role ?? "—"}
-              </p>
-            </div>
-            <ChevronsUpDown className="w-4 h-4 text-slate-400 shrink-0" />
-          </button>
-        </div>
-      </div>
       </aside>
     </>
   );
