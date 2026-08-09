@@ -27,6 +27,8 @@ export async function GET() {
         taskDescription: maintenanceSchedule.taskDescription,
         maintenanceFrequency: maintenanceSchedule.maintenanceFrequency,
         responsiblePersonName: maintenanceSchedule.responsiblePersonName,
+        responsiblePersonId: maintenanceSchedule.responsiblePersonId,
+        assistantIds: maintenanceSchedule.assistantIds,
         status: maintenanceSchedule.status,
         completedDate: maintenanceSchedule.completedDate,
         workOrderId: maintenanceSchedule.workOrderId,

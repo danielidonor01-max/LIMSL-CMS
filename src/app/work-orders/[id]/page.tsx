@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import { PERMIT_ISSUE_ROLES, MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import {
   ArrowLeft,
   Loader2,
@@ -16,6 +16,7 @@ import {
   Wrench,
   Calendar,
   User,
+  Users,
   ShieldCheck,
   CheckCircle2,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import WorkOrderParts from "@/components/WorkOrderParts";
+import AssignPeople, { type Person } from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -46,6 +48,7 @@ export default function WorkOrderDetailPage() {
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
   const canIssuePermit = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
+  const canAssign = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
   const [wo, setWo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -53,8 +56,17 @@ export default function WorkOrderDetailPage() {
   const [completionNotes, setCompletionNotes] = useState("");
   const [actualHours, setActualHours] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [people, setPeople] = useState<Person[]>([]);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setPeople(Array.isArray(d) ? d : []))
+      .catch(() => setPeople([]));
+  }, []);
 
   const load = () => {
     setLoading(true);
@@ -135,6 +147,29 @@ export default function WorkOrderDetailPage() {
       return JSON.parse(json);
     } catch {
       return [];
+    }
+  };
+
+  const helperIds: string[] = (() => {
+    try {
+      const p = JSON.parse(wo.assistantIds ?? "[]");
+      return Array.isArray(p) ? p.filter((v: unknown): v is string => typeof v === "string") : [];
+    } catch {
+      return [];
+    }
+  })();
+  const helperNames = helperIds.map((hid) => people.find((p) => p.id === hid)?.name ?? "Unknown");
+  const jobClosed = wo.status === "COMPLETED" || wo.status === "CANCELLED";
+
+  const submitAssign = async (next: { leadId: string; leadName: string; assistantIds: string[] }) => {
+    const ok = await patch({
+      technicianId: next.leadId || null,
+      technicianName: next.leadName || null,
+      assistantIds: next.assistantIds,
+    });
+    if (ok) {
+      toast.success(next.leadId ? `Assigned to ${next.leadName}.` : "Technician cleared.");
+      setAssignOpen(false);
     }
   };
 
@@ -226,6 +261,27 @@ export default function WorkOrderDetailPage() {
           </div>
         </div>
 
+        {/* People on the job */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-600" /> People on this job
+              </h3>
+              <p className="text-xs text-slate-500 mt-2">
+                <span className="font-medium text-slate-900">{wo.technicianName ?? "Unassigned"}</span>
+                {" is accountable"}
+                {helperNames.length > 0 && `, helped by ${helperNames.join(", ")}`}.
+              </p>
+            </div>
+            {canAssign && !jobClosed && (
+              <Button variant="secondary" icon={Users} onClick={() => setAssignOpen(true)}>
+                Change
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Equipment card */}
         {eq && (
           <div className="bg-white border border-slate-200 rounded-xl p-6">
@@ -303,6 +359,18 @@ export default function WorkOrderDetailPage() {
           />
         )}
       </main>
+
+      <AssignPeople
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        people={people}
+        leadId={wo.technicianId ?? null}
+        assistantIds={helperIds}
+        title="Who is on this job?"
+        subtitle={`${wo.workOrderNumber} · ${wo.title}`}
+        saving={acting}
+        onSave={submitAssign}
+      />
 
       {/* Cancelling is irreversible and frees the schedule occurrence, confirm. */}
       <Modal

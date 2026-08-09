@@ -78,6 +78,33 @@ export async function POST(request: Request) {
       .where(eq(equipment.id, body.equipmentId))
       .limit(1);
 
+    // A job raised off a plan inherits the people already named on that plan,
+    // otherwise the assignment made on the schedule is silently lost the moment
+    // the work order exists and nobody is told the job is theirs.
+    let inherited: { technicianId: string | null; technicianName: string | null; assistantIds: string | null } = {
+      technicianId: null,
+      technicianName: null,
+      assistantIds: null,
+    };
+    if (body.scheduleId && !body.technicianId) {
+      const [sched] = await db
+        .select({
+          responsiblePersonId: maintenanceSchedule.responsiblePersonId,
+          responsiblePersonName: maintenanceSchedule.responsiblePersonName,
+          assistantIds: maintenanceSchedule.assistantIds,
+        })
+        .from(maintenanceSchedule)
+        .where(eq(maintenanceSchedule.id, body.scheduleId))
+        .limit(1);
+      if (sched) {
+        inherited = {
+          technicianId: sched.responsiblePersonId ?? null,
+          technicianName: sched.responsiblePersonName ?? null,
+          assistantIds: sched.assistantIds ?? null,
+        };
+      }
+    }
+
     const newWo = {
       id,
       workOrderNumber,
@@ -89,8 +116,9 @@ export async function POST(request: Request) {
       title: body.title,
       description: body.description || "",
       plannedDate: body.plannedDate || null,
-      technicianId: body.technicianId || null,
-      technicianName: body.technicianName || null,
+      technicianId: body.technicianId || inherited.technicianId,
+      technicianName: body.technicianName || inherited.technicianName,
+      assistantIds: inherited.assistantIds,
       supervisorId: body.supervisorId || null,
       createdBy: gate.actor?.id ?? null,
     };

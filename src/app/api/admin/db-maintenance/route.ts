@@ -105,6 +105,8 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["equipment.decommission", "ALTER TABLE equipment ADD COLUMN IF NOT EXISTS decommissioned_at text, ADD COLUMN IF NOT EXISTS decommission_reason text, ADD COLUMN IF NOT EXISTS decommissioned_by_id text, ADD COLUMN IF NOT EXISTS decommissioned_by_name text"],
+  ["assignees", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS assistant_ids text"],
+  ["work_orders.assistants", "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assistant_ids text"],
   ["email_change_user_idx", "CREATE INDEX IF NOT EXISTS email_change_user_idx ON email_change_requests (user_id)"],
   ["email_change_token_idx", "CREATE INDEX IF NOT EXISTS email_change_token_idx ON email_change_requests (token_hash)"],
   ["password_resets_user_idx", "CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets (user_id)"],

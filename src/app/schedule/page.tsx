@@ -24,6 +24,7 @@ import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
+import AssignPeople from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/roles";
 import {
@@ -59,6 +60,8 @@ type ScheduleRow = {
   taskDescription: string | null;
   maintenanceFrequency: string | null;
   responsiblePersonName: string | null;
+  responsiblePersonId: string | null;
+  assistantIds: string | null;
   status: string;
   completedDate: string | null;
   workOrderId: string | null;
@@ -74,6 +77,18 @@ type ScheduleRow = {
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
+
+// assistantIds is stored as JSON text. A malformed value must not take the page
+// down, so it reads as "nobody else" rather than throwing.
+const safeIds = (raw: string | null | undefined): string[] => {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+};
 
 const emptyCreate = {
   equipmentId: "",
@@ -110,6 +125,37 @@ export default function SchedulePage() {
     null,
   );
   const [snooze, setSnooze] = useState<{ row: ScheduleRow; reason: string; until: string } | null>(null);
+  const [assign, setAssign] = useState<ScheduleRow | null>(null);
+
+  const submitAssign = async (next: { leadId: string; leadName: string; assistantIds: string[] }) => {
+    if (!assign) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/schedule/${assign.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responsiblePersonId: next.leadId || null,
+          responsiblePersonName: next.leadName || null,
+          assistantIds: next.assistantIds,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not save the assignment.");
+        return;
+      }
+      toast.success(
+        next.leadId
+          ? `Assigned to ${next.leadName}${next.assistantIds.length ? ` with ${next.assistantIds.length} other(s)` : ""}.`
+          : "Left unassigned. Only managers will be reminded.",
+      );
+      setAssign(null);
+      load();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submitSnooze = async () => {
     if (!snooze) return;
@@ -523,7 +569,12 @@ export default function SchedulePage() {
                       <td className="py-3 px-4 text-slate-500">
                         {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "-"}
                       </td>
-                      <td className="py-3 px-4 text-slate-700">{r.responsiblePersonName ?? "-"}</td>
+                      <td className="py-3 px-4 text-slate-700">
+                        {r.responsiblePersonName ?? "-"}
+                        {safeIds(r.assistantIds).length > 0 && (
+                          <span className="text-slate-400"> +{safeIds(r.assistantIds).length}</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <Badge className={SCHEDULE_STATUS_BADGE[r.status]}>
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
@@ -540,6 +591,14 @@ export default function SchedulePage() {
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
+                          {r.status !== "COMPLETED" && (
+                            <button
+                              onClick={() => setAssign(r)}
+                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                            >
+                              Assign
+                            </button>
+                          )}
                           {r.status !== "COMPLETED" && (
                             <button
                               onClick={() => setReschedule({ row: r, date: r.plannedDate })}
@@ -732,6 +791,18 @@ export default function SchedulePage() {
             </div>
           )}
         </Modal>
+
+        <AssignPeople
+          open={!!assign}
+          onClose={() => setAssign(null)}
+          people={staff}
+          leadId={assign?.responsiblePersonId ?? null}
+          assistantIds={safeIds(assign?.assistantIds)}
+          title="Who is doing this job"
+          subtitle={assign ? `${assign.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[assign.activityType] ?? assign.activityType}` : ""}
+          saving={saving}
+          onSave={submitAssign}
+        />
 
         {/* Quieten reminders, NOT a deferral. The work is still overdue and
             still counts; this only stops the daily nagging of someone who is

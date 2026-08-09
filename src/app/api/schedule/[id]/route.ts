@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { validateDeferral } from "@/lib/maintenance/deferral";
+import { notify } from "@/lib/notifications";
 
 // Reschedule an activity (move its planned date) or adjust its remarks. Completion
 // is intentionally NOT done here, it flows through the work order + PM checklist
@@ -72,6 +73,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // what escalations.ts uses to reach the person, and it skips any activity
     // that has none.
     if (body.responsiblePersonId !== undefined) set.responsiblePersonId = body.responsiblePersonId || null;
+    let addedHelpers: string[] = [];
+    if (body.assistantIds !== undefined) {
+      const raw: unknown[] = Array.isArray(body.assistantIds) ? body.assistantIds : [];
+      const ids = raw.filter((v): v is string => typeof v === "string" && v.length > 0);
+      // The accountable person is not also a helper, otherwise they appear twice
+      // and would be notified twice.
+      const lead = set.responsiblePersonId ?? row.responsiblePersonId;
+      const next = [...new Set(ids)].filter((personId) => personId !== lead);
+      let before: string[] = [];
+      try {
+        const parsed = JSON.parse(row.assistantIds ?? "[]");
+        if (Array.isArray(parsed)) before = parsed.filter((v): v is string => typeof v === "string");
+      } catch {
+        before = [];
+      }
+      addedHelpers = next.filter((personId) => !before.includes(personId));
+      set.assistantIds = JSON.stringify(next);
+    }
 
     if (Object.keys(set).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -92,6 +111,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           ? `Activity rescheduled to ${set.plannedDate}`
           : `Activity updated`,
     });
+
+    // Being given work you were not told about is how a PM goes quietly overdue.
+    // Best-effort, an assignment must not fail because email is down.
+    const newLead =
+      set.responsiblePersonId && set.responsiblePersonId !== row.responsiblePersonId
+        ? [String(set.responsiblePersonId)]
+        : [];
+    const recipients = [...newLead, ...addedHelpers];
+    if (recipients.length) {
+      try {
+        const when = set.plannedDate ?? row.plannedDate;
+        await notify({
+          event: "GENERAL",
+          title: newLead.length
+            ? `${row.activityType} assigned to you, due ${when}`
+            : `You are on a ${row.activityType} due ${when}`,
+          body: row.taskDescription || `Scheduled ${row.activityType} activity.`,
+          linkPath: "/schedule",
+          relatedEntityType: "maintenance_schedule",
+          relatedEntityId: id,
+          userIds: recipients,
+        });
+      } catch (err) {
+        console.warn("schedule assign: notify failed", err);
+      }
+    }
 
     const [updated] = await db.select().from(maintenanceSchedule).where(eq(maintenanceSchedule.id, id)).limit(1);
     return NextResponse.json(updated);

@@ -138,6 +138,26 @@ export async function PATCH(
     if (body.technicianName !== undefined) updates.technicianName = body.technicianName;
     if (body.description !== undefined) updates.description = body.description;
 
+    // Others on the job. The assigned technician stays single because one name
+    // has to answer for the work; helpers are recorded so they can be reached
+    // and so the history shows who was actually on the machine.
+    let addedHelpers: string[] = [];
+    if (body.assistantIds !== undefined) {
+      const lead = body.technicianId !== undefined ? body.technicianId : current.technicianId;
+      const raw: unknown[] = Array.isArray(body.assistantIds) ? body.assistantIds : [];
+      const ids = raw.filter((v): v is string => typeof v === "string" && v.length > 0);
+      const next = [...new Set(ids)].filter((personId) => personId !== lead);
+      let before: string[] = [];
+      try {
+        const parsed = JSON.parse(current.assistantIds ?? "[]");
+        if (Array.isArray(parsed)) before = parsed.filter((v): v is string => typeof v === "string");
+      } catch {
+        before = [];
+      }
+      addedHelpers = next.filter((personId) => !before.includes(personId));
+      updates.assistantIds = JSON.stringify(next);
+    }
+
     await db.update(workOrders).set(updates).where(eq(workOrders.id, id));
 
     // Cancelling frees the linked schedule occurrence so a replacement WO can be
@@ -199,6 +219,22 @@ export async function PATCH(
         });
       } catch (err) {
         console.warn("work-order assign: notify failed", err);
+      }
+    }
+
+    if (addedHelpers.length) {
+      try {
+        await notify({
+          event: "GENERAL",
+          title: `You are on work order ${current.workOrderNumber}`,
+          body: `${current.title}. Working with ${(updates.technicianName as string) ?? current.technicianName ?? "the assigned technician"}.`,
+          linkPath: `/work-orders/${id}`,
+          relatedEntityType: "work_order",
+          relatedEntityId: id,
+          userIds: addedHelpers,
+        });
+      } catch (err) {
+        console.warn("work-order helpers: notify failed", err);
       }
     }
 

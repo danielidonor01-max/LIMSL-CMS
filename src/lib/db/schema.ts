@@ -110,8 +110,13 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   activityType: text("activity_type").notNull(), // PM | INS | CM | PRS
   taskDescription: text("task_description"),
   maintenanceFrequency: text("maintenance_frequency"),
+  // The accountable person. One name, because "the maintenance team" cannot be
+  // asked why a PM was missed.
   responsiblePersonId: text("responsible_person_id").references(() => users.id),
   responsiblePersonName: text("responsible_person_name"),
+  // Others working the job. They are notified and can complete the work, but
+  // accountability stays with the person above, which is what an auditor traces.
+  assistantIds: text("assistant_ids"), // JSON array of user ids
   status: text("status").notNull().default("SCHEDULED"), // SCHEDULED | COMPLETED | OVERDUE | MISSED | RESCHEDULED
   completedDate: text("completed_date"),
   // Schedule adherence. "Completed" alone says nothing about WHEN: a PM planned
@@ -150,6 +155,9 @@ export const workOrders = pgTable("work_orders", {
   actualDuration: real("actual_duration"), // hours
   technicianId: text("technician_id").references(() => users.id),
   technicianName: text("technician_name"),
+  // Others on the job. Notified alongside the lead, but accountability for the
+  // work order stays with technicianId.
+  assistantIds: text("assistant_ids"), // JSON array of user ids
   supervisorId: text("supervisor_id").references(() => users.id),
   wmsId: text("wms_id"),
   permitId: text("permit_id"),
