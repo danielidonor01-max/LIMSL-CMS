@@ -109,6 +109,34 @@ export default function SchedulePage() {
   const [defer, setDefer] = useState<{ row: ScheduleRow; reason: string; reviewDate: string } | null>(
     null,
   );
+  const [snooze, setSnooze] = useState<{ row: ScheduleRow; reason: string; until: string } | null>(null);
+
+  const submitSnooze = async () => {
+    if (!snooze) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/escalations/snooze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityType: "SCHEDULE",
+          entityId: snooze.row.id,
+          reason: snooze.reason,
+          until: snooze.until,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not quieten the reminders.");
+        return;
+      }
+      toast.success(`Reminders paused until ${formatDate(d.until)} — the activity is still overdue.`);
+      setSnooze(null);
+      load();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const load = () => {
     refresh();
@@ -520,6 +548,20 @@ export default function SchedulePage() {
                               Reschedule
                             </button>
                           )}
+                          {r.status === "OVERDUE" && (
+                            <button
+                              onClick={() =>
+                                setSnooze({
+                                  row: r,
+                                  reason: "",
+                                  until: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10),
+                                })
+                              }
+                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                            >
+                              Quieten
+                            </button>
+                          )}
                           {r.status !== "COMPLETED" && r.status !== "DEFERRED" && (
                             <button
                               onClick={() =>
@@ -686,6 +728,49 @@ export default function SchedulePage() {
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setReschedule(null)}>Cancel</Button>
                 <Button type="button" loading={saving} onClick={submitReschedule}>Reschedule</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Quieten reminders — NOT a deferral. The work is still overdue and
+            still counts; this only stops the daily nagging of someone who is
+            already dealing with it. */}
+        <Modal
+          open={!!snooze}
+          onClose={() => setSnooze(null)}
+          title="Quieten reminders"
+          subtitle={snooze ? `${snooze.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[snooze.row.activityType] ?? snooze.row.activityType}` : ""}
+        >
+          {snooze && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                This activity <strong>stays overdue</strong> and still counts against PM compliance. All this does is
+                stop the daily reminder while you deal with it. If you want it formally put off, use{" "}
+                <strong>Defer</strong> instead — that records a risk accepted and needs a review date.
+              </p>
+              <Field label="What is being done about it" htmlFor="sn-reason">
+                <input
+                  id="sn-reason"
+                  value={snooze.reason}
+                  onChange={(e) => setSnooze((s) => (s ? { ...s, reason: e.target.value } : s))}
+                  placeholder="e.g. Bearing on order, ETA 3 weeks — inspected weekly meanwhile"
+                  className={FIELD_CLASS}
+                />
+              </Field>
+              <Field label="Remind me again on" htmlFor="sn-until">
+                <input
+                  id="sn-until"
+                  type="date"
+                  min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)}
+                  value={snooze.until}
+                  onChange={(e) => setSnooze((s) => (s ? { ...s, until: e.target.value } : s))}
+                  className={FIELD_CLASS}
+                />
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setSnooze(null)}>Cancel</Button>
+                <Button type="button" loading={saving} onClick={submitSnooze}>Quieten</Button>
               </div>
             </div>
           )}

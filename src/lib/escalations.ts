@@ -70,7 +70,7 @@ async function recentlyEscalated(
   });
 }
 
-export async function runEscalations(now = new Date()): Promise<EscalationSummary> {
+export async function runEscalations(now = new Date(), trigger: "manual" | "scheduled" = "manual"): Promise<EscalationSummary> {
   // Make statuses current before deciding what's overdue.
   await reconcileSchedule(now);
   // Keep every recurring series stocked with a future occurrence, so a machine

@@ -19,7 +19,10 @@ export async function POST(request: Request) {
       if (gate.res) return gate.res;
     }
 
-    const summary = await runEscalations();
+    // A cron tick honours the configured send window; a person pressing "Run
+    // now" always runs. A button that silently does nothing outside 07:00 is
+    // indistinguishable from a broken button.
+    const summary = await runEscalations(new Date(), viaToken ? "scheduled" : "manual");
     return NextResponse.json(summary);
   } catch (error) {
     console.error("Escalation run failed:", error);

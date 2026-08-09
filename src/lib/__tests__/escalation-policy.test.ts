@@ -170,6 +170,37 @@ test("the last item clearing is reported once", () => {
   assert.equal(r.send, true);
 });
 
+// The send window applies to cron ticks only. "Run now" doing nothing outside
+// 07:00 would be indistinguishable from a broken button.
+test("the send window holds a scheduled run but never blocks a manual one", () => {
+  const args = {
+    policy: { ...P, sendHour: 7 },
+    lastSentAt: null,
+    diff: diffDigest([], ["m1"]),
+    currentCount: 1,
+    now: new Date("2026-08-12T15:00:00"), // 15:00 local, not the send hour
+  } as const;
+
+  const scheduled = shouldSendDigest({ ...args, trigger: "scheduled" });
+  assert.equal(scheduled.send, false);
+  assert.match(scheduled.send === false ? scheduled.reason : "", /send window/i);
+
+  assert.equal(shouldSendDigest({ ...args, trigger: "manual" }).send, true);
+  assert.equal(shouldSendDigest(args).send, true, "manual is the safe default");
+});
+
+test("a scheduled run inside the window goes out", () => {
+  const r = shouldSendDigest({
+    policy: { ...P, sendHour: 7 },
+    lastSentAt: null,
+    diff: diffDigest([], ["m1"]),
+    currentCount: 1,
+    now: new Date("2026-08-12T07:30:00"),
+    trigger: "scheduled",
+  });
+  assert.equal(r.send, true);
+});
+
 test("weekends are skipped when the workshop does not run", () => {
   const sat = shouldSendDigest({
     policy: P,

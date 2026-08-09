@@ -126,9 +126,16 @@ export function shouldSendDigest(input: {
   diff: DigestDiff;
   currentCount: number;
   now?: Date;
+  /**
+   * "scheduled" is a cron tick and honours the send window; "manual" is someone
+   * pressing Run now and must always work — a button that silently does nothing
+   * outside 07:00 is indistinguishable from a broken button.
+   */
+  trigger?: "manual" | "scheduled";
 }): SendDecision {
   const { policy, lastSentAt, diff, currentCount } = input;
   const now = input.now ?? new Date();
+  const trigger = input.trigger ?? "manual";
 
   // Nothing outstanding and nothing resolved since last time: silence.
   if (currentCount === 0 && diff.resolved.length === 0) {
@@ -138,6 +145,12 @@ export function shouldSendDigest(input: {
   if (policy.skipWeekends) {
     const day = now.getDay();
     if (day === 0 || day === 6) return { send: false, reason: "Weekend — digests are paused." };
+  }
+
+  // The send window. A digest before shift is useful; the same digest arriving
+  // through the day is not. Only applies to scheduled runs.
+  if (trigger === "scheduled" && now.getHours() !== policy.sendHour) {
+    return { send: false, reason: `Outside the send window (${policy.sendHour}:00).` };
   }
 
   if (lastSentAt) {
