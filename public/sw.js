@@ -17,7 +17,10 @@
 // (src/lib/offline/outbox.ts), which parks them in localStorage and sends them
 // on reconnect — not by this worker.
 
-const VERSION = "limsl-v1";
+// Bumping this evicts the previous caches on activate. The brand icons and the
+// manifest are static assets served cache-first, so without a bump a phone
+// keeps handing back the old placeholder mark indefinitely.
+const VERSION = "limsl-v2";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const OFFLINE_URL = "/offline";
