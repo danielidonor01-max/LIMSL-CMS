@@ -241,6 +241,88 @@ const PLANS: JobPlan[] = [
       ] },
     ],
   },
+  {
+    category: "CNC_LIGHT",
+    title: "CNC light duty / bench",
+    sections: [
+      { key: "visual", label: "Visual & physical", tasks: [...GENERAL_VISUAL, ...SAFETY_COMMON, { item: "Bed and slideways clean of swarf", criteria: "No packed chips in the ways" }] },
+      { key: "functional", label: "Functional tests", tasks: [
+        { item: "Axis travel smooth over full stroke", criteria: "No juddering or binding" },
+        { item: "Spindle run-up and run-down", criteria: "No abnormal noise or vibration" },
+        { item: "Collet / chuck grip test", criteria: "Holds without slip at working speed" },
+        { item: "Limit switches and homing", criteria: "All axes home correctly" },
+        { item: "Extraction / chip clearance working", criteria: "Airflow present at the cutter" },
+      ] },
+      { key: "lubrication", label: "Lubrication", tasks: [
+        { item: "Slideway lubrication applied", criteria: "Correct grade; ways wet, not flooded" },
+        { item: "Leadscrew / ballscrew condition", criteria: "Clean, greased, no scoring" },
+      ] },
+      { key: "electrical", label: "Electrical", tasks: [
+        { item: "Panel interior clean and dry", criteria: "No dust build-up, no moisture ingress" },
+        { item: "Emergency stop stops all motion", criteria: "Spindle and axes halt immediately" },
+        { item: "Earth continuity to machine frame", unit: "Ω", criteria: "< 1 Ω" },
+      ] },
+    ],
+  },
+  {
+    category: "PRESS_ROLL_SHEAR",
+    title: "Press / roll / shear",
+    sections: [
+      { key: "visual", label: "Visual & physical", tasks: [
+        ...GENERAL_VISUAL,
+        ...SAFETY_COMMON,
+        { item: "Light curtain / guard alignment", criteria: "Beam unbroken across the full opening" },
+        { item: "Tooling and die condition", criteria: "No cracks, chips or excessive wear" },
+        { item: "Blade / roll surface condition", criteria: "No nicks, even wear across the width" },
+      ] },
+      { key: "functional", label: "Functional tests", tasks: [
+        { item: "Two-hand control forces simultaneous operation", criteria: "One hand alone will not initiate" },
+        { item: "Ram stops on guard interruption", criteria: "Stroke halts before the die closes" },
+        { item: "Backgauge positioning accuracy", unit: "mm", criteria: "Within tolerance over full travel" },
+        { item: "Ram parallelism / crowning", criteria: "Even bend along the full length" },
+        { item: "Stopping time measured", unit: "ms", criteria: "Within the guard's safety distance calculation" },
+      ] },
+      { key: "lubrication", label: "Lubrication", tasks: [
+        { item: "Hydraulic fluid level and condition", criteria: "Clear, not milky or dark" },
+        { item: "Hydraulic hoses and fittings", criteria: "No weeping, chafing or bulging" },
+        { item: "Slide and pivot greasing", criteria: "All points taken grease" },
+      ] },
+      { key: "electrical", label: "Electrical", tasks: [
+        { item: "Panel interior clean and dry", criteria: "No dust build-up, no moisture ingress" },
+        { item: "Safety relay function test", criteria: "Faults on a single-channel break" },
+        { item: "Foot pedal guard and cable", criteria: "Guard fitted; cable undamaged" },
+        { item: "Earth continuity to machine frame", unit: "Ω", criteria: "< 1 Ω" },
+      ] },
+    ],
+  },
+  {
+    category: "SYSTEM",
+    title: "Facility system / installation",
+    sections: [
+      { key: "visual", label: "Visual & physical", tasks: [
+        { item: "Installation identified and labelled", criteria: "Tag legible and matches the register" },
+        { item: "Enclosures and covers secure", criteria: "All fixings present; no unauthorised openings" },
+        { item: "Signs of water ingress or corrosion", criteria: "Dry, no rust bloom or staining" },
+        { item: "Access route clear", criteria: "Reachable for inspection and isolation" },
+        { item: "Supports, brackets and fixings sound", criteria: "No movement or fatigue cracking" },
+      ] },
+      { key: "functional", label: "Functional tests", tasks: [
+        { item: "System operates through its normal range", criteria: "No alarm, no abnormal noise" },
+        { item: "Isolation point operates and locks off", criteria: "Padlockable; isolates the whole installation" },
+        { item: "Protective device operation verified", criteria: "Trips within its rating" },
+        { item: "Distribution / delivery reaching all points served", criteria: "No dead legs, no starved outlets" },
+      ] },
+      { key: "lubrication", label: "Servicing", tasks: [
+        { item: "Filters, traps and strainers checked", criteria: "Clean or replaced; no bypass" },
+        { item: "Moving parts serviced per OEM", criteria: "Per the installation's manual" },
+      ] },
+      { key: "electrical", label: "Electrical", tasks: [
+        { item: "Terminations tight and undamaged", criteria: "No discolouration or heat marking" },
+        { item: "Earth continuity across the installation", unit: "Ω", criteria: "< 1 Ω" },
+        { item: "Insulation resistance where applicable", unit: "MΩ", criteria: "Per the installation's test record" },
+      ] },
+    ],
+  },
 ];
 
 // Categories with no bespoke plan fall back to a general powered-machine plan
@@ -272,12 +354,13 @@ const GENERAL_PLAN: JobPlan = {
 
 const BY_CATEGORY = new Map(PLANS.map((p) => [p.category, p]));
 
-// Categories that share a plan — a press/roll/shear is mechanically close
-// enough to the heavy CNC plan to use it rather than the generic one.
-const ALIASES: Record<string, string> = {
-  CNC_LIGHT: "CNC_HEAVY",
-  PRESS_ROLL_SHEAR: "CNC_HEAVY",
-};
+// Every category now carries its own plan. CNC_LIGHT and PRESS_ROLL_SHEAR used
+// to borrow the heavy-CNC plan, which asked a bench router about tool-change
+// cycles and a press brake about spindle bearing temperature — questions with no
+// answer, which teach a technician to tick without reading. SYSTEM had no plan
+// at all and fell to the generic one, so the SYS assets added in Phase 5 landed
+// back on exactly the "one checklist for everything" finding the audit raised.
+const ALIASES: Record<string, string> = {};
 
 export function jobPlanFor(category: string | null | undefined): JobPlan {
   const key = category ?? "";

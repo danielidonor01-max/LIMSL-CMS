@@ -68,6 +68,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     if (typeof body.remarks === "string") set.remarks = body.remarks;
     if (body.responsiblePersonName !== undefined) set.responsiblePersonName = body.responsiblePersonName || null;
+    // Reassignment has to move the ID too. The name alone is a label; the ID is
+    // what escalations.ts uses to reach the person, and it skips any activity
+    // that has none.
+    if (body.responsiblePersonId !== undefined) set.responsiblePersonId = body.responsiblePersonId || null;
 
     if (Object.keys(set).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

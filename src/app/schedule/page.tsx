@@ -22,9 +22,10 @@ import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
-import Field, { FIELD_CLASS } from "@/components/Field";
+import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
 import { formatDate } from "@/lib/utils";
+import { ROLE_LABELS } from "@/lib/roles";
 import {
   ACTIVITY_TYPE_BADGE,
   ACTIVITY_TYPE_LABELS,
@@ -80,6 +81,7 @@ const emptyCreate = {
   activityType: "PM",
   maintenanceFrequency: "MONTHLY",
   taskDescription: "",
+  responsiblePersonId: "",
   responsiblePersonName: "",
 };
 
@@ -98,6 +100,8 @@ export default function SchedulePage() {
     [],
   );
   const equipmentList = Array.isArray(equipmentData) ? equipmentData : [];
+  const { data: staffData } = useApi<{ id: string; name: string; role: string }[]>("/api/users", []);
+  const staff = Array.isArray(staffData) ? staffData : [];
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreate);
   const [saving, setSaving] = useState(false);
@@ -624,16 +628,37 @@ export default function SchedulePage() {
                 className={FIELD_CLASS}
               />
             </Field>
-            <Field label="Responsible (optional)" htmlFor="schedule-responsible">
-              <input
-                id="schedule-responsible"
-                type="text"
-                value={createForm.responsiblePersonName}
-                onChange={(e) => setCreateForm((f) => ({ ...f, responsiblePersonName: e.target.value }))}
-                placeholder="Assigned technician / team"
-                className={FIELD_CLASS}
-              />
-            </Field>
+            <div>
+              <label className={LABEL_CLASS}>Responsible person</label>
+              {/* This was a free-text box, and escalations.ts skips any activity
+                  with no responsiblePersonId — so every per-person reminder was
+                  silently dropped and only the role broadcasts ever fired. A
+                  typed name also drifts: "Musa", "musa a." and "Musa Abubakar"
+                  are three different people to the system. */}
+              <Select
+                value={createForm.responsiblePersonId}
+                onChange={(v) => {
+                  const u = staff.find((x) => x.id === v);
+                  setCreateForm((f) => ({
+                    ...f,
+                    responsiblePersonId: v,
+                    responsiblePersonName: u?.name ?? "",
+                  }));
+                }}
+                className="w-full"
+              >
+                <option value="">Unassigned — nobody will be reminded</option>
+                {staff.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} · {ROLE_LABELS[u.role] ?? u.role}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Overdue and due-soon reminders go to this person directly. Leaving it unassigned means only the
+                managers hear about it.
+              </p>
+            </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="secondary" onClick={() => setShowCreate(false)}>Cancel</Button>
               <Button type="submit" loading={saving} icon={CalendarPlus}>Schedule</Button>
