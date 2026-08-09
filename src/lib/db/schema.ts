@@ -388,6 +388,21 @@ export const oemRegistry = pgTable("oem_registry", {
 // A contractor register that does not stop anybody working is a spreadsheet.
 // The obligation is not to hold certificates; it is to not let someone onto a
 // live machine without them — so these rows gate permit issue.
+// ─── Password reset ─────────────────────────────────────────────────────────
+// The token is stored HASHED. A reset table holding usable tokens is a table
+// that hands out accounts to anyone who can read it — a database dump, a rogue
+// backup, a support engineer with a console. What we keep is a digest we can
+// compare against, and the only copy of the real token is the one in the email.
+export const passwordResets = pgTable("password_resets", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
+  requestedIp: text("requested_ip"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("password_resets_user_idx").on(t.userId)]);
+
 export const contractors = pgTable("contractors", {
   id: text("id").primaryKey(),
   companyName: text("company_name").notNull(),

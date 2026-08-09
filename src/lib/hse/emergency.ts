@@ -12,46 +12,62 @@
 // nothing. What an auditor asks is whether they happen at the required
 // frequency, and whether the deficiencies they surfaced were closed.
 
+// The five systems LIMSL actually operates lead the list — fire alarm, smoke
+// detection, lightning arrestors, earthing and spill kits. The rest stay
+// available because most sites also hold extinguishers and first aid, and
+// removing a type would orphan any record already filed against it.
 export type EmergencyEquipmentType =
-  | "FIRE_EXTINGUISHER"
   | "FIRE_ALARM"
+  | "SMOKE_DETECTOR"
+  | "LIGHTNING_ARRESTOR"
+  | "EARTHING_SYSTEM"
+  | "SPILL_KIT"
+  | "FIRE_EXTINGUISHER"
   | "FIRE_HOSE"
   | "EMERGENCY_LIGHT"
   | "EXIT_SIGN"
   | "FIRST_AID_KIT"
   | "EYE_WASH"
   | "SAFETY_SHOWER"
-  | "SPILL_KIT"
   | "AED"
   | "ASSEMBLY_POINT"
   | "OTHER";
 
 export const EMERGENCY_TYPE_LABELS: Record<EmergencyEquipmentType, string> = {
+  FIRE_ALARM: "Fire alarm system / call point",
+  SMOKE_DETECTOR: "Smoke detector",
+  LIGHTNING_ARRESTOR: "Lightning arrestor",
+  EARTHING_SYSTEM: "Earthing system",
+  SPILL_KIT: "Spillage kit",
   FIRE_EXTINGUISHER: "Fire extinguisher",
-  FIRE_ALARM: "Fire alarm / call point",
   FIRE_HOSE: "Fire hose reel",
   EMERGENCY_LIGHT: "Emergency light",
   EXIT_SIGN: "Exit sign",
   FIRST_AID_KIT: "First aid kit",
   EYE_WASH: "Eye wash station",
   SAFETY_SHOWER: "Safety shower",
-  SPILL_KIT: "Spill kit",
   AED: "Defibrillator (AED)",
   ASSEMBLY_POINT: "Assembly point",
   OTHER: "Other",
 };
 
 // Sensible statutory-ish defaults; every item can override its own interval.
+// Lightning protection and earthing are tested annually (IEC 62305 practice) —
+// they are measured installations rather than things you eyeball monthly, which
+// is why their interval is an order of magnitude longer than an extinguisher's.
 export const DEFAULT_INSPECTION_INTERVAL_DAYS: Record<string, number> = {
-  FIRE_EXTINGUISHER: 30,
   FIRE_ALARM: 30,
+  SMOKE_DETECTOR: 30,
+  LIGHTNING_ARRESTOR: 365,
+  EARTHING_SYSTEM: 365,
+  SPILL_KIT: 90,
+  FIRE_EXTINGUISHER: 30,
   FIRE_HOSE: 90,
   EMERGENCY_LIGHT: 30,
   EXIT_SIGN: 90,
   FIRST_AID_KIT: 30,
   EYE_WASH: 7,
   SAFETY_SHOWER: 7,
-  SPILL_KIT: 90,
   AED: 30,
   ASSEMBLY_POINT: 180,
   OTHER: 90,

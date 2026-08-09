@@ -8,7 +8,7 @@ import type { NextAuthConfig } from "next-auth";
 // public because the session cannot be checked with the network down — and
 // redirecting to /login at that moment would show a sign-in form that cannot
 // possibly submit.
-const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr", "/offline"];
+const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr", "/offline", "/forgot-password", "/reset-password"];
 
 export const authConfig = {
   pages: { signIn: "/login" },

@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Loader2, LogIn, Eye, EyeOff, ShieldCheck, ClipboardCheck, HardHat, AlertCircle,
 } from "lucide-react";
@@ -116,7 +117,12 @@ function LoginForm() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Password</label>
+                <Link href="/forgot-password" className="text-[11px] font-semibold text-emerald-700 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}

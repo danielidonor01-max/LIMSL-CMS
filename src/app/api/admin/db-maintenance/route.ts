@@ -54,6 +54,20 @@ const INDEXES: [string, string][] = [
   // Phase 4b — schedule adherence, deferral register, failure taxonomy.
   ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
   ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
+  [
+    "password_resets",
+    `CREATE TABLE IF NOT EXISTS password_resets (
+      id text PRIMARY KEY,
+      user_id text NOT NULL,
+      token_hash text NOT NULL,
+      expires_at text NOT NULL,
+      used_at text,
+      requested_ip text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["password_resets_user_idx", "CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets (user_id)"],
+  ["password_resets_token_idx", "CREATE INDEX IF NOT EXISTS password_resets_token_idx ON password_resets (token_hash)"],
   // Sign-off overrides — a step signed by someone other than the role it names.
   ["signoffs.override", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS is_override boolean DEFAULT false, ADD COLUMN IF NOT EXISTS override_reason text"],
   // Phase 6f — condition monitoring.

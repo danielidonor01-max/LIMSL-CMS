@@ -61,6 +61,8 @@ test("no page-level module has appeared without being considered for search", ()
     // Reference and admin surfaces — nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",
+    // Unauthenticated auth surfaces — they hold no records at all.
+    "forgot-password", "reset-password",
   ]);
 
   const routed = readdirSync(appDir, { withFileTypes: true })

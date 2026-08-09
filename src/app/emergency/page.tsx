@@ -65,12 +65,12 @@ type Payload = {
 
 const emptyItem = {
   tagNumber: "",
-  type: "FIRE_EXTINGUISHER" as EmergencyEquipmentType,
+  type: "FIRE_ALARM" as EmergencyEquipmentType,
   location: "",
   capacity: "",
   installedDate: "",
   lastInspectionDate: "",
-  inspectionIntervalDays: "",
+  inspectionIntervalDays: String(intervalFor("FIRE_ALARM")),
   expiryDate: "",
   notes: "",
 };
@@ -254,7 +254,7 @@ export default function EmergencyPage() {
               </Button>
               {canWrite && (
                 <Button icon={Plus} onClick={() => (tab === "drills" ? setShowDrill(true) : setShowItem(true))}>
-                  {tab === "drills" ? "Record Drill" : "Add Item"}
+                  {tab === "drills" ? "Record Drill" : "Add Equipment"}
                 </Button>
               )}
             </>
@@ -381,8 +381,8 @@ export default function EmergencyPage() {
               ) : (
                 <EmptyState
                   icon={ShieldAlert}
-                  title="No emergency equipment registered"
-                  message="Start with fire extinguishers and first-aid points. Recording where each one is and how often it must be checked is what turns a cupboard full of equipment into evidence that it works."
+                  title="No emergency or safety equipment registered"
+                  message="Start with the fire alarm system, smoke detectors, lightning arrestors, earthing and spill kits. Recording where each one is and how often it must be checked is what turns installed equipment into evidence that it works."
                   actionLabel={canWrite ? "Add the first item" : undefined}
                   onAction={canWrite ? () => setShowItem(true) : undefined}
                 />
@@ -516,7 +516,7 @@ export default function EmergencyPage() {
         )}
 
         {/* Add equipment */}
-        <Modal open={showItem} onClose={() => setShowItem(false)} title="Add emergency equipment" subtitle="Where it is and how often it must be checked">
+        <Modal open={showItem} onClose={() => setShowItem(false)} title="Add emergency & safety equipment" subtitle="Where it is and how often it must be checked">
           <form onSubmit={submitItem} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Tag number *" htmlFor="em-tag">
@@ -545,7 +545,7 @@ export default function EmergencyPage() {
                 <input id="em-cap" value={itemForm.capacity} onChange={(e) => setItemForm((f) => ({ ...f, capacity: e.target.value }))} placeholder="9 kg" className={FIELD_CLASS} />
               </Field>
               <Field label="Check every (days)" htmlFor="em-int">
-                <input id="em-int" inputMode="numeric" value={itemForm.inspectionIntervalDays || String(intervalFor(itemForm.type))} onChange={(e) => setItemForm((f) => ({ ...f, inspectionIntervalDays: e.target.value }))} className={FIELD_CLASS} />
+                <input id="em-int" inputMode="numeric" value={itemForm.inspectionIntervalDays} onChange={(e) => setItemForm((f) => ({ ...f, inspectionIntervalDays: e.target.value }))} className={FIELD_CLASS} />
               </Field>
               <Field label="Last checked" htmlFor="em-last">
                 <input id="em-last" type="date" max={new Date().toISOString().slice(0, 10)} value={itemForm.lastInspectionDate} onChange={(e) => setItemForm((f) => ({ ...f, lastInspectionDate: e.target.value }))} className={FIELD_CLASS} />
