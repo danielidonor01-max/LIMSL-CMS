@@ -865,6 +865,13 @@ export const signoffs = pgTable(
     signedById: text("signed_by_id").references(() => users.id),
     signedByName: text("signed_by_name"),
     signedByRole: text("signed_by_role"),
+    // A step signed by someone other than the role it names — a Super Admin
+    // stepping in, or a manager covering an absent junior. The chain's intent
+    // still stands: this is an exception, so it is recorded AS an exception with
+    // a stated reason, rather than looking identical to a normal signature.
+    // Working out that signedByRole ≠ role after the fact is not a control.
+    isOverride: boolean("is_override").default(false),
+    overrideReason: text("override_reason"),
     signatureData: text("signature_data"), // base64 drawn signature
     comments: text("comments"),
     signedAt: text("signed_at"),

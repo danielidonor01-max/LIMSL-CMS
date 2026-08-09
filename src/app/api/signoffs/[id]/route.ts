@@ -68,6 +68,26 @@ export async function POST(
       }
     }
 
+    // Signing a step your role does not name is an EXCEPTION — a Super Admin
+    // stepping in for an absent manager, or a senior covering a junior. The
+    // chain's intent is unchanged by that, so the exception has to justify
+    // itself: an auditor's first question is "why did this person sign the
+    // Maintenance Manager's step", and "they were allowed to" is not an answer.
+    const isOverride = action === "sign" && user.role !== step.role;
+    const overrideReason = String(body.overrideReason ?? "").trim();
+    if (isOverride && overrideReason.length < 10) {
+      return NextResponse.json(
+        {
+          error:
+            `This step names ${step.roleLabel}. You may sign it, but the reason has to be recorded — ` +
+            `say why you are signing in their place (at least a sentence).`,
+          requiresOverrideReason: true,
+          stepRoleLabel: step.roleLabel,
+        },
+        { status: 400 },
+      );
+    }
+
     await db
       .update(signoffs)
       .set({
@@ -75,6 +95,8 @@ export async function POST(
         signedById: user.id ?? null,
         signedByName: user.name ?? null,
         signedByRole: user.role ?? null,
+        isOverride,
+        overrideReason: isOverride ? overrideReason.slice(0, 500) : null,
         signatureData: action === "sign" ? body.signatureData : null,
         comments: body.comments || null,
         signedAt: new Date().toISOString(),
@@ -88,7 +110,12 @@ export async function POST(
       action: action === "reject" ? "REJECT" : "SIGN",
       entityType: step.entityType,
       entityId: step.entityId,
-      entityDescription: `${step.roleLabel} ${action === "reject" ? "rejected" : "signed"}`,
+      // The audit line names the exception explicitly. Someone reading the trail
+      // must not have to notice that a role field differs from another role
+      // field two columns away.
+      entityDescription: isOverride
+        ? `${step.roleLabel} signed AS AN OVERRIDE by ${user.name} (${user.role}) — ${overrideReason}`
+        : `${step.roleLabel} ${action === "reject" ? "rejected" : "signed"}`,
     });
 
     // After a signature, notify whoever must sign next. After a rejection,

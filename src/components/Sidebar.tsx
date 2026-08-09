@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -144,9 +145,14 @@ export default function Sidebar({
           ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
       >
       <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 border-b border-slate-200 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
-          <Wrench className="w-4 h-4 text-white" />
-        </div>
+        <Image
+          src="/brand/logo-80.png"
+          alt=""
+          width={32}
+          height={32}
+          priority
+          className="w-8 h-8 rounded-lg shrink-0"
+        />
         <div>
           <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-none">LIMSL CMS</h1>
           <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">

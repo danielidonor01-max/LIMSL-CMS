@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowLeft, Printer, Download, Wrench } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
 import Button from "@/components/Button";
+import Image from "next/image";
 
 export type Column = { key: string; label: string };
 
@@ -52,9 +53,9 @@ export default function PrintableReport({
           {/* Letterhead */}
           <div className="flex items-start justify-between gap-4 border-b-2 border-slate-800 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-slate-900 flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-white" />
-              </div>
+              {/* Printed records carry the company mark — these go into audit
+                  packs and to insurers. */}
+              <Image src="/brand/logo-80.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-base font-black tracking-tight text-slate-900 leading-none">
                   LEE INTERNATIONAL

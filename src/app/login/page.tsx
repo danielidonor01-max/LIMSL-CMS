@@ -4,8 +4,9 @@
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import {
-  Wrench, Loader2, LogIn, Eye, EyeOff, ShieldCheck, ClipboardCheck, HardHat, AlertCircle,
+  Loader2, LogIn, Eye, EyeOff, ShieldCheck, ClipboardCheck, HardHat, AlertCircle,
 } from "lucide-react";
 
 function LoginForm() {
@@ -45,8 +46,8 @@ function LoginForm() {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-white/5" />
         <div className="relative flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
-            <Wrench className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm">
+            <Image src="/brand/logo-80.png" alt="" width={40} height={40} priority className="w-full h-full object-contain" />
           </div>
           <div>
             <p className="text-sm font-bold tracking-tight leading-none">LIMSL CMS</p>
@@ -88,8 +89,8 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="flex flex-col items-center mb-8 lg:hidden">
-            <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-3">
-              <Wrench className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm mb-3">
+              <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">LIMSL CMS</h1>
             <p className="text-[11px] text-slate-500 font-mono uppercase tracking-widest">Maintenance Portal</p>

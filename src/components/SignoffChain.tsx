@@ -20,6 +20,8 @@ type Step = {
   status: string;
   signedByName: string | null;
   signedByRole: string | null;
+  isOverride: boolean | null;
+  overrideReason: string | null;
   signatureData: string | null;
   comments: string | null;
   signedAt: string | null;
@@ -41,6 +43,7 @@ export default function SignoffChain({
   const [openStep, setOpenStep] = useState<string | null>(null);
   const [sig, setSig] = useState<string | null>(null);
   const [comments, setComments] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +66,7 @@ export default function SignoffChain({
     const res = await fetch(`/api/signoffs/${stepId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "sign", signatureData: sig, comments }),
+      body: JSON.stringify({ action: "sign", signatureData: sig, comments, overrideReason }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -74,6 +77,7 @@ export default function SignoffChain({
     setOpenStep(null);
     setSig(null);
     setComments("");
+    setOverrideReason("");
     load();
   };
 
@@ -137,6 +141,23 @@ export default function SignoffChain({
                           </span>
                         )}
                       </div>
+
+                      {/* An exception has to look like one. Reading the chain,
+                          nobody should have to compare two role fields to
+                          notice that somebody else signed this step. */}
+                      {step.isOverride && (
+                        <div className="mt-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5">
+                          <p className="text-[10px] font-semibold text-amber-900">
+                            Signed in place of {ROLE_LABELS[step.role] ?? step.role} by{" "}
+                            {ROLE_LABELS[step.signedByRole ?? ""] ?? step.signedByRole}
+                          </p>
+                          {step.overrideReason && (
+                            <p className="text-[10px] text-amber-800 mt-0.5 leading-relaxed">
+                              {step.overrideReason}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -176,6 +197,27 @@ export default function SignoffChain({
                 {isOpen && (
                   <div className="border-t border-slate-200 p-3 bg-slate-50/60 space-y-2">
                     <SignaturePad label={`Sign as ${ROLE_LABELS[step.role] ?? step.role}`} onChange={setSig} />
+
+                    {/* Signing a step your role does not name is an exception.
+                        Asking for the reason here, before the signature, makes
+                        it a deliberate act rather than something discovered in
+                        the audit trail six months later. */}
+                    {role && role !== step.role && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 space-y-1.5">
+                        <p className="text-[11px] text-amber-900 leading-relaxed">
+                          This step names <strong>{ROLE_LABELS[step.role] ?? step.role}</strong>. You may sign it, but
+                          it will be recorded as an override against your name.
+                        </p>
+                        <input
+                          value={overrideReason}
+                          onChange={(e) => setOverrideReason(e.target.value)}
+                          placeholder="Why are you signing in their place?"
+                          aria-label="Reason for signing in place of the named role"
+                          className="w-full px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    )}
+
                     <input
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
