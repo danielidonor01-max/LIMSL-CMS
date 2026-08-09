@@ -92,6 +92,21 @@ const INDEXES: [string, string][] = [
       created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
     )`,
   ],
+  [
+    "email_change_requests",
+    `CREATE TABLE IF NOT EXISTS email_change_requests (
+      id text PRIMARY KEY,
+      user_id text NOT NULL,
+      new_email text NOT NULL,
+      token_hash text NOT NULL,
+      expires_at text NOT NULL,
+      used_at text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["equipment.decommission", "ALTER TABLE equipment ADD COLUMN IF NOT EXISTS decommissioned_at text, ADD COLUMN IF NOT EXISTS decommission_reason text, ADD COLUMN IF NOT EXISTS decommissioned_by_id text, ADD COLUMN IF NOT EXISTS decommissioned_by_name text"],
+  ["email_change_user_idx", "CREATE INDEX IF NOT EXISTS email_change_user_idx ON email_change_requests (user_id)"],
+  ["email_change_token_idx", "CREATE INDEX IF NOT EXISTS email_change_token_idx ON email_change_requests (token_hash)"],
   ["password_resets_user_idx", "CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets (user_id)"],
   ["password_resets_token_idx", "CREATE INDEX IF NOT EXISTS password_resets_token_idx ON password_resets (token_hash)"],
   // Sign-off overrides, a step signed by someone other than the role it names.

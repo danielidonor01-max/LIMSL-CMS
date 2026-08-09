@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
   UserCircle, Loader2, Save, KeyRound, Mail, Phone, MessageCircle, SlidersHorizontal,
-  LayoutGrid, Rows3, Bell, ChevronRight, Sparkles,
+  LayoutGrid, Rows3, Bell, ChevronRight, Sparkles, Check,
 } from "lucide-react";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
@@ -34,6 +34,33 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [prefsSavedAt, setPrefsSavedAt] = useState<number | null>(null);
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  const requestEmailChange = async () => {
+    const next = emailDraft.trim().toLowerCase();
+    if (!next) return;
+    setEmailBusy(true);
+    try {
+      const res = await fetch("/api/account/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: next }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not start the change.");
+        return;
+      }
+      setPendingEmail(d.pending);
+      setEmailDraft("");
+      toast.success("Check the new address for a confirmation link.");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
 
   const [profile, setProfile] = useState({ name: "", email: "", phone: "", whatsapp: "" });
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
@@ -56,7 +83,9 @@ export default function AccountPage() {
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        // Email is deliberately excluded. It changes through a verified flow of
+        // its own, because a typo here would break password recovery.
+        body: JSON.stringify({ ...profile, email: undefined }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -84,6 +113,10 @@ export default function AccountPage() {
         return;
       }
       await refresh(); // apply density / landing app-wide immediately
+      // Preferences save the moment you touch them, profile needs a button.
+      // Two save models on one page with no signal leaves people unsure whether
+      // a toggle stuck, so this one confirms itself.
+      setPrefsSavedAt(Date.now());
     } finally {
       setSavingPrefs(false);
     }
@@ -132,10 +165,6 @@ export default function AccountPage() {
             <input value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className={field} />
           </div>
           <div className="space-y-1.5">
-            <label className={label}><Mail className="w-3 h-3 inline mr-1" />Email (used to sign in)</label>
-            <input type="email" value={profile.email} onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))} className={field} />
-          </div>
-          <div className="space-y-1.5">
             <label className={label}><Phone className="w-3 h-3 inline mr-1" />Phone</label>
             <input value={profile.phone} onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))} placeholder="e.g. +234…" className={field} />
           </div>
@@ -153,7 +182,17 @@ export default function AccountPage() {
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-emerald-600" /> Preferences
-          {savingPrefs && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />}
+          {savingPrefs ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving
+            </span>
+          ) : prefsSavedAt ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600">
+              <Check className="w-3.5 h-3.5" /> Saved
+            </span>
+          ) : (
+            <span className="text-[11px] font-normal text-slate-400">Saves as you change them</span>
+          )}
         </h3>
 
         {/* Default landing */}
@@ -196,6 +235,10 @@ export default function AccountPage() {
         {/* Notifications */}
         <div className="space-y-2.5">
           <label className={label}><Bell className="w-3 h-3 inline mr-1" />Notifications</label>
+          <p className="text-[11px] text-slate-500 -mt-1">
+            These control how you are reached. A Super Admin can switch an event off for everyone, in which case
+            nobody receives it whatever is set here.
+          </p>
           <ToggleRow
             title="Email notifications"
             desc="Reminders, escalations and sign-off requests, sent by email."

@@ -68,6 +68,38 @@ export async function PATCH(
       .limit(1);
     if (!before) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
+    // Retiring an asset silently removes it from availability, PM compliance and
+    // every other denominator it was in. That is the same weight as deferring
+    // maintenance, so it carries the same evidence: why, and who decided.
+    const retiring = body.status === "DECOMMISSIONED" && before.status !== "DECOMMISSIONED";
+    if (retiring) {
+      const reason = String(body.decommissionReason ?? "").trim();
+      if (reason.length < 10) {
+        return NextResponse.json(
+          {
+            error:
+              "Say why this asset is being retired. It leaves the availability and PM compliance figures, " +
+              "and an auditor will ask what happened to it.",
+            requiresDecommissionReason: true,
+          },
+          { status: 400 },
+        );
+      }
+      updates.decommissionReason = reason.slice(0, 500);
+      updates.decommissionedAt = String(body.decommissionedAt ?? "").slice(0, 10) || new Date().toISOString().slice(0, 10);
+      updates.decommissionedById = gate.actor?.id ?? null;
+      updates.decommissionedByName = gate.actor?.name ?? null;
+    }
+
+    // Bringing one back into service clears the retirement, otherwise the record
+    // keeps a decommission date while reading as operational.
+    if (body.status !== undefined && body.status !== "DECOMMISSIONED" && before.status === "DECOMMISSIONED") {
+      updates.decommissionedAt = null;
+      updates.decommissionReason = null;
+      updates.decommissionedById = null;
+      updates.decommissionedByName = null;
+    }
+
     const updated = await db
       .update(equipment)
       .set(updates)
@@ -81,7 +113,9 @@ export async function PATCH(
           await logEquipmentEvent({
             equipmentId: before.id,
             category: "STATUS",
-            title: `Status changed: ${before.status?.replace(/_/g, " ")} → ${String(body.status).replace(/_/g, " ")}`,
+            title: retiring
+              ? `Decommissioned: ${updates.decommissionReason}`
+              : `Status changed: ${before.status?.replace(/_/g, " ")} to ${String(body.status).replace(/_/g, " ")}`,
             source: "AUTO",
             performedById: gate.actor?.id ?? null,
             performedByName: gate.actor?.name ?? null,

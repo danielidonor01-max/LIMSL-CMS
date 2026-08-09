@@ -53,18 +53,16 @@ export async function PATCH(request: Request) {
     updates.name = name.slice(0, 120);
   }
 
-  if (body.email !== undefined) {
-    const email = String(body.email).trim().toLowerCase();
-    if (!EMAIL_RE.test(email)) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-    if (email !== u.email.toLowerCase()) {
-      const [clash] = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(and(eq(users.email, email), ne(users.id, u.id)))
-        .limit(1);
-      if (clash) return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
-    }
-    updates.email = email;
+  // The sign-in address is deliberately NOT settable here. It moves through
+  // /api/account/email, which verifies the new address before anything changes.
+  // Password recovery emails whatever is on file, so a typo saved directly is a
+  // lockout that only another admin can undo. Refused rather than ignored, so a
+  // stale client cannot believe it saved something it did not.
+  if (body.email !== undefined && String(body.email).trim().toLowerCase() !== u.email.toLowerCase()) {
+    return NextResponse.json(
+      { error: "Change your sign-in address from the Account page, where the new one is verified first." },
+      { status: 400 },
+    );
   }
 
   if (body.phone !== undefined) updates.phone = String(body.phone).trim().slice(0, 40) || null;

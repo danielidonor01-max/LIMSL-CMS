@@ -43,6 +43,13 @@ export const equipment = pgTable("equipment", {
   meterUpdatedAt: text("meter_updated_at"),
   meterServiceInterval: real("meter_service_interval"),       // units between services
   meterAtLastService: real("meter_at_last_service"),
+  // Retiring an asset removes it from every compliance denominator, so it is a
+  // decision with the same weight as deferring maintenance and gets the same
+  // treatment: a reason, a date, and a name against it.
+  decommissionedAt: text("decommissioned_at"),
+  decommissionReason: text("decommission_reason"),
+  decommissionedById: text("decommissioned_by_id"),
+  decommissionedByName: text("decommissioned_by_name"),
   requiresCalibration: boolean("requires_calibration").default(false),
   requiresPremob: boolean("requires_premob").default(false),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -427,6 +434,20 @@ export const passwordResets = pgTable("password_resets", {
   requestedIp: text("requested_ip"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 }, (t) => [index("password_resets_user_idx").on(t.userId)]);
+
+// Changing the sign-in address is verified at the NEW address before it takes
+// effect. Without that, one typo replaces the only route back into the account:
+// password recovery emails the address on file, so a wrong address is not an
+// inconvenience, it is a lockout with no self-service fix.
+export const emailChangeRequests = pgTable("email_change_requests", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  newEmail: text("new_email").notNull(),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("email_change_user_idx").on(t.userId)]);
 
 export const contractors = pgTable("contractors", {
   id: text("id").primaryKey(),
@@ -1131,6 +1152,7 @@ export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
 export type EscalationDigest = typeof escalationDigests.$inferSelect;
 export type EscalationSnooze = typeof escalationSnoozes.$inferSelect;
+export type EmailChangeRequest = typeof emailChangeRequests.$inferSelect;
 export type Contractor = typeof contractors.$inferSelect;
 export type NewContractor = typeof contractors.$inferInsert;
 export type ContractorPerson = typeof contractorPersonnel.$inferSelect;

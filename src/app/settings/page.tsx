@@ -521,7 +521,7 @@ export default function AppSettingsPage() {
       id: "sharepoint", label: "SharePoint", desc: "Pull live Excel registers from Microsoft 365", icon: Cloud,
       status: spStatus ? { ok: spStatus.configured, text: spStatus.configured ? "Connected" : "Not connected" } : undefined,
     },
-    { id: "data", label: "Data & Users", desc: "Go-live imports and user accounts", icon: Database },
+    { id: "data", label: "Data & Accounts", desc: "Imports, database updates, account pages", icon: Database },
   ];
 
   return (
@@ -905,25 +905,32 @@ export default function AppSettingsPage() {
       )}
 
       {tab === "data" && (
-      <div className="space-y-3">
+      <div className="space-y-5">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Go-live and accounts</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            These open their own pages. Nothing here is a setting on this screen.
+          </p>
+        </div>
+        <div className="space-y-3">
         {([
           {
             href: "/settings/import",
             icon: Database,
             title: "Data Import",
-            desc: "Go-live registers from CSV / Excel or straight from SharePoint, equipment, schedule, users and components, with preview before commit.",
+            desc: "Bring in equipment, schedule, users and components from Excel, CSV or SharePoint. Previews before it commits.",
           },
           {
             href: "/settings/users",
             icon: UsersIcon,
             title: "User Management",
-            desc: "Accounts, roles and access, create users, reset passwords, deactivate leavers.",
+            desc: "Create accounts, set roles, reset passwords and deactivate leavers.",
           },
           {
             href: "/account",
             icon: UserCircle,
             title: "My Account & Preferences",
-            desc: "Personal settings, density, landing page, notification and AI-chat preferences. Every user has their own.",
+            desc: "Your own landing page, list density and notification preferences.",
           },
         ] as const).map(({ href, icon: Icon, title, desc }) => (
           <Link
@@ -942,7 +949,9 @@ export default function AppSettingsPage() {
           </Link>
         ))}
 
-        {/* Database maintenance, self-service index migration for the deployed DB. */}
+        </div>
+
+        {/* Database maintenance, self-service migration for the deployed DB. */}
         <section className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-emerald-600" />

@@ -24,6 +24,7 @@ import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
+import WorkOrderParts from "@/components/WorkOrderParts";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -286,6 +287,12 @@ export default function WorkOrderDetailPage() {
             </p>
           </div>
         )}
+
+        <WorkOrderParts
+          workOrderId={String(id)}
+          equipmentId={eq?.id}
+          canWrite={wo.status !== "COMPLETED" && wo.status !== "CANCELLED"}
+        />
 
         {/* Multi-level PM sign-off chain */}
         {checklist && (
