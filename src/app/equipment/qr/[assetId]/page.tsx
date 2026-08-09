@@ -1,9 +1,9 @@
 // src/app/equipment/qr/[assetId]/page.tsx
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Printer, Download, QrCode, Wrench } from "lucide-react";
+import { ArrowLeft, Printer, QrCode, Wrench } from "lucide-react";
 import QRCode from "qrcode";
 
 export default function QRPrintPage({ params }: { params: Promise<{ assetId: string }> }) {

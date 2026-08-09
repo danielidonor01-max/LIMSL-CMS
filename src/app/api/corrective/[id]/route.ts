@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
-import { and, eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { getWorkSettings } from "@/lib/settings";

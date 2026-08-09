@@ -5,7 +5,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Printer, Download, Wrench } from "lucide-react";
+import { ArrowLeft, Printer, Download } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
 import Button from "@/components/Button";
 import Image from "next/image";

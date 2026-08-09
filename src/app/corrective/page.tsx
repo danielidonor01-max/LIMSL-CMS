@@ -1,7 +1,6 @@
 // src/app/corrective/page.tsx
 "use client";
 
-import React from "react";
 import { useApi } from "@/lib/api-cache";
 import LoadError from "@/components/LoadError";
 import Button from "@/components/Button";

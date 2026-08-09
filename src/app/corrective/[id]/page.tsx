@@ -1,17 +1,13 @@
 // src/app/corrective/[id]/page.tsx
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
-  Loader2,
-  Calendar,
-  User,
-  Wrench,
-  CheckCircle2,
+          CheckCircle2,
   Clock,
   ShieldCheck,
   Plus,

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 
@@ -206,6 +206,19 @@ export default function NewWms() {
                 className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
               />
             </div>
+          </div>
+
+          {/* This was submitted on every method statement with no way to fill
+              it, so every record stored an empty string. */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase">Mobilization</label>
+            <textarea
+              placeholder="Access, isolation arranged, permits raised, people and plant on site before work starts..."
+              value={mobilization}
+              onChange={(e) => setMobilization(e.target.value)}
+              rows={2}
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none resize-none"
+            />
           </div>
 
           {/* Procedure Steps Inputs */}

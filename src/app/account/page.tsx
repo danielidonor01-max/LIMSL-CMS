@@ -173,9 +173,55 @@ export default function AccountPage() {
             <input value={profile.whatsapp} onChange={(e) => setProfile((p) => ({ ...p, whatsapp: e.target.value }))} placeholder="e.g. +234…" className={field} />
           </div>
         </div>
-        <p className="text-[11px] text-slate-400">
-          Your role and department are set by a Super Admin. Your email is also your sign-in address.
+        <p className="text-[11px] text-slate-500">
+          Your role and department are set by a Super Admin.
         </p>
+
+        {/* Sign-in address. Kept apart from the fields above because it is the
+            only one that can lock you out: password recovery emails whatever is
+            on file, so a typo saved instantly leaves no way back. Verified at
+            the new address before anything changes. */}
+        <div className="pt-4 border-t border-slate-100 space-y-2">
+          <label className={label}>
+            <Mail className="w-3 h-3 inline mr-1" />
+            Sign-in address
+          </label>
+          <p className="text-sm text-slate-900 font-mono break-all">{me?.email}</p>
+
+          {pendingEmail ? (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+              <p className="text-[11px] text-amber-900 leading-relaxed">
+                Waiting for <span className="font-mono font-semibold">{pendingEmail}</span> to confirm. Until then this
+                address stays your sign-in. The link expires in an hour.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input
+                type="email"
+                value={emailDraft}
+                onChange={(e) => setEmailDraft(e.target.value)}
+                placeholder="New address"
+                aria-label="New sign-in address"
+                className={`${field} sm:max-w-xs`}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={emailBusy}
+                onClick={requestEmailChange}
+                disabled={!emailDraft.trim()}
+              >
+                Send confirmation
+              </Button>
+            </div>
+          )}
+
+          <p className="text-[11px] text-slate-500">
+            We send a link to the new address, and tell the current one that a change was asked for. Nothing changes
+            until the link is opened.
+          </p>
+        </div>
       </section>
 
       {/* Preferences */}

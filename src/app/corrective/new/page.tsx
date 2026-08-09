@@ -23,7 +23,6 @@ export default function NewCorrectiveRequest() {
   const [urgency, setUrgency] = useState("MEDIUM");
   const [faultDescription, setFaultDescription] = useState("");
   const [operatingStatusAtFailure, setOperatingStatusAtFailure] = useState("RUNNING");
-  const [observedFault, setObservedFault] = useState("");
   const [errorCodes, setErrorCodes] = useState("");
   const [environmentalCondition, setEnvironmentalCondition] = useState("");
 
@@ -68,7 +67,6 @@ export default function NewCorrectiveRequest() {
           urgency,
           faultDescription,
           operatingStatusAtFailure,
-          observedFault,
           errorCodes,
           environmentalCondition,
         },

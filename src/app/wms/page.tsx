@@ -1,7 +1,6 @@
 // src/app/wms/page.tsx
 "use client";
 
-import React from "react";
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";

@@ -15,7 +15,7 @@ import Button from "./Button";
 import Modal from "./Modal";
 import Select from "./Select";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "./Field";
-import { STOCK_LEVEL_LABELS, type StockLevel } from "@/lib/maintenance/spares";
+import { type StockLevel } from "@/lib/maintenance/spares";
 
 type Spare = {
   id: string;

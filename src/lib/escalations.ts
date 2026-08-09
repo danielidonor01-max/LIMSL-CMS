@@ -26,7 +26,12 @@ import {
   COMPLIANCE_ESCALATION_ROLES,
 } from "@/lib/roles";
 import { audienceForAge, diffDigest, shouldSendDigest } from "@/lib/maintenance/escalation-policy";
-import { getEscalationPolicy, lastDigest, recordDigest, activeSnoozes } from "@/lib/maintenance/escalation-store";
+import {
+  getEscalationPolicy,
+  activeSnoozes,
+  lastDigest,
+  recordDigest,
+} from "@/lib/maintenance/escalation-store";
 
 // How many days ahead counts as "due soon" for a proactive reminder.
 const REMINDER_LEAD_DAYS = Number(process.env.REMINDER_LEAD_DAYS || 3);
@@ -113,30 +118,67 @@ export async function runEscalations(now = new Date(), trigger: "manual" | "sche
   const overdue = sched.filter((s) => s.status === "OVERDUE");
   summary.overdueActivities = overdue.length;
 
-  // One digest per responsible person.
+  // One digest per responsible person, reporting what CHANGED rather than the
+  // state. Restating the same list every morning is what turns a digest into
+  // wallpaper, and then a genuinely new breakdown arrives in a message nobody
+  // opens any more.
   const byPerson = new Map<string, typeof overdue>();
   for (const s of overdue) {
     if (!s.responsiblePersonId) continue;
-    byPerson.set(s.responsiblePersonId, [...(byPerson.get(s.responsiblePersonId) ?? []), s]);
-  }
-  for (const [personId, items] of byPerson) {
-    if (await recentlyEscalated("escalation:schedule", personId, now)) {
-      summary.skippedDuplicate++;
+    // Someone has said they are on it and when to ask again.
+    if (snoozed.has(`SCHEDULE:${s.id}`)) {
+      summary.snoozed++;
       continue;
     }
-    const body = `You have ${items.length} overdue maintenance ${
-      items.length === 1 ? "activity" : "activities"
-    }:\n${fmtList(items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"}, ${i.activityType} (due ${i.plannedDate})`))}`;
+    byPerson.set(s.responsiblePersonId, [...(byPerson.get(s.responsiblePersonId) ?? []), s]);
+  }
+
+  for (const [personId, items] of byPerson) {
+    const keys = items.map((i) => i.id).sort();
+    const previous = await lastDigest(personId, "OVERDUE");
+    const diff = diffDigest(previous?.itemKeys, keys);
+    const decision = shouldSendDigest({
+      policy,
+      lastSentAt: previous?.sentAt,
+      diff,
+      currentCount: keys.length,
+      now,
+      trigger,
+    });
+    if (!decision.send) {
+      summary.skippedUnchanged++;
+      continue;
+    }
+
+    const byId = new Map(items.map((i) => [i.id, i]));
+    const label = (id: string) => {
+      const i = byId.get(id);
+      if (!i) return "Activity";
+      return `${eqLabel.get(i.equipmentId) ?? "Equipment"}, ${i.activityType} (due ${i.plannedDate})`;
+    };
+
+    const parts: string[] = [];
+    if (diff.added.length) parts.push(`New since your last update:\n${fmtList(diff.added.map(label))}`);
+    if (diff.resolved.length) parts.push(`Cleared: ${diff.resolved.length} no longer overdue.`);
+    if (diff.unchanged.length) parts.push(`Still open, unchanged: ${diff.unchanged.length}.`);
+
     const sent = await notify({
       event: "ESCALATION",
-      title: `Overdue maintenance, ${items.length} item${items.length === 1 ? "" : "s"}`,
-      body,
+      title: diff.added.length
+        ? `${diff.added.length} new overdue item${diff.added.length === 1 ? "" : "s"}`
+        : `Overdue maintenance update, ${keys.length} open`,
+      body: parts.join("\n\n"),
       linkPath: "/schedule",
       relatedEntityType: "escalation:schedule",
       relatedEntityId: personId,
       userIds: [personId],
     });
-    if (sent.length) summary.notificationsSent += sent.length;
+    if (sent.length) {
+      summary.notificationsSent += sent.length;
+      // Only after a successful send. A delivery failure must not convince the
+      // system it has already told someone.
+      await recordDigest(personId, "OVERDUE", keys);
+    }
   }
 
   // One plant-wide digest to the maintenance leadership.

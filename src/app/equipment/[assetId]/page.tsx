@@ -1,14 +1,13 @@
 // src/app/equipment/[assetId]/page.tsx
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Wrench,
   CheckCircle2,
   AlertTriangle,
-  FileText,
-  Calendar,
+    Calendar,
   Layers,
   Activity,
   ShieldCheck,

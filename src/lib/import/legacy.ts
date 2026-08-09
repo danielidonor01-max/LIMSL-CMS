@@ -15,8 +15,7 @@ import { syncEquipmentCalibration } from "@/lib/calibration";
 import {
   loadWorkbook,
   normName,
-  addDays,
-  parseRegisterWorkbook,
+    parseRegisterWorkbook,
   parseHistoryWorkbook,
   parseScheduleWorkbook,
   classifyHistoryText,

@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { and, eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { parsePrefs, sanitizePrefs } from "@/lib/user-prefs";
 import { ROLE_LABELS, ROLE_DEPARTMENT } from "@/lib/roles";
