@@ -25,6 +25,8 @@ import {
   MAINTENANCE_ESCALATION_ROLES,
   COMPLIANCE_ESCALATION_ROLES,
 } from "@/lib/roles";
+import { audienceForAge, diffDigest, shouldSendDigest } from "@/lib/maintenance/escalation-policy";
+import { getEscalationPolicy, lastDigest, recordDigest, activeSnoozes } from "@/lib/maintenance/escalation-store";
 
 // How many days ahead counts as "due soon" for a proactive reminder.
 const REMINDER_LEAD_DAYS = Number(process.env.REMINDER_LEAD_DAYS || 3);
@@ -37,6 +39,8 @@ export type EscalationSummary = {
   trainingExpiring: number;
   notificationsSent: number;
   skippedDuplicate: number;
+  skippedUnchanged: number;
+  snoozed: number;
 };
 
 // Has an escalation for this exact target already gone out within `hours`? Guards
@@ -85,7 +89,14 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
     trainingExpiring: 0,
     notificationsSent: 0,
     skippedDuplicate: 0,
+    skippedUnchanged: 0,
+    snoozed: 0,
   };
+
+  // The admin-set policy, and anything someone has explicitly said they are
+  // already dealing with.
+  const policy = await getEscalationPolicy();
+  const snoozed = await activeSnoozes(now);
 
   const [sched, perms, equip] = await Promise.all([
     db.select().from(maintenanceSchedule),
@@ -137,14 +148,25 @@ export async function runEscalations(now = new Date()): Promise<EscalationSummar
       const body =
         `${overdue.length} maintenance ${overdue.length === 1 ? "activity is" : "activities are"} overdue across the plant` +
         `${unassigned ? ` (${unassigned} with no one assigned)` : ""}. Review the schedule and assign, complete, or reschedule them.`;
+      // Escalation means the audience WIDENS with age, not that the same people
+      // are told again. The oldest outstanding item sets the tier.
+      const oldest = overdue.reduce((max, s) => {
+        const days = Math.floor((now.getTime() - Date.parse(`${s.plannedDate}T00:00:00Z`)) / 86_400_000);
+        return Number.isFinite(days) && days > max ? days : max;
+      }, 0);
+      const tierRoles = audienceForAge(oldest, policy);
+      const roles = [...new Set([...MAINTENANCE_ESCALATION_ROLES, ...tierRoles])];
+
       const sent = await notify({
         event: "ESCALATION",
         title: `${overdue.length} overdue maintenance ${overdue.length === 1 ? "activity" : "activities"}`,
-        body,
+        body: `${body}
+
+Oldest outstanding: ${oldest} day(s).`,
         linkPath: "/schedule",
         relatedEntityType: "escalation:schedule-all",
         relatedEntityId: "ALL",
-        roles: MAINTENANCE_ESCALATION_ROLES,
+        roles,
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }

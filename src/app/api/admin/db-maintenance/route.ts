@@ -16,6 +16,32 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 // additive column migrations (IF NOT EXISTS — idempotent, data-safe).
 const INDEXES: [string, string][] = [
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
+  ["app_settings.escalation_policy", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS escalation_policy text"],
+  [
+    "escalation_digests",
+    `CREATE TABLE IF NOT EXISTS escalation_digests (
+      id text PRIMARY KEY,
+      user_id text NOT NULL,
+      scope text NOT NULL,
+      item_keys text NOT NULL,
+      sent_at text NOT NULL
+    )`,
+  ],
+  ["escalation_digests_user_scope_uq", "CREATE UNIQUE INDEX IF NOT EXISTS escalation_digests_user_scope_uq ON escalation_digests (user_id, scope)"],
+  [
+    "escalation_snoozes",
+    `CREATE TABLE IF NOT EXISTS escalation_snoozes (
+      id text PRIMARY KEY,
+      entity_type text NOT NULL,
+      entity_id text NOT NULL,
+      snoozed_until text NOT NULL,
+      reason text NOT NULL,
+      snoozed_by_id text,
+      snoozed_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["escalation_snoozes_entity_uq", "CREATE UNIQUE INDEX IF NOT EXISTS escalation_snoozes_entity_uq ON escalation_snoozes (entity_type, entity_id)"],
   // Phase 1 — ISO evidence tables and columns (additive, data-safe).
   ["calibration_records.traceability", "ALTER TABLE calibration_records ADD COLUMN IF NOT EXISTS traceable_to text, ADD COLUMN IF NOT EXISTS reference_standard_id text, ADD COLUMN IF NOT EXISTS lab_name text, ADD COLUMN IF NOT EXISTS lab_accreditation_no text, ADD COLUMN IF NOT EXISTS accreditation_body text"],
   [

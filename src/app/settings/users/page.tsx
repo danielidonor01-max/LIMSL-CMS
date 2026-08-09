@@ -22,6 +22,8 @@ import {
   UserCog,
   Download,
   Printer,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
@@ -130,6 +132,39 @@ export default function UsersAdminPage() {
   const [list, setList] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageTab, setPageTab] = useState<"users" | "roles">("users");
+  // Clearing seed accounts previews before it acts — this is the one action in
+  // the app that can lock everybody out, so it says exactly what it will do.
+  const [clearPlan, setClearPlan] = useState<any>(null);
+  const [clearing, setClearing] = useState(false);
+
+  const openClearSeed = async () => {
+    const res = await fetch("/api/admin/clear-seed-users", { cache: "no-store" });
+    const d = await res.json();
+    if (!res.ok) {
+      toast.error(d.error || "Could not read the account list.");
+      return;
+    }
+    setClearPlan(d);
+  };
+
+  const confirmClearSeed = async () => {
+    setClearing(true);
+    try {
+      const res = await fetch("/api/admin/clear-seed-users", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not clear the accounts.");
+        return;
+      }
+      toast.success(
+        `${d.deleted} account(s) removed, ${d.deactivated} deactivated. Your own account was kept.`,
+      );
+      setClearPlan(null);
+      load();
+    } finally {
+      setClearing(false);
+    }
+  };
   const [roleView, setRoleView] = useState<"cards" | "matrix">("cards");
 
   // Toolbar filters
@@ -387,9 +422,14 @@ export default function UsersAdminPage() {
           </div>
         </div>
         {pageTab === "users" && (
-          <Button icon={UserPlus} onClick={() => { setShowForm(true); setError(null); }}>
-            Add user
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" icon={Trash2} onClick={openClearSeed}>
+              Clear seed accounts
+            </Button>
+            <Button icon={UserPlus} onClick={() => { setShowForm(true); setError(null); }}>
+              Add user
+            </Button>
+          </div>
         )}
       </div>
 
@@ -586,6 +626,87 @@ export default function UsersAdminPage() {
           </div>
         </>
       )}
+
+      <Modal
+        open={!!clearPlan}
+        onClose={() => setClearPlan(null)}
+        title="Clear seed accounts"
+        subtitle="Preview — nothing has happened yet"
+      >
+        {clearPlan && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+              <p>
+                <strong>Your own account is kept.</strong>{" "}
+                {clearPlan.keptSelf?.email ? <span className="font-mono">{clearPlan.keptSelf.email}</span> : null} — you
+                will still be able to sign in.
+              </p>
+            </div>
+
+            {clearPlan.toDelete.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-slate-900">
+                  {clearPlan.toDelete.length} account(s) will be deleted
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">They have no activity recorded against them.</p>
+                <ul className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                  {clearPlan.toDelete.map((u: any) => (
+                    <li key={u.id} className="text-[11px] text-slate-600 flex justify-between gap-3">
+                      <span>{u.name}</span>
+                      <span className="font-mono text-slate-400 truncate">{u.email}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {clearPlan.toDeactivate.length > 0 && (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                <p className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {clearPlan.toDeactivate.length} account(s) will be deactivated, not deleted
+                </p>
+                <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                  These have signed something, raised something or been assigned work. Deleting them would orphan a
+                  signature and destroy the evidence trail. They can no longer sign in, and their records stay
+                  attributable.
+                </p>
+                <ul className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                  {clearPlan.toDeactivate.map((u: any) => (
+                    <li key={u.id} className="text-[11px] text-amber-900 flex justify-between gap-3">
+                      <span>{u.name}</span>
+                      <span className="font-mono text-amber-700/70 truncate">{u.email}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {clearPlan.toDelete.length === 0 && clearPlan.toDeactivate.length === 0 && (
+              <p className="text-xs text-slate-500">
+                There is nothing to clear — yours is the only account on the system.
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="secondary" onClick={() => setClearPlan(null)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                icon={Trash2}
+                loading={clearing}
+                disabled={clearPlan.toDelete.length === 0 && clearPlan.toDeactivate.length === 0}
+                onClick={confirmClearSeed}
+              >
+                Clear {clearPlan.toDelete.length + clearPlan.toDeactivate.length} account(s)
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {pageTab === "roles" && (
         <div className="space-y-4">

@@ -388,6 +388,31 @@ export const oemRegistry = pgTable("oem_registry", {
 // A contractor register that does not stop anybody working is a spreadsheet.
 // The obligation is not to hold certificates; it is to not let someone onto a
 // live machine without them — so these rows gate permit issue.
+// ─── Escalation state ───────────────────────────────────────────────────────
+// What each person was last told, so the next digest can report the CHANGE
+// rather than restating the situation. Without this the digest is stateless and
+// repeats itself until people stop reading it.
+export const escalationDigests = pgTable("escalation_digests", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  scope: text("scope").notNull(),          // OVERDUE | UPCOMING | BREAKDOWN | ...
+  itemKeys: text("item_keys").notNull(),   // JSON array of stable per-item keys
+  sentAt: text("sent_at").notNull(),
+}, (t) => [uniqueIndex("escalation_digests_user_scope_uq").on(t.userId, t.scope)]);
+
+// "Handled, waiting on a part" is not the same as ignored, and a system that
+// cannot tell them apart nags the person already dealing with it.
+export const escalationSnoozes = pgTable("escalation_snoozes", {
+  id: text("id").primaryKey(),
+  entityType: text("entity_type").notNull(), // SCHEDULE | CORRECTIVE
+  entityId: text("entity_id").notNull(),
+  snoozedUntil: text("snoozed_until").notNull(),
+  reason: text("reason").notNull(),
+  snoozedById: text("snoozed_by_id"),
+  snoozedByName: text("snoozed_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [uniqueIndex("escalation_snoozes_entity_uq").on(t.entityType, t.entityId)]);
+
 // ─── Password reset ─────────────────────────────────────────────────────────
 // The token is stored HASHED. A reset table holding usable tokens is a table
 // that hands out accounts to anyone who can read it — a database dump, a rogue
@@ -962,6 +987,7 @@ export const appSettings = pgTable("app_settings", {
   // JSON {event: {enabled, roles|null}} — admin overrides for who gets what;
   // null/absent event = code defaults (see lib/notifications/routing.ts).
   notificationRouting: text("notification_routing"),
+  escalationPolicy: text("escalation_policy"),
   updatedById: text("updated_by_id"),
   updatedByName: text("updated_by_name"),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -1103,6 +1129,8 @@ export type NewWorkOrder = typeof workOrders.$inferInsert;
 export type CorrectiveMaintenance = typeof correctiveMaintenance.$inferSelect;
 export type KpiRecord = typeof kpiRecords.$inferSelect;
 export type WmsDocument = typeof wmsDocuments.$inferSelect;
+export type EscalationDigest = typeof escalationDigests.$inferSelect;
+export type EscalationSnooze = typeof escalationSnoozes.$inferSelect;
 export type Contractor = typeof contractors.$inferSelect;
 export type NewContractor = typeof contractors.$inferInsert;
 export type ContractorPerson = typeof contractorPersonnel.$inferSelect;

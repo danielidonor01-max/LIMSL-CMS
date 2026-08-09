@@ -64,6 +64,36 @@ export default function AppSettingsPage() {
   const [previewEnd, setPreviewEnd] = useState("");
 
   const [escalating, setEscalating] = useState(false);
+  const [escalationPolicy, setEscalationPolicy] = useState<any>(null);
+  const [policySaving, setPolicySaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/settings/escalation-policy")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.policy && setEscalationPolicy(d.policy));
+  }, []);
+
+  const saveEscalationPolicy = async () => {
+    setPolicySaving(true);
+    try {
+      const res = await fetch("/api/settings/escalation-policy", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policy: escalationPolicy }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not save the escalation rules.");
+        return;
+      }
+      // The server clamps and sorts; show what was actually stored rather than
+      // what was typed.
+      setEscalationPolicy(d.policy);
+      toast.success("Escalation rules saved.");
+    } finally {
+      setPolicySaving(false);
+    }
+  };
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
   const [diagnosis, setDiagnosis] = useState<any>(null);
@@ -1193,10 +1223,132 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
           <BellRing className="w-4 h-4 text-emerald-600" /> Maintenance Reminders &amp; Escalations
         </h3>
         <p className="text-xs text-slate-500">
-          Reminds responsible people about maintenance <strong>due soon</strong>, and escalates <strong>overdue</strong>
-          activities and lapsed permits to them and to managers. Runs safely any number of times a day (each item is only
-          notified once). Wire the endpoint to a daily scheduler, or run it on demand here.
+          Reminds responsible people about maintenance <strong>due soon</strong> and chases what is{" "}
+          <strong>overdue</strong>. Digests report what has <strong>changed</strong> since the last one — if nothing
+          is new and nothing has cleared, nothing is sent. An alert that repeats unchanged trains people to ignore it.
         </p>
+
+        {escalationPolicy && (
+          <div className="space-y-4 rounded-lg border border-slate-200 p-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-900">Who gets told, and when</p>
+              <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                The audience widens as an item ages — it is not handed over, people are added. Set the day each level
+                joins.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {escalationPolicy.tiers.map((t: any, i: number) => (
+                <div key={i} className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] text-slate-500">After</span>
+                  <input
+                    inputMode="numeric"
+                    value={String(t.afterDays)}
+                    onChange={(e) => {
+                      const tiers = [...escalationPolicy.tiers];
+                      tiers[i] = { ...tiers[i], afterDays: e.target.value.replace(/\D/g, "") };
+                      setEscalationPolicy({ ...escalationPolicy, tiers });
+                    }}
+                    aria-label={`Days before notifying ${t.roles.join(", ")}`}
+                    className="w-16 px-2 min-h-9 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center"
+                  />
+                  <span className="text-[11px] text-slate-500">day(s), also notify</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ROLES.map((rk) => {
+                      const on = t.roles.includes(rk);
+                      return (
+                        <button
+                          key={rk}
+                          type="button"
+                          onClick={() => {
+                            const tiers = [...escalationPolicy.tiers];
+                            const roles = on ? t.roles.filter((r: string) => r !== rk) : [...t.roles, rk];
+                            tiers[i] = { ...tiers[i], roles };
+                            setEscalationPolicy({ ...escalationPolicy, tiers });
+                          }}
+                          className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                            on
+                              ? "bg-emerald-600 border-emerald-600 text-white"
+                              : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                          }`}
+                        >
+                          {ROLE_LABELS[rk] ?? rk}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div>
+                <label className={label}>At most one digest every</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    inputMode="numeric"
+                    value={String(escalationPolicy.frequencyDays)}
+                    onChange={(e) =>
+                      setEscalationPolicy({ ...escalationPolicy, frequencyDays: e.target.value.replace(/\D/g, "") })
+                    }
+                    className="w-16 px-2 min-h-9 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center"
+                  />
+                  <span className="text-xs text-slate-500">day(s)</span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  A <strong>new</strong> breakdown always sends immediately, whatever this says.
+                </p>
+              </div>
+              <div>
+                <label className={label}>Send around</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    inputMode="numeric"
+                    value={String(escalationPolicy.sendHour)}
+                    onChange={(e) =>
+                      setEscalationPolicy({ ...escalationPolicy, sendHour: e.target.value.replace(/\D/g, "") })
+                    }
+                    className="w-16 px-2 min-h-9 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center"
+                  />
+                  <span className="text-xs text-slate-500">:00 — before shift is usually right</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2.5 text-xs text-slate-700">
+                <Toggle
+                  checked={escalationPolicy.skipWeekends}
+                  onChange={(v) => setEscalationPolicy({ ...escalationPolicy, skipWeekends: v })}
+                  ariaLabel="Pause digests at the weekend"
+                />
+                Pause digests at the weekend
+              </label>
+              <label className="flex items-center gap-2.5 text-xs text-slate-700">
+                <Toggle
+                  checked={escalationPolicy.repeatUnchanged}
+                  onChange={(v) => setEscalationPolicy({ ...escalationPolicy, repeatUnchanged: v })}
+                  ariaLabel="Send even when nothing has changed"
+                />
+                Send even when nothing has changed
+              </label>
+              {escalationPolicy.repeatUnchanged && (
+                <p className="text-[11px] text-amber-700 leading-relaxed">
+                  This restores the old behaviour: the same list every day whether or not anything moved. It is what
+                  made the digests unreadable.
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button size="sm" loading={policySaving} onClick={saveEscalationPolicy}>
+                Save escalation rules
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Button variant="secondary" icon={BellRing} loading={escalating} onClick={runEscalation}>
           Run escalation now
         </Button>
