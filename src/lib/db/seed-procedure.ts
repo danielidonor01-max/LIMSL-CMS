@@ -1,7 +1,7 @@
 // src/lib/db/seed-procedure.ts
 // Seeds the controlled Equipment & System Maintenance Procedure with the FULL,
 // word-for-word text imported from the official LIMSL source document
-// (EQUIPMENT MAINTENANCE PROCEDURE — Rev 2). The content lives in
+// (EQUIPMENT MAINTENANCE PROCEDURE. Rev 2). The content lives in
 // procedure-rev2.md so it stays faithful and diff-able; this loads it as the
 // current APPROVED revision. Idempotent: it won't clobber the full content or any
 // later revisions authored in-app.
@@ -20,11 +20,11 @@ export async function seedProcedure() {
   console.log("📘 Seeding Equipment Maintenance Procedure (Rev 2, full document)...");
   const existing = await db.select().from(procedureRevisions);
 
-  // If the full document is already loaded, leave it — don't overwrite in-app edits.
+  // If the full document is already loaded, leave it, don't overwrite in-app edits.
   // (Length is the reliable signal: the old placeholder baseline was abridged.)
   const alreadyFull = existing.some((r) => (r.contentMarkdown?.length ?? 0) > 40_000);
   if (alreadyFull) {
-    console.log(`ℹ️  Full procedure content already present (${existing.length} revision(s)) — skipping.`);
+    console.log(`ℹ️  Full procedure content already present (${existing.length} revision(s)), skipping.`);
     return;
   }
 
@@ -48,7 +48,7 @@ export async function seedProcedure() {
     effectiveDate: new Date().toISOString().slice(0, 10),
     approvedAt: new Date().toISOString(),
   });
-  console.log(`✅ Procedure Rev ${REVISION} seeded (APPROVED) — ${CONTENT.length} chars.`);
+  console.log(`✅ Procedure Rev ${REVISION} seeded (APPROVED), ${CONTENT.length} chars.`);
 }
 
 seedProcedure()

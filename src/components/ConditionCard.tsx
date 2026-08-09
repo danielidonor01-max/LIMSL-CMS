@@ -103,7 +103,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
       {!data.points.length ? (
         <p className="text-xs text-slate-500 leading-relaxed">
           Nothing is being measured on this machine. A thermography or vibration point only earns its place if
-          somebody takes the reading on a schedule — add one when you have decided who and how often, not before.
+          somebody takes the reading on a schedule, add one when you have decided who and how often, not before.
         </p>
       ) : (
         <>
@@ -132,7 +132,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
 
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-2xl font-bold text-slate-900 tabular-nums">
-                    {p.latest ? p.latest.value : "—"}
+                    {p.latest ? p.latest.value : "-"}
                     <span className="text-xs text-slate-500 font-normal"> {p.unit}</span>
                   </span>
                   <span className="text-[11px] text-slate-500">
@@ -152,7 +152,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                 {p.trend.projectedAlarmDate && (
                   <p className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
                     At this rate it reaches the alarm level around{" "}
-                    <strong>{formatDate(p.trend.projectedAlarmDate)}</strong> — every reading so far is still within
+                    <strong>{formatDate(p.trend.projectedAlarmDate)}</strong>, every reading so far is still within
                     limits.
                   </p>
                 )}
@@ -263,8 +263,8 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                     "Reading recorded.",
                   );
                   if (d) {
-                    if (d.verdict === "ALARM") toast.error("Above the alarm level — intervene now.");
-                    else if (d.verdict === "ALERT") toast.warning("Above the alert level — plan an intervention.");
+                    if (d.verdict === "ALARM") toast.error("Above the alarm level, intervene now.");
+                    else if (d.verdict === "ALERT") toast.warning("Above the alert level, plan an intervention.");
                     setReading(null);
                   }
                 }}

@@ -1,7 +1,7 @@
 // src/lib/diagnostics/ingest-docs.ts
 // P0 document ingestion (docs/TROUBLESHOOTING-ENGINE.md §2.2): turn uploaded
 // text documents and the approved maintenance procedure into searchable
-// document_chunks rows. Idempotent — each run replaces the source's previous
+// document_chunks rows. Idempotent, each run replaces the source's previous
 // chunks, so re-ingesting after an upload or a new procedure revision is safe.
 // Pure code, no AI: this path works with the schematic engine still disabled.
 import { db } from "@/lib/db";
@@ -96,7 +96,7 @@ export async function ingestDocument(documentId: string): Promise<IngestSummary>
     return {
       source: label,
       status: "SKIPPED",
-      reason: pdfKind === "IMAGE_ONLY" ? "scanned PDF (image-only) — needs the vision pipeline" : "no text found",
+      reason: pdfKind === "IMAGE_ONLY" ? "scanned PDF (image-only), needs the vision pipeline" : "no text found",
       chunks: 0,
       pdfKind,
     };
@@ -113,7 +113,7 @@ export async function ingestDocument(documentId: string): Promise<IngestSummary>
 }
 
 // Ingest the current APPROVED maintenance procedure revision (markdown in the
-// DB — no file involved). Plant-wide: equipmentId stays NULL so passages
+// DB, no file involved). Plant-wide: equipmentId stays NULL so passages
 // surface for every machine.
 export async function ingestApprovedProcedure(): Promise<IngestSummary> {
   const revs = await db

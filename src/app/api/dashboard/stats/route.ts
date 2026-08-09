@@ -20,7 +20,7 @@ export async function GET() {
 
     // This figure is the live headcount and nothing else. It previously
     // preferred the latest stored monthly KPI, so a tile saying "now" could show
-    // a time-based number from last month — the two definitions the KPI page was
+    // a time-based number from last month, the two definitions the KPI page was
     // already confusing, leaking back in through the back door.
     //
     // Matches the fleet rule used in lib/kpi/compute.ts: a retired asset is not
@@ -48,7 +48,7 @@ export async function GET() {
       {
         // Two different figures used to share the label "Equipment
         // Availability": this asset headcount, and the time-based availability
-        // on the KPI page. Same words, different metric, same screen — the
+        // on the KPI page. Same words, different metric, same screen, the
         // first thing an auditor asks is which one management reviews. This
         // tile is now explicitly the right-now headcount; the time-based
         // measure keeps the plain name on the KPI page.

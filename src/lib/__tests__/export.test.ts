@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCSV, escapeCell } from "@/lib/export";
 
-// CSV exports carry free text written by users — fault descriptions, audit
+// CSV exports carry free text written by users, fault descriptions, audit
 // entries, remarks. Excel and Sheets EXECUTE a cell that opens with = + - @,
 // so an unescaped export is a code-execution path onto the machine of whoever
 // opens it (typically the auditor).

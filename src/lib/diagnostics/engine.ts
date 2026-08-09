@@ -1,11 +1,10 @@
 // src/lib/diagnostics/engine.ts
 // In-app diagnostic engine. Given a machine and a symptom/error-code query, it
 // ranks probable causes by combining THREE evidence sources:
-//   1. Curated diagnostic guides (reinforced by successCount — usage learning)
+//   1. Curated diagnostic guides (reinforced by successCount, usage learning)
 //   2. Historical corrective cases / RCA (verified root causes seen before)
 //   3. The component registry + schematics (points to the sheet/zone to check)
-// It is a transparent heuristic (token-overlap similarity), not a black box —
-// every diagnosis carries its evidence.
+// It is a transparent heuristic (token-overlap similarity), not a black box, // every diagnosis carries its evidence.
 
 export type Guide = {
   id: string;
@@ -193,7 +192,7 @@ export function diagnose(
       historyRefs: cases.map((c) => ({
         cmrf: c.cmrfNumber,
         date: c.reportedDate,
-        rootCause: c.rootCauseCategory ?? "—",
+        rootCause: c.rootCauseCategory ?? "-",
         parts: c.partsReplaced,
       })),
     });

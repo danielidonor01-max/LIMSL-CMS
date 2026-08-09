@@ -1,8 +1,7 @@
 // src/components/EmptyState.tsx
 // Twenty-two pages wrote their own one-line "nothing here" string at four
 // different paddings and two text sizes, none with an icon or a way forward.
-// An empty state should say what would be here, why it isn't, and what to do —
-// especially when the reason is a filter the user can clear.
+// An empty state should say what would be here, why it isn't, and what to do, // especially when the reason is a filter the user can clear.
 "use client";
 
 import { Inbox } from "lucide-react";

@@ -129,7 +129,7 @@ export default function ContractorsPage() {
         toast.error(d.error || "Failed to suspend.");
         return;
       }
-      toast.success(`${suspend.c.companyName} suspended — no permit can be issued to them.`);
+      toast.success(`${suspend.c.companyName} suspended. No permit can be issued to them.`);
       setSuspend(null);
       refresh();
     } finally {
@@ -180,7 +180,7 @@ export default function ContractorsPage() {
         <PageHeader
           icon={HardHat}
           title="Contractors"
-          subtitle="Insurance and site induction, checked before a permit can be issued — ISO 45001 clause 8.1.4.2"
+          subtitle="Insurance and site induction, checked before a permit is issued"
           code="LIMSL-HSE-CON-018"
           backHref="/"
           backLabel="Dashboard"
@@ -218,7 +218,7 @@ export default function ContractorsPage() {
             <div className="p-4 rounded-xl border bg-white border-slate-200">
               <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Enforcement</p>
               <p className="text-sm text-slate-700 mt-2 leading-relaxed">
-                A permit naming a blocked contractor is refused at issue — this register is a gate, not a list.
+                A permit naming a blocked contractor is refused at issue, this register is a gate, not a list.
               </p>
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function ContractorsPage() {
               <EmptyState
                 icon={HardHat}
                 title="No contractors registered"
-                message="Add the companies that come on site — OEM engineers, electricians, riggers. Recording their insurance expiry and induction date is what lets the system refuse a permit when either has lapsed."
+                message="Add the companies that come on site, OEM engineers, electricians, riggers. Recording their insurance expiry and induction date is what lets the system refuse a permit when either has lapsed."
                 actionLabel={canWrite ? "Add the first contractor" : undefined}
                 onAction={canWrite ? () => setShowAdd(true) : undefined}
               />
@@ -446,7 +446,7 @@ export default function ContractorsPage() {
               </Field>
             </div>
             <p className="text-[11px] text-slate-500 -mt-1">
-              Leaving either date blank blocks the contractor rather than clearing them — &ldquo;never checked&rdquo;
+              Leaving either date blank blocks the contractor rather than clearing them, &ldquo;never checked&rdquo;
               and &ldquo;checked and valid&rdquo; must not look the same to whoever issues the permit.
             </p>
 
@@ -462,7 +462,7 @@ export default function ContractorsPage() {
           {suspend && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600">
-                While suspended, no permit can be issued naming this company — the request is refused at the point of
+                While suspended, no permit can be issued naming this company, the request is refused at the point of
                 issue.
               </p>
               <Field label="Reason" htmlFor="s-reason">
@@ -488,7 +488,7 @@ export default function ContractorsPage() {
           {addPerson && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600">
-                A person&apos;s induction can lapse while their company&apos;s is current — a new hire sent to site by an
+                A person&apos;s induction can lapse while their company&apos;s is current, a new hire sent to site by an
                 otherwise compliant contractor is exactly what this catches.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

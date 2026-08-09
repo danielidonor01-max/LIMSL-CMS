@@ -67,7 +67,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("specs");
 
-  // Session resolves client-side only — defer role reads past mount.
+  // Session resolves client-side only, defer role reads past mount.
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -75,7 +75,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   useEffect(() => {
     // All three fetches fly in parallel, and the page unblocks as soon as the
-    // asset itself lands — components/guides fill their sections when ready.
+    // asset itself lands, components/guides fill their sections when ready.
     // The previous serial chain tripled the perceived load time.
     let alive = true;
     fetch(`/api/equipment/${assetIdKey}`)
@@ -139,7 +139,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
       panel: "bg-amber-50 border-amber-200",
       icon: "bg-amber-500/10 text-amber-600",
       Icon: Wrench,
-      meaning: "Work is in progress — not available for production.",
+      meaning: "Work is in progress, not available for production.",
       action: { label: "See open work", href: `/work-orders?equipmentId=${eq.id}`, icon: ClipboardList },
     },
     BROKEN_DOWN: {
@@ -158,7 +158,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
       panel: "bg-orange-50 border-orange-200",
       icon: "bg-orange-500/10 text-orange-600",
       Icon: PackageSearch,
-      meaning: "Down waiting on a part — this counts as unavailable.",
+      meaning: "Down waiting on a part, this counts as unavailable.",
       // The spares register is the useful next step here, not the work-order
       // list: the question is which part, and when it lands.
       action: { label: "Check spares", href: `/spares?q=${encodeURIComponent(eq.name ?? "")}`, icon: PackageSearch },
@@ -167,22 +167,22 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
       panel: "bg-slate-100 border-slate-200",
       icon: "bg-slate-200 text-slate-500",
       Icon: Archive,
-      meaning: "Retired from service — kept on the register for its history.",
+      meaning: "Retired from service, kept on the register for its history.",
       action: { label: "View history", href: `/equipment/${assetIdKey}/history`, icon: History, variant: "secondary" },
     },
   };
   const statusView = statusViews[eq.status] ?? statusViews.OPERATIONAL;
 
-  // Safety guidance derived from the machine's real attributes — no fabricated,
+  // Safety guidance derived from the machine's real attributes, no fabricated,
   // machine-specific isolation points (those live in the machine's WMS / PTW).
   const safetyMeasures = [
     "Permit-to-Work (PTW) required before any electrical or mechanical intervention.",
-    "Apply LOTO and confirm isolation before work begins — isolation points are defined in the machine's Work Method Statement.",
+    "Apply LOTO and confirm isolation before work begins, isolation points are defined in the machine's Work Method Statement.",
     (eq.criticality === "CRITICAL" || eq.criticality === "HIGH")
-      ? "High-criticality asset — Maintenance Manager sign-off required on close-out."
+      ? "High-criticality asset. Maintenance Manager sign-off required on close-out."
       : null,
     eq.requiresCalibration
-      ? "Calibration required — verify the current certificate before returning to service."
+      ? "Calibration required, verify the current certificate before returning to service."
       : null,
     "PPE as specified on the active Permit-to-Work.",
   ].filter(Boolean) as string[];
@@ -193,7 +193,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         <PageHeader
           icon={Wrench}
           title={eq.name}
-          subtitle="Digital twin — specification, status, documents and maintenance history"
+          subtitle="Specification, status, documents and maintenance history"
           code={eq.assetId}
           backHref="/equipment"
           backLabel="Equipment Registry"
@@ -218,7 +218,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           }
         />
         {/* Status banner. It used to be green for everything except BROKEN_DOWN,
-            so a machine awaiting parts — real, invisible downtime — read as
+            so a machine awaiting parts, real, invisible downtime, read as
             healthy at a glance. */}
         <div
           className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${statusView.panel}`}
@@ -295,15 +295,15 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Manufacturer</span>
-                    <span className="font-semibold text-slate-900">{eq.oem || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.oem || "-"}</span>
                   </div>
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Model</span>
-                    <span className="font-semibold text-slate-900">{eq.model || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.model || "-"}</span>
                   </div>
                   <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
                     <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Serial Number</span>
-                    <span className="font-semibold text-slate-900 font-mono">{eq.serialNumber || "—"}</span>
+                    <span className="font-semibold text-slate-900 font-mono">{eq.serialNumber || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -318,7 +318,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Last Completed PM</p>
-                      <p className="font-bold text-slate-900">{eq.lastMaintenanceDate || "—"}</p>
+                      <p className="font-bold text-slate-900">{eq.lastMaintenanceDate || "-"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -327,7 +327,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     </div>
                     <div className="text-xs">
                       <p className="text-slate-500 font-mono text-[9px] uppercase">Next Scheduled PM</p>
-                      <p className={`font-bold ${isBroken ? "text-rose-600" : "text-slate-900"}`}>{eq.nextMaintenanceDate || "—"}</p>
+                      <p className={`font-bold ${isBroken ? "text-rose-600" : "text-slate-900"}`}>{eq.nextMaintenanceDate || "-"}</p>
                     </div>
                   </div>
                 </div>
@@ -341,15 +341,15 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Bay Location</span>
-                    <span className="font-semibold text-slate-900">{eq.location || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.location || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Criticality</span>
-                    <span className="font-semibold text-slate-900">{eq.criticality || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.criticality || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200 pb-2">
                     <span className="text-slate-500">Frequency</span>
-                    <span className="font-semibold text-slate-900">{eq.maintenanceFrequency || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.maintenanceFrequency || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -485,7 +485,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Expiry</span>
-                    <span className="font-semibold text-slate-900">{eq.warrantyExpiry || "—"}</span>
+                    <span className="font-semibold text-slate-900">{eq.warrantyExpiry || "-"}</span>
                   </div>
                   <p className="text-[10px] text-slate-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
                 </div>

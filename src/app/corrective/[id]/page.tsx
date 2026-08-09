@@ -63,7 +63,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [supervisorName, setSupervisorName] = useState("");
   const [supervisorComments, setSupervisorComments] = useState("");
 
-  // Downtime window — production hours are derived from these against the
+  // Downtime window, production hours are derived from these against the
   // working-hours settings, so a weekend or off-shift outage isn't over-counted.
   const [downStartAt, setDownStartAt] = useState("");
   const [downEndAt, setDownEndAt] = useState("");
@@ -191,7 +191,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     toast.success("Your unsaved analysis was restored.");
   };
 
-  // The RCA fields as the API expects them. Close-out sends these TOO — a
+  // The RCA fields as the API expects them. Close-out sends these TOO, a
   // technician who fills the 5 Whys and closes out without first pressing
   // "Save RCA Analysis" used to lose the entire analysis silently.
   const rcaPayload = () => ({
@@ -214,13 +214,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't save the RCA — check your connection and try again.");
+        toast.error(d.error || "Couldn't save the RCA, check your connection and try again.");
         return;
       }
       clearDraft();
       toast.success("RCA and corrective actions saved.");
     } catch {
-      toast.error("Couldn't save the RCA — check your connection and try again.");
+      toast.error("Couldn't save the RCA, check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -236,7 +236,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       return;
     }
     if (!downStartAt || !downEndAt) {
-      toast.error("Record when the machine went down and when it was restored — this drives MTTR.");
+      toast.error("Record when the machine went down and when it was restored, this drives MTTR.");
       return;
     }
     if (new Date(downEndAt).getTime() <= new Date(downStartAt).getTime()) {
@@ -254,7 +254,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           ...rcaPayload(),
           status: "CLOSED",
           technicianSignature: techSign,
-          // technicianName is stamped from the session server-side — the client
+          // technicianName is stamped from the session server-side, the client
           // is not trusted to name the signer.
           supervisorSignature: superSign,
           supervisorName: supervisorName.trim(),
@@ -270,14 +270,14 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't close out the record — your entries are still here, try again.");
+        toast.error(d.error || "Couldn't close out the record, your entries are still here, try again.");
         return;
       }
       clearDraft();
       toast.success("Breakdown closed out.");
       router.push("/corrective");
     } catch {
-      toast.error("Couldn't close out the record — your entries are still here, try again.");
+      toast.error("Couldn't close out the record, your entries are still here, try again.");
     } finally {
       setSaving(false);
     }
@@ -377,7 +377,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             </div>
 
             {/* The 5 Whys is a chain, and it was rendered as five identical
-                disconnected boxes — which is why they get filled in as five
+                disconnected boxes, which is why they get filled in as five
                 unrelated statements. Each step now names the answer above it, so
                 the question you are actually answering is the one the technique
                 asks. */}
@@ -414,7 +414,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                         {i === 0
                           ? "Why did it fail?"
                           : previous
-                            ? `Why did that happen — "${previous.length > 60 ? `${previous.slice(0, 60)}…` : previous}"?`
+                            ? `Why did that happen, "${previous.length > 60 ? `${previous.slice(0, 60)}…` : previous}"?`
                             : "Why did that happen?"}
                         {isRoot && (
                           <span className="ml-2 text-[10px] font-bold text-rose-700 uppercase tracking-wide">
@@ -443,7 +443,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               })}
             </ol>
             <p className="text-[11px] text-slate-500 -mt-1">
-              Stop early if you reach a cause you can actually act on — five levels is a guide, not a quota.
+              Stop early if you reach a cause you can actually act on, five levels is a guide, not a quota.
               A root cause you cannot change is a sign the chain went one step too far.
             </p>
 
@@ -458,7 +458,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <option key={m.code} value={m.code}>{m.label}</option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-slate-400">Required at close-out — this is what makes recurring failures visible.</p>
+                <p className="text-[11px] text-slate-400">Required at close-out, this is what makes recurring failures visible.</p>
               </div>
               <div className="space-y-2">
                 <span className="text-xs font-semibold text-slate-500 uppercase">How was it detected?</span>
@@ -626,7 +626,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   />
                 </div>
 
-                {/* Downtime window — feeds MTTR. Production hours only. */}
+                {/* Downtime window, feeds MTTR. Production hours only. */}
                 <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-3">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-rose-600" />

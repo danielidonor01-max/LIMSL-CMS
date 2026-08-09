@@ -20,7 +20,7 @@ export async function getEscalationPolicy(): Promise<EscalationPolicy> {
     if (!row?.escalationPolicy) return DEFAULT_ESCALATION_POLICY;
     return normalisePolicy(JSON.parse(row.escalationPolicy));
   } catch {
-    // A malformed policy must not stop escalation entirely — that would turn a
+    // A malformed policy must not stop escalation entirely, that would turn a
     // bad settings save into total silence, which is the worst failure here.
     return DEFAULT_ESCALATION_POLICY;
   }

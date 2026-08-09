@@ -35,7 +35,7 @@ function ResetForm() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Check the link before asking for a password twice — an expired link should
+  // Check the link before asking for a password twice, an expired link should
   // say so up front, not after the typing.
   useEffect(() => {
     if (!token) {

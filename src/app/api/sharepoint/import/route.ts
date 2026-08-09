@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const cfg = await getSharepointConfig();
-    if (!cfg) return NextResponse.json({ error: "SharePoint is not connected — configure it in App Settings." }, { status: 400 });
+    if (!cfg) return NextResponse.json({ error: "SharePoint is not connected, configure it in App Settings." }, { status: 400 });
 
     const { bytes, name } = await downloadFile(cfg, itemId);
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const rows = await parseSpreadsheet(file);
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: `"${name}" has no data rows — check its header row matches the ${entity} template.` },
+        { error: `"${name}" has no data rows, check its header row matches the ${entity} template.` },
         { status: 400 },
       );
     }

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     await db.insert(correctiveMaintenance).values(newCorrective);
 
-    // Status is DERIVED from the machine's open work, never flipped here — see
+    // Status is DERIVED from the machine's open work, never flipped here, see
     // lib/equipment-status.ts (the single writer). Best-effort: a derivation
     // failure must not fail the fault report.
     if (body.equipmentId) {
@@ -67,14 +67,14 @@ export async function POST(request: Request) {
     }
 
     // Alert the maintenance leadership + HSE that a breakdown was logged.
-    // Best-effort — never let a notification failure fail the record.
+    // Best-effort, never let a notification failure fail the record.
     try {
       const [eqRow] = await db.select().from(equipment).where(eq(equipment.id, body.equipmentId)).limit(1);
-      const machine = eqRow ? `${eqRow.assetId} — ${eqRow.name}` : "a machine";
+      const machine = eqRow ? `${eqRow.assetId}, ${eqRow.name}` : "a machine";
       await notify({
         event: "BREAKDOWN",
         title: `Breakdown logged: ${machine}`,
-        body: `${newCorrective.cmrfNumber} (${newCorrective.urgency}) — ${newCorrective.faultDescription || "fault reported"}. Reported by ${newCorrective.reportedByName}.`,
+        body: `${newCorrective.cmrfNumber} (${newCorrective.urgency}), ${newCorrective.faultDescription || "fault reported"}. Reported by ${newCorrective.reportedByName}.`,
         linkPath: `/corrective/${newCorrective.id}`,
         relatedEntityType: "corrective_maintenance",
         relatedEntityId: newCorrective.id,

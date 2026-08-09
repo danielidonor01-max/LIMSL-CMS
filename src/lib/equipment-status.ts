@@ -1,6 +1,6 @@
 // src/lib/equipment-status.ts
 // ONE writer for equipment.status. The status a machine shows is a CONSEQUENCE
-// of its open work — corrective faults and in-progress preventive jobs — not a
+// of its open work, corrective faults and in-progress preventive jobs, not a
 // field each flow flips on its own. Previously three routes set it directly and
 // could disagree (closing one of two open faults returned a still-broken
 // machine to service). Every one of those flows now calls applyDerivedStatus()
@@ -8,7 +8,7 @@
 //
 // DECOMMISSIONED and AWAITING_PARTS are sticky MANUAL states: they describe a
 // decision no record implies (an asset retired, a machine waiting on a delivery)
-// so derivation never overrides them — only an explicit edit on the equipment
+// so derivation never overrides them, only an explicit edit on the equipment
 // record can move a machine out of them.
 import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment, workOrders } from "@/lib/db/schema";

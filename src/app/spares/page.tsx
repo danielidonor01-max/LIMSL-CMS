@@ -88,7 +88,7 @@ function SparesRegister() {
   const { data: equipmentData } = useApi<{ id: string; assetId: string; name: string }[]>("/api/equipment", []);
   const equipmentList = Array.isArray(equipmentData) ? equipmentData : [];
 
-  // Arriving from a machine that is awaiting parts — land on that machine's
+  // Arriving from a machine that is awaiting parts, land on that machine's
   // spares rather than the whole register.
   const [q, setQ] = useState(searchParams.get("q") ?? "");
   const [riskOnly, setRiskOnly] = useState(false);
@@ -117,7 +117,7 @@ function SparesRegister() {
           (s.binLocation ?? "").toLowerCase().includes(term),
       );
     }
-    // Worst first — a spares list sorted by part number buries the one thing
+    // Worst first, a spares list sorted by part number buries the one thing
     // that needs a decision.
     return [...out].sort(
       (a, b) =>
@@ -174,7 +174,7 @@ function SparesRegister() {
         toast.error(d.error || "Failed to record the movement.");
         return;
       }
-      toast.success(`Stock updated — ${d.balanceAfter} ${movement.spare.unit ?? "ea"} on hand.`);
+      toast.success(`Stock updated: ${d.balanceAfter} ${movement.spare.unit ?? "ea"} on hand.`);
       setMovement(null);
       refresh();
     } catch {
@@ -212,7 +212,7 @@ function SparesRegister() {
         <PageHeader
           icon={Package}
           title="Critical Spares"
-          subtitle="Parts held against the machines that stop production, and what it costs when the shelf is empty"
+          subtitle="Parts held for the machines that stop production, and what an empty shelf costs"
           code="LIMSL-MAIN-SPR-016"
           backHref="/"
           backLabel="Dashboard"
@@ -248,7 +248,7 @@ function SparesRegister() {
             <div className="p-4 rounded-xl border bg-white border-slate-200">
               <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">On order</p>
               <p className="text-3xl font-bold text-slate-900 mt-2">{spares.filter((s) => s.onOrder).length}</p>
-              <p className="text-[11px] text-slate-600 mt-1">A purchase order is not a spare — the wait is unchanged</p>
+              <p className="text-[11px] text-slate-600 mt-1">A purchase order is not a spare, the wait is unchanged</p>
             </div>
           </div>
         )}
@@ -351,7 +351,7 @@ function SparesRegister() {
                         <td className="py-3 px-4 text-center text-slate-500">{s.minimumQuantity}</td>
                         <td className="py-3 px-4">
                           <Badge className={STOCK_LEVEL_BADGE[s.risk?.level] ?? ""}>
-                            {STOCK_LEVEL_LABELS[s.risk?.level] ?? "—"}
+                            {STOCK_LEVEL_LABELS[s.risk?.level] ?? "-"}
                           </Badge>
                           {reorder > 0 && (
                             <p className="text-[10px] text-slate-500 mt-1">

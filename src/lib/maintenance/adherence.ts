@@ -2,8 +2,8 @@
 // Schedule adherence, and criticality-driven maintenance strategy.
 //
 // "Completed" said nothing about WHEN. A PM planned for 1 January and performed
-// on 30 June counted as fully compliant, which made PM compliance — the
-// headline ISO 9001 metric — impossible to fail and therefore meaningless. A
+// on 30 June counted as fully compliant, which made PM compliance, the
+// headline ISO 9001 metric, impossible to fail and therefore meaningless. A
 // monthly PM done six weeks late is not a monthly PM.
 //
 // The window scales with frequency: a weekly task done five days late has
@@ -21,7 +21,7 @@ export const ADHERENCE_WINDOW_DAYS: Record<string, number> = {
 
 const DEFAULT_WINDOW_DAYS = 14;
 
-// Frequencies reach us in mixed case — legacy Excel imports carry "Weekly", and
+// Frequencies reach us in mixed case, legacy Excel imports carry "Weekly", and
 // equipment created before the enum was settled carries "Quarterly". Matching
 // them literally sent every one of those to the 14-day default, which quietly
 // made a weekly PM twelve days late "compliant". Normalise like nextPlannedDate
@@ -40,7 +40,7 @@ export function daysBetween(plannedDate: string, completedDate: string): number 
 export type AdherenceVerdict = "ON_TIME" | "LATE_WITHIN_WINDOW" | "MISSED";
 
 // Early or on the day is on time. Inside the window is late but still counts as
-// adherent — real workshops have shift patterns and part lead times. Beyond it,
+// adherent, real workshops have shift patterns and part lead times. Beyond it,
 // the activity was missed, however sincerely it was eventually performed.
 export function adherenceOf(
   plannedDate: string,

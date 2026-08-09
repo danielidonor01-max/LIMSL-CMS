@@ -8,7 +8,7 @@ import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { applyMovement, MOVEMENT_LABELS } from "@/lib/maintenance/spares";
 
-// The part plus its movement history — a stock figure nobody can explain is a
+// The part plus its movement history, a stock figure nobody can explain is a
 // stock figure nobody trusts.
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

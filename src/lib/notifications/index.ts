@@ -2,7 +2,7 @@
 // Notification dispatch. Every notifiable event is recorded (the `notifications`
 // table is both an in-app inbox and a delivery outbox) and then, best-effort,
 // delivered over WhatsApp when a provider is configured. Delivery NEVER blocks or
-// fails the originating write — a WhatsApp outage must not stop a permit or work
+// fails the originating write, a WhatsApp outage must not stop a permit or work
 // order from being saved.
 //
 // Email is a later phase; an EMAIL channel row is recorded as QUEUED but not sent.
@@ -32,7 +32,7 @@ type NotifyInput = {
   linkPath?: string;
   relatedEntityType?: string;
   relatedEntityId?: string;
-  // Recipients — resolved to active users. Provide roles and/or explicit user ids.
+  // Recipients, resolved to active users. Provide roles and/or explicit user ids.
   roles?: string[];
   userIds?: string[];
 };
@@ -50,18 +50,18 @@ async function resolveRecipients(roles?: string[], userIds?: string[]) {
 }
 
 // Record + best-effort-deliver a notification to each resolved recipient.
-// Returns the created notification rows. Safe to await from any handler — it
+// Returns the created notification rows. Safe to await from any handler, it
 // swallows delivery errors and only records their status.
 export async function notify(input: NotifyInput) {
   // Admin routing overlay: an event switched off in Settings sends nowhere; a
-  // role-audience override redirects role-targeted sends. Best-effort — a
+  // role-audience override redirects role-targeted sends. Best-effort, a
   // routing read failure must never block a notification.
   let target: { roles?: string[]; userIds?: string[] } | null = { roles: input.roles, userIds: input.userIds };
   try {
     const { getRouting, applyRouting } = await import("./routing");
     target = applyRouting(await getRouting(), input.event, input.roles, input.userIds);
   } catch (err) {
-    console.warn("notify: routing lookup failed — using defaults", err);
+    console.warn("notify: routing lookup failed, using defaults", err);
   }
   if (!target) return [];
 

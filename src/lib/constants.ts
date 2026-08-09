@@ -37,10 +37,10 @@ export const EQUIPMENT_STATUS_BADGE: Record<string, string> = {
 // Criticality is a business judgement, so it is spelled out rather than shown as
 // an enum: "HIGH" tells a new foreman nothing about what to do differently.
 export const CRITICALITY_LABELS: Record<string, string> = {
-  CRITICAL: "Critical — production stops",
-  HIGH: "High — major disruption",
-  MEDIUM: "Medium — work-around exists",
-  LOW: "Low — little impact",
+  CRITICAL: "Critical, production stops",
+  HIGH: "High, major disruption",
+  MEDIUM: "Medium, work-around exists",
+  LOW: "Low, little impact",
 };
 
 export const CRITICALITY_SHORT: Record<string, string> = {
@@ -110,7 +110,7 @@ export const PERMIT_STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Active",
   CLOSED: "Closed",
   CLOSED_LATE: "Closed after expiry",
-  EXPIRED: "Expired — not closed",
+  EXPIRED: "Expired, not closed",
   CANCELLED: "Cancelled",
 };
 
@@ -185,10 +185,10 @@ export const WO_TYPE_OPTIONS = Object.keys(WO_TYPE_LABELS);
 export const PRIORITY_OPTIONS = Object.keys(PRIORITY_LABELS);
 
 export const QUARTER_LABELS: Record<number, string> = {
-  1: "Q1 (Jan–Mar)",
-  2: "Q2 (Apr–Jun)",
-  3: "Q3 (Jul–Sep)",
-  4: "Q4 (Oct–Dec)",
+  1: "Q1 (Jan-Mar)",
+  2: "Q2 (Apr-Jun)",
+  3: "Q3 (Jul-Sep)",
+  4: "Q4 (Oct-Dec)",
 };
 
 export const MONTH_NAMES = [

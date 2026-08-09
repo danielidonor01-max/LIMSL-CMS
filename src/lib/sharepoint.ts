@@ -3,8 +3,7 @@
 // company's live Excel registers straight from SharePoint into the import
 // pipeline. Setup needs an Azure "App registration" with the APPLICATION
 // permission Sites.Read.All (admin-consented); the tenant/client/secret are
-// stored AES-GCM-encrypted in api_credentials under the SHAREPOINT row —
-// deliberately NOT in the AI PROVIDERS registry, so it never joins the AI
+// stored AES-GCM-encrypted in api_credentials under the SHAREPOINT row, // deliberately NOT in the AI PROVIDERS registry, so it never joins the AI
 // failover chain.
 import { db } from "@/lib/db";
 import { apiCredentials } from "@/lib/db/schema";

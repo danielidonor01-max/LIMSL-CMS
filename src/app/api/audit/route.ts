@@ -1,6 +1,6 @@
 // src/app/api/audit/route.ts
 // The retrieval surface for the audit trail (ISO 9001 7.5.3.2). A trail that can
-// only return its newest 100 rows is not retrievable evidence — an auditor asking
+// only return its newest 100 rows is not retrievable evidence, an auditor asking
 // "every approval on LEE/PE/0012 in FY2024" must get an answer, and a file they
 // can take away. Hence the filters below plus `format=csv`.
 //
@@ -35,7 +35,7 @@ const CSV_COLUMNS = [
 ];
 
 // Timestamps are stored as second-precision ISO text, so a lexicographic
-// comparison is a chronological one — provided both sides are in that exact
+// comparison is a chronological one, provided both sides are in that exact
 // format. A bare date means the auditor's whole day, inclusive at both ends.
 function boundary(raw: string | null, edge: "start" | "end"): string | null {
   const value = (raw ?? "").trim();
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
       : intParam(explicitLimit, DEFAULT_LIMIT, MAX_LIMIT);
     const offset = intParam(params.get("offset"), 0, Number.MAX_SAFE_INTEGER);
 
-    // Timestamp alone is not a stable sort — several rows share a second, and a
+    // Timestamp alone is not a stable sort, several rows share a second, and a
     // page boundary landing inside that second would drop or repeat entries.
     const rows = await db
       .select()

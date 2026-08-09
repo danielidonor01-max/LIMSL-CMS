@@ -23,7 +23,7 @@ export default function PreferencesProvider({ children }: { children: React.Reac
 
   // Redirect happens here (not a separate effect) so it fires once prefs have
   // actually arrived, avoiding a race with the default "/". The sessionStorage
-  // guard keeps it to the first arrival — later, deliberate visits to "/" stay.
+  // guard keeps it to the first arrival, later, deliberate visits to "/" stay.
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/me");
@@ -43,7 +43,7 @@ export default function PreferencesProvider({ children }: { children: React.Reac
         router.replace(p.defaultLanding);
       }
     } catch {
-      // Preferences are non-critical chrome — never block the app on them.
+      // Preferences are non-critical chrome, never block the app on them.
     }
   }, [router]);
 

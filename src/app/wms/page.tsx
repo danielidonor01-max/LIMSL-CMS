@@ -24,7 +24,7 @@ export default function WmsList() {
         <PageHeader
           icon={FileText}
           title="Work Method Statements"
-          subtitle="How each job is to be carried out safely — drafted, reviewed and approved"
+          subtitle="How each job is to be carried out safely, drafted, reviewed and approved"
           backHref="/"
           backLabel="Dashboard"
           actions={

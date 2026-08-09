@@ -1,8 +1,8 @@
 // src/lib/schedule.ts
 // Makes the maintenance schedule a *living* PM program rather than a static list:
-//  • reconcileSchedule() — flips past-due open activities to OVERDUE (persisted),
+//  • reconcileSchedule(), flips past-due open activities to OVERDUE (persisted),
 //    so compliance/overdue figures always reflect today, not the seed snapshot.
-//  • generateNextOccurrence() — when a PM is completed, spawns the next occurrence
+//  • generateNextOccurrence(), when a PM is completed, spawns the next occurrence
 //    from the activity's frequency, so the programme perpetuates itself.
 // nextPlannedDate() is pure and covered by the frequency table below.
 import { db } from "@/lib/db";
@@ -59,7 +59,7 @@ export function nextPlannedDate(dateISO: string | null | undefined, freq: string
 
 // Persist → OVERDUE for any activity whose planned date has passed and which was
 // never completed. RESCHEDULED rows are deliberately included: a reschedule moves
-// the date, it does not exempt the activity — otherwise rescheduling would
+// the date, it does not exempt the activity, otherwise rescheduling would
 // permanently hide work from the overdue KPI and escalations. Idempotent; safe to
 // call on every schedule read.
 export async function reconcileSchedule(now = new Date()): Promise<void> {
@@ -77,7 +77,7 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
 
   // A deferral is a time-boxed risk acceptance, not an exemption. Once the
   // agreed review date passes the activity returns to OVERDUE and re-enters the
-  // compliance denominator — otherwise deferring would be a permanent place to
+  // compliance denominator, otherwise deferring would be a permanent place to
   // hide work, which is exactly the behaviour the register exists to stop. The
   // justification and approver stay on the row.
   await db
@@ -98,7 +98,7 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
 // is never done never spawns its successor: a neglected machine's occurrences
 // dry up, its missed PMs age out of the compliance denominator, and PM
 // compliance RISES the longer you ignore it. That is a self-concealing failure
-// mode — the metric improves as the maintenance stops.
+// mode, the metric improves as the maintenance stops.
 //
 // A plan is a plan: every recurring series must always own at least one future
 // dated occurrence, whether or not the last one was done. Idempotent.

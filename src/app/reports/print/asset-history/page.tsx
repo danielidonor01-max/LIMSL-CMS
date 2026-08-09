@@ -1,7 +1,7 @@
 // src/app/reports/print/asset-history/page.tsx
 // The per-asset maintenance dossier, printed. Same letterhead and sign-off block
 // as the other ISO evidence registers, but the body is a machine's identity plus
-// one chronological record set for the requested window — what an auditor asks
+// one chronological record set for the requested window, what an auditor asks
 // for when they pick a machine off the shop floor and say "show me this one".
 "use client";
 
@@ -109,20 +109,20 @@ function AssetHistoryDossier() {
 
   const eq = data.equipment;
   const t = data.totals;
-  const availability = t.availability == null ? "—" : `${(t.availability * 100).toFixed(1)}%`;
+  const availability = t.availability == null ? ", " : `${(t.availability * 100).toFixed(1)}%`;
   const identity: [string, string][] = [
-    ["Asset ID", String(eq.assetId ?? "—")],
-    ["Equipment", String(eq.name ?? "—")],
-    ["Category", EQUIPMENT_CATEGORY_LABELS[String(eq.category)] ?? String(eq.category ?? "—")],
-    ["OEM", String(eq.oem ?? "—")],
-    ["Model", String(eq.model ?? "—")],
-    ["Serial number", String(eq.serialNumber ?? "—")],
-    ["Location", [eq.location, eq.bay].filter(Boolean).join(" · ") || "—"],
-    ["Criticality", CRITICALITY_SHORT[String(eq.criticality)] ?? String(eq.criticality ?? "—")],
-    ["Commissioned", eq.commissioningDate ? formatDate(String(eq.commissioningDate)) : "—"],
-    ["Warranty expiry", eq.warrantyExpiry ? formatDate(String(eq.warrantyExpiry)) : "—"],
-    ["Service interval", FREQUENCY_LABELS[String(eq.maintenanceFrequency ?? "")] ?? String(eq.maintenanceFrequency ?? "—")],
-    ["Current status", EQUIPMENT_STATUS_LABELS[String(eq.status)] ?? String(eq.status ?? "—")],
+    ["Asset ID", String(eq.assetId ?? "-")],
+    ["Equipment", String(eq.name ?? "-")],
+    ["Category", EQUIPMENT_CATEGORY_LABELS[String(eq.category)] ?? String(eq.category ?? "-")],
+    ["OEM", String(eq.oem ?? "-")],
+    ["Model", String(eq.model ?? "-")],
+    ["Serial number", String(eq.serialNumber ?? "-")],
+    ["Location", [eq.location, eq.bay].filter(Boolean).join(" · ") || "-"],
+    ["Criticality", CRITICALITY_SHORT[String(eq.criticality)] ?? String(eq.criticality ?? "-")],
+    ["Commissioned", eq.commissioningDate ? formatDate(String(eq.commissioningDate)) : ", "],
+    ["Warranty expiry", eq.warrantyExpiry ? formatDate(String(eq.warrantyExpiry)) : ", "],
+    ["Service interval", FREQUENCY_LABELS[String(eq.maintenanceFrequency ?? "")] ?? String(eq.maintenanceFrequency ?? "-")],
+    ["Current status", EQUIPMENT_STATUS_LABELS[String(eq.status)] ?? String(eq.status ?? "-")],
   ];
 
   const summary: [string, string][] = [
@@ -185,11 +185,11 @@ function AssetHistoryDossier() {
           {/* Title + generated stamp */}
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Maintenance Dossier — {String(eq.assetId ?? "")} {eq.name ? `· ${eq.name}` : ""}
+              Maintenance Dossier, {String(eq.assetId ?? "")} {eq.name ? `· ${eq.name}` : ""}
             </h2>
             <p className="text-[11px] text-slate-500 font-mono mt-1">
-              {formatDate(data.range.from)} – {formatDate(data.range.to)} · generated{" "}
-              {new Date(data.generatedAt).toLocaleString()} · by {session?.user?.name ?? "—"} ·{" "}
+              {formatDate(data.range.from)}, {formatDate(data.range.to)} · generated{" "}
+              {new Date(data.generatedAt).toLocaleString()} · by {session?.user?.name ?? "-"} ·{" "}
               {data.events.length} record{data.events.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -203,7 +203,7 @@ function AssetHistoryDossier() {
               {identity.map(([label, value]) => (
                 <div key={label}>
                   <p className="text-[9px] text-slate-500 uppercase tracking-wider">{label}</p>
-                  <p className="text-[11px] text-slate-900 font-medium break-words">{value || "—"}</p>
+                  <p className="text-[11px] text-slate-900 font-medium break-words">{value || "-"}</p>
                 </div>
               ))}
             </div>
@@ -225,7 +225,7 @@ function AssetHistoryDossier() {
             {!!t.downtimeUnrecorded && (
               <p className="text-[10px] text-amber-700 mt-2">
                 {t.downtimeUnrecorded} breakdown{t.downtimeUnrecorded === 1 ? "" : "s"} in this period have no recorded
-                downtime window — availability above is an upper bound.
+                downtime window, availability above is an upper bound.
               </p>
             )}
             <p className="text-[10px] text-slate-400 mt-1">
@@ -263,13 +263,13 @@ function AssetHistoryDossier() {
                       <tr key={`${e.date}-${e.reference}-${i}`} className="text-slate-800 break-inside-avoid align-top">
                         <td className="py-1.5 pr-3 whitespace-nowrap">{formatDate(e.date)}</td>
                         <td className="py-1.5 pr-3 whitespace-nowrap">{e.category}</td>
-                        <td className="py-1.5 pr-3 font-mono text-[10px]">{e.reference || "—"}</td>
+                        <td className="py-1.5 pr-3 font-mono text-[10px]">{e.reference || "-"}</td>
                         <td className="py-1.5 pr-3">
                           <span className="font-semibold">{e.title}</span>
                           {e.detail && <span className="block text-slate-500">{e.detail}</span>}
                         </td>
-                        <td className="py-1.5 pr-3 whitespace-nowrap">{e.performedBy || "—"}</td>
-                        <td className="py-1.5">{e.state || "—"}</td>
+                        <td className="py-1.5 pr-3 whitespace-nowrap">{e.performedBy || "-"}</td>
+                        <td className="py-1.5">{e.state || "-"}</td>
                       </tr>
                     ))
                   )}

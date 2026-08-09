@@ -2,14 +2,14 @@
 // The asset-numbering policy, in one place.
 //
 // LIMSL numbers two different kinds of thing and the distinction is not
-// cosmetic: PE is production equipment — a machine you can point at, take out
-// of service and put a permit on. SYS is a facility system — the compressed-air
-// ring, the earthing installation, the LV distribution — which is rarely "off",
+// cosmetic: PE is production equipment, a machine you can point at, take out
+// of service and put a permit on. SYS is a facility system, the compressed-air
+// ring, the earthing installation, the LV distribution, which is rarely "off",
 // is maintained as an installation rather than a unit, and is what an auditor
 // looks for when asking about infrastructure.
 //
 // Before this module the generator only knew how to make PE codes, so creating
-// a SYS asset meant typing an ID by hand and hoping it was free — with a unique
+// a SYS asset meant typing an ID by hand and hoping it was free, with a unique
 // constraint on the column, a collision surfaced as a generic save failure.
 
 export const ASSET_PREFIXES = ["PE", "SYS"] as const;
@@ -18,11 +18,11 @@ export type AssetPrefix = (typeof ASSET_PREFIXES)[number];
 export const ASSET_PREFIX_META: Record<AssetPrefix, { label: string; help: string }> = {
   PE: {
     label: "Production Equipment",
-    help: "A machine on the shop floor — lathes, presses, welders, cranes, compressors.",
+    help: "A machine on the shop floor, lathes, presses, welders, cranes, compressors.",
   },
   SYS: {
     label: "Facility System",
-    help: "An installation rather than a unit — earthing, LV distribution, air ring, facility AC.",
+    help: "An installation rather than a unit, earthing, LV distribution, air ring, facility AC.",
   },
 };
 
@@ -49,7 +49,7 @@ export function parseAssetId(assetId: string | null | undefined): {
 export const formatAssetId = (prefix: AssetPrefix, serial: number): string =>
   `LEE/${prefix}/${String(serial).padStart(4, "0")}`;
 
-// The next free serial WITHIN a prefix — the two series are numbered
+// The next free serial WITHIN a prefix, the two series are numbered
 // independently, so LEE/PE/0007 and LEE/SYS/0007 can both exist.
 export function nextAssetId(existingIds: (string | null | undefined)[], prefix: AssetPrefix): string {
   let max = 0;

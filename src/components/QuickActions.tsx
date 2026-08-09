@@ -2,7 +2,7 @@
 // The app's primary "create" affordance in the top bar, role-aware.
 //
 // It used to be an icon-only ⚡ button with the same visual weight as the
-// notification bell — a primary action and a passive indicator rendered
+// notification bell, a primary action and a passive indicator rendered
 // identically. Worse, a lightning bolt is genuinely ambiguous in THIS product:
 // the app is full of electrical panels, earthing systems and ELECTRICAL fault
 // types, so the icon reads as a domain object rather than as "create". It is

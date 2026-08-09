@@ -8,7 +8,7 @@
 
 // Availability must count ALL production time lost to maintenance. Excluding
 // planned downtime meant a machine stopped eight hours for a PM still read as
-// 100% available — and worse, made the number gameable, since classifying work
+// 100% available, and worse, made the number gameable, since classifying work
 // as preventive removed its downtime from the figure entirely.
 export function availabilityOf(
   plannedHours: number,
@@ -26,8 +26,7 @@ export type PermitOutcome = {
 };
 
 // The old PTW metric was "approved ÷ raised". A permit can only reach ACTIVE
-// through a fully signed chain, so that ratio trended to 100% by construction —
-// a safety KPI that could not go down. What matters is close-out discipline:
+// through a fully signed chain, so that ratio trended to 100% by construction, // a safety KPI that could not go down. What matters is close-out discipline:
 // was the isolation signed back off inside the permit's validity?
 export function ptwComplianceOf(permits: PermitOutcome[]): {
   compliance: number | null;

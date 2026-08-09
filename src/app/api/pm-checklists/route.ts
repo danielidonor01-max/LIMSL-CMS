@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     // Enforce PTW: if a Permit-to-Work is attached to this work order, it must be
     // signed off (ACTIVE) before the PM can be completed. This is the server-side
-    // audit backing the technician's checklist attestation — a self-declared
+    // audit backing the technician's checklist attestation, a self-declared
     // "PTW issued" checkbox can't stand in for a real, signed permit.
     await reconcilePermits();
     const linkedPermits = await db.select().from(permits).where(eq(permits.workOrderId, body.workOrderId));
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            `Permit ${p.permitNumber} is ${p.status.replace("_", " ").toLowerCase()} — the Permit-to-Work must be ` +
+            `Permit ${p.permitNumber} is ${p.status.replace("_", " ").toLowerCase()}, the Permit-to-Work must be ` +
             `signed off (ACTIVE) before this PM checklist can be submitted.`,
         },
         { status: 409 },
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       nextPMDate: body.nextPMDate || null,
       technicianSignature: body.technicianSignature || null,
       supervisorSignature: body.supervisorSignature || null,
-      // The performing technician is the authenticated submitter — never client
+      // The performing technician is the authenticated submitter, never client
       // text. (The supervisor's authenticated approval lives in the PM sign-off
       // chain started below; the name here is display-only shop-floor capture.)
       technicianName: gate.actor?.name || body.technicianName || null,
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     };
 
     // The completion flow is one atomic unit: checklist + WO status + schedule
-    // roll + equipment dates must all land or none — a mid-sequence failure must
+    // roll + equipment dates must all land or none, a mid-sequence failure must
     // not leave a COMPLETED work order with an un-rolled schedule (or vice
     // versa). Reads that feed the writes happen first.
     const [wo] = await db
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       // Complete the linked schedule activity and spawn its next occurrence so
       // the PM programme perpetuates itself instead of emptying out.
       if (wo?.scheduleId) {
-        // Record HOW LATE, not just that it happened — a PM planned in January
+        // Record HOW LATE, not just that it happened, a PM planned in January
         // and done in June is not a compliant monthly PM.
         const [before] = await tx
           .select()
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
     });
 
     // Status comes from the single writer once the WO is COMPLETED and any
-    // follow-up fault exists — a PM sign-off never declares a machine fit for
+    // follow-up fault exists, a PM sign-off never declares a machine fit for
     // service while corrective work is open on it.
     try {
       await applyDerivedStatus(body.equipmentId);
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
     // Start the PM approval chain NOW (not lazily on some later page load): the
     // submitting technician's authenticated signature covers step 1, and the
     // Foreman is notified that verification is due. The work order itself stays
-    // COMPLETED — the chain governs the checklist record's approval, not whether
+    // COMPLETED, the chain governs the checklist record's approval, not whether
     // the physical work happened.
     try {
       const chain = await ensureSignoffChain("PM_CHECKLIST", checklistId, wo?.workOrderNumber);
@@ -218,13 +218,13 @@ export async function POST(request: Request) {
       await logEquipmentEvent({
         equipmentId: body.equipmentId,
         category: "PM",
-        title: `Preventive maintenance completed${wo?.workOrderNumber ? ` — ${wo.workOrderNumber}` : ""}`,
+        title: `Preventive maintenance completed${wo?.workOrderNumber ? `, ${wo.workOrderNumber}` : ""}`,
         detail: body.correctiveActionRequired
           ? `Follow-up corrective action flagged: ${body.actionDescription || "see checklist"}`
           : "PM checklist signed off; equipment returned to service.",
         refType: "work_order",
         refId: wo?.id ?? null,
-        // The signed record is viewed on the WO page — the /pm-checklist path is
+        // The signed record is viewed on the WO page, the /pm-checklist path is
         // the blank submission form and 409s on re-submit.
         href: body.workOrderId ? `/work-orders/${body.workOrderId}` : null,
         source: "AUTO",

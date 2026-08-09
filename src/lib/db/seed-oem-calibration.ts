@@ -40,10 +40,10 @@ export async function seedOemCalibration() {
     leadDays: number;
   }[] = [
     { needle: "stako", vendorName: "VILMAR (Stako CNC specialist)", contactPerson: "Andrei Popescu", phone: "+40 21 555 0110", email: "service@vilmar.ro", country: "Romania", warrantyEndOffsetDays: -120, warrantyScope: "Control system, drives, spindle", responseHrs: 72, leadDays: 45 },
-    { needle: "vertical lathe", vendorName: "Metal Gennari S.r.l.", contactPerson: "Luca Bianchi", phone: "+39 030 555 220", email: "aftersales@metalgennari.it", country: "Italy", warrantyEndOffsetDays: 210, warrantyScope: "Full machine — 24 months", responseHrs: 96, leadDays: 60 },
+    { needle: "vertical lathe", vendorName: "Metal Gennari S.r.l.", contactPerson: "Luca Bianchi", phone: "+39 030 555 220", email: "aftersales@metalgennari.it", country: "Italy", warrantyEndOffsetDays: 210, warrantyScope: "Full machine, 24 months", responseHrs: 96, leadDays: 60 },
     { needle: "sertom plate rolling", vendorName: "Sertom S.p.A.", contactPerson: "Marco Rossi", phone: "+39 030 999 100", email: "service@sertom.com", country: "Italy", warrantyEndOffsetDays: 60, warrantyScope: "Hydraulics & rollers", responseHrs: 96, leadDays: 55 },
     { needle: "esab column boom", vendorName: "ESAB Middle East", contactPerson: "Ahmed Al-Rashid", phone: "+971 4 555 700", email: "support@esab.ae", country: "UAE", warrantyEndOffsetDays: -300, warrantyScope: "Wire feed & power source", responseHrs: 48, leadDays: 21 },
-    { needle: "kone 12t overhead crane #1", vendorName: "Konecranes Nigeria", contactPerson: "Emeka Obi", phone: "+234 1 271 5500", email: "service.ng@konecranes.com", country: "Nigeria", warrantyEndOffsetDays: 400, warrantyScope: "Hoist, brakes, controls — AMC", responseHrs: 24, leadDays: 14 },
+    { needle: "kone 12t overhead crane #1", vendorName: "Konecranes Nigeria", contactPerson: "Emeka Obi", phone: "+234 1 271 5500", email: "service.ng@konecranes.com", country: "Nigeria", warrantyEndOffsetDays: 400, warrantyScope: "Hoist, brakes, controls, AMC", responseHrs: 24, leadDays: 14 },
   ];
 
   type OemRow = typeof oemRegistry.$inferInsert;
@@ -83,7 +83,7 @@ export async function seedOemCalibration() {
       oemId: oemByNeedle["stako"],
       equipmentId: stakoEq.id,
       interventionDate: daysFromNow(-3),
-      problemDescription: "No motion on X axis — suspected drive/encoder fault",
+      problemDescription: "No motion on X axis, suspected drive/encoder fault",
       warrantyStatus: "OUT",
       oemNotified: true,
       responseTimeHrs: 72,

@@ -32,7 +32,7 @@ test("overdue reports how far past, not a floor of zero", () => {
 });
 
 // A replaced meter reads lower than the last service. Treating that as negative
-// usage would push the service out forever — the machine would never come due.
+// usage would push the service out forever, the machine would never come due.
 test("a meter that reads lower than the last service does not defer the service", () => {
   const s = meterState(50, 1000, 500);
   assert.equal(s.used, 0);
@@ -46,7 +46,7 @@ test("no interval configured is said plainly rather than shown as due", () => {
 });
 
 // Number(null) is 0, so an unread meter looked like a machine sitting at zero
-// hours — reported as comfortably within interval. A green tick for an asset
+// hours, reported as comfortably within interval. A green tick for an asset
 // nobody has measured is the worst answer available.
 test("an interval with no reading yet is NOT reported as within interval", () => {
   for (const v of [null, undefined, ""]) {
@@ -132,7 +132,7 @@ test("the due date follows real usage, so a hard-worked machine comes due sooner
   assert.equal(idle, "2026-04-20");
 });
 
-test("no rate means no projected date — not today, and not never", () => {
+test("no rate means no projected date, not today, and not never", () => {
   assert.equal(projectedDueDate(100, null), null);
   assert.equal(projectedDueDate(100, 0), null);
 });

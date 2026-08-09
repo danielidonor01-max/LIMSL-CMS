@@ -2,11 +2,11 @@
 // Password reset, written so that the obvious mistakes are impossible rather
 // than merely avoided.
 //
-//   • The token is random, 32 bytes, from a CSPRNG — never derived from the
+//   • The token is random, 32 bytes, from a CSPRNG, never derived from the
 //     user id, the email, or the time.
 //   • Only its HASH is stored. A reset table holding usable tokens hands out
 //     accounts to anyone who can read the database.
-//   • It expires, and it is single-use — consumed the moment it succeeds.
+//   • It expires, and it is single-use, consumed the moment it succeeds.
 //   • Requesting a reset for an unknown address answers exactly as it does for
 //     a known one. Anything else turns the form into a "does this person work
 //     here" oracle, which for a company directory is worth having.
@@ -54,7 +54,7 @@ export function resetIsUsable(
   }
   const expires = Date.parse(row.expiresAt);
   if (!Number.isFinite(expires) || expires <= now.getTime()) {
-    return { ok: false, reason: `This reset link has expired — they last ${RESET_TTL_MINUTES} minutes. Request a new one.` };
+    return { ok: false, reason: `This reset link has expired, they last ${RESET_TTL_MINUTES} minutes. Request a new one.` };
   }
   return { ok: true };
 }

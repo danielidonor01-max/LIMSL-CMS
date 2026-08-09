@@ -161,8 +161,7 @@ export default function EquipmentList() {
     const urlParam = (eq.assetId || "").replace(/\//g, "-");
     return [
       { label: "Digital Twin", icon: Eye, href: `/equipment/${urlParam}` },
-      // The diagnostic engine was reachable only via a banner on the twin page —
-      // the most valuable feature in the product, effectively hidden.
+      // The diagnostic engine was reachable only via a banner on the twin page,       // the most valuable feature in the product, effectively hidden.
       { label: "Troubleshoot", icon: Stethoscope, href: `/equipment/${urlParam}/troubleshoot` },
       { label: "Report Fault", icon: AlertTriangle, href: `/corrective/new?equipmentId=${eq.id}`, danger: true },
       { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
@@ -198,7 +197,7 @@ export default function EquipmentList() {
           subtitle={
             loading
               ? "Every machine and facility system, with status, criticality and location"
-              : `${counts.total} asset${counts.total === 1 ? "" : "s"} — ${counts.pe} production, ${counts.sys} facility system${counts.sys === 1 ? "" : "s"}`
+              : `${counts.total} asset${counts.total === 1 ? "" : "s"}, ${counts.pe} production, ${counts.sys} facility system${counts.sys === 1 ? "" : "s"}`
           }
           backHref="/"
           backLabel="Dashboard"
@@ -295,7 +294,7 @@ export default function EquipmentList() {
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">{emptyState}</div>
         ) : (
           <>
-            {/* Mobile — the register was table-only, unusable on the floor */}
+            {/* Mobile, the register was table-only, unusable on the floor */}
             <div className="grid gap-3 md:hidden">
               {sortedEquipment.map((eq) => {
                 const urlParam = (eq.assetId || "").replace(/\//g, "-");
@@ -317,7 +316,7 @@ export default function EquipmentList() {
                       </Badge>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-2.5">
-                      {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category} · {eq.location || "—"}
+                      {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category} · {eq.location || "-"}
                       {eq.oem ? ` · ${eq.oem}` : ""}
                     </p>
                   </div>
@@ -363,8 +362,8 @@ export default function EquipmentList() {
                           <td className="py-3.5 px-4">
                             {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}
                           </td>
-                          <td className="py-3.5 px-4">{eq.oem || "—"}</td>
-                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "—"}</td>
+                          <td className="py-3.5 px-4">{eq.oem || "-"}</td>
+                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "-"}</td>
                           <td className="py-3.5 px-4">
                             <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                               {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}

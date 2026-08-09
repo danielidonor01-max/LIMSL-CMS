@@ -1,4 +1,4 @@
-// Regression tests for the canonical role model — the single source of truth
+// Regression tests for the canonical role model, the single source of truth
 // behind every sign-off gate, sidebar entry and page guard. A change here that
 // nobody notices is an authorisation hole.
 import { test } from "node:test";
@@ -52,7 +52,7 @@ test("a junior role may never sign a senior step", () => {
 });
 
 test("peers in different departments cannot sign for each other", () => {
-  // QA/QC and HSE share a rank, so neither can cover the other's step — the
+  // QA/QC and HSE share a rank, so neither can cover the other's step, the
   // records check and the safety sign-off stay separate signatures.
   assert.equal(canSignStep("QA_QC", "HSE"), false);
   assert.equal(canSignStep("HSE", "QA_QC"), false);
@@ -68,7 +68,7 @@ test("an unrelated or absent signer is denied", () => {
 
 test("an unrecognised role on either side fails CLOSED", () => {
   // A typo in a chain definition must never become a step almost anyone
-  // outranks — a compliance gate denies what it cannot recognise.
+  // outranks, a compliance gate denies what it cannot recognise.
   assert.equal(canSignStep("TECHNICIAN", "TYPO_ROLE"), false);
   assert.equal(canSignStep("QA_QC", ""), false);
   assert.equal(canSignStep("VIEWER", "TYPO_ROLE"), false);
@@ -156,7 +156,7 @@ test("universal paths are open to every role", () => {
   }
 });
 
-test("universal paths match exactly — a sub-route falls back to the role's scope", () => {
+test("universal paths match exactly, a sub-route falls back to the role's scope", () => {
   // No sub-routes exist under these today; if one is added, scoped roles will
   // need it added to their allow-list or to UNIVERSAL_PATHS.
   assert.equal(canAccessPath("VIEWER", "/notifications/abc"), false);
@@ -169,7 +169,7 @@ test("an unlisted role has full access, and an unauthenticated caller is left to
     assert.equal(canAccessPath(null, path), true, `unauthenticated on ${path}`);
     assert.equal(canAccessPath(undefined, path), true);
   }
-  // Even /settings — the middleware, not this helper, stops the anonymous case.
+  // Even /settings, the middleware, not this helper, stops the anonymous case.
   assert.equal(canAccessPath(null, "/settings"), true);
 });
 
@@ -213,7 +213,7 @@ test("every scoped role in the path table is a canonical role", () => {
 });
 
 // A new module reachable from the sidebar but absent from a scoped role's path
-// list renders "Access restricted" — the nav and the guard read the same table,
+// list renders "Access restricted", the nav and the guard read the same table,
 // so the failure stays silent until someone with that role clicks it.
 test("the spares register is reachable by the roles that maintain machinery", () => {
   for (const role of ["SUPER_ADMIN", "COO", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "FOREMAN", "TECHNICIAN", "QA_QC"]) {
@@ -224,7 +224,7 @@ test("the spares register is reachable by the roles that maintain machinery", ()
   assert.equal(canAccessPath("HSE", "/spares"), false);
 });
 
-// HSE owns emergency preparedness — a register they cannot open is not a
+// HSE owns emergency preparedness, a register they cannot open is not a
 // control they can maintain.
 test("HSE and QA/QC can reach the emergency register", () => {
   assert.equal(canAccessPath("HSE", "/emergency"), true);

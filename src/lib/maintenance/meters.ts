@@ -2,8 +2,7 @@
 // Servicing by how hard a machine has actually worked, not by the calendar.
 //
 // A compressor serviced "quarterly" is serviced on the same day whether it ran
-// three shifts a day or sat idle for two months. For run-hours assets —
-// compressors, cranes, gensets — the calendar is a proxy for use, and a bad one:
+// three shifts a day or sat idle for two months. For run-hours assets, // compressors, cranes, gensets, the calendar is a proxy for use, and a bad one:
 // it over-services the idle machine (wasting parts and downtime) and
 // under-services the hard-worked one, which is the failure that actually costs
 // production.
@@ -59,7 +58,7 @@ export type MeterState = {
   used: number;        // units since the last service
   remaining: number;   // units until the next one (negative once overdue)
   fraction: number;    // share of the interval consumed; >1 means overdue
-  percent: number;     // the same, clamped to 0–100 for a progress bar
+  percent: number;     // the same, clamped to 0-100 for a progress bar
 };
 
 export function meterState(
@@ -74,7 +73,7 @@ export function meterState(
   if (!Number.isFinite(step) || step <= 0) return { status: "NOT_CONFIGURED", ...idle };
 
   // Number(null) is 0, so an unread meter used to look like a machine sitting at
-  // zero hours — reported as comfortably within interval. A green tick for an
+  // zero hours, reported as comfortably within interval. A green tick for an
   // asset nobody has measured is the worst answer available here.
   if (currentReading === null || currentReading === undefined || String(currentReading).trim() === "") {
     return { status: "NO_READING", ...idle };
@@ -122,7 +121,7 @@ export function usageRatePerDay(readings: Reading[]): number | null {
   if (days <= 0) return null;
 
   const delta = Number(last.reading) - Number(first.reading);
-  if (delta <= 0) return null; // idle or reset — no meaningful rate
+  if (delta <= 0) return null; // idle or reset, no meaningful rate
   return delta / days;
 }
 
@@ -156,7 +155,7 @@ export function validateReading(
   if (Number.isFinite(prev) && value < prev && !allowReset) {
     return {
       ok: false,
-      error: `The last reading was ${prev}. A meter cannot go backwards — check the figure, or tick "meter was replaced or reset" if that is what happened.`,
+      error: `The last reading was ${prev}. A meter cannot go backwards, check the figure, or tick "meter was replaced or reset" if that is what happened.`,
     };
   }
   return { ok: true, reading: value };

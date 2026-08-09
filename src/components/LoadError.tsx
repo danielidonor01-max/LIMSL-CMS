@@ -1,6 +1,6 @@
 // src/components/LoadError.tsx
 // A failed fetch must never render as an empty state. On workshop wifi a
-// dropped request used to look identical to "there is no work" — the
+// dropped request used to look identical to "there is no work", the
 // technician walks away believing the list. This says what happened and
 // offers the retry the cache hook already provides.
 "use client";
@@ -22,7 +22,7 @@ export default function LoadError({
       <div>
         <p className="text-sm font-semibold text-slate-900">Couldn&apos;t load {what}</p>
         <p className="text-xs text-slate-500 mt-0.5">
-          This is a connection problem — the records are safe. Check your signal and try again.
+          This is a connection problem, the records are safe. Check your signal and try again.
         </p>
       </div>
       {onRetry && (

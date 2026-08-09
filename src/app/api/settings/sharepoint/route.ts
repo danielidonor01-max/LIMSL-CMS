@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     const test = await testSharepoint(cfg);
-    if (!test.ok) return NextResponse.json({ error: `Connection failed — ${test.detail}` }, { status: 400 });
+    if (!test.ok) return NextResponse.json({ error: `Connection failed, ${test.detail}` }, { status: 400 });
 
     await setSharepointConfig(cfg, gate.actor ?? {});
     await db.insert(auditLog).values({
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       action: "UPDATE",
       entityType: "settings",
       entityId: "sharepoint",
-      entityDescription: `SharePoint connection saved — ${cfg.siteUrl}`,
+      entityDescription: `SharePoint connection saved, ${cfg.siteUrl}`,
     });
     return NextResponse.json({ ok: true, detail: test.detail, status: await sharepointStatus() });
   } catch (error) {

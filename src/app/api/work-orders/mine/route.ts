@@ -1,7 +1,7 @@
 // src/app/api/work-orders/mine/route.ts
 // The jobs assigned to the signed-in person. /work-orders has status and type
 // filters but no "mine", so a technician had to scan a seven-column table of
-// everyone's work to find their own — on a phone, sideways.
+// everyone's work to find their own, on a phone, sideways.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { workOrders, equipment } from "@/lib/db/schema";

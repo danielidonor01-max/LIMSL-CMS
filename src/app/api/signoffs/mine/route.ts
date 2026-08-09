@@ -1,6 +1,6 @@
 // src/app/api/signoffs/mine/route.ts
 // The current user's action queue: every sign-off step that is theirs to sign
-// right now — pending, unlocked (all earlier required steps signed), and matching
+// right now, pending, unlocked (all earlier required steps signed), and matching
 // their role (or a senior/super-admin who may cover it). Spans every module that
 // uses the sign-off engine.
 import { NextResponse } from "next/server";
@@ -58,7 +58,7 @@ export async function GET() {
           isStepUnlocked(sorted, s.stepOrder),
       );
       if (!next) continue;
-      // A user's personal queue is the steps that are THEIRS by role — their own
+      // A user's personal queue is the steps that are THEIRS by role, their own
       // responsibility, not every junior step a senior could also cover. The
       // senior-override capability still lives on the entity page (canSignStep).
       if (next.role !== user.role) continue;

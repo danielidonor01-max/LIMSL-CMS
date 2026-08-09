@@ -73,7 +73,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              `Close-out requires the full corrective sign-off chain — ` +
+              `Close-out requires the full corrective sign-off chain, ` +
               `${summary.signed} of ${summary.total} required signatures are in place. ` +
               `Complete the chain on this page first.`,
           },
@@ -85,7 +85,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              "Select the failure mode before close-out — a coded mode is what lets recurring failures " +
+              "Select the failure mode before close-out, a coded mode is what lets recurring failures " +
               "be seen across the fleet. Choose \"Not determined\" if it genuinely could not be established.",
           },
           { status: 400 },
@@ -102,12 +102,12 @@ export async function PATCH(
       const de = body.downEndAt ?? record.downEndAt;
       if (!ds || !de || new Date(de).getTime() <= new Date(ds).getTime()) {
         return NextResponse.json(
-          { error: "A valid downtime window (down → restored) is required before close-out — it drives MTTR." },
+          { error: "A valid downtime window (down → restored) is required before close-out, it drives MTTR." },
           { status: 400 },
         );
       }
       // The names on the closed record come from the authenticated chain
-      // signatures, never from client-supplied text — that's what makes the
+      // signatures, never from client-supplied text, that's what makes the
       // record forgery-proof.
       chainTechnicianName =
         chain.find((s) => s.role === "TECHNICIAN" && s.status === "SIGNED")?.signedByName ?? null;
@@ -116,7 +116,7 @@ export async function PATCH(
     }
 
     // Downtime is derived server-side from the down/restored window against the
-    // working-hours settings — the client value is never trusted for a KPI input.
+    // working-hours settings, the client value is never trusted for a KPI input.
     const downStartAt = body.downStartAt ?? record.downStartAt;
     const downEndAt = body.downEndAt ?? record.downEndAt;
     let totalDowntimeHours = record.totalDowntimeHours;
@@ -150,7 +150,7 @@ export async function PATCH(
       rcaTool: body.rcaTool ?? record.rcaTool,
       rcaAnalysis: body.rcaAnalysis ? JSON.stringify(body.rcaAnalysis) : record.rcaAnalysis,
       rootCauseCategory: body.rootCauseCategory ?? record.rootCauseCategory,
-      // Coded failure taxonomy — free text can't aggregate. These are what make
+      // Coded failure taxonomy, free text can't aggregate. These are what make
       // "how many bearing failures across the CNC fleet this year" answerable.
       failureMode: body.failureMode ?? record.failureMode,
       detectionMethod: body.detectionMethod ?? record.detectionMethod,
@@ -204,7 +204,7 @@ export async function PATCH(
         await logEquipmentEvent({
           equipmentId: record.equipmentId,
           category: "CM",
-          title: `Corrective maintenance closed — ${record.cmrfNumber}`,
+          title: `Corrective maintenance closed, ${record.cmrfNumber}`,
           detail: `${record.faultDescription || record.observedFault || "Fault"}${record.verifiedRootCause ? ` · Root cause: ${record.verifiedRootCause}` : ""}${totalDowntimeHours != null ? ` · ${totalDowntimeHours}h downtime` : ""}`,
           refType: "corrective_maintenance",
           refId: record.id,

@@ -3,7 +3,7 @@
 //
 // A parts list is inventory admin. What turns it into maintenance capability is
 // this: for a CRITICAL machine, a spare below its minimum is a *predicted*
-// outage whose length is already known — the supplier's lead time. That is a
+// outage whose length is already known, the supplier's lead time. That is a
 // number you can act on weeks before anything breaks, and it is the reason
 // AWAITING_PARTS shows up as unexplained downtime today.
 //
@@ -82,7 +82,7 @@ export function spareRisk(input: {
     return { level, exposureDays, atRisk: false, severity: "none", headline: STOCK_LEVEL_LABELS[level] };
   }
 
-  // Being on order bounds the wait, so it takes a grade off — but it cannot
+  // Being on order bounds the wait, so it takes a grade off, but it cannot
   // take one off a critical part that is entirely absent, because the exposure
   // if the machine fails this afternoon is exactly the same either way. A
   // purchase order is not a spare.
@@ -95,9 +95,9 @@ export function spareRisk(input: {
   const headline =
     level === "OUT_OF_STOCK"
       ? lead > 0
-        ? `Out of stock${machine} — a failure today means ${lead} day${lead === 1 ? "" : "s"} down waiting on the supplier.`
-        : `Out of stock${machine} — no lead time recorded, so the wait is unknown.`
-      : `Below minimum${machine} — reorder before the shelf runs out.`;
+        ? `Out of stock${machine}, a failure today means ${lead} day${lead === 1 ? "" : "s"} down waiting on the supplier.`
+        : `Out of stock${machine}, no lead time recorded, so the wait is unknown.`
+      : `Below minimum${machine}, reorder before the shelf runs out.`;
 
   return { level, exposureDays, atRisk: true, severity, headline };
 }
@@ -122,7 +122,7 @@ export function applyMovement(
     if (qty > current) {
       return {
         ok: false,
-        error: `Only ${current} in stock — you cannot issue ${qty}. Record a receipt first if stock arrived without being booked in.`,
+        error: `Only ${current} in stock, you cannot issue ${qty}. Record a receipt first if stock arrived without being booked in.`,
       };
     }
     return { ok: true, balanceAfter: current - qty, delta: -qty };

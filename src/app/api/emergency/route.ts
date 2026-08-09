@@ -14,8 +14,7 @@ import {
   intervalFor,
 } from "@/lib/hse/emergency";
 
-// The register plus the drill programme, with readiness already computed —
-// "how many extinguishers" and "how many working extinguishers" must never be
+// The register plus the drill programme, with readiness already computed, // "how many extinguishers" and "how many working extinguishers" must never be
 // answerable differently by two callers.
 export async function GET() {
   try {
@@ -66,7 +65,7 @@ export async function POST(request: Request) {
       const drillDate = String(body.drillDate ?? "").slice(0, 10);
       if (!drillDate || drillDate > new Date().toISOString().slice(0, 10)) {
         return NextResponse.json(
-          { error: "Give the date the drill was actually held — it cannot be in the future." },
+          { error: "Give the date the drill was actually held, it cannot be in the future." },
           { status: 400 },
         );
       }
@@ -101,7 +100,7 @@ export async function POST(request: Request) {
     const location = String(body.location ?? "").trim();
     if (!tagNumber || !location || !body.type) {
       return NextResponse.json(
-        { error: "A tag number, a type and a location are required — an item nobody can find is not a control." },
+        { error: "A tag number, a type and a location are required, an item nobody can find is not a control." },
         { status: 400 },
       );
     }

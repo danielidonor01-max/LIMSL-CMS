@@ -1,5 +1,5 @@
 // src/lib/db/seed-kpi.ts
-// Phase 5 seed: plant-wide monthly KPI series (Jan–Jun 2026) plus a few
+// Phase 5 seed: plant-wide monthly KPI series (Jan-Jun 2026) plus a few
 // per-equipment rows for drill-down. Mirrors the documented improvement
 // trajectory (availability climbing to 90%, PM compliance recovering from the
 // 20% crisis, MTTR falling toward the 4-hour target).
@@ -44,7 +44,7 @@ export async function seedKpi() {
       repeatFailureRate: Number((0.12 - Number(month.slice(5)) * 0.01).toFixed(3)),
       maintenanceBacklog: Math.max(4, 24 - Number(month.slice(5)) * 3),
       utilizationRate: util,
-      remark: month === "2026-01" ? "PM compliance crisis — understaffed" : "Recovering",
+      remark: month === "2026-01" ? "PM compliance crisis, understaffed" : "Recovering",
     }),
   );
 
@@ -75,7 +75,7 @@ export async function seedKpi() {
       pmCompliance: 0.5,
       inspectionCompliance: 0.95,
       utilizationRate: p.avail - 0.1,
-      remark: p.needle === "stako" ? "Active breakdown — no motion X axis" : "Stable",
+      remark: p.needle === "stako" ? "Active breakdown, no motion X axis" : "Stable",
     });
   }
 

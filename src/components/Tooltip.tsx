@@ -2,7 +2,7 @@
 // Replaces the native `title` attribute on icon-only controls.
 //
 // A browser tooltip waits about a second, cannot be styled, never appears on
-// touch, and is not announced by screen readers — so on an icon-only button it
+// touch, and is not announced by screen readers, so on an icon-only button it
 // is the only label, delivered late, to some users and not others. This shows
 // on hover AND on keyboard focus, immediately, and pairs with a real
 // aria-label on the trigger.

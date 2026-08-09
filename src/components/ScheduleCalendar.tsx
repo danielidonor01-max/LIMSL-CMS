@@ -80,7 +80,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
     if (view === "week") {
       const s = startOfWeek(cursor);
       const e = addDays(s, 6);
-      return `${MONTH_NAMES[s.getMonth()]} ${s.getDate()} – ${MONTH_NAMES[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+      return `${MONTH_NAMES[s.getMonth()]} ${s.getDate()}, ${MONTH_NAMES[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
     }
     if (view === "month") return `${MONTH_NAMES[cursor.getMonth()]} ${cursor.getFullYear()}`;
     if (view === "quarter") {
@@ -170,7 +170,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
               {selectedRows.map((r) => (
                 <div key={r.id} className="p-3 border border-slate-200 rounded-lg">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-slate-900">{r.equipmentName ?? "—"}</span>
+                    <span className="text-sm font-semibold text-slate-900">{r.equipmentName ?? "-"}</span>
                     <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[r.status] ?? "bg-slate-400"}`} title={r.status} />
                   </div>
                   <p className="text-[11px] font-mono text-slate-500">{r.assetId}</p>

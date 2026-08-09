@@ -13,7 +13,7 @@ export function isoSeconds(d: Date = new Date()): string {
   return d.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
-// en-GB, matching how Nigeria writes dates (day first) — formatCurrency was
+// en-GB, matching how Nigeria writes dates (day first), formatCurrency was
 // already localised to en-NG while dates were rendering US-format.
 //
 // The month stays spelled out deliberately. A purely numeric date is ambiguous

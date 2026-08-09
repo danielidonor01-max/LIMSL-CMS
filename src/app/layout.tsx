@@ -22,23 +22,23 @@ export const metadata: Metadata = {
       { url: "/brand/logo-48.png", sizes: "48x48", type: "image/png" },
     ],
     // Home-screen icons are generated from the 80px master. A flat geometric
-    // mark upscales acceptably — no gradients or fine detail to smear — and the
-    // phone renders these at roughly 120–180px anyway. A ≥512px master or an SVG
+    // mark upscales acceptably, no gradients or fine detail to smear, and the
+    // phone renders these at roughly 120-180px anyway. A ≥512px master or an SVG
     // would still be sharper; this is the best available from what exists.
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
 // iOS shows a blank screen while a standalone web app boots unless it is handed
-// an image matching the EXACT device viewport — it will not scale one for you,
+// an image matching the EXACT device viewport, it will not scale one for you,
 // and a startup image with no media query is ignored outright. Sizes are CSS
 // pixels (device pixels ÷ the pixel ratio). Android needs none of this: it
 // builds its splash from the manifest's name, background_color and icon.
 const IOS_SPLASH: { w: number; h: number; ratio: number; file: string }[] = [
   { w: 430, h: 932, ratio: 3, file: "1290x2796" }, // 14/15 Pro Max
-  { w: 428, h: 926, ratio: 3, file: "1284x2778" }, // 12–14 Pro Max
+  { w: 428, h: 926, ratio: 3, file: "1284x2778" }, // 12-14 Pro Max
   { w: 393, h: 852, ratio: 3, file: "1179x2556" }, // 14/15 Pro
-  { w: 390, h: 844, ratio: 3, file: "1170x2532" }, // 12–14
+  { w: 390, h: 844, ratio: 3, file: "1170x2532" }, // 12-14
   { w: 375, h: 812, ratio: 3, file: "1125x2436" }, // X / XS / 11 Pro
   { w: 414, h: 896, ratio: 2, file: "828x1792" },  // XR / 11
   { w: 375, h: 667, ratio: 2, file: "750x1334" },  // SE / 8

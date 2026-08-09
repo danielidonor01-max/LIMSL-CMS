@@ -1,7 +1,7 @@
 // src/app/api/equipment/[assetId]/schematics/extract/confirm/route.ts
 // Human confirmation of a LOCAL_TEXT extraction (P2-lite). The reviewed
-// component list upserts into component_registry — keyed by tag per machine so
-// re-confirming updates rather than duplicates — and the job flips CONFIRMED.
+// component list upserts into component_registry, keyed by tag per machine so
+// re-confirming updates rather than duplicates, and the job flips CONFIRMED.
 // This is the only path from extraction into live data.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";

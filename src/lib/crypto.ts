@@ -1,13 +1,13 @@
 // src/lib/crypto.ts
 // Symmetric encryption for secrets at rest (API keys in api_credentials).
-// AES-256-GCM with a key derived from AUTH_SECRET — no new secret to manage,
+// AES-256-GCM with a key derived from AUTH_SECRET, no new secret to manage,
 // and the DB alone (e.g. a leaked backup) cannot reveal the plaintext.
 // Server-only: node:crypto must never enter a client bundle.
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 function derivedKey(): Buffer {
   const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error("AUTH_SECRET is not set — cannot encrypt credentials.");
+  if (!secret) throw new Error("AUTH_SECRET is not set, cannot encrypt credentials.");
   // Domain-separated derivation so this key is distinct from any other
   // AUTH_SECRET use.
   return createHash("sha256").update(`${secret}:limsl-api-credentials`).digest();

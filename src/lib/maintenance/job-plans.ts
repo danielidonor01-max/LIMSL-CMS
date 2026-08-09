@@ -4,17 +4,17 @@
 // Until now a single hardcoded 21-item list was served to all 33 assets: a CNC
 // lathe, a 5-tonne overhead crane, a screw compressor and an earthing system
 // each received "Gearbox oil level & condition" and "Emergency stop functional"
-// — and every item arrived pre-ticked OK. An auditor who prints two checklists
+//, and every item arrived pre-ticked OK. An auditor who prints two checklists
 // sees they are identical and concludes the PM record is a formality. Worse,
 // nobody was checking crane brake wear, compressor separator dP or earth-loop
 // impedance, because those tasks did not exist anywhere in the system.
 //
 // Each task carries acceptance criteria (what "OK" actually means) and, where
-// the answer is a number rather than a judgement, a unit — so a PM produces
+// the answer is a number rather than a judgement, a unit, so a PM produces
 // evidence and a trend instead of a tick.
 export type JobTask = {
   item: string;
-  criteria?: string; // what OK means — the acceptance criterion
+  criteria?: string; // what OK means, the acceptance criterion
   unit?: string; // when set, the technician records a measured value
 };
 
@@ -326,7 +326,7 @@ const PLANS: JobPlan[] = [
 ];
 
 // Categories with no bespoke plan fall back to a general powered-machine plan
-// rather than nothing — the generic checklist stays available, it just stops
+// rather than nothing, the generic checklist stays available, it just stops
 // pretending to be a crane inspection.
 const GENERAL_PLAN: JobPlan = {
   category: "GENERAL",
@@ -356,7 +356,7 @@ const BY_CATEGORY = new Map(PLANS.map((p) => [p.category, p]));
 
 // Every category now carries its own plan. CNC_LIGHT and PRESS_ROLL_SHEAR used
 // to borrow the heavy-CNC plan, which asked a bench router about tool-change
-// cycles and a press brake about spindle bearing temperature — questions with no
+// cycles and a press brake about spindle bearing temperature, questions with no
 // answer, which teach a technician to tick without reading. SYSTEM had no plan
 // at all and fell to the generic one, so the SYS assets added in Phase 5 landed
 // back on exactly the "one checklist for everything" finding the audit raised.

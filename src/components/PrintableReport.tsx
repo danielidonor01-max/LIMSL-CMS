@@ -53,7 +53,7 @@ export default function PrintableReport({
           {/* Letterhead */}
           <div className="flex items-start justify-between gap-4 border-b-2 border-slate-800 pb-4">
             <div className="flex items-center gap-3">
-              {/* Printed records carry the company mark — these go into audit
+              {/* Printed records carry the company mark, these go into audit
                   packs and to insurers. */}
               <Image src="/brand/logo-80.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
               <div>
@@ -105,7 +105,7 @@ export default function PrintableReport({
                     <tr key={i} className="text-slate-800 break-inside-avoid">
                       {columns.map((c) => (
                         <td key={c.key} className="py-1.5 pr-3 align-top">
-                          {r[c.key] == null || r[c.key] === "" ? "—" : String(r[c.key])}
+                          {r[c.key] == null || r[c.key] === "" ? ", " : String(r[c.key])}
                         </td>
                       ))}
                     </tr>

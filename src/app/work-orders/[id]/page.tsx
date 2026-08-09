@@ -216,11 +216,11 @@ export default function WorkOrderDetailPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-200">
             <Meta icon={<Calendar className="w-3.5 h-3.5" />} label="Planned" value={formatDate(wo.plannedDate)} />
             <Meta icon={<Calendar className="w-3.5 h-3.5" />} label="Completed" value={formatDate(wo.completionDate)} />
-            <Meta icon={<User className="w-3.5 h-3.5" />} label="Technician" value={wo.technicianName ?? "—"} />
+            <Meta icon={<User className="w-3.5 h-3.5" />} label="Technician" value={wo.technicianName ?? "-"} />
             <Meta
               icon={<Wrench className="w-3.5 h-3.5" />}
               label="Duration"
-              value={wo.actualDuration ? `${wo.actualDuration} hrs` : "—"}
+              value={wo.actualDuration ? `${wo.actualDuration} hrs` : "-"}
             />
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function WorkOrderDetailPage() {
                   {eq.name}
                 </Link>
                 <p className="text-[11px] font-mono text-slate-500 mt-0.5">
-                  {eq.assetId} · {eq.location} · {eq.oem ?? "—"}
+                  {eq.assetId} · {eq.location} · {eq.oem ?? "-"}
                 </p>
               </div>
               <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
@@ -251,7 +251,7 @@ export default function WorkOrderDetailPage() {
         {checklist && (
           <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
             <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> PM Checklist — Signed Off
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> PM Checklist. Signed Off
             </h3>
 
             <div className="flex flex-wrap gap-2">
@@ -297,7 +297,7 @@ export default function WorkOrderDetailPage() {
         )}
       </main>
 
-      {/* Cancelling is irreversible and frees the schedule occurrence — confirm. */}
+      {/* Cancelling is irreversible and frees the schedule occurrence, confirm. */}
       <Modal
         open={cancelOpen}
         onClose={() => setCancelOpen(false)}
@@ -329,7 +329,7 @@ export default function WorkOrderDetailPage() {
         </div>
       </Modal>
 
-      {/* Non-PM completion — the summary becomes the machine-history entry. */}
+      {/* Non-PM completion, the summary becomes the machine-history entry. */}
       <Modal
         open={completeOpen}
         onClose={() => setCompleteOpen(false)}
@@ -361,7 +361,7 @@ export default function WorkOrderDetailPage() {
               className="w-full sm:w-40 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
             />
             <p className="text-[11px] text-slate-400">
-              Feeds the maintenance backlog figure — without it, backlog is an assumption rather than a measurement.
+              Feeds the maintenance backlog figure, without it, backlog is an assumption rather than a measurement.
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-1">
@@ -437,7 +437,7 @@ function SignatureView({ label, name, sig }: { label: string; name: string | nul
       ) : (
         <div className="h-14 flex items-center text-xs text-slate-500 italic">No signature</div>
       )}
-      <p className="text-sm text-slate-900 mt-1">{name ?? "—"}</p>
+      <p className="text-sm text-slate-900 mt-1">{name ?? "-"}</p>
     </div>
   );
 }

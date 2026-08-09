@@ -2,7 +2,7 @@
 // The app-wide replacement for native <select>. Renders a styled field trigger
 // + popover option list (like Dropdown, but form-field shaped), so no browser-
 // drawn menu ever appears. Near-drop-in: it accepts the same <option> children a
-// native select takes (or an `options` prop) — only the onChange signature
+// native select takes (or an `options` prop), only the onChange signature
 // differs (plain value, not an event). Keyboard: Enter/Space/ArrowDown open,
 // arrows move, Enter selects, Esc closes.
 "use client";

@@ -1,5 +1,5 @@
 // src/lib/notifications/email.ts
-// SMTP email delivery via nodemailer. Provider-agnostic — the same code sends
+// SMTP email delivery via nodemailer. Provider-agnostic, the same code sends
 // through Google Workspace, Microsoft 365, cPanel/webmail, or a transactional
 // relay (Resend/SendGrid SMTP). Credentials come from env (see config.ts).
 import nodemailer, { type Transporter } from "nodemailer";
@@ -10,7 +10,7 @@ export type SendResult = {
   messageId?: string;
   error?: string;
   // What the relay actually said. `ok` only ever means "the relay accepted the
-  // message for delivery" — it is NOT proof of delivery. A receiver like
+  // message for delivery", it is NOT proof of delivery. A receiver like
   // Microsoft 365 accepts at the edge and then quarantines silently, and any
   // later bounce goes to the authenticated mailbox, never back to this app.
   // Recording the SMTP response is the only trace we get.
@@ -55,15 +55,15 @@ function explainSmtpError(err: unknown): string {
     );
   }
   if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) {
-    return `SMTP_HOST could not be resolved — check the hostname (smtp.gmail.com for Gmail). Raw: ${raw}`;
+    return `SMTP_HOST could not be resolved, check the hostname (smtp.gmail.com for Gmail). Raw: ${raw}`;
   }
   if (/ETIMEDOUT|ECONNREFUSED|ESOCKET/i.test(raw)) {
-    return `Could not reach the SMTP server — check SMTP_PORT (587 with SMTP_SECURE=false, or 465 with true). Raw: ${raw}`;
+    return `Could not reach the SMTP server, check SMTP_PORT (587 with SMTP_SECURE=false, or 465 with true). Raw: ${raw}`;
   }
   return raw;
 }
 
-// Verify the SMTP connection/credentials without sending — used by the test button.
+// Verify the SMTP connection/credentials without sending, used by the test button.
 export async function verifyEmail(): Promise<SendResult> {
   try {
     await getTransport().verify();
@@ -73,7 +73,7 @@ export async function verifyEmail(): Promise<SendResult> {
   }
 }
 
-// The From ADDRESS must be the authenticated mailbox — Gmail (and any
+// The From ADDRESS must be the authenticated mailbox. Gmail (and any
 // DMARC-checking receiver) treats a From at a different domain than the
 // authenticated sender as spoofing, which is a straight ticket to spam. The
 // display name from EMAIL_FROM is kept; only a mismatched address is replaced.
@@ -92,13 +92,13 @@ export async function sendEmail(to: string, title: string, body: string, linkPat
   try {
     const base = config.appUrl.replace(/\/$/, "");
     const link = linkPath && base ? `${base}${linkPath}` : null;
-    const text = `${body}${link ? `\n\nOpen: ${link}` : ""}\n\n— LIMSL CMS`;
+    const text = `${body}${link ? `\n\nOpen: ${link}` : ""}\n\n, LIMSL CMS`;
     const html = `<div style="font-family:system-ui,-apple-system,Arial,sans-serif;color:#0f172a;max-width:560px">
       <h2 style="margin:0 0 10px;font-size:16px">${escapeHtml(title)}</h2>
       <p style="white-space:pre-line;font-size:14px;line-height:1.5;color:#334155;margin:0 0 16px">${escapeHtml(body)}</p>
       ${link ? `<p style="margin:0 0 16px"><a href="${link}" style="display:inline-block;background:#059669;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Open in LIMSL CMS</a></p>` : ""}
       <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0"/>
-      <p style="font-size:11px;color:#94a3b8;margin:0">LIMSL CMS — automated maintenance notification. Please do not reply to this email.</p>
+      <p style="font-size:11px;color:#94a3b8;margin:0">LIMSL CMS, automated maintenance notification. Please do not reply to this email.</p>
     </div>`;
     const info = await getTransport().sendMail({
       from: alignedFrom(),

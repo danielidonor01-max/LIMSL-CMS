@@ -26,7 +26,7 @@ export interface SchematicProvider {
   extract(input: { fileUrl?: string; base64?: string; pdfKind?: string }): Promise<ExtractionResult>;
 }
 
-// Disabled provider — returned whenever the engine isn't configured.
+// Disabled provider, returned whenever the engine isn't configured.
 export class NullProvider implements SchematicProvider {
   readonly name = "NONE";
   async extract(): Promise<ExtractionResult> {

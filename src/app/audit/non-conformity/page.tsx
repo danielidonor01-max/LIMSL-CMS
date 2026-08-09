@@ -39,7 +39,7 @@ export default function NonConformityRegister() {
       const res = await fetch("/api/audit/auto-detect", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`Audit scan complete — ${data.newNonConformitiesRaised} new non-conformities raised.`);
+        toast.success(`Audit scan complete: ${data.newNonConformitiesRaised} new non-conformities raised.`);
         loadNCs();
       }
     } catch (err) {
@@ -73,7 +73,7 @@ export default function NonConformityRegister() {
       setCorrectiveAction("");
       loadNCs();
     } catch {
-      toast.error("Couldn't close the non-conformity — check your connection and try again.");
+      toast.error("Couldn't close the non-conformity, check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -259,7 +259,7 @@ export default function NonConformityRegister() {
                   </div>
                 )}
 
-                {/* CAPA sign-off — close-out is gated on this chain completing,
+                {/* CAPA sign-off, close-out is gated on this chain completing,
                     including the independent effectiveness verification. */}
                 <SignoffChain
                   entityType={activeNc.type === "SAFETY_INCIDENT" ? "SAFETY_INCIDENT" : "NON_CONFORMITY"}

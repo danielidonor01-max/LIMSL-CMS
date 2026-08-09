@@ -18,7 +18,7 @@ import { nanoid } from "nanoid";
 import { sql } from "drizzle-orm";
 
 const YEAR = 2026;
-const TODAY = new Date(); // seed runs in Node — Date is available here
+const TODAY = new Date(); // seed runs in Node. Date is available here
 
 // Frequency → the months (1-12) a PM/activity falls in for the year
 function monthsForFrequency(freq: string | null): number[] {
@@ -109,7 +109,7 @@ export async function seedSchedule() {
         month,
         plannedDate,
         activityType: "PM",
-        taskDescription: `${eq.maintenanceFrequency ?? "QUARTERLY"} preventive maintenance — ${eq.name}`,
+        taskDescription: `${eq.maintenanceFrequency ?? "QUARTERLY"} preventive maintenance, ${eq.name}`,
         maintenanceFrequency: eq.maintenanceFrequency,
         responsiblePersonId: tech?.id,
         responsiblePersonName: tech?.name,
@@ -131,7 +131,7 @@ export async function seedSchedule() {
           month,
           plannedDate,
           activityType: "INS",
-          taskDescription: `Quarterly compliance inspection — ${eq.name}`,
+          taskDescription: `Quarterly compliance inspection, ${eq.name}`,
           maintenanceFrequency: eq.maintenanceFrequency,
           responsiblePersonId: tech?.id,
           responsiblePersonName: tech?.name,
@@ -161,7 +161,7 @@ export async function seedSchedule() {
         scheduleId: s.id,
         priority: eq.criticality === "CRITICAL" || eq.criticality === "HIGH" ? "HIGH" : "MEDIUM",
         status: "OPEN",
-        title: `PM — ${eq.name}`,
+        title: `PM, ${eq.name}`,
         description: s.taskDescription,
         plannedDate: s.plannedDate,
         technicianId: s.responsiblePersonId,
@@ -197,7 +197,7 @@ export async function seedSchedule() {
       scheduleId: target.id,
       priority: "HIGH",
       status: "COMPLETED",
-      title: `PM — ${crane.name}`,
+      title: `PM, ${crane.name}`,
       description: target.taskDescription,
       plannedDate: target.plannedDate,
       startDate: target.plannedDate,

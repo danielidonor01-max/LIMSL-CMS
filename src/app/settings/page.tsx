@@ -59,7 +59,7 @@ export default function AppSettingsPage() {
     updatedAt: null,
   });
 
-  // Live preview window — demonstrates the maths against the *unsaved* form.
+  // Live preview window, demonstrates the maths against the *unsaved* form.
   const [previewStart, setPreviewStart] = useState("");
   const [previewEnd, setPreviewEnd] = useState("");
 
@@ -114,7 +114,7 @@ export default function AppSettingsPage() {
   };
   useEffect(loadEmailStatus, []);
 
-  // Notification routing — which events send, and to which roles.
+  // Notification routing, which events send, and to which roles.
   type RoutingEvent = { event: string; label: string; desc: string; personal: boolean; defaultRoles: string[] | null };
   const [routingEvents, setRoutingEvents] = useState<RoutingEvent[]>([]);
   const [routing, setRouting] = useState<Record<string, { enabled: boolean; roles: string[] | null }>>({});
@@ -172,7 +172,7 @@ export default function AppSettingsPage() {
         toast.error(d.error || "Connection failed.");
         return;
       }
-      toast.success("SMTP connection verified — credentials accepted.");
+      toast.success("SMTP connection verified, credentials accepted.");
     } catch {
       toast.error("Connection check failed.");
     } finally {
@@ -261,7 +261,7 @@ export default function AppSettingsPage() {
       // A toast disappears; which statement failed is the one thing worth
       // keeping on screen, since the alternative is reading server logs.
       setDbMaintResult(d);
-      if (d.ok) toast.success(`Database up to date — ${d.applied.length} statements verified.`);
+      if (d.ok) toast.success(`Database up to date: ${d.applied.length} statements verified.`);
       else toast.error(`${d.applied.length} applied, ${d.failed.length} failed.`);
     } finally {
       setDbMaintBusy(false);
@@ -359,7 +359,7 @@ export default function AppSettingsPage() {
       // "Accepted by the relay" is all we actually know. Saying "delivered"
       // sends the admin looking in an inbox when the message is in quarantine.
       if (d.diagnosis?.severity === "warn") {
-        toast.warning(`Handed to the mail server for ${d.to} — but it may be filtered. See the note below.`);
+        toast.warning(`Handed to the mail server for ${d.to}, but it may be filtered. See below.`);
       } else {
         toast.success(`Test email sent to ${d.to}. Check the inbox (and spam).`);
       }
@@ -402,9 +402,9 @@ export default function AppSettingsPage() {
         return;
       }
       if (d.notificationsSent === 0 && d.skippedDuplicate === 0) {
-        toast.success("Nothing overdue or due soon — no reminders needed.");
+        toast.success("Nothing overdue or due soon, no reminders needed.");
       } else if (d.notificationsSent === 0) {
-        toast.success(`Already notified today — ${d.skippedDuplicate} digest(s) skipped.`);
+        toast.success(`Already notified today. ${d.skippedDuplicate} digest(s) skipped.`);
       } else {
         toast.success(
           `${d.overdueActivities} overdue, ${d.upcomingActivities} due soon, ` +
@@ -508,13 +508,13 @@ export default function AppSettingsPage() {
 
   const aiConfigured = creds.filter((c) => c.configured).length;
   const NAV: { id: TabId; label: string; desc: string; icon: typeof CalendarDays; status?: { ok: boolean; text: string } }[] = [
-    { id: "calendar", label: "Work Calendar", desc: "Production hours — the basis of downtime & KPIs", icon: CalendarDays },
+    { id: "calendar", label: "Work Calendar", desc: "Production hours, the basis of downtime and KPIs", icon: CalendarDays },
     {
       id: "notifications", label: "Notifications & Email", desc: "SMTP delivery, digests, test send", icon: BellRing,
       status: emailStatus ? { ok: emailStatus.ready, text: emailStatus.ready ? "Configured" : "Not configured" } : undefined,
     },
     {
-      id: "ai", label: "AI Providers", desc: "API keys & the diagnosis failover chain", icon: KeyRound,
+      id: "ai", label: "AI Providers", desc: "API keys and the diagnosis failover chain", icon: KeyRound,
       status: { ok: aiConfigured > 0, text: aiConfigured > 0 ? `${aiConfigured} active` : "No keys" },
     },
     {
@@ -589,7 +589,7 @@ export default function AppSettingsPage() {
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
         <p>
           Downtime, MTTR and MTBF count <strong>production hours</strong>, not wall-clock hours. A machine that stops at
-          16:00 Friday and is restored 09:00 Monday is down only the hours the workshop would have been running — the
+          16:00 Friday and is restored 09:00 Monday is down only the hours the workshop would have been running, the
           weekend and off-shift hours below are excluded automatically.
         </p>
       </div>
@@ -708,7 +708,7 @@ export default function AppSettingsPage() {
             errors. Add more than one key and an exhausted free tier never stops a diagnosis.
           </span>
         </div>
-        {/* Summary table — the whole chain at a glance */}
+        {/* Summary table, the whole chain at a glance */}
         <div className="overflow-x-auto border border-slate-200 rounded-lg">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50">
@@ -743,9 +743,9 @@ export default function AppSettingsPage() {
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">Not configured</span>
                     )}
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-500">{c.keyHint ?? "—"}</td>
+                  <td className="py-2.5 px-3 font-mono text-slate-500">{c.keyHint ?? "-"}</td>
                   <td className="py-2.5 px-3 text-slate-400 hidden md:table-cell">
-                    {c.updatedByName ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}` : "—"}
+                    {c.updatedByName ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}` : "-"}
                   </td>
                   <td className="py-2.5 px-3 text-right">
                     <Button size="sm" variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={(e) => { e.stopPropagation(); testKey(c.provider); }}>
@@ -758,7 +758,7 @@ export default function AppSettingsPage() {
           </table>
         </div>
 
-        {/* Per-provider tabs — manage one key at a time */}
+        {/* Per-provider tabs, manage one key at a time */}
         <div className="flex gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto">
           {creds.map((c) => {
             const active = (aiTab ?? creds[0]?.provider) === c.provider;
@@ -866,7 +866,7 @@ export default function AppSettingsPage() {
               <ol className="text-[11px] text-slate-600 list-decimal list-inside space-y-0.5">
                 <li>Azure Portal → Microsoft Entra ID → App registrations → New registration.</li>
                 <li>API permissions → Microsoft Graph → <span className="font-mono">Application</span> → add <span className="font-mono">Sites.Read.All</span> → Grant admin consent.</li>
-                <li>Certificates &amp; secrets → New client secret — copy its <em>Value</em> immediately.</li>
+                <li>Certificates &amp; secrets → New client secret, copy its <em>Value</em> immediately.</li>
                 <li>The Tenant ID and Client ID are on the app&apos;s Overview page.</li>
               </ol>
             </div>
@@ -911,19 +911,19 @@ export default function AppSettingsPage() {
             href: "/settings/import",
             icon: Database,
             title: "Data Import",
-            desc: "Go-live registers from CSV / Excel or straight from SharePoint — equipment, schedule, users and components, with preview before commit.",
+            desc: "Go-live registers from CSV / Excel or straight from SharePoint, equipment, schedule, users and components, with preview before commit.",
           },
           {
             href: "/settings/users",
             icon: UsersIcon,
             title: "User Management",
-            desc: "Accounts, roles and access — create users, reset passwords, deactivate leavers.",
+            desc: "Accounts, roles and access, create users, reset passwords, deactivate leavers.",
           },
           {
             href: "/account",
             icon: UserCircle,
             title: "My Account & Preferences",
-            desc: "Personal settings — density, landing page, notification and AI-chat preferences. Every user has their own.",
+            desc: "Personal settings, density, landing page, notification and AI-chat preferences. Every user has their own.",
           },
         ] as const).map(({ href, icon: Icon, title, desc }) => (
           <Link
@@ -942,14 +942,14 @@ export default function AppSettingsPage() {
           </Link>
         ))}
 
-        {/* Database maintenance — self-service index migration for the deployed DB. */}
+        {/* Database maintenance, self-service index migration for the deployed DB. */}
         <section className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-emerald-600" />
             <h3 className="text-sm font-semibold text-slate-900">Database maintenance</h3>
           </div>
           <p className="text-xs text-slate-500 leading-snug">
-            Brings the database up to what this version of the app expects — new tables, new columns and performance
+            Brings the database up to what this version of the app expects, new tables, new columns and performance
             indexes. Every statement only creates what is missing and never touches existing data, so it is safe to
             run repeatedly. <strong>Run it once after each deployment</strong>; features added in that release will
             error against the database until you do.
@@ -968,7 +968,7 @@ export default function AppSettingsPage() {
               <p className="font-semibold">
                 {dbMaintResult.failed?.length
                   ? `${dbMaintResult.applied.length} applied, ${dbMaintResult.failed.length} failed`
-                  : `Database is up to date — ${dbMaintResult.applied.length} statements verified.`}
+                  : `Database is up to date, ${dbMaintResult.applied.length} statements verified.`}
               </p>
               {dbMaintResult.failed?.length > 0 && (
                 <ul className="mt-1.5 space-y-1.5 text-[11px]">
@@ -1034,7 +1034,7 @@ export default function AppSettingsPage() {
                 ))}
               </div>
             )}
-            {/* Per-variable diagnosis — shows exactly what this deployment sees. */}
+            {/* Per-variable diagnosis, shows exactly what this deployment sees. */}
             <div className="space-y-1.5">
               <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">What this deployment sees</p>
               {([
@@ -1043,7 +1043,7 @@ export default function AppSettingsPage() {
                 { k: "SMTP_USER", ok: emailStatus.hasUser, note: "the sending address" },
                 { k: "SMTP_PASS", ok: emailStatus.hasPass, note: "16-char Google App Password" },
                 { k: "EMAIL_FROM", ok: !!emailStatus.from, note: "sender name/address" },
-                { k: "APP_URL", ok: emailStatus.appUrlSet, note: "optional — absolute email links", optional: true },
+                { k: "APP_URL", ok: emailStatus.appUrlSet, note: "optional, absolute email links", optional: true },
               ] as { k: string; ok: boolean; note: string; optional?: boolean }[]).map((v) => (
                 <div key={v.k} className="flex items-center gap-2 text-[11px]">
                   {v.ok ? (
@@ -1052,7 +1052,7 @@ export default function AppSettingsPage() {
                     <XCircle className={`w-3.5 h-3.5 shrink-0 ${v.optional ? "text-slate-300" : "text-rose-500"}`} />
                   )}
                   <span className={`font-mono ${v.ok ? "text-slate-700" : v.optional ? "text-slate-400" : "text-rose-600 font-semibold"}`}>{v.k}</span>
-                  <span className="text-slate-400">— {v.ok ? "set" : v.optional ? "not set (optional)" : `missing · ${v.note}`}</span>
+                  <span className="text-slate-400">, {v.ok ? "set" : v.optional ? "not set (optional)" : `missing · ${v.note}`}</span>
                 </div>
               ))}
             </div>
@@ -1100,7 +1100,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="name@leemachinery.net — blank sends to you"
+              placeholder="name@leemachinery.net, blank sends to you"
               className={`${timeField} w-full`}
             />
           </div>
@@ -1224,7 +1224,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         </h3>
         <p className="text-xs text-slate-500">
           Reminds responsible people about maintenance <strong>due soon</strong> and chases what is{" "}
-          <strong>overdue</strong>. Digests report what has <strong>changed</strong> since the last one — if nothing
+          <strong>overdue</strong>. Digests report what has <strong>changed</strong> since the last one, if nothing
           is new and nothing has cleared, nothing is sent. An alert that repeats unchanged trains people to ignore it.
         </p>
 
@@ -1233,7 +1233,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
             <div>
               <p className="text-xs font-semibold text-slate-900">Who gets told, and when</p>
               <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                The audience widens as an item ages — it is not handed over, people are added. Set the day each level
+                The audience widens as an item ages, it is not handed over, people are added. Set the day each level
                 joins.
               </p>
             </div>
@@ -1311,7 +1311,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                     }
                     className="w-16 px-2 min-h-9 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center"
                   />
-                  <span className="text-xs text-slate-500">:00 — before shift is usually right</span>
+                  <span className="text-xs text-slate-500">:00, before shift is usually right</span>
                 </div>
               </div>
             </div>
@@ -1354,7 +1354,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         </Button>
       </section>
 
-      {/* Notification routing — who gets what */}
+      {/* Notification routing, who gets what */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
@@ -1364,7 +1364,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         </div>
         <p className="text-xs text-slate-500">
           Control which notification kinds are sent, and which roles receive the role-targeted ones. Personal notices
-          (your sign-off step, a work order assigned to you) always go to the person concerned — routing can only switch
+          (your sign-off step, a work order assigned to you) always go to the person concerned, routing can only switch
           them off. Each recipient&apos;s own channel preferences (email, sound, desktop) still apply on top.
         </p>
         <div className="divide-y divide-slate-100">

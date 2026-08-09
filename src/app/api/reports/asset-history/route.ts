@@ -1,5 +1,5 @@
 // src/app/api/reports/asset-history/route.ts
-// The per-asset maintenance dossier — the single most common auditor request
+// The per-asset maintenance dossier, the single most common auditor request
 // ("show me everything you did to LEE/PE/0012 last year") and the one the system
 // could not answer. Assembles one date-ranged, chronological record set for a
 // machine: work orders, PM checklists with their sign-off state, corrective
@@ -8,7 +8,7 @@
 //
 // buildTimeline() is reused for the explicit machine-log entries and for its
 // de-duplication key (a source that already wrote an AUTO log entry is not
-// listed twice) — but it is unbounded, so everything here is range-filtered and
+// listed twice), but it is unbounded, so everything here is range-filtered and
 // the source records are re-read to carry the detail a dossier needs.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -41,7 +41,7 @@ export type DossierEvent = {
   href: string | null;
 };
 
-const MAX_RANGE_DAYS = 3660; // ~10 years — a guard, not a policy
+const MAX_RANGE_DAYS = 3660; // ~10 years, a guard, not a policy
 const day = (v: string | null | undefined) => (v ?? "").slice(0, 10);
 
 function isoDate(d: Date) {
@@ -54,7 +54,7 @@ function normaliseDate(raw: string | null, fallback: string): string {
   return fallback;
 }
 
-// Planned production hours for one machine across the range — the availability
+// Planned production hours for one machine across the range, the availability
 // baseline, using the same model as the KPI layer (production calendar from the
 // Super-Admin working-hours settings), just ranged instead of per-month.
 function plannedHoursInRange(from: string, to: string, s: WorkSettings): number {
@@ -157,13 +157,13 @@ export async function GET(request: Request) {
           w.description,
           w.actualDuration != null && `${w.actualDuration} h actual`,
         ]),
-        performedBy: w.technicianName ?? "—",
+        performedBy: w.technicianName ?? "-",
         state: w.status.replace(/_/g, " "),
         href: `/work-orders/${w.id}`,
       });
     }
 
-    // 2. PM checklists — the signed record, not just the work order that framed it.
+    // 2. PM checklists, the signed record, not just the work order that framed it.
     const checklistsInRange = checklists.filter((c) => inRange(c.date));
     for (const c of checklistsInRange) {
       const signatures = [
@@ -187,7 +187,7 @@ export async function GET(request: Request) {
             c.areaSafe && "area safe",
           ].filter(Boolean).join("/") || "not recorded"}`,
         ]),
-        performedBy: c.technicianName ?? "—",
+        performedBy: c.technicianName ?? "-",
         state: joinDetail([
           c.pmCompleted ? "completed" : "not completed",
           signatures,
@@ -197,7 +197,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // 3. Corrective records — fault, root cause, downtime, close-out.
+    // 3. Corrective records, fault, root cause, downtime, close-out.
     const cmsInRange = cms.filter((c) => inRange(c.reportedDate) || inRange(c.closeOutDate));
     for (const c of cmsInRange) {
       events.push({
@@ -220,7 +220,7 @@ export async function GET(request: Request) {
             : "downtime window not recorded",
           c.closeOutDate ? `closed ${day(c.closeOutDate)}` : "not closed out",
         ]),
-        performedBy: c.technicianName || c.reportedByName || "—",
+        performedBy: c.technicianName || c.reportedByName || "-",
         state: joinDetail([c.status.replace(/_/g, " "), chainFor("CORRECTIVE", c.id)]),
         href: `/corrective/${c.id}`,
       });
@@ -233,14 +233,14 @@ export async function GET(request: Request) {
         date: day(n.detectedDate || n.createdAt),
         category: "Non-conformity",
         reference: n.ncNumber,
-        title: `${n.type.replace(/_/g, " ")} — ${n.severity.toLowerCase()} severity`,
+        title: `${n.type.replace(/_/g, " ")}, ${n.severity.toLowerCase()} severity`,
         detail: joinDetail([
           n.description,
           n.rootCause && `root cause: ${n.rootCause}`,
           n.correctiveAction && `action: ${n.correctiveAction}`,
           n.closeOutDate ? `closed ${day(n.closeOutDate)}` : n.targetDate ? `target ${day(n.targetDate)}` : null,
         ]),
-        performedBy: n.detectedBy ?? "—",
+        performedBy: n.detectedBy ?? "-",
         state: joinDetail([
           n.status.replace(/_/g, " "),
           chainFor(n.type === "SAFETY_INCIDENT" ? "SAFETY_INCIDENT" : "NON_CONFORMITY", n.id),
@@ -256,8 +256,8 @@ export async function GET(request: Request) {
       events.push({
         date: day(c.calibrationDate),
         category: "Calibration",
-        reference: c.certificateNumber || instrumentName.get(c.instrumentId) || "—",
-        title: `Calibration — ${instrumentName.get(c.instrumentId) ?? "instrument"}`,
+        reference: c.certificateNumber || instrumentName.get(c.instrumentId) || "-",
+        title: `Calibration, ${instrumentName.get(c.instrumentId) ?? "instrument"}`,
         detail: joinDetail([
           c.asFound && `as found ${c.asFound.replace(/_/g, " ").toLowerCase()}`,
           c.asLeft && `as left ${c.asLeft.replace(/_/g, " ").toLowerCase()}`,
@@ -266,7 +266,7 @@ export async function GET(request: Request) {
           c.nextCalibrationDate && `next due ${day(c.nextCalibrationDate)}`,
           c.notes,
         ]),
-        performedBy: c.calibratedBy ?? "—",
+        performedBy: c.calibratedBy ?? "-",
         state: c.verdict,
         href: "/calibration",
       });
@@ -286,13 +286,13 @@ export async function GET(request: Request) {
           d.expiryDate && `expires ${day(d.expiryDate)}`,
           d.notes,
         ]),
-        performedBy: d.uploadedBy ?? "—",
+        performedBy: d.uploadedBy ?? "-",
         state: d.status,
         href: `/equipment/${(asset.assetId || "").replace(/\//g, "-")}`,
       });
     }
 
-    // 7. Machine-log entries — accidents, transfers, diagnoses, status changes,
+    // 7. Machine-log entries, accidents, transfers, diagnoses, status changes,
     //    notes. buildTimeline() prefers its AUTO log entry over the source row it
     //    was written from; a dossier wants the opposite (the source record carries
     //    root cause, downtime and sign-off), so an entry pointing at a record
@@ -308,14 +308,14 @@ export async function GET(request: Request) {
       const refLabel =
         (entry.refType === "work_order" && entry.refId && woNumber.get(entry.refId)) ||
         (entry.refType === "corrective_maintenance" && entry.refId && cmNumber.get(entry.refId)) ||
-        "—";
+        ", ";
       events.push({
         date: day(entry.occurredAt),
         category: titleFor(entry.category),
         reference: refLabel,
         title: entry.title,
         detail: entry.detail ?? "",
-        performedBy: entry.performedByName ?? "—",
+        performedBy: entry.performedByName ?? "-",
         state: entry.source === "MANUAL" ? "Logged manually" : "Recorded automatically",
         href: entry.href,
       });

@@ -56,7 +56,7 @@ export async function PATCH(
 
     // A WMS is a controlled safety document: once anyone has signed it (or
     // rejected it), its content can only change under a NEW revision with a
-    // fresh approval chain — signatures attest to specific content, and silent
+    // fresh approval chain, signatures attest to specific content, and silent
     // post-signature edits would leave operators working an unreviewed method.
     const chain = await getSignoffChain("WMS", wms.id);
     const hasSignatures = chain.some((s) => s.status === "SIGNED" || s.status === "REJECTED");
@@ -70,7 +70,7 @@ export async function PATCH(
     const startsNewRevision = hasSignatures && touchesContent;
 
     // Content edits only. Approval/status is DERIVED from the sign-off chain
-    // (see reconcileWmsStatus) — it can never be forced through the API, so the
+    // (see reconcileWmsStatus), it can never be forced through the API, so the
     // status and reviewed/approved fields are deliberately NOT writable here.
     const updateFields: any = {
       title: body.title ?? wms.title,
@@ -115,7 +115,7 @@ export async function PATCH(
         action: "UPDATE",
         entityType: "wms",
         entityId: wms.id,
-        entityDescription: `WMS ${wms.wmsNumber} content changed after sign-off — revision ${(wms.revision ?? 0) + 1} opened, approval chain reset`,
+        entityDescription: `WMS ${wms.wmsNumber} content changed after sign-off, revision ${(wms.revision ?? 0) + 1} opened, approval chain reset`,
       });
     }
 

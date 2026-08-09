@@ -105,7 +105,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           equipmentId: id,
           category: "INSPECTION",
           source: "AUTO",
-          title: `${point.name}: ${value} ${point.unit ?? ""} — ${verdict === "ALARM" ? "above alarm level" : "above alert level"}`,
+          title: `${point.name}: ${value} ${point.unit ?? ""}, ${verdict === "ALARM" ? "above alarm level" : "above alert level"}`,
           detail: body.notes || null,
           occurredAt: takenOn,
           performedById: gate.actor?.id ?? null,
@@ -123,10 +123,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const alert = num(body.alertLimit);
     const alarm = num(body.alarmLimit);
     // Thresholds the wrong way round would make every reading an alarm and no
-    // reading an alert — silently useless.
+    // reading an alert, silently useless.
     if (alert !== null && alarm !== null && alert >= alarm) {
       return NextResponse.json(
-        { error: "The alert level must be below the alarm level — alert means plan, alarm means stop." },
+        { error: "The alert level must be below the alarm level, alert means plan, alarm means stop." },
         { status: 400 },
       );
     }

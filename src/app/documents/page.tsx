@@ -191,7 +191,7 @@ export default function DocumentsPage() {
                               {g.assetId}
                             </Link>
                           ) : (
-                            "—"
+                            ", "
                           )}
                         </p>
                       </div>
@@ -231,7 +231,7 @@ export default function DocumentsPage() {
                                   <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {d.title}
                                 </td>
                                 <td className="py-2 px-3 text-slate-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
-                                <td className="py-2 px-3 text-slate-500">{d.revision ?? "—"}</td>
+                                <td className="py-2 px-3 text-slate-500">{d.revision ?? "-"}</td>
                                 <td className="py-2 px-3 font-mono text-slate-500">{formatDate(d.expiryDate)}</td>
                                 <td className="py-2 px-3">
                                   <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
@@ -244,7 +244,7 @@ export default function DocumentsPage() {
                                       <Download className="w-3.5 h-3.5" /> Open
                                     </a>
                                   ) : (
-                                    <span className="text-slate-400">—</span>
+                                    <span className="text-slate-400">, </span>
                                   )}
                                 </td>
                               </tr>

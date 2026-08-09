@@ -3,7 +3,7 @@
 // are reconciled to today, then the responsible people are nagged through the
 // notification outbox (in-app now, WhatsApp once a provider is configured).
 //
-// Notifications are DIGESTS, not one-per-item — each responsible person gets a
+// Notifications are DIGESTS, not one-per-item, each responsible person gets a
 // single summary of their overdue work, and managers get one plant-wide summary,
 // so a backlog of 70 items doesn't mean 70 messages. A per-day dedup guard makes
 // the scan safe to run repeatedly (manual button or a daily cron).
@@ -45,7 +45,7 @@ export type EscalationSummary = {
 
 // Has an escalation for this exact target already gone out within `hours`? Guards
 // against re-nagging on repeated runs. Compares in JS because SQLite's
-// datetime('now') default is space-separated, not ISO — a raw string compare
+// datetime('now') default is space-separated, not ISO, a raw string compare
 // against an ISO cutoff would be wrong across the date/time separator.
 async function recentlyEscalated(
   entityType: string,
@@ -103,7 +103,7 @@ export async function runEscalations(now = new Date(), trigger: "manual" | "sche
     db.select().from(permits),
     db.select().from(equipment),
   ]);
-  const eqLabel = new Map(equip.map((e) => [e.id, `${e.assetId} — ${e.name}`]));
+  const eqLabel = new Map(equip.map((e) => [e.id, `${e.assetId}, ${e.name}`]));
 
   const fmtList = (items: string[], cap = 8) =>
     items.slice(0, cap).map((s) => `• ${s}`).join("\n") +
@@ -126,10 +126,10 @@ export async function runEscalations(now = new Date(), trigger: "manual" | "sche
     }
     const body = `You have ${items.length} overdue maintenance ${
       items.length === 1 ? "activity" : "activities"
-    }:\n${fmtList(items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"} — ${i.activityType} (due ${i.plannedDate})`))}`;
+    }:\n${fmtList(items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"}, ${i.activityType} (due ${i.plannedDate})`))}`;
     const sent = await notify({
       event: "ESCALATION",
-      title: `Overdue maintenance — ${items.length} item${items.length === 1 ? "" : "s"}`,
+      title: `Overdue maintenance, ${items.length} item${items.length === 1 ? "" : "s"}`,
       body,
       linkPath: "/schedule",
       relatedEntityType: "escalation:schedule",
@@ -196,11 +196,11 @@ Oldest outstanding: ${oldest} day(s).`,
     const body = `You have ${items.length} maintenance ${
       items.length === 1 ? "activity" : "activities"
     } due in the next ${REMINDER_LEAD_DAYS} day${REMINDER_LEAD_DAYS === 1 ? "" : "s"}:\n${fmtList(
-      items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"} — ${i.activityType} (due ${i.plannedDate})`),
+      items.map((i) => `${eqLabel.get(i.equipmentId) ?? "Equipment"}, ${i.activityType} (due ${i.plannedDate})`),
     )}`;
     const sent = await notify({
       event: "ESCALATION",
-      title: `Maintenance due soon — ${items.length} item${items.length === 1 ? "" : "s"}`,
+      title: `Maintenance due soon, ${items.length} item${items.length === 1 ? "" : "s"}`,
       body,
       linkPath: "/schedule",
       relatedEntityType: "escalation:schedule-upcoming",
@@ -235,7 +235,7 @@ Oldest outstanding: ${oldest} day(s).`,
 
   // ── Calibration due / overdue ──────────────────────────────────────────────
   // An instrument out of calibration silently invalidates every inspection made
-  // with it — a direct ISO 9001 non-conformity. Longer lead than PMs because
+  // with it, a direct ISO 9001 non-conformity. Longer lead than PMs because
   // external calibration labs need booking.
   const calLeadDays = Number(process.env.CALIBRATION_LEAD_DAYS || 14);
   const calHorizon = new Date(now.getTime() + calLeadDays * 86_400_000).toISOString().slice(0, 10);
@@ -249,11 +249,11 @@ Oldest outstanding: ${oldest} day(s).`,
       const overdueCal = calDue.filter((c) => c.nextCalibrationDate! < today);
       const body =
         `${calDue.length} instrument${calDue.length === 1 ? " is" : "s are"} due for calibration within ${calLeadDays} days` +
-        `${overdueCal.length ? ` — ${overdueCal.length} already OVERDUE` : ""}:\n` +
-        fmtList(calDue.map((c) => `${c.instrumentName}${c.serialNumber ? ` (S/N ${c.serialNumber})` : ""} — due ${c.nextCalibrationDate}${c.nextCalibrationDate! < today ? " ⚠ overdue" : ""}`));
+        `${overdueCal.length ? `, ${overdueCal.length} already OVERDUE` : ""}:\n` +
+        fmtList(calDue.map((c) => `${c.instrumentName}${c.serialNumber ? ` (S/N ${c.serialNumber})` : ""}, due ${c.nextCalibrationDate}${c.nextCalibrationDate! < today ? " ⚠ overdue" : ""}`));
       const sent = await notify({
         event: "ESCALATION",
-        title: `Calibration due — ${calDue.length} instrument${calDue.length === 1 ? "" : "s"}`,
+        title: `Calibration due, ${calDue.length} instrument${calDue.length === 1 ? "" : "s"}`,
         body,
         linkPath: "/calibration",
         relatedEntityType: "escalation:calibration",
@@ -279,11 +279,11 @@ Oldest outstanding: ${oldest} day(s).`,
       const lapsedTr = expiring.filter((c) => c.expiryDate! < today);
       const body =
         `${expiring.length} competency record${expiring.length === 1 ? "" : "s"} expire${expiring.length === 1 ? "s" : ""} within ${trainLeadDays} days` +
-        `${lapsedTr.length ? ` — ${lapsedTr.length} already LAPSED` : ""}:\n` +
-        fmtList(expiring.map((c) => `${c.employeeName} — ${c.skillArea} (expires ${c.expiryDate}${c.expiryDate! < today ? " ⚠ lapsed" : ""})`));
+        `${lapsedTr.length ? `, ${lapsedTr.length} already LAPSED` : ""}:\n` +
+        fmtList(expiring.map((c) => `${c.employeeName}, ${c.skillArea} (expires ${c.expiryDate}${c.expiryDate! < today ? " ⚠ lapsed" : ""})`));
       const sent = await notify({
         event: "ESCALATION",
-        title: `Training expiring — ${expiring.length} record${expiring.length === 1 ? "" : "s"}`,
+        title: `Training expiring, ${expiring.length} record${expiring.length === 1 ? "" : "s"}`,
         body,
         linkPath: "/training",
         relatedEntityType: "escalation:training",

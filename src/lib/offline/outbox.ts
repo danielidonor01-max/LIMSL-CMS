@@ -2,14 +2,14 @@
 // A submit that survives losing signal.
 //
 // Phase 3 shipped drafts and an honest offline banner, so nothing typed is lost
-// — but a technician who presses Submit with no bars still watches it fail and
+//, but a technician who presses Submit with no bars still watches it fail and
 // has to remember to come back. The outbox closes that: the request is parked on
 // the device and sent when the connection returns.
 //
 // The dangerous version of this feature is the one that swallows failures. If a
-// queued request is rejected for a real reason — a validation error, a permit
+// queued request is rejected for a real reason, a validation error, a permit
 // that lapsed while the phone was in a pocket, someone else closing the record
-// first — retrying it forever hides the problem behind an optimistic tick. So:
+// first, retrying it forever hides the problem behind an optimistic tick. So:
 //
 //   • 4xx is TERMINAL. It will never succeed on retry, and the user must be told.
 //   • 5xx and network failures retry with backoff, up to a cap.
@@ -41,14 +41,14 @@ export const MAX_ATTEMPTS = 5;
 export const STORAGE_KEY = "limsl.outbox.v1";
 
 // Roughly 4 MB of the usual 5 MB localStorage budget. PM checklists carry two
-// signature images, so a handful of them is a realistic ceiling — better to
+// signature images, so a handful of them is a realistic ceiling, better to
 // refuse the eleventh honestly than to evict the first ten silently.
 export const MAX_STORE_BYTES = 4_000_000;
 
 // A 4xx will never succeed on a retry. Treating it as retryable turns a
 // fixable validation error into an item that spins forever and is never read.
 export function shouldRetry(status: number | null): boolean {
-  if (status === null) return true;            // network failure — the whole point
+  if (status === null) return true;            // network failure, the whole point
   if (status === 408 || status === 429) return true; // timeout / rate limit are transient
   if (status >= 500) return true;
   return false;
@@ -105,7 +105,7 @@ export function applyResult(
   return { keep: true, entry: { ...entry, attempts, status: "PENDING", lastError: result.error ?? null } };
 }
 
-// Only entries worth sending now — a FAILED one waits for the user to decide.
+// Only entries worth sending now, a FAILED one waits for the user to decide.
 export const sendable = (queue: OutboxEntry[]): OutboxEntry[] =>
   queue.filter((e) => e.status === "PENDING");
 

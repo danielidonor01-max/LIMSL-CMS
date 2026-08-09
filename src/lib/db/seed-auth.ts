@@ -5,7 +5,7 @@
 // name only. Every seeded account is therefore flagged `mustChangePassword`, which
 // forces the holder to set their own password on first login before they can reach
 // any page. Without that flag the COO, Factory Manager and Super Admin would all
-// keep a publicly-known password indefinitely — an ISO 9001/45001 audit finding.
+// keep a publicly-known password indefinitely, an ISO 9001/45001 audit finding.
 //
 // Dev tip: to skip the forced-change screen while testing, clear the flag for one
 // account rather than removing it here:
@@ -28,8 +28,8 @@ export async function seedAuth() {
       .where(eq(users.id, u.id));
   }
   console.log(`✅ Password set for ${all.length} users (bootstrap: "${DEFAULT_PASSWORD}")`);
-  console.log("   ⚠ All accounts flagged mustChangePassword — each user must set their own on first login.");
-  all.forEach((u) => console.log(`   • ${u.email} — ${u.role}`));
+  console.log("   ⚠ All accounts flagged mustChangePassword, each user must set their own on first login.");
+  all.forEach((u) => console.log(`   • ${u.email}, ${u.role}`));
   console.log("🎉 Auth seed complete!");
 }
 

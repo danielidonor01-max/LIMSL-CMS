@@ -1,14 +1,13 @@
 // src/lib/diagnostics/gemini.ts
-// Server-side Google Gemini client (REST — no SDK dependency) for the
+// Server-side Google Gemini client (REST, no SDK dependency) for the
 // troubleshooting module's AI layer. The key comes from CMS Settings
 // (src/lib/credentials.ts: env var override → encrypted DB). Structured JSON
-// output is enforced via responseSchema, so responses parse or fail loudly —
-// never free prose into the UI. Supports inline images (panel photos, scanned
+// output is enforced via responseSchema, so responses parse or fail loudly, // never free prose into the UI. Supports inline images (panel photos, scanned
 // schematic tiles) for the vision path.
 import { getApiKey } from "@/lib/credentials";
 
 // Probed against a fresh AI Studio key (2026-07): the pinned 2.x models return
-// 404 "no longer available to new users" / 429 zero-quota — the `-latest`
+// 404 "no longer available to new users" / 429 zero-quota, the `-latest`
 // aliases are the free-tier path. Walk the fallbacks on 404 AND 429, since a
 // 429 can mean "this model has no quota for this key" rather than a rate spike.
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
@@ -31,7 +30,7 @@ export class GeminiError extends Error {
 // and parse the JSON candidate. Shared by the single-shot and chat entry points.
 async function runGenerate<T>(payload: Record<string, unknown>): Promise<GeminiResult<T>> {
   const key = await getApiKey("GEMINI");
-  if (!key) throw new GeminiError("Gemini is not configured — add the API key in App Settings.");
+  if (!key) throw new GeminiError("Gemini is not configured, add the API key in App Settings.");
   const body = JSON.stringify(payload);
 
   let lastErr: GeminiError | null = null;
@@ -51,9 +50,9 @@ async function runGenerate<T>(payload: Record<string, unknown>): Promise<GeminiR
       continue; // try next fallback
     }
     if (res.status === 429) {
-      // Either a rate spike or zero quota for this model on this key — try the
+      // Either a rate spike or zero quota for this model on this key, try the
       // next model; only surface the 429 if every fallback is exhausted.
-      lastErr = new GeminiError("Gemini quota/rate limit reached — try again in a minute.", true);
+      lastErr = new GeminiError("Gemini quota/rate limit reached, try again in a minute.", true);
       continue;
     }
     if (!res.ok) {
@@ -77,7 +76,7 @@ async function runGenerate<T>(payload: Record<string, unknown>): Promise<GeminiR
     try {
       data = JSON.parse(text) as T;
     } catch {
-      throw new GeminiError("Gemini returned unparseable JSON — response discarded.");
+      throw new GeminiError("Gemini returned unparseable JSON, response discarded.");
     }
 
     return {

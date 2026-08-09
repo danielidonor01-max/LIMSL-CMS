@@ -29,7 +29,7 @@ function read(): OutboxEntry[] {
   }
 }
 
-// Returns false when the queue could not be persisted — the caller must then
+// Returns false when the queue could not be persisted, the caller must then
 // tell the user, never assume the work is safe.
 function write(queue: OutboxEntry[]): boolean {
   if (typeof window === "undefined") return false;
@@ -70,7 +70,7 @@ export async function submitOrQueue(input: {
       });
       return { ok: true, sent: true, response: res };
     } catch {
-      // Reachability lied — navigator.onLine only knows about the network
+      // Reachability lied, navigator.onLine only knows about the network
       // interface, not whether anything is actually answering on it. Fall
       // through and park.
     }

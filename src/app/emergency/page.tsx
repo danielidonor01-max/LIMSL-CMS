@@ -243,7 +243,7 @@ export default function EmergencyPage() {
         <PageHeader
           icon={ShieldAlert}
           title="Emergency Preparedness"
-          subtitle="Fire, first-aid and rescue equipment, and the drill programme — ISO 45001 clause 8.2"
+          subtitle="Fire, first-aid and rescue equipment, plus the drill programme"
           code="LIMSL-HSE-EMG-017"
           backHref="/"
           backLabel="Dashboard"
@@ -310,7 +310,7 @@ export default function EmergencyPage() {
             <p>
               <strong>{data.drillFollowUp.unresolved}</strong> drill
               {data.drillFollowUp.unresolved === 1 ? " has" : "s have"} recorded deficiencies with no corrective action
-              against them. A drill that found problems and closed none taught the organisation nothing — and it is the
+              against them. A drill that found problems and closed none taught the organisation nothing, and it is the
               first thing an auditor probes.
             </p>
           </div>
@@ -428,7 +428,7 @@ export default function EmergencyPage() {
                                   : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
                               }
                             >
-                              {i.readiness.severity === "warn" ? "Ready — check due" : "Ready"}
+                              {i.readiness.severity === "warn" ? "Ready, check due" : "Ready"}
                             </Badge>
                           ) : (
                             <>
@@ -467,7 +467,7 @@ export default function EmergencyPage() {
               <EmptyState
                 icon={Siren}
                 title="No drills recorded"
-                message="ISO 45001 asks for periodic emergency drills, and for evidence that what they surfaced was acted on. Record the next one here — including anything that went wrong, which is the part that matters."
+                message="ISO 45001 asks for periodic emergency drills, and for evidence that what they surfaced was acted on. Record the next one here, including anything that went wrong, which is the part that matters."
                 actionLabel={canWrite ? "Record a drill" : undefined}
                 onAction={canWrite ? () => setShowDrill(true) : undefined}
               />
@@ -487,7 +487,7 @@ export default function EmergencyPage() {
                           {d.evacuationMinutes ? ` · cleared in ${d.evacuationMinutes} min` : ""}
                         </p>
                       </div>
-                      <span className="text-[11px] text-slate-400">{d.conductedByName ?? "—"}</span>
+                      <span className="text-[11px] text-slate-400">{d.conductedByName ?? "-"}</span>
                     </div>
                     {d.scenario && <p className="text-xs text-slate-600">{d.scenario}</p>}
                     {d.observations && <p className="text-xs text-slate-600">{d.observations}</p>}
@@ -555,7 +555,7 @@ export default function EmergencyPage() {
               </Field>
             </div>
             <p className="text-[11px] text-slate-500 -mt-1">
-              Leaving &ldquo;last checked&rdquo; blank is fine and honest — the item will show as never inspected until
+              Leaving &ldquo;last checked&rdquo; blank is fine and honest, the item will show as never inspected until
               someone checks it, which is the truth.
             </p>
 

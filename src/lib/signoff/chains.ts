@@ -18,7 +18,7 @@ export const PM_CHAIN: ChainStep[] = [
   { role: "MAINTENANCE_MANAGER", roleLabel: "Approved by (Maintenance Manager)", required: true },
 ];
 
-// Corrective Maintenance close-out sign-off (higher authority — RCA + safety):
+// Corrective Maintenance close-out sign-off (higher authority, RCA + safety):
 //   Technician repairs → Foreman verifies → HSE safety sign-off → Maintenance
 //   Manager approves RCA/CA → Factory Manager close-out. COO for critical cases.
 export const CM_CHAIN: ChainStep[] = [
@@ -27,7 +27,7 @@ export const CM_CHAIN: ChainStep[] = [
   { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
   { role: "MAINTENANCE_MANAGER", roleLabel: "RCA & action approved (Maintenance Manager)", required: true },
   { role: "FACTORY_MANAGER", roleLabel: "Close-out (Factory Manager)", required: true },
-  { role: "COO", roleLabel: "Executive approval (COO) — critical only", required: false },
+  { role: "COO", roleLabel: "Executive approval (COO), critical only", required: false },
 ];
 
 // Work Method Statement authorisation:
@@ -45,14 +45,14 @@ export const WMS_CHAIN: ChainStep[] = [
 //   QA/QC authorises the change (document control) → Maintenance Manager →
 //   Factory Manager → COO sign off before the revision becomes effective.
 export const PROCEDURE_CHAIN: ChainStep[] = [
-  { role: "QA_QC", roleLabel: "Authorised by (QA/QC — document control)", required: true },
+  { role: "QA_QC", roleLabel: "Authorised by (QA/QC, document control)", required: true },
   { role: "MAINTENANCE_MANAGER", roleLabel: "Signed off (Maintenance Manager)", required: true },
   { role: "FACTORY_MANAGER", roleLabel: "Signed off (Factory Manager)", required: true },
   { role: "COO", roleLabel: "Approved (COO)", required: true },
 ];
 
 // Permit-to-Work authorisation. A permit is raised against a named permit holder
-// and must be fully signed BEFORE any work begins — a permit sits in
+// and must be fully signed BEFORE any work begins, a permit sits in
 // PENDING_APPROVAL and only becomes ACTIVE when every step below is signed.
 export const PTW_CHAIN: ChainStep[] = [
   { role: "FOREMAN", roleLabel: "Requested by (Foreman)", required: true },
@@ -71,12 +71,12 @@ export const PTW_CLOSEOUT_CHAIN: ChainStep[] = [
 ];
 
 // Non-conformity / CAPA close-out (ISO 9001 10.2.2, ISO 45001 10.2).
-// An NC used to close on a single status change — less rigour than a machine
+// An NC used to close on a single status change, less rigour than a machine
 // breakdown, which demands five signatures. The clause requires evidence of the
 // action taken AND of its effectiveness, reviewed by someone other than the
 // person who performed it.
 // Each step is a DIFFERENT role: one person per role is the norm in a shop this
-// size, and segregation of duties forbids the same person signing twice — a
+// size, and segregation of duties forbids the same person signing twice, a
 // chain that named one role twice could never be completed here.
 export const NC_CHAIN: ChainStep[] = [
   { role: "QA_QC", roleLabel: "Investigation & root cause (QA/QC)", required: true },
@@ -84,7 +84,7 @@ export const NC_CHAIN: ChainStep[] = [
   { role: "FACTORY_MANAGER", roleLabel: "Effectiveness verified & closed (Factory Manager)", required: true },
 ];
 
-// Safety incidents are investigated by HSE, not quality — and the Factory
+// Safety incidents are investigated by HSE, not quality, and the Factory
 // Manager owns the close-out because incidents carry legal weight.
 export const SAFETY_INCIDENT_CHAIN: ChainStep[] = [
   { role: "HSE", roleLabel: "Investigation & root cause (HSE)", required: true },

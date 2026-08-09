@@ -1,8 +1,8 @@
 // src/components/AccountMenu.tsx
 // The avatar belongs top-right: it is the first place desktop muscle memory
 // looks, and on this app that corner was empty while the account control sat at
-// the bottom of the sidebar. The sidebar entry stays — it is the only one on
-// mobile, where the top bar has no room — so this is an addition, not a move.
+// the bottom of the sidebar. The sidebar entry stays, it is the only one on
+// mobile, where the top bar has no room, so this is an addition, not a move.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -54,7 +54,7 @@ export default function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Account — ${name}`}
+        aria-label={`Account, ${name}`}
         className={`flex items-center gap-2 pl-1 pr-1.5 min-h-10 rounded-lg transition-colors ${
           open ? "bg-slate-100" : "hover:bg-slate-100"
         }`}

@@ -1,6 +1,6 @@
 // src/lib/diagnostics/extract-text.ts
 // Extracts per-page text from an uploaded document so it can be chunked into
-// document_chunks. PDF text layers are read with pdfjs-dist (pure JS — no
+// document_chunks. PDF text layers are read with pdfjs-dist (pure JS, no
 // native deps, works in the Next server runtime and in tsx scripts alike).
 // Plain text / markdown pass straight through as a single "page".
 //
@@ -30,7 +30,7 @@ async function extractPdf(data: Uint8Array): Promise<ExtractResult> {
   // Dynamic import keeps pdfjs out of every bundle that merely imports this
   // module's types/helpers; serverExternalPackages leaves it un-bundled.
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  // No worker in Node — pdfjs falls back to its "fake worker" automatically.
+  // No worker in Node, pdfjs falls back to its "fake worker" automatically.
   const loadingTask = pdfjs.getDocument({ data, useSystemFonts: true });
   const doc = await loadingTask.promise;
 
@@ -39,7 +39,7 @@ async function extractPdf(data: Uint8Array): Promise<ExtractResult> {
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
-    // Join text items, inserting newlines when the y-position jumps — keeps
+    // Join text items, inserting newlines when the y-position jumps, keeps
     // paragraphs/headings separable for the chunker.
     let text = "";
     let lastY: number | null = null;

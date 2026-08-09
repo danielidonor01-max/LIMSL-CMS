@@ -1,6 +1,6 @@
 // src/components/PageHeader.tsx
 // The standard page title row. UI-STANDARDS has always mandated this component
-// but it never existed, so 40 pages hand-rolled their own — two header systems,
+// but it never existed, so 40 pages hand-rolled their own, two header systems,
 // four icon-chip variants and two back-link patterns, with document codes and
 // acronyms leaking into subtitles. One header, one chip, one back link.
 //

@@ -2,7 +2,7 @@
 // Admin-managed notification routing: which event kinds are sent at all, and
 // which ROLES receive the role-targeted ones. Stored as JSON on the settings
 // row; absent entries fall back to the code defaults used at each call site,
-// so routing is an OVERLAY — turning an event off silences it everywhere,
+// so routing is an OVERLAY, turning an event off silences it everywhere,
 // setting roles replaces the default audience. Personally-targeted
 // notifications (your sign-off step, a WO assigned to you) keep their explicit
 // recipient; routing can only disable them, never re-address them.
@@ -20,7 +20,7 @@ export type EventRouting = { enabled: boolean; roles: string[] | null };
 export type RoutingMap = Record<string, EventRouting>;
 
 // The catalogue the Settings UI renders. defaultRoles must reference the SAME
-// constants the dispatch sites use — it was a hand-copied duplicate, so the
+// constants the dispatch sites use, it was a hand-copied duplicate, so the
 // audience shown to an admin could silently differ from the one that received
 // the message.
 export const NOTIFY_EVENTS: Array<{

@@ -1,7 +1,7 @@
 // src/lib/config.ts
 // Central feature flags / runtime config. The schematic-ingestion engine is
 // scaffolded but OFF until an AI provider is configured (no Claude subscription
-// yet) — see docs/SCHEMATIC-ENGINE.md.
+// yet), see docs/SCHEMATIC-ENGINE.md.
 
 function normalizeSmtpPass(raw: string): string {
   const v = raw.trim();
@@ -40,7 +40,7 @@ export const config = {
   twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM || "", // e.g. whatsapp:+14155238886
 
   // ── Email notifications (SMTP via nodemailer) ─────────────────────────────
-  // Works with any mailbox that offers SMTP — Google Workspace, Microsoft 365,
+  // Works with any mailbox that offers SMTP. Google Workspace, Microsoft 365,
   // cPanel/webmail on leemachinery.net, or a transactional relay (Resend/SendGrid).
   emailEnabled: process.env.EMAIL_ENABLED === "true",
   emailFrom: process.env.EMAIL_FROM || "LIMSL CMS <no-reply@leemachinery.net>",
@@ -56,13 +56,13 @@ export const config = {
   smtpPass: normalizeSmtpPass(process.env.SMTP_PASS || ""),
 
   // ── File storage ────────────────────────────────────────────────────────
-  // LOCAL (default) writes to a gitignored folder on the server — right for a
+  // LOCAL (default) writes to a gitignored folder on the server, right for a
   // single self-hosted workshop machine. SUPABASE stores in cloud object
-  // storage — right for a hosted/multi-site deploy. Same interface either way.
+  // storage, right for a hosted/multi-site deploy. Same interface either way.
   storageProvider: (process.env.STORAGE_PROVIDER || "LOCAL").toUpperCase(), // LOCAL | SUPABASE
   storageLocalDir: process.env.STORAGE_LOCAL_DIR || "storage/uploads",
   storageMaxBytes: Number(process.env.STORAGE_MAX_BYTES || 26_214_400), // 25 MB
-  // Supabase Storage (cloud) — REST, no SDK needed.
+  // Supabase Storage (cloud), REST, no SDK needed.
   supabaseUrl: process.env.SUPABASE_URL || "",
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || "",
   supabaseBucket: process.env.SUPABASE_BUCKET || "limsl-documents",
@@ -90,7 +90,7 @@ export function ingestionReady(): { ready: boolean; reason?: string } {
 }
 
 // Whether WhatsApp delivery is actually wired up. When not ready, notifications
-// are still recorded and shown in-app — they are just marked QUEUED, never faked
+// are still recorded and shown in-app, they are just marked QUEUED, never faked
 // as sent.
 export function whatsappReady(): { ready: boolean; reason?: string } {
   if (!config.whatsappEnabled) return { ready: false, reason: "WHATSAPP_ENABLED is not set to true" };

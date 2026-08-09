@@ -69,7 +69,7 @@ type Kpi = {
 };
 
 const pct = (n: number | null | undefined) =>
-  n === null || n === undefined ? "—" : `${(n * 100).toFixed(1)}%`;
+  n === null || n === undefined ? ", " : `${(n * 100).toFixed(1)}%`;
 
 export default function KpiPage() {
   const { data, loading } = useApi<KpiData | null>("/api/kpi", null);
@@ -90,7 +90,7 @@ export default function KpiPage() {
   );
 
   const categories = useMemo(() => {
-    // Guard against an error body (HTTP 200 but no live/monthly) — the fetch
+    // Guard against an error body (HTTP 200 but no live/monthly), the fetch
     // doesn't check res.ok, so `data` can be truthy yet malformed.
     if (!data || !data.live || !Array.isArray(data.monthly)) return [];
     const l = data.live;
@@ -105,14 +105,14 @@ export default function KpiPage() {
     const downtimeWindow = m.reduce((a, x) => a + (x.downtimeHours ?? 0), 0);
 
     const reliability: Kpi[] = [
-      { label: "MTBF", value: l.mtbf == null ? "—" : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
+      { label: "MTBF", value: l.mtbf == null ? ", " : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
       { label: "Assets Available Now", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
       { label: "Breakdown Frequency", value: `${lastMo}/mo`, target: "≤ 2/mo", tone: lastMo <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
       { label: "Failure Rate", value: `${(l.failureRate ?? 0).toFixed(2)}/asset·mo`, target: "declining", tone: (l.failureRate ?? 0) <= 0.2 ? "good" : "warning" },
       { label: "Active Breakdowns", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
     ];
     const maintenance: Kpi[] = [
-      { label: "MTTR", value: l.mttr == null ? "—" : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
+      { label: "MTTR", value: l.mttr == null ? ", " : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
       { label: "PM Compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: (l.pmCompliance ?? 0) >= 0.95 ? "good" : (l.pmCompliance ?? 0) >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
       { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
       {
@@ -132,7 +132,7 @@ export default function KpiPage() {
       { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
       { label: "Downtime (6 mo)", value: `${downtimeWindow.toFixed(0)} hrs`, target: "declining", tone: "neutral" },
       { label: "Breakdowns (6 mo)", value: String(l.breakdownsWindow ?? 0), target: "declining", tone: "neutral" },
-      { label: "Maint. Cost", value: "Not tracked", target: "—", tone: "neutral" },
+      { label: "Maint. Cost", value: "Not tracked", target: "-", tone: "neutral" },
     ];
     const safety: Kpi[] = [
       {
@@ -231,7 +231,7 @@ export default function KpiPage() {
             {/* Trend charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ChartCard
-                title="Equipment Availability over time (%) — production hours lost to all maintenance"
+                title="Equipment Availability over time (%), production hours lost to all maintenance"
                 data={chartData}
                 series={[{ key: "availability", label: "Availability %" }]}
               >
@@ -335,8 +335,8 @@ export default function KpiPage() {
                           <td className="py-2.5 px-5 font-medium text-slate-900">{r.equipmentName}</td>
                           <td className="py-2.5 px-4 text-slate-700">{r.breakdowns}</td>
                           <td className="py-2.5 px-4">{pct(r.availability)}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf == null ? "—" : `${r.mtbf} hrs`}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mttr == null ? "—" : `${r.mttr} hrs`}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
                           <td className="py-2.5 px-4 text-slate-700">{r.downtimeHours} hrs</td>
                           <td className="py-2.5 px-4 text-slate-500">{r.remark}</td>
                         </tr>
@@ -370,7 +370,7 @@ function ChartCard({
   title: string;
   children: React.ReactNode;
   // The same numbers the chart draws, as a table. A trend line conveys its
-  // meaning by shape alone — nothing at all for a screen reader, and nothing on
+  // meaning by shape alone, nothing at all for a screen reader, and nothing on
   // a greyscale print, which is how these get attached to an audit pack. The
   // figures exist; withholding them was the only problem.
   series?: { key: string; label: string }[];
@@ -409,7 +409,7 @@ function ChartCard({
                     </th>
                     {series.map((s) => (
                       <td key={s.key} className="py-1.5 px-3 text-right tabular-nums text-slate-600">
-                        {row[s.key] ?? "—"}
+                        {row[s.key] ?? "-"}
                       </td>
                     ))}
                   </tr>

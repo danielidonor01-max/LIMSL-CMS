@@ -2,7 +2,7 @@
 // Splits a text document into retrieval-sized chunks for document_chunks
 // (docs/TROUBLESHOOTING-ENGINE.md §2.2). Heading-aware: markdown/numbered
 // headings start a new chunk and become its `heading`, so a retrieved passage
-// carries its section context. Pure module — no DB, no IO — so it is unit-
+// carries its section context. Pure module, no DB, no IO, so it is unit-
 // testable and reusable by every ingestion path (upload hook, backfill,
 // future schematic pipeline).
 
@@ -67,7 +67,7 @@ export function chunkPages(pages: PageText[]): Chunk[] {
     if (!buf.length || !bufHasNew) return;
     const content = buf.map((b) => b.text).join("\n\n");
     if (estimateTokens(content) < MIN_TOKENS && chunks.length) {
-      // Too small to stand alone — append to the previous chunk instead.
+      // Too small to stand alone, append to the previous chunk instead.
       const prev = chunks[chunks.length - 1];
       prev.content = `${prev.content}\n\n${content}`;
       prev.tokenEstimate = estimateTokens(prev.content);

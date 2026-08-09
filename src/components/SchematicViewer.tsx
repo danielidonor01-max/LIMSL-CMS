@@ -172,7 +172,7 @@ export default function SchematicViewer({
       setCandidates((d.job.data.candidates as Candidate[]).map((c) => ({ ...c, include: true })));
       setReviewing(true);
       setZoomTile(null);
-      toast.success(`${d.job.data.candidates.length} candidate components found — review and confirm.`);
+      toast.success(`${d.job.data.candidates.length} candidate components found, review and confirm.`);
     } finally {
       setExtracting(false);
     }
@@ -428,7 +428,7 @@ export default function SchematicViewer({
                     <Button size="sm" variant="ghost" onClick={() => setTagDraft(null)}>Cancel</Button>
                   </div>
                 )}
-                <p className="text-[11px] text-slate-400 font-mono">{zoomTile.tileKey} · native resolution — scroll to pan</p>
+                <p className="text-[11px] text-slate-400 font-mono">{zoomTile.tileKey} · native resolution, scroll to pan</p>
               </div>
             ) : current?.preview ? (
               <div className="space-y-2">

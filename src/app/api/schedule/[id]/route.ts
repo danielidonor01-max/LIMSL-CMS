@@ -9,7 +9,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { validateDeferral } from "@/lib/maintenance/deferral";
 
 // Reschedule an activity (move its planned date) or adjust its remarks. Completion
-// is intentionally NOT done here — it flows through the work order + PM checklist
+// is intentionally NOT done here, it flows through the work order + PM checklist
 // so the sign-off and recurrence stay auditable.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         return NextResponse.json({ error: "Invalid planned date" }, { status: 400 });
       }
       // A reschedule must move work to a future date. Backdating would flip the
-      // row straight back to OVERDUE at best — and at worst be used to massage
+      // row straight back to OVERDUE at best, and at worst be used to massage
       // the overdue list. Reconciliation also re-evaluates RESCHEDULED rows, so
       // rescheduling can never hide an activity from the overdue KPI.
       const today = new Date().toISOString().slice(0, 10);
@@ -87,7 +87,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       entityType: "maintenance_schedule",
       entityId: id,
       entityDescription: set.status === "DEFERRED"
-        ? `Activity DEFERRED to review ${set.deferredReviewDate} — ${set.deferredReason}`
+        ? `Activity DEFERRED to review ${set.deferredReviewDate}, ${set.deferredReason}`
         : set.plannedDate
           ? `Activity rescheduled to ${set.plannedDate}`
           : `Activity updated`,

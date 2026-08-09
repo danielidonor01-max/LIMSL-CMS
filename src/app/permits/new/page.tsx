@@ -66,7 +66,7 @@ function NewPermitForm() {
     }
     loadEquipment();
 
-    // The permit holder must be a real, accountable person — load the user list.
+    // The permit holder must be a real, accountable person, load the user list.
     fetch("/api/users")
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setUserList(Array.isArray(d) ? d : []))
@@ -92,7 +92,7 @@ function NewPermitForm() {
     e.preventDefault();
     if (!equipmentId) return;
     if (!permitHolderId) {
-      toast.error("Assign a permit holder — a permit needs a named, accountable person.");
+      toast.error("Assign a permit holder, a permit needs a named, accountable person.");
       return;
     }
 
@@ -122,7 +122,7 @@ function NewPermitForm() {
 
       if (res.ok) {
         const p = await res.json();
-        toast.success(`${p.permitNumber} raised — awaiting sign-off. Work may not begin until approved.`);
+        toast.success(`${p.permitNumber} raised. Work may not begin until it is signed off.`);
         router.push(`/permits/${p.id}`);
       } else {
         const err = await res.json().catch(() => ({}));
@@ -216,10 +216,10 @@ function NewPermitForm() {
               onChange={(v) => setWmsId(v)}
               className="w-full"
             >
-              <option value="">— No WMS linked —</option>
+              <option value="">. No WMS linked , </option>
               {wmsList.map((w) => (
                 <option key={w.id} value={w.id}>
-                  {w.wmsNumber} — {w.title}
+                  {w.wmsNumber}, {w.title}
                 </option>
               ))}
             </Select>
@@ -267,7 +267,7 @@ function NewPermitForm() {
                     </div>
                   </div>
                   <textarea
-                    placeholder="Task / work step — what is being done"
+                    placeholder="Task / work step, what is being done"
                     value={row.task}
                     onChange={(e) => updateJha(i, "task", e.target.value)}
                     rows={2}
@@ -358,7 +358,7 @@ function NewPermitForm() {
               </option>
               {userList.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.name} — {ROLE_LABELS[u.role] ?? u.role}
+                  {u.name}, {ROLE_LABELS[u.role] ?? u.role}
                 </option>
               ))}
             </Select>
@@ -370,7 +370,7 @@ function NewPermitForm() {
           <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
             <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
-              Valid for <strong>one working day</strong> — the permit must be re-raised tomorrow, not renewed.
+              Valid for <strong>one working day</strong>, the permit must be re-raised tomorrow, not renewed.
               Raising it does <strong>not</strong> authorise work: it must be signed by the Foreman, Maintenance
               Manager, HSE and Factory Manager before work may begin.
             </span>

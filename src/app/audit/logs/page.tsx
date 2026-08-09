@@ -1,7 +1,7 @@
 // src/app/audit/logs/page.tsx
 // The auditor's window onto the trail (ISO 9001 7.5.3.2). Filters map 1:1 onto
 // /api/audit query params, so what is on screen is exactly what the CSV export
-// contains — the export button reruns the same query server-side.
+// contains, the export button reruns the same query server-side.
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -181,7 +181,7 @@ export default function AuditTrailLogs() {
         <PageHeader
           icon={Shield}
           title="System Audit Log"
-          subtitle="Every recorded change — who did it, when, and to which record"
+          subtitle="Every recorded change: who, when, and to which record"
           code="ISO 9001 7.5.3"
           backHref="/"
           backLabel="Dashboard"
@@ -331,7 +331,7 @@ export default function AuditTrailLogs() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-slate-600 max-w-md">
-                            {log.entityDescription || <span className="text-slate-300">—</span>}
+                            {log.entityDescription || <span className="text-slate-300">, </span>}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap text-slate-600">
                             {log.userName || "System"}

@@ -1,5 +1,5 @@
 // src/lib/use-draft.ts
-// Local draft persistence for the two long forms — the PM checklist (~30
+// Local draft persistence for the two long forms, the PM checklist (~30
 // inputs) and the corrective RCA. Both were all-or-nothing single POSTs with
 // no draft anywhere in the app, so backgrounding the browser or losing the
 // workshop wifi threw away fifteen minutes of standing at a machine.
@@ -23,7 +23,7 @@ export function useDraft<T extends object>(
   const [dismissed, setDismissed] = useState(false);
   const loadedFor = useRef<string | null>(null);
 
-  // Offer whatever was saved last time, once per record — never apply it
+  // Offer whatever was saved last time, once per record, never apply it
   // silently, because a stale draft overwriting fresh server data is worse
   // than losing the draft.
   useEffect(() => {
@@ -33,7 +33,7 @@ export function useDraft<T extends object>(
       const raw = window.localStorage.getItem(PREFIX + key);
       if (raw) setRestored(JSON.parse(raw) as T);
     } catch {
-      /* unreadable draft — ignore */
+      /* unreadable draft, ignore */
     }
   }, [key, enabled]);
 
@@ -43,7 +43,7 @@ export function useDraft<T extends object>(
       try {
         window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
       } catch {
-        /* quota or private mode — saving a draft must never break the form */
+        /* quota or private mode, saving a draft must never break the form */
       }
     }, DEBOUNCE_MS);
     return () => clearTimeout(t);

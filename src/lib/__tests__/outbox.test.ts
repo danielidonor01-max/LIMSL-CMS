@@ -32,7 +32,7 @@ const entry = (over: Partial<OutboxEntry> = {}): OutboxEntry => ({
 
 // The failure this whole design is built to avoid: a validation error retried
 // forever behind an optimistic tick, so the user never learns it was rejected.
-test("a 4xx is terminal — retrying will never make it succeed", () => {
+test("a 4xx is terminal, retrying will never make it succeed", () => {
   for (const status of [400, 401, 403, 404, 409, 422]) {
     assert.equal(shouldRetry(status), false, `${status} must not be retried`);
   }

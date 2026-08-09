@@ -1,7 +1,7 @@
 // src/lib/import/entities.ts
 // Per-entity import: validate every row, then (on commit) upsert by a natural key
 // so a re-import updates rather than duplicates and never wipes existing data with
-// a blank cell. Preview and commit run the SAME validation — the client is never
+// a blank cell. Preview and commit run the SAME validation, the client is never
 // trusted to have pre-validated.
 import { db } from "@/lib/db";
 import { equipment, maintenanceSchedule, users, componentRegistry, auditLog } from "@/lib/db/schema";

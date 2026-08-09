@@ -1,6 +1,6 @@
 // src/lib/doc-number.ts
 // Race-safe document numbering (WO-2026-0031, PTW-2026-0007, …). One atomic
-// upsert-increment per call against the doc_counters table — two concurrent
+// upsert-increment per call against the doc_counters table, two concurrent
 // creates can never draw the same number, and numbers are never reused after a
 // deletion (both of which count()/max()-based schemes get wrong). Counters are
 // per series-and-year, so each new year naturally starts a fresh sequence.

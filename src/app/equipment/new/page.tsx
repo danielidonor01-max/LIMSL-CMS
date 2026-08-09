@@ -111,13 +111,13 @@ export default function NewEquipmentPage() {
       <PageHeader
         icon={Layers}
         title="Add to the Asset Register"
-        subtitle="Choose what you are adding first — it decides how the asset is numbered and maintained"
+        subtitle="What you are adding decides how it is numbered and maintained"
         backHref="/equipment"
         backLabel="Back to registry"
       />
 
       <form onSubmit={submit} className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
-        {/* What kind of asset — decided first, because it drives everything below */}
+        {/* What kind of asset, decided first, because it drives everything below */}
         <fieldset>
           <legend className={LABEL_CLASS}>What are you adding?</legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
@@ -156,7 +156,7 @@ export default function NewEquipmentPage() {
           </div>
         </fieldset>
 
-        {/* Asset ID — numbered within the chosen series */}
+        {/* Asset ID, numbered within the chosen series */}
         <div>
           <label className={LABEL_CLASS}>Asset ID (auto-generated)</label>
           <div className="flex gap-2">
@@ -179,7 +179,7 @@ export default function NewEquipmentPage() {
             </button>
           </div>
           <p className="text-[10px] text-slate-500 mt-1">
-            Next free code in the LEE/{assetType}/ series. Editable — a duplicate is refused on save.
+            Next free code in the LEE/{assetType}/ series. Editable, a duplicate is refused on save.
           </p>
         </div>
 

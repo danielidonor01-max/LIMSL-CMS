@@ -5,7 +5,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 // `/offline` is served by the service worker when there is no connection. It is
-// public because the session cannot be checked with the network down — and
+// public because the session cannot be checked with the network down, and
 // redirecting to /login at that moment would show a sign-in form that cannot
 // possibly submit.
 const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr", "/offline", "/forgot-password", "/reset-password"];
@@ -48,8 +48,7 @@ export const authConfig = {
     session({ session, token }) {
       if (session.user) {
         // Normalise the legacy "ADMIN" role (from the original seed) to the
-        // canonical SUPER_ADMIN here, at the one boundary roles enter the app —
-        // so an older/stale session is never half-broken without a re-login.
+        // canonical SUPER_ADMIN here, at the one boundary roles enter the app,         // so an older/stale session is never half-broken without a re-login.
         const raw = token.role as string;
         (session.user as { role?: string }).role = raw === "ADMIN" ? "SUPER_ADMIN" : raw;
         (session.user as { id?: string }).id = token.uid as string;

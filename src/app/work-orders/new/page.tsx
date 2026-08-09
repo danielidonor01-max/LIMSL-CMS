@@ -64,7 +64,7 @@ function NewWorkOrderForm() {
               equipmentId: item.equipmentId,
               type: item.activityType === "INS" ? "INSPECTION" : "PREVENTIVE",
               plannedDate: item.plannedDate,
-              title: `${item.activityType === "INS" ? "Inspection" : "PM"} — ${item.equipmentName}`,
+              title: `${item.activityType === "INS" ? "Inspection" : "PM"}, ${item.equipmentName}`,
               description: item.taskDescription || "",
             }));
           }
@@ -74,7 +74,7 @@ function NewWorkOrderForm() {
             setForm((f) => ({
               ...f,
               equipmentId: eq.id,
-              title: `PM — ${eq.name}`,
+              title: `PM, ${eq.name}`,
             }));
         }
       } catch {
@@ -92,7 +92,7 @@ function NewWorkOrderForm() {
     setForm((f) => ({
       ...f,
       equipmentId: id,
-      title: eq ? `${WO_TYPE_LABELS[f.type]} — ${eq.name}` : f.title,
+      title: eq ? `${WO_TYPE_LABELS[f.type]}, ${eq.name}` : f.title,
       priority:
         eq?.criticality === "HIGH" || eq?.criticality === "CRITICAL" ? "HIGH" : f.priority,
     }));
@@ -164,7 +164,7 @@ function NewWorkOrderForm() {
                 <option value="">Select equipment…</option>
                 {equipment.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.assetId} — {e.name}
+                    {e.assetId}, {e.name}
                   </option>
                 ))}
               </Select>
@@ -204,7 +204,7 @@ function NewWorkOrderForm() {
               <input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. Quarterly PM — Sertom Plate Rolling Machine"
+                placeholder="e.g. Quarterly PM. Sertom Plate Rolling Machine"
                 className={FIELD_CLASS}
                 required
               />

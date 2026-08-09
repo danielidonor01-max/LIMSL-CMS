@@ -28,7 +28,7 @@ test("MEDIUM/LOW faults alone only put the machine under maintenance", () => {
 });
 
 test("an unrecognised or blank urgency is treated as non-severe, not as no fault", () => {
-  // deriveEquipmentStatus maps a null urgency column to "" — an open corrective
+  // deriveEquipmentStatus maps a null urgency column to "", an open corrective
   // with no urgency recorded must still take the machine out of service.
   assert.equal(decideStatus("OPERATIONAL", [""], false), "UNDER_MAINTENANCE");
   assert.equal(decideStatus("OPERATIONAL", ["ROUTINE"], false), "UNDER_MAINTENANCE");

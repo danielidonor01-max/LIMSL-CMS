@@ -7,7 +7,7 @@
 // data lands rather than being built from nothing.
 //
 // These render entirely from client JS with no server round-trip, which is what
-// lets them appear instantly once the app shell is cached — on a phone with no
+// lets them appear instantly once the app shell is cached, on a phone with no
 // signal the shell and the wireframe are what the technician sees while the
 // network is still being decided.
 "use client";

@@ -5,8 +5,7 @@ import { equipment } from "@/lib/db/schema";
 import { nextAssetId, isAssetPrefix, type AssetPrefix } from "@/lib/asset-id";
 
 // The next free asset code for a series. `?prefix=SYS` numbers a facility
-// system; anything else defaults to PE. The two series are counted separately —
-// generating a SYS code used to be impossible here, which is why facility
+// system; anything else defaults to PE. The two series are counted separately, // generating a SYS code used to be impossible here, which is why facility
 // systems were being added by typing an ID and hoping it was free.
 export async function GET(request: Request) {
   try {

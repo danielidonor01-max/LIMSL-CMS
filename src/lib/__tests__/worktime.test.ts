@@ -1,4 +1,4 @@
-// Regression tests for production-time arithmetic — the input to every downtime,
+// Regression tests for production-time arithmetic, the input to every downtime,
 // MTTR/MTBF and availability figure. A machine is only "down" while the workshop
 // would otherwise have been running.
 //
@@ -16,7 +16,7 @@ import {
   type WorkSettings,
 } from "@/lib/worktime";
 
-const S = DEFAULT_WORK_SETTINGS; // 08:00–17:00, lunch 12:00–13:00, Mon–Fri
+const S = DEFAULT_WORK_SETTINGS; // 08:00-17:00, lunch 12:00-13:00, Mon-Fri
 const settings = (over: Partial<WorkSettings> = {}): WorkSettings => ({ ...DEFAULT_WORK_SETTINGS, ...over });
 
 const MON = "2026-01-05"; // Monday
@@ -52,9 +52,9 @@ test("a full shift is the working window minus lunch", () => {
 test("hours outside the shift are excluded", () => {
   assert.equal(productionDowntimeHours(`${MON}T18:00`, `${MON}T20:00`, S), 0);
   assert.equal(productionDowntimeHours(`${MON}T00:00`, `${MON}T06:00`, S), 0);
-  // 06:00–09:00 contributes only 08:00–09:00.
+  // 06:00-09:00 contributes only 08:00-09:00.
   assert.equal(productionDowntimeHours(`${MON}T06:00`, `${MON}T09:00`, S), 1);
-  // 16:00–23:00 contributes only 16:00–17:00.
+  // 16:00-23:00 contributes only 16:00-17:00.
   assert.equal(productionDowntimeHours(`${MON}T16:00`, `${MON}T23:00`, S), 1);
 });
 
@@ -83,7 +83,7 @@ test("consecutive working days accumulate a full shift each", () => {
 });
 
 test("a partial first and last day are both prorated", () => {
-  // Mon 11:00–17:00 (5h after lunch) + Tue 08:00–10:00 (2h).
+  // Mon 11:00-17:00 (5h after lunch) + Tue 08:00-10:00 (2h).
   assert.equal(productionDowntimeHours(`${MON}T11:00`, `${TUE}T10:00`, S), 7);
 });
 
@@ -125,7 +125,7 @@ test("isProductionDay follows the configured week", () => {
   const withWeekends = settings({ weekendOvertime: true });
   assert.deepEqual([0, 6].map((d) => isProductionDay(d, withWeekends)), [true, true]);
 
-  // Weekend overtime only adds Sat/Sun — it does not resurrect a disabled weekday.
+  // Weekend overtime only adds Sat/Sun, it does not resurrect a disabled weekday.
   const weekendOnly = settings({ workingDays: [], weekendOvertime: true });
   assert.deepEqual([0, 1, 6].map((d) => isProductionDay(d, weekendOnly)), [true, false, true]);
 });

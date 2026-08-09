@@ -1,6 +1,6 @@
 // src/lib/worktime.ts
 // Production-time arithmetic. Downtime and repair clocks must count *production
-// hours*, not wall-clock hours — a machine that fails at 4pm Friday and is fixed
+// hours*, not wall-clock hours, a machine that fails at 4pm Friday and is fixed
 // 9am Monday was not "down 65 hours"; it was down for the ~2 production hours the
 // workshop would otherwise have been running. Every function here takes a
 // WorkSettings so the working window is a Super-Admin setting, never hardcoded.
@@ -17,7 +17,7 @@ export type WorkSettings = {
   weekendOvertime: boolean; // if true, Sat/Sun also count as production days
 };
 
-// Standard LIMSL shift: 08:00–17:00, lunch 12:00–13:00, Mon–Fri, no weekend work.
+// Standard LIMSL shift: 08:00-17:00, lunch 12:00-13:00, Mon-Fri, no weekend work.
 export const DEFAULT_WORK_SETTINGS: WorkSettings = {
   workDayStart: "08:00",
   workDayEnd: "17:00",
@@ -119,7 +119,7 @@ export function productionDaysInMonth(monthKey: string, s: WorkSettings): number
   return count;
 }
 
-// Planned production hours for a month — the availability/MTBF baseline per asset.
+// Planned production hours for a month, the availability/MTBF baseline per asset.
 export function plannedHoursForMonth(monthKey: string, s: WorkSettings): number {
   return productionDaysInMonth(monthKey, s) * productiveHoursPerDay(s);
 }

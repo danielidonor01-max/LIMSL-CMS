@@ -40,10 +40,10 @@ export const ROLE_DEPARTMENT: Record<string, string> = {
   QA_QC: "QA_QC",
   HSE: "HSE",
   TECHNICIAN: "MAINTENANCE",
-  VIEWER: "—",
+  VIEWER: ", ",
 };
 
-// Seniority ranking — used for "a manager can also sign a subordinate step".
+// Seniority ranking, used for "a manager can also sign a subordinate step".
 export const ROLE_RANK: Record<string, number> = {
   TECHNICIAN: 1,
   FOREMAN: 2,
@@ -105,7 +105,7 @@ const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications", "/accou
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
   if (UNIVERSAL_PATHS.includes(pathname)) return true;
-  // Administration lives under /settings — even "full access" roles must not
+  // Administration lives under /settings, even "full access" roles must not
   // reach it by direct URL. Mirrors SETTINGS_WRITE_ROLES, which gates the
   // settings API routes.
   if (pathname === "/settings" || pathname.startsWith("/settings/")) {
@@ -128,12 +128,12 @@ export const MAINTENANCE_WRITE_ROLES = [
 ];
 
 // Roles permitted to RAISE (issue) a Permit-to-Work. HSE is the issuing
-// authority — they raise the permit and assign a holder. Super Admin can act on
+// authority, they raise the permit and assign a holder. Super Admin can act on
 // their behalf.
 export const PERMIT_ISSUE_ROLES = ["SUPER_ADMIN", "HSE"];
 
 // Roles permitted to act on an existing permit (cancel). Same as the issuing
-// authority — the issuer owns the permit lifecycle.
+// authority, the issuer owns the permit lifecycle.
 export const PERMIT_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
 // Roles permitted to manage the training & competency records.
@@ -144,7 +144,7 @@ export const TRAINING_WRITE_ROLES = [
   "QA_QC",
 ];
 
-// Roles permitted to write compliance records — non-conformities, risk register,
+// Roles permitted to write compliance records, non-conformities, risk register,
 // and to trigger the compliance auto-detect scan. Owned by QA/QC and HSE together
 // with the management chain.
 export const COMPLIANCE_WRITE_ROLES = [
@@ -162,12 +162,12 @@ export const SETTINGS_WRITE_ROLES = ["SUPER_ADMIN"];
 // ── Notification audiences ───────────────────────────────────────────────────
 // Who hears about an operational event. These were five separate hardcoded
 // arrays at the call sites plus a sixth copy in the Settings UI used only for
-// display — so the audience shown to an admin could differ from the audience
+// display, so the audience shown to an admin could differ from the audience
 // that actually received the message, and nothing would report the difference.
 //
 // SUPER_ADMIN is included deliberately. At LIMSL the account is held by the lead
 // maintenance supervisor and engineer, so it is an operational role and not only
-// an administrative one — and the system already lets that person sign any step
+// an administrative one, and the system already lets that person sign any step
 // in any chain. Being able to act on everything while being told about nothing
 // was the contradiction these lists are correcting.
 export const BREAKDOWN_NOTIFY_ROLES = [
@@ -184,7 +184,7 @@ export const MAINTENANCE_ESCALATION_ROLES = [
   "FACTORY_MANAGER",
 ];
 
-// Calibration and competency expiry — QA/QC owns the record, maintenance owns
+// Calibration and competency expiry, QA/QC owns the record, maintenance owns
 // the instrument.
 export const COMPLIANCE_ESCALATION_ROLES = [
   "SUPER_ADMIN",

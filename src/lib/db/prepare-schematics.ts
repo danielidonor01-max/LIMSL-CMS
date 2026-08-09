@@ -1,6 +1,6 @@
 // src/lib/db/prepare-schematics.ts
 // Bulk-prepare every uploaded schematic PDF into high-resolution tiles
-// (P1 of docs/TROUBLESHOOTING-ENGINE.md). Run from a real machine — rendering
+// (P1 of docs/TROUBLESHOOTING-ENGINE.md). Run from a real machine, rendering
 // A0/A1 sheets is memory-heavy and belongs off serverless:
 //
 //   export DATABASE_URL=postgresql://...

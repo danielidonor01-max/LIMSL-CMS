@@ -1,9 +1,9 @@
 // src/lib/hse/contractors.ts
-// Contractor control — ISO 45001 clause 8.1.4.2.
+// Contractor control, ISO 45001 clause 8.1.4.2.
 //
 // A contractor register that does not stop anybody working is a spreadsheet.
 // The obligation is not to *hold* insurance certificates and induction records,
-// it is to not let someone onto a live machine without them — so the only part
+// it is to not let someone onto a live machine without them, so the only part
 // of this that matters is the gate, and the gate has to be able to say no.
 //
 // Three things independently disqualify a company from working on site:
@@ -23,7 +23,7 @@ export type EligibilityReason =
 
 export const REASON_TEXT: Record<EligibilityReason, string> = {
   INSURANCE_EXPIRED: "Public liability insurance has expired.",
-  INSURANCE_MISSING: "No insurance expiry date on file — it has never been verified.",
+  INSURANCE_MISSING: "No insurance expiry date on file, it has never been verified.",
   INDUCTION_EXPIRED: "Site safety induction has expired.",
   INDUCTION_MISSING: "No site safety induction recorded.",
   SUSPENDED: "Suspended from working on site.",
@@ -86,7 +86,7 @@ export function assessContractor(
 }
 
 // An individual's own induction, which can lapse while the company's is current
-// — a new hire sent to site by an otherwise compliant contractor is the case
+//, a new hire sent to site by an otherwise compliant contractor is the case
 // this catches.
 export function assessPerson(
   p: { inductionValidUntil?: string | null },

@@ -52,7 +52,7 @@ export async function seedCorrectiveWms() {
     console.log("✅ Corrective case CMRF-2026-0001 (Stako, no motion X axis)");
   }
 
-  // ── Historical CLOSED corrective cases with full RCA — the knowledge base the
+  // ── Historical CLOSED corrective cases with full RCA, the knowledge base the
   //    diagnostic engine learns from. ─────────────────────────────────────────
   const ca = (actions: { action: string; responsible: string; status: string }[]) =>
     JSON.stringify(actions);
@@ -170,7 +170,7 @@ export async function seedCorrectiveWms() {
     {
       id: nanoid(),
       wmsNumber: "WMS-2026-0001",
-      title: "Roller alignment & hydraulic service — Sertom Plate Rolling Machine",
+      title: "Roller alignment & hydraulic service. Sertom Plate Rolling Machine",
       revision: 1,
       machinesScope: JSON.stringify(["Sertom Plate Rolling Machine"]),
       equipmentIds: JSON.stringify(sertom ? [sertom.id] : []),
@@ -196,7 +196,7 @@ export async function seedCorrectiveWms() {
     {
       id: nanoid(),
       wmsNumber: "WMS-2026-0002",
-      title: "X-axis servo diagnosis & replacement — Stako CNC Machine",
+      title: "X-axis servo diagnosis & replacement. Stako CNC Machine",
       revision: 0,
       machinesScope: JSON.stringify(["Stako CNC Machine"]),
       equipmentIds: JSON.stringify(stako ? [stako.id] : []),

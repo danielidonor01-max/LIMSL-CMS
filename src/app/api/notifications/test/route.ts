@@ -1,5 +1,5 @@
 // src/app/api/notifications/test/route.ts
-// Email delivery diagnostics for a Super Admin — all three without exposing
+// Email delivery diagnostics for a Super Admin, all three without exposing
 // secrets:
 //   GET               → readiness status + masked config (is SMTP configured?)
 //   POST {verifyOnly} → open the SMTP connection & auth, without sending
@@ -14,21 +14,21 @@ import { config, emailReady } from "@/lib/config";
 import { sendEmail, verifyEmail } from "@/lib/notifications/email";
 import { diagnoseRecipient } from "@/lib/notifications/deliverability";
 
-// Never returns passwords — only whether each field is present + safe metadata.
+// Never returns passwords, only whether each field is present + safe metadata.
 function status() {
   const ready = emailReady();
   const env = process.env;
 
   // Catch the most common "I set it but it's still not configured" causes:
   // a wrong value for the boolean, or a variable set under a name the app
-  // doesn't read. Never surface secret VALUES — only names (and the non-secret
+  // doesn't read. Never surface secret VALUES, only names (and the non-secret
   // EMAIL_ENABLED value).
   const hints: string[] = [];
   if (env.EMAIL_ENABLED && env.EMAIL_ENABLED !== "true") {
-    hints.push(`EMAIL_ENABLED is "${env.EMAIL_ENABLED}" — it must be exactly true (lowercase, no quotes/spaces).`);
+    hints.push(`EMAIL_ENABLED is "${env.EMAIL_ENABLED}", it must be exactly true (lowercase, no quotes/spaces).`);
   }
   const nearMiss = (canonical: string, aliases: string[]) => {
-    if (!env[canonical]) for (const a of aliases) if (env[a]) hints.push(`Found ${a}, but the app reads ${canonical} — rename it to ${canonical}.`);
+    if (!env[canonical]) for (const a of aliases) if (env[a]) hints.push(`Found ${a}, but the app reads ${canonical}, rename it to ${canonical}.`);
   };
   nearMiss("SMTP_HOST", ["SMTP_SERVER", "SMTP_HOSTNAME", "MAIL_HOST", "SMPT_HOST"]);
   nearMiss("SMTP_USER", ["SMTP_USERNAME", "SMTP_EMAIL", "SMTP_MAIL", "EMAIL_USER", "GMAIL_USER"]);
@@ -49,7 +49,7 @@ function status() {
   };
 }
 
-// Always reflect the running deployment's live env — never a cached snapshot,
+// Always reflect the running deployment's live env, never a cached snapshot,
 // so a "Recheck" right after redeploying shows the real state.
 export const dynamic = "force-dynamic";
 
@@ -65,17 +65,17 @@ export async function POST(request: Request) {
 
   const ready = emailReady();
   if (!ready.ready) {
-    return NextResponse.json({ error: `Email is not configured — ${ready.reason}.` }, { status: 400 });
+    return NextResponse.json({ error: `Email is not configured, ${ready.reason}.` }, { status: 400 });
   }
 
   let body: { to?: string; verifyOnly?: boolean } = {};
   try {
     body = await request.json();
   } catch {
-    // no body — treat as a send to the admin's own address
+    // no body, treat as a send to the admin's own address
   }
 
-  // Connection/credential check only — proves SMTP is reachable and auth works.
+  // Connection/credential check only, proves SMTP is reachable and auth works.
   if (body.verifyOnly) {
     const res = await verifyEmail();
     if (!res.ok) return NextResponse.json({ error: `Connection failed: ${res.error}` }, { status: 502 });
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
   }
 
   // Diagnose the route BEFORE sending. Where a message will be silently
-  // quarantined, a green "sent" tick is worse than no result at all — it sends
+  // quarantined, a green "sent" tick is worse than no result at all, it sends
   // the admin looking in the wrong place for hours.
   const diagnosis = await diagnoseRecipient(to, config.smtpUser);
   if (diagnosis.severity === "fail") {
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
   const res = await sendEmail(
     to,
     "Test notification",
-    "This is a test email from LIMSL CMS.\n\nIf you received it, email delivery is working — maintenance reminders, overdue escalations and sign-off requests will reach your inbox.",
+    "This is a test email from LIMSL CMS.\n\nIf you received it, email delivery is working, maintenance reminders, overdue escalations and sign-off requests will reach your inbox.",
     "/notifications",
   );
   if (!res.ok) {

@@ -1,7 +1,7 @@
 // src/lib/storage/index.ts
 // Provider-agnostic file storage. Two backends behind one interface:
-//   LOCAL    — filesystem on the server (default; right for a self-hosted site)
-//   SUPABASE — cloud object storage over REST (right for a hosted/multi-site deploy)
+//   LOCAL, filesystem on the server (default; right for a self-hosted site)
+//   SUPABASE, cloud object storage over REST (right for a hosted/multi-site deploy)
 // Switch with STORAGE_PROVIDER; nothing else changes. Files are always served
 // through the auth-gated /api/files route, never as public URLs.
 import { config } from "@/lib/config";

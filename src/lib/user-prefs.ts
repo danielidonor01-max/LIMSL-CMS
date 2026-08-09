@@ -1,5 +1,5 @@
 // src/lib/user-prefs.ts
-// Per-user preferences — the single source of truth for their shape and defaults.
+// Per-user preferences, the single source of truth for their shape and defaults.
 // Pure (no server-only imports) so both the client preferences UI and the server
 // (notify recipient selection, /api/me) can share it. Stored as JSON in
 // users.preferences; parsePrefs() always returns a fully-populated object so
@@ -13,7 +13,7 @@ export type UserPrefs = {
   notifyEmail: boolean; // receive email notifications (when SMTP is configured)
   notifyInApp: boolean; // show the in-app notification inbox badge
   // AI chat composer: false (default) = Enter inserts a new line and Ctrl/Cmd+Enter
-  // sends — the safe choice on shop-floor phones where a stray Enter mid-report
+  // sends, the safe choice on shop-floor phones where a stray Enter mid-report
   // would fire a half-typed message at the assistant. true = Enter sends.
   chatEnterToSend: boolean;
   // Alert channels for NEW in-app notifications while the app is open:
@@ -33,7 +33,7 @@ export const DEFAULT_PREFS: UserPrefs = {
   notifyDesktop: false,
 };
 
-// Landing pages a user may choose — kept to broadly-accessible destinations so
+// Landing pages a user may choose, kept to broadly-accessible destinations so
 // the choice is valid for every role (route guards still apply on navigation).
 export const LANDING_OPTIONS: { value: string; label: string }[] = [
   { value: "/", label: "Dashboard" },

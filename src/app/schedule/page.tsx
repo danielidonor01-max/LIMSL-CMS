@@ -130,7 +130,7 @@ export default function SchedulePage() {
         toast.error(d.error || "Could not quieten the reminders.");
         return;
       }
-      toast.success(`Reminders paused until ${formatDate(d.until)} — the activity is still overdue.`);
+      toast.success(`Reminders paused until ${formatDate(d.until)}. The activity is still overdue.`);
       setSnooze(null);
       load();
     } finally {
@@ -213,7 +213,7 @@ export default function SchedulePage() {
         toast.error(d.error || "Failed to defer.");
         return;
       }
-      toast.success("Deferral recorded against your name — it returns to overdue on the review date.");
+      toast.success("Deferral recorded against your name. It returns to overdue on the review date.");
       setDefer(null);
       load();
     } catch {
@@ -452,7 +452,7 @@ export default function SchedulePage() {
               <EmptyState
                 icon={ShieldCheck}
                 title="Nothing is being deferred"
-                message="No maintenance has been formally put off. When work has to wait, defer it here rather than letting it run overdue — the reason, the person accepting the risk and the review date are all recorded."
+                message="No maintenance has been formally put off. When work has to wait, defer it here rather than letting it run overdue, the reason, the person accepting the risk and the review date are all recorded."
                 actionLabel="View all activities"
                 onAction={() => setTab("all")}
               />
@@ -521,9 +521,9 @@ export default function SchedulePage() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-500">
-                        {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "—"}
+                        {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "-"}
                       </td>
-                      <td className="py-3 px-4 text-slate-700">{r.responsiblePersonName ?? "—"}</td>
+                      <td className="py-3 px-4 text-slate-700">{r.responsiblePersonName ?? "-"}</td>
                       <td className="py-3 px-4">
                         <Badge className={SCHEDULE_STATUS_BADGE[r.status]}>
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
@@ -531,7 +531,7 @@ export default function SchedulePage() {
                         {r.status === "DEFERRED" && (
                           <div className="mt-1.5 max-w-[280px] text-[10px] leading-relaxed text-slate-500">
                             <span className="text-violet-700 font-medium">
-                              {r.deferredByName ?? "—"}
+                              {r.deferredByName ?? "-"}
                             </span>
                             {r.deferredReviewDate ? ` · review ${formatDate(r.deferredReviewDate)}` : ""}
                             {r.deferredReason ? <div className="text-slate-500">{r.deferredReason}</div> : null}
@@ -621,7 +621,7 @@ export default function SchedulePage() {
                 <option value="">Select equipment…</option>
                 {equipmentList.map((eq) => (
                   <option key={eq.id} value={eq.id}>
-                    {eq.assetId} — {eq.name}
+                    {eq.assetId}, {eq.name}
                   </option>
                 ))}
               </Select>
@@ -673,7 +673,7 @@ export default function SchedulePage() {
             <div>
               <label className={LABEL_CLASS}>Responsible person</label>
               {/* This was a free-text box, and escalations.ts skips any activity
-                  with no responsiblePersonId — so every per-person reminder was
+                  with no responsiblePersonId, so every per-person reminder was
                   silently dropped and only the role broadcasts ever fired. A
                   typed name also drifts: "Musa", "musa a." and "Musa Abubakar"
                   are three different people to the system. */}
@@ -689,7 +689,7 @@ export default function SchedulePage() {
                 }}
                 className="w-full"
               >
-                <option value="">Unassigned — nobody will be reminded</option>
+                <option value="">Unassigned, nobody will be reminded</option>
                 {staff.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name} · {ROLE_LABELS[u.role] ?? u.role}
@@ -733,7 +733,7 @@ export default function SchedulePage() {
           )}
         </Modal>
 
-        {/* Quieten reminders — NOT a deferral. The work is still overdue and
+        {/* Quieten reminders, NOT a deferral. The work is still overdue and
             still counts; this only stops the daily nagging of someone who is
             already dealing with it. */}
         <Modal
@@ -747,14 +747,14 @@ export default function SchedulePage() {
               <p className="text-xs text-slate-600 leading-relaxed">
                 This activity <strong>stays overdue</strong> and still counts against PM compliance. All this does is
                 stop the daily reminder while you deal with it. If you want it formally put off, use{" "}
-                <strong>Defer</strong> instead — that records a risk accepted and needs a review date.
+                <strong>Defer</strong> instead, that records a risk accepted and needs a review date.
               </p>
               <Field label="What is being done about it" htmlFor="sn-reason">
                 <input
                   id="sn-reason"
                   value={snooze.reason}
                   onChange={(e) => setSnooze((s) => (s ? { ...s, reason: e.target.value } : s))}
-                  placeholder="e.g. Bearing on order, ETA 3 weeks — inspected weekly meanwhile"
+                  placeholder="e.g. Bearing on order, ETA 3 weeks, inspected weekly meanwhile"
                   className={FIELD_CLASS}
                 />
               </Field>
@@ -776,7 +776,7 @@ export default function SchedulePage() {
           )}
         </Modal>
 
-        {/* Deferral — a recorded, owned, time-boxed risk acceptance */}
+        {/* Deferral, a recorded, owned, time-boxed risk acceptance */}
         <Modal
           open={!!defer}
           onClose={() => setDefer(null)}
@@ -788,7 +788,7 @@ export default function SchedulePage() {
               <p className="text-xs text-slate-500">
                 Planned for <span className="font-mono text-slate-700">{formatDate(defer.row.plannedDate)}</span>.
                 Deferring records a risk you are accepting, against your name. It does not close the
-                activity — on the review date it returns to the overdue list.
+                activity, on the review date it returns to the overdue list.
               </p>
               <Field label="Reason and risk accepted" htmlFor="defer-reason">
                 <textarea

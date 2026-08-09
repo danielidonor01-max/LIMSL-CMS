@@ -12,7 +12,7 @@ import { chainSummary } from "@/lib/signoff/chains";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
 
 // A Permit-to-Work is valid for one working day. It must be re-raised the next
-// day, never renewed — this is fixed policy, not a per-permit setting.
+// day, never renewed, this is fixed policy, not a per-permit setting.
 export const PERMIT_VALIDITY_HOURS = 24;
 
 // A permit's status is driven by its signatures, never by a button.
@@ -34,10 +34,10 @@ export async function reconcilePermits() {
           .update(permits)
           .set({ status: "ACTIVE", approvedAt: new Date().toISOString() })
           .where(eq(permits.id, p.id));
-        // Authorised — open the close-out chain so the job can be signed off later.
+        // Authorised, open the close-out chain so the job can be signed off later.
         await ensureSignoffChain("PERMIT_CLOSEOUT", p.id);
       } else if (lapsed) {
-        // A permit not fully signed within its day lapses — it cannot be
+        // A permit not fully signed within its day lapses, it cannot be
         // approved the next day; a fresh permit must be raised.
         await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
       }
@@ -46,7 +46,7 @@ export async function reconcilePermits() {
 
     // A permit that WAS authorised (approvedAt set) put real isolation on real
     // machinery. If it then lapses, that isolation still exists in the field and
-    // someone still has to sign "isolation removed, safe to re-energise" — so an
+    // someone still has to sign "isolation removed, safe to re-energise", so an
     // EXPIRED permit must remain closable. Previously only ACTIVE permits were
     // checked, which left the HSE de-isolation step permanently unsignable and
     // equipment isolated with no record of who removed the locks.
@@ -56,7 +56,7 @@ export async function reconcilePermits() {
         await db
           .update(permits)
           // CLOSED_LATE is honest: the work was closed out, but after the
-          // permit's validity window — an auditable distinction.
+          // permit's validity window, an auditable distinction.
           .set({
             status: p.status === "EXPIRED" ? "CLOSED_LATE" : "CLOSED",
             closedAt: new Date().toISOString(),
@@ -103,7 +103,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // HSE is the issuing authority — only HSE (or Super Admin) may raise a permit.
+    // HSE is the issuing authority, only HSE (or Super Admin) may raise a permit.
     const gate = await requireRoles(PERMIT_ISSUE_ROLES);
     if (gate.res) return gate.res;
 
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     }
 
     // A permit must name an accountable holder. "Maintenance Team" is not
-    // accountable to an auditor — a person is.
+    // accountable to an auditor, a person is.
     if (!body.permitHolderId) {
       return NextResponse.json(
         { error: "A permit holder must be assigned before the permit can be raised." },
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     // ISO 45001 8.1.4.2. Where the work is being done by an outside company, the
     // gate is here or it is nowhere: a contractor register that never stops
     // anybody working is a spreadsheet. Insurance and induction both lapse
-    // silently — nobody is emailed by their insurer's expiry date — so the check
+    // silently, nobody is emailed by their insurer's expiry date, so the check
     // has to happen at the moment a permit is raised.
     if (body.contractorId) {
       const [contractor] = await db
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Identify at least one hazard and its control measure before raising the permit — " +
+            "Identify at least one hazard and its control measure before raising the permit, " +
             "a permit without hazard content cannot authorise work (ISO 45001 6.1.2).",
         },
         { status: 400 },
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
       if (!wms) return NextResponse.json({ error: "The selected Work Method Statement was not found." }, { status: 400 });
       if (wms.status !== "APPROVED") {
         return NextResponse.json(
-          { error: `WMS ${wms.wmsNumber} is ${String(wms.status).toLowerCase().replace(/_/g, " ")} — only an APPROVED method statement may back a permit.` },
+          { error: `WMS ${wms.wmsNumber} is ${String(wms.status).toLowerCase().replace(/_/g, " ")}, only an APPROVED method statement may back a permit.` },
           { status: 409 },
         );
       }
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
 
     const permitNumber = await nextDocNumber("PTW");
 
-    // Fixed one-working-day validity — permits are re-raised, never renewed.
+    // Fixed one-working-day validity, permits are re-raised, never renewed.
     const expiryDate = new Date(Date.now() + PERMIT_VALIDITY_HOURS * 3600 * 1000).toISOString();
 
     const newPermit = {
@@ -213,7 +213,7 @@ export async function POST(request: Request) {
       contractorId: body.contractorId || null,
       issuedDate: new Date().toISOString(),
       expiryDate,
-      // Raised unapproved — work may not begin until the chain is fully signed.
+      // Raised unapproved, work may not begin until the chain is fully signed.
       status: "PENDING_APPROVAL",
     };
 
@@ -231,7 +231,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "LOTO is marked as applied — list the isolation points (energy source, isolating device and lock/tag) " +
+            "LOTO is marked as applied, list the isolation points (energy source, isolating device and lock/tag) " +
             "so the de-isolation can be verified at close-out (ISO 45001 8.1.2).",
         },
         { status: 400 },

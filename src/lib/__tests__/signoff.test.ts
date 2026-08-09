@@ -67,7 +67,7 @@ test("isStepUnlocked: required=null is treated as optional and does not block", 
 test("isStepUnlocked: a REJECTED earlier required step blocks everything after it", () => {
   const chain = [step(1, "SIGNED"), step(2, "REJECTED"), step(3, "PENDING")];
   assert.equal(isStepUnlocked(chain, 3), false);
-  // …and only SIGNED clears it — no other terminal status counts.
+  // …and only SIGNED clears it, no other terminal status counts.
   for (const status of ["REJECTED", "PENDING", "SKIPPED", "signed", ""]) {
     assert.equal(isStepUnlocked([step(1, status), step(2, "PENDING")], 2), status === "SIGNED");
   }
@@ -153,7 +153,7 @@ test("every declared chain is non-empty, uses canonical roles and has a required
     assert.ok(chain.length > 0, `${entityType} has no steps`);
     assert.ok(
       chain.some((s) => s.required),
-      `${entityType} has no required step — chainSummary could never complete`,
+      `${entityType} has no required step, chainSummary could never complete`,
     );
     for (const s of chain) {
       assert.ok(
@@ -198,7 +198,7 @@ test("every declared chain unlocks strictly in declaration order", () => {
 // ── Segregation of duties ────────────────────────────────────────────────────
 // A multi-level chain means multiple PEOPLE. Rank-seniority lets a manager cover
 // a junior step, which without this rule let ONE senior sign an entire chain
-// alone — including the HSE safety step — collapsing the control the chain
+// alone, including the HSE safety step, collapsing the control the chain
 // exists to provide. Mirrors the guard in POST /api/signoffs/[id].
 const alreadySignedByMe = (
   chain: Array<{ id: string; status: string; signedById: string | null }>,

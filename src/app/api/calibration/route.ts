@@ -51,7 +51,7 @@ export async function GET() {
 }
 
 // Record a calibration. The instrument master (calibration_records) is upserted
-// and an immutable calibration_events row is ALWAYS written — the master's
+// and an immutable calibration_events row is ALWAYS written, the master's
 // dates and status are only a cache of the newest event, never the history.
 export async function POST(request: Request) {
   try {
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Verdict must be one of: ${VERDICT_VALUES.join(", ")}.` }, { status: 400 });
     }
     // An instrument left rejected cannot be recorded as a pass, whatever the
-    // form said — the verdict follows the instrument's actual condition.
+    // form said, the verdict follows the instrument's actual condition.
     if (asLeft === "REJECTED") verdict = "FAIL";
 
     // ── Instrument master: upsert ────────────────────────────────────────────
@@ -248,7 +248,7 @@ export async function POST(request: Request) {
         action: "CREATE",
         entityType: "non_conformity",
         entityId: nc.id,
-        entityDescription: `NC ${ncNumber} raised (${nc.severity}) — ${nc.description.slice(0, 80)}`,
+        entityDescription: `NC ${ncNumber} raised (${nc.severity}), ${nc.description.slice(0, 80)}`,
       });
     }
 
@@ -262,7 +262,7 @@ export async function POST(request: Request) {
       entityType: "calibration",
       entityId: master.id,
       entityDescription:
-        `Calibration ${verdict} recorded — ${master.instrumentName} on ${calibrationDate} ` +
+        `Calibration ${verdict} recorded, ${master.instrumentName} on ${calibrationDate} ` +
         `(as-found ${asFound}) · next due ${nextCalibrationDate}` +
         (raisedNc ? ` · NC ${raisedNc.ncNumber} raised` : ""),
     });

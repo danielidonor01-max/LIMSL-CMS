@@ -13,7 +13,7 @@ function baseDir() {
     : path.join(process.cwd(), config.storageLocalDir);
 }
 
-// Guard against path traversal — a key must be a single flat filename.
+// Guard against path traversal, a key must be a single flat filename.
 function safeKey(key: string): string | null {
   if (!key || key.includes("/") || key.includes("\\") || key.includes("..")) return null;
   return key;

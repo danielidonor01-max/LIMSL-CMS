@@ -1,6 +1,6 @@
 // src/components/OfflineBanner.tsx
 // Workshop wifi drops. Until now the only signal was that a submit quietly did
-// nothing, which is indistinguishable from success — so a technician would walk
+// nothing, which is indistinguishable from success, so a technician would walk
 // away believing a fault was logged. This says so plainly, and reassures them
 // that what they've typed is still on the phone.
 "use client";
@@ -31,7 +31,7 @@ export default function OfflineBanner() {
       className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-xs font-semibold text-amber-950 no-print"
     >
       <WifiOff className="w-4 h-4 shrink-0" />
-      You&apos;re offline — anything you type is kept on this phone. Reconnect before submitting.
+      You&apos;re offline, anything you type is kept on this phone. Reconnect before submitting.
     </div>
   );
 }

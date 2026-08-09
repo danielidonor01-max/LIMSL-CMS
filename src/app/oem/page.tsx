@@ -281,10 +281,10 @@ export default function OemPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
-                      <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {v.phone ?? "—"}</span>
-                      <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {v.email ?? "—"}</span>
-                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {v.avgResponseTimeHrs ?? "—"} hr response</span>
-                      <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {v.avgSpareLeadTimeDays ?? "—"} d lead</span>
+                      <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {v.phone ?? "-"}</span>
+                      <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {v.email ?? "-"}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {v.avgResponseTimeHrs ?? "-"} hr response</span>
+                      <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {v.avgSpareLeadTimeDays ?? "-"} d lead</span>
                     </div>
 
                     <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px]">
@@ -343,10 +343,10 @@ export default function OemPage() {
                           <td className="py-2.5 px-4 text-slate-700 max-w-xs">{it.problemDescription}</td>
                           <td className="py-2.5 px-4">
                             <Badge className={it.warrantyStatus === "IN" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20"}>
-                              {it.warrantyStatus ?? "—"}
+                              {it.warrantyStatus ?? "-"}
                             </Badge>
                           </td>
-                          <td className="py-2.5 px-4 text-slate-700">{it.responseTimeHrs ?? "—"} hrs</td>
+                          <td className="py-2.5 px-4 text-slate-700">{it.responseTimeHrs ?? "-"} hrs</td>
                           <td className="py-2.5 px-4 text-slate-500 max-w-xs">{it.resolutionSummary}</td>
                           <td className="py-2.5 px-4">
                             {it.closed ? (
@@ -381,7 +381,7 @@ export default function OemPage() {
             <Select value={vendorEquipmentId} onChange={setVendorEquipmentId} required className="w-full">
               <option value="" disabled>Select equipment…</option>
               {equipmentList.map((e) => (
-                <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
+                <option key={e.id} value={e.id}>{e.assetId}, {e.name}</option>
               ))}
             </Select>
           </div>
@@ -437,7 +437,7 @@ export default function OemPage() {
           <div>
             <label className={LABEL_CLASS}>Vendor (optional)</label>
             <Select value={intOemId} onChange={setIntOemId} className="w-full">
-              <option value="">— No linked vendor —</option>
+              <option value="">. No linked vendor , </option>
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>{v.vendorName} ({v.assetId})</option>
               ))}
@@ -446,9 +446,9 @@ export default function OemPage() {
           <div>
             <label className={LABEL_CLASS}>Equipment (if no vendor)</label>
             <Select value={intEquipmentId} onChange={setIntEquipmentId} className="w-full">
-              <option value="">— Select equipment —</option>
+              <option value="">. Select equipment , </option>
               {equipmentList.map((e) => (
-                <option key={e.id} value={e.id}>{e.assetId} — {e.name}</option>
+                <option key={e.id} value={e.id}>{e.assetId}, {e.name}</option>
               ))}
             </Select>
           </div>

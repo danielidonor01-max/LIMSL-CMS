@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
     // Criticality was a badge colour consumed by nothing. A job on a machine
     // that stops production should not default to the same priority as one on
-    // a bench grinder — the client can still override.
+    // a bench grinder, the client can still override.
     const [eqRow] = await db
       .select({ criticality: equipment.criticality })
       .from(equipment)
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "work_order",
       entityId: id,
-      entityDescription: `${workOrderNumber} — ${body.title}`,
+      entityDescription: `${workOrderNumber}, ${body.title}`,
     });
 
     // Tell the assigned technician their job exists. Best-effort.
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       try {
         await notify({
           event: "GENERAL",
-          title: `Work order assigned to you — ${workOrderNumber}`,
+          title: `Work order assigned to you, ${workOrderNumber}`,
           body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. Open the work order for details.`,
           linkPath: `/work-orders/${id}`,
           relatedEntityType: "work_order",

@@ -1,7 +1,7 @@
 // src/components/OutboxTray.tsx
 // What is waiting to be sent, and what was refused.
 //
-// A queue nobody can see is a queue nobody trusts — and worse, a rejected
+// A queue nobody can see is a queue nobody trusts, and worse, a rejected
 // submission that only lives in localStorage is a job the workshop believes is
 // recorded. This sits under the offline banner and stays visible until the queue
 // is empty.
@@ -28,8 +28,8 @@ export default function OutboxTray() {
       const r = await flush();
       refresh();
       if (r.sent > 0) toast.success(`${r.sent} queued submission${r.sent === 1 ? "" : "s"} sent.`);
-      if (r.failed > 0) toast.error(`${r.failed} could not be sent — see the reason below.`);
-      if (r.sent === 0 && r.failed === 0) toast.info("Nothing could be sent yet — still no connection.");
+      if (r.failed > 0) toast.error(`${r.failed} could not be sent, see the reason below.`);
+      if (r.sent === 0 && r.failed === 0) toast.info("Nothing could be sent yet, still no connection.");
     } finally {
       setBusy(false);
     }
@@ -47,7 +47,7 @@ export default function OutboxTray() {
                   {waiting.length} submission{waiting.length === 1 ? "" : "s"} waiting to send
                 </strong>{" "}
                 <span className="text-slate-500">
-                  {online ? "— sending automatically." : "— they will go as soon as you have signal."}
+                  {online ? ", sending automatically." : ", they will go as soon as you have signal."}
                 </span>
               </span>
             </p>
@@ -81,13 +81,13 @@ export default function OutboxTray() {
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-rose-900">Not sent — {e.label}</p>
+                <p className="text-xs font-semibold text-rose-900">Not sent, {e.label}</p>
                 <p className="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
                   {e.lastError ?? "The server refused this submission."}
                 </p>
                 <p className="text-[10px] text-rose-700/80 mt-1">
                   Queued {describeAge(e.createdAt)} · {e.attempts} attempt{e.attempts === 1 ? "" : "s"}. Nothing has
-                  been recorded for this — you will need to redo it or discard it.
+                  been recorded for this, you will need to redo it or discard it.
                 </p>
               </div>
             </div>
@@ -96,7 +96,7 @@ export default function OutboxTray() {
                 onClick={() => {
                   retry(e.id);
                   refresh();
-                  toast.info("Queued again — it will retry on the next send.");
+                  toast.info("Queued again, it will retry on the next send.");
                 }}
                 className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-rose-300 text-rose-700 text-[11px] font-semibold hover:bg-rose-100"
               >

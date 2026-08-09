@@ -31,7 +31,7 @@ export type TimelineEvent = {
   refId?: string | null;
 };
 
-// Record an explicit log entry. Best-effort at call sites — a logging failure
+// Record an explicit log entry. Best-effort at call sites, a logging failure
 // must never fail the underlying maintenance action.
 export async function logEquipmentEvent(entry: {
   equipmentId: string;
@@ -103,7 +103,7 @@ export async function buildTimeline(equipmentId: string): Promise<TimelineEvent[
     events.push({
       id: `wo-${w.id}`,
       category: w.type === "PREVENTIVE" ? "PM" : w.type === "INSPECTION" ? "INSPECTION" : "CM",
-      title: `${w.type} work order ${w.workOrderNumber} — ${w.status.replace(/_/g, " ").toLowerCase()}`,
+      title: `${w.type} work order ${w.workOrderNumber}, ${w.status.replace(/_/g, " ").toLowerCase()}`,
       detail: w.title,
       href: `/work-orders/${w.id}`,
       source: "DERIVED",
@@ -117,7 +117,7 @@ export async function buildTimeline(equipmentId: string): Promise<TimelineEvent[
     events.push({
       id: `cm-${c.id}`,
       category: "CM",
-      title: `Corrective ${c.cmrfNumber} — ${(c.status ?? "").toLowerCase() || "logged"}`,
+      title: `Corrective ${c.cmrfNumber}, ${(c.status ?? "").toLowerCase() || "logged"}`,
       detail: c.faultDescription || c.observedFault || null,
       href: `/corrective/${c.id}`,
       source: "DERIVED",
@@ -130,7 +130,7 @@ export async function buildTimeline(equipmentId: string): Promise<TimelineEvent[
     events.push({
       id: `nc-${n.id}`,
       category: n.type === "SAFETY_INCIDENT" ? "ACCIDENT" : "INSPECTION",
-      title: `${(n.type ?? "Non-conformity").replace(/_/g, " ")} — ${n.ncNumber ?? ""}`.trim(),
+      title: `${(n.type ?? "Non-conformity").replace(/_/g, " ")}, ${n.ncNumber ?? ""}`.trim(),
       detail: n.description ?? null,
       href: `/audit/non-conformity`,
       source: "DERIVED",
@@ -143,7 +143,7 @@ export async function buildTimeline(equipmentId: string): Promise<TimelineEvent[
     events.push({
       id: `doc-${d.id}`,
       category: "DOCUMENT",
-      title: `Document added — ${d.title}`,
+      title: `Document added, ${d.title}`,
       detail: d.docType?.replace(/_/g, " ") ?? null,
       href: d.fileUrl ?? null,
       source: "DERIVED",

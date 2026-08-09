@@ -40,7 +40,7 @@ export async function ensureSignoffChain(entityType: string, entityId: string, r
     .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)))
     .orderBy(asc(signoffs.stepOrder));
 
-  // Best-effort — never let a notification failure abort chain creation. Only
+  // Best-effort, never let a notification failure abort chain creation. Only
   // the caller whose rows actually landed notifies, so a lost race can't send
   // the first-signer request twice.
   if (canonical[0]?.id === rows[0].id) {
@@ -63,7 +63,7 @@ export async function getSignoffChain(entityType: string, entityId: string) {
 }
 
 // Rework path: after a rejection (or a content change to an already-signed
-// document) the old signatures no longer attest to anything — drop the chain and
+// document) the old signatures no longer attest to anything, drop the chain and
 // start a fresh one so every step must sign the CURRENT content. The old steps'
 // audit-log entries remain; only the live chain resets.
 export async function resetSignoffChain(entityType: string, entityId: string, reference?: string) {

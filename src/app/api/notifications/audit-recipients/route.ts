@@ -2,7 +2,7 @@
 // Which of our own people will actually receive what we send them.
 //
 // Deliverability is a property of the (sender, recipient-domain) pair, not of
-// the app — so with a consumer-domain sender, an entire staff domain can be
+// the app, so with a consumer-domain sender, an entire staff domain can be
 // silently quarantined while the CMS reports every message as sent. This
 // answers "who is affected" once, up front, instead of one confused support
 // conversation at a time.

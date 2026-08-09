@@ -7,8 +7,8 @@ import { auth } from "@/auth";
 
 // GET → the current user's in-app notifications (newest first) + unread count.
 // `?countOnly=1` returns just the number: the topbar bell polls this once a
-// minute for every signed-in user, and it was pulling 100 full rows — body text,
-// delivery errors and all — to render a single integer.
+// minute for every signed-in user, and it was pulling 100 full rows, body text,
+// delivery errors and all, to render a single integer.
 export async function GET(request: Request) {
   try {
     const session = await auth();

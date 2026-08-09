@@ -3,7 +3,7 @@
 // The CMS renders pages client-side and fetches in useEffect (see AGENTS.md §7),
 // so without this every navigation re-hits the DB and shows a spinner. useApi()
 // serves the last response instantly from an in-memory cache, then revalidates
-// in the background — revisiting a page feels immediate. Concurrent callers for
+// in the background, revisiting a page feels immediate. Concurrent callers for
 // the same URL share one in-flight request (dedupe).
 "use client";
 

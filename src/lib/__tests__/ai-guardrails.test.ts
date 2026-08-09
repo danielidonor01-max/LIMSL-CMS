@@ -17,10 +17,10 @@ type RawChatTurn = Parameters<typeof validateChatTurn>[0];
 const STANDARD_LOTO = "Isolate the machine and verify zero energy (LOTO) before starting";
 
 const ITEMS: EvidenceItem[] = [
-  { id: "G:g1", kind: "GUIDE", label: "Guide — will not start", text: "Symptom: will not start." },
-  { id: "H:CMRF-2026-0007", kind: "HISTORY", label: "History — CMRF-2026-0007", text: "Verified root cause: seized bearing." },
+  { id: "G:g1", kind: "GUIDE", label: "Guide, will not start", text: "Symptom: will not start." },
+  { id: "H:CMRF-2026-0007", kind: "HISTORY", label: "History, CMRF-2026-0007", text: "Verified root cause: seized bearing." },
   { id: "D:chunk1", kind: "DOC", label: "Manual · Section 4", text: "Torque the flange to 40 Nm." },
-  { id: "C:CB-12", kind: "COMPONENT", label: "CB-12 — main breaker", text: "CB-12: main breaker (BREAKER)." },
+  { id: "C:CB-12", kind: "COMPONENT", label: "CB-12, main breaker", text: "CB-12: main breaker (BREAKER)." },
 ];
 
 const pack = (): EvidencePack => ({ items: ITEMS, componentTags: new Set(["CB-12", "KM-3"]) });
@@ -48,11 +48,11 @@ test("invented evidence ids are stripped, real ones keep their label and kind", 
   );
   assert.equal(out.diagnoses.length, 1);
   assert.deepEqual(out.diagnoses[0].evidence, [
-    { id: "H:CMRF-2026-0007", label: "History — CMRF-2026-0007", kind: "HISTORY" },
+    { id: "H:CMRF-2026-0007", label: "History, CMRF-2026-0007", kind: "HISTORY" },
   ]);
 });
 
-test("evidence id matching is exact — no prefix or case fuzz", () => {
+test("evidence id matching is exact, no prefix or case fuzz", () => {
   const out = validateAiResponse(
     respond({ diagnoses: [diagnosis({ evidenceIds: ["h:cmrf-2026-0007", "H:CMRF-2026-000", "H:CMRF-2026-0007 "] })] }),
     pack(),
@@ -340,7 +340,7 @@ test("chat turn: free text is truncated and blank optionals become null", () => 
 });
 
 test("chat turn: energy wording confined to the prose reply does not trigger LOTO", () => {
-  // Only the working hypothesis and the actionable steps are scanned — the
+  // Only the working hypothesis and the actionable steps are scanned, the
   // conversational reply is not a procedure.
   const turn = validateChatTurn(chat({ reply: "The breaker panel is the usual suspect on this machine." }), pack());
   assert.deepEqual(turn.safety, []);

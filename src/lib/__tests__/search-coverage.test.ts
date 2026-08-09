@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 // Search covered four modules for most of this project's life, and every module
-// added afterwards silently did not join — so by the end of Phase 6 the search
+// added afterwards silently did not join, so by the end of Phase 6 the search
 // bar could not find permits, spares, calibration, emergency equipment,
 // contractors, non-conformities or training: the majority of the app.
 //
@@ -58,10 +58,10 @@ test("no page-level module has appeared without being considered for search", ()
   const appDir = join(process.cwd(), "src", "app");
   const known = new Set([
     ...SEARCHABLE_MODULES,
-    // Reference and admin surfaces — nothing to look up by name.
+    // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",
-    // Unauthenticated auth surfaces — they hold no records at all.
+    // Unauthenticated auth surfaces, they hold no records at all.
     "forgot-password", "reset-password",
   ]);
 
@@ -74,7 +74,7 @@ test("no page-level module has appeared without being considered for search", ()
   assert.deepEqual(
     unconsidered,
     [],
-    `new module(s) ${unconsidered.join(", ")} — add to SEARCHABLE_MODULES and the search route, ` +
+    `new module(s) ${unconsidered.join(", ")}, add to SEARCHABLE_MODULES and the search route, ` +
       `or to the known-reference list if they hold nothing findable`,
   );
 });

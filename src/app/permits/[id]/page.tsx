@@ -147,7 +147,7 @@ export default function PermitDetail() {
           <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900">
             <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-bold">Approved — work is authorised</p>
+              <p className="text-sm font-bold">Approved, work is authorised</p>
               <p className="text-xs mt-0.5">
                 Fully signed{permit.approvedAt ? ` on ${new Date(permit.approvedAt).toLocaleString()}` : ""}. Sign the
                 close-out below when the job is complete.
@@ -187,7 +187,7 @@ export default function PermitDetail() {
                     {permit.equipment.assetId}
                   </Link>
                 ) : null}
-                {" — "}
+                {"-"}
                 {permit.equipment?.name}
               </h2>
             </div>
@@ -210,11 +210,11 @@ export default function PermitDetail() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
-            <Meta icon={<User className="w-3.5 h-3.5" />} label="Permit Holder" value={permit.permitHolderName ?? "—"} strong />
+            <Meta icon={<User className="w-3.5 h-3.5" />} label="Permit Holder" value={permit.permitHolderName ?? "-"} strong />
             <Meta
               icon={<Clock className="w-3.5 h-3.5" />}
               label="Expires"
-              value={permit.expiryDate ? new Date(permit.expiryDate).toLocaleString() : "—"}
+              value={permit.expiryDate ? new Date(permit.expiryDate).toLocaleString() : "-"}
             />
             <Meta
               icon={<CheckCircle2 className="w-3.5 h-3.5" />}
@@ -250,7 +250,7 @@ export default function PermitDetail() {
                   href={`/wms/${permit.wms.id}`}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100"
                 >
-                  <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber} — {permit.wms.title}
+                  <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber}, {permit.wms.title}
                   <span className="text-[9px] font-bold uppercase">{permit.wms.status}</span>
                 </Link>
               ) : (
@@ -275,9 +275,9 @@ export default function PermitDetail() {
                     <tbody className="divide-y divide-slate-200">
                       {jhaRows.map((r, i) => (
                         <tr key={i} className="text-slate-700">
-                          <td className="py-1.5 px-2 align-top">{r.task || "—"}</td>
-                          <td className="py-1.5 px-2 align-top">{r.hazards || "—"}</td>
-                          <td className="py-1.5 px-2 align-top">{r.controls || "—"}</td>
+                          <td className="py-1.5 px-2 align-top">{r.task || "-"}</td>
+                          <td className="py-1.5 px-2 align-top">{r.hazards || "-"}</td>
+                          <td className="py-1.5 px-2 align-top">{r.controls || "-"}</td>
                           <td className="py-1.5 px-2 align-top">
                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                               r.residualRisk === "HIGH" ? "bg-rose-500/10 text-rose-600"
@@ -297,19 +297,19 @@ export default function PermitDetail() {
           </div>
         </div>
 
-        {/* Authorisation chain — must be complete before work begins */}
+        {/* Authorisation chain, must be complete before work begins */}
         <SignoffChain
           entityType="PERMIT"
           entityId={permit.id}
-          title="Permit Authorisation — required before work begins"
+          title="Permit Authorisation, required before work begins"
         />
 
-        {/* Close-out chain — only exists once the permit is approved */}
+        {/* Close-out chain, only exists once the permit is approved */}
         {permit.closeout && (
           <SignoffChain
             entityType="PERMIT_CLOSEOUT"
             entityId={permit.id}
-            title="Close-out — work complete & isolation removed"
+            title="Close-out, work complete & isolation removed"
           />
         )}
       </main>

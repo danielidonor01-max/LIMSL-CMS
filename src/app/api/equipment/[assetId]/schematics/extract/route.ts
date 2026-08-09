@@ -1,5 +1,5 @@
 // src/app/api/equipment/[assetId]/schematics/extract/route.ts
-// P2-lite component extraction from a schematic's PDF text layer — NO AI, no
+// P2-lite component extraction from a schematic's PDF text layer, NO AI, no
 // API key (docs/TROUBLESHOOTING-ENGINE.md; deterministic alternative to the
 // disabled vision engine). Results persist as a LOCAL_TEXT job in
 // schematic_ingestion_jobs with status NEEDS_REVIEW; nothing touches the
@@ -85,7 +85,7 @@ export async function POST(
 
     const extraction = await extractTags(bytes);
 
-    // One active LOCAL_TEXT job per document — replace previous runs.
+    // One active LOCAL_TEXT job per document, replace previous runs.
     await db
       .delete(schematicIngestionJobs)
       .where(
@@ -108,7 +108,7 @@ export async function POST(
         extraction.candidates.length > 0
           ? null
           : extraction.scannedPages.length === extraction.pages.length
-            ? "No text layer — scanned PDF; use click-to-tag or the future vision pipeline."
+            ? "No text layer, scanned PDF; use click-to-tag or the future vision pipeline."
             : "No recognizable component tags found in the text layer.",
       requestedById: gate.actor?.id ?? null,
     };

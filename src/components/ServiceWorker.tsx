@@ -1,7 +1,7 @@
 // src/components/ServiceWorker.tsx
 // Registers the app-shell worker. Registration is deliberately deferred until
 // after load so it never competes with the first paint on a slow workshop
-// connection — the shell being cached matters on the *second* visit, not this
+// connection, the shell being cached matters on the *second* visit, not this
 // one.
 "use client";
 

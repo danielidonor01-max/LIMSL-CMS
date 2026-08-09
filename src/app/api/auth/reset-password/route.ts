@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const token = String(body.token ?? "");
     if (!token) return NextResponse.json({ error: "No reset token supplied." }, { status: 400 });
 
-    // Looked up BY HASH — the plaintext token exists only in the email.
+    // Looked up BY HASH, the plaintext token exists only in the email.
     const [row] = await db
       .select()
       .from(passwordResets)
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 
     // Consume the token FIRST. If the password update then fails, the worst
-    // outcome is a spent link and a retry — not a token that stays live after a
+    // outcome is a spent link and a retry, not a token that stays live after a
     // partial success.
     await db
       .update(passwordResets)

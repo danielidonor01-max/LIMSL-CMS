@@ -14,7 +14,7 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const rawCallback = params.get("callbackUrl") || "/";
-  // Only same-app paths — an absolute URL here would be an open redirect.
+  // Only same-app paths, an absolute URL here would be an open redirect.
   const callbackUrl = rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
 
   const [email, setEmail] = useState("");
@@ -42,7 +42,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-white lg:grid lg:grid-cols-2 font-sans">
-      {/* Brand / value panel — desktop only */}
+      {/* Brand / value panel, desktop only */}
       <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-white/5" />
@@ -58,17 +58,17 @@ function LoginForm() {
 
         <div className="relative space-y-6 max-w-md">
           <h2 className="text-3xl font-bold leading-tight tracking-tight">
-            Every machine, procedure and sign-off — auditable in one place.
+            Every machine, procedure and sign-off, auditable in one place.
           </h2>
           <p className="text-emerald-50/90 text-sm leading-relaxed">
-            The computerized maintenance management system for LEE International Machinery — built compliance-first for
+            The computerized maintenance management system for LEE International Machinery, built compliance-first for
             ISO&nbsp;9001 &amp; 45001.
           </p>
           <ul className="space-y-3 text-sm">
             {[
               { icon: ClipboardCheck, text: "Preventive & corrective maintenance with traceable sign-off" },
               { icon: HardHat, text: "Permits-to-work, WMS and safety compliance" },
-              { icon: ShieldCheck, text: "Full audit trail — who did what, when, under which revision" },
+              { icon: ShieldCheck, text: "Full audit trail, who did what, when, under which revision" },
             ].map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-3">
                 <span className="mt-0.5 w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0">

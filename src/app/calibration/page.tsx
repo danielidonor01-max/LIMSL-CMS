@@ -130,7 +130,7 @@ export default function CalibrationPage() {
     // Mirrors the server rule so the user is told before the round trip.
     if (!traceableTo && !labName) {
       toast.error(
-        "Traceability is required (ISO 9001 7.1.5.2) — name the standard traced to, or the calibration laboratory.",
+        "Traceability is required (ISO 9001 7.1.5.2), name the standard traced to, or the calibration laboratory.",
       );
       return;
     }
@@ -165,7 +165,7 @@ export default function CalibrationPage() {
         const nc = saved?.nonConformity?.ncNumber as string | undefined;
         if (nc) {
           toast.warning(
-            `Out of tolerance — ${nc} raised. The instrument is out of service; measurements taken since the last passing calibration must be assessed.`,
+            `Out of tolerance, ${nc} raised. The instrument is out of service; measurements taken since the last passing calibration must be assessed.`,
           );
         } else {
           toast.success(editing?.id ? "Calibration event recorded." : "Instrument registered.");
@@ -213,7 +213,7 @@ export default function CalibrationPage() {
             {summary.OVERDUE > 0 && (
               <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs">
                 <AlertTriangle className="w-4 h-4 animate-pulse" />
-                {summary.OVERDUE} instrument{summary.OVERDUE > 1 ? "s are" : " is"} overdue for calibration — raise a non-conformity and schedule immediately.
+                {summary.OVERDUE} instrument{summary.OVERDUE > 1 ? "s are" : " is"} overdue for calibration, raise a non-conformity and schedule immediately.
               </div>
             )}
 
@@ -275,9 +275,9 @@ export default function CalibrationPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-slate-500">{r.calibrationInterval ?? "—"} d</td>
+                          <td className="py-3 px-4 text-slate-500">{r.calibrationInterval ?? "-"} d</td>
                           <td className="py-3 px-4">
-                            <div className="font-mono text-slate-500">{r.certificateNumber ?? "—"}</div>
+                            <div className="font-mono text-slate-500">{r.certificateNumber ?? "-"}</div>
                             {traceability ? (
                               <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -555,7 +555,7 @@ function Meta({ label, value, mono = false }: { label: string; value: string | n
   return (
     <div>
       <dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{label}</dt>
-      <dd className={`text-slate-700 ${mono ? "font-mono" : ""}`}>{value || "—"}</dd>
+      <dd className={`text-slate-700 ${mono ? "font-mono" : ""}`}>{value || "-"}</dd>
     </div>
   );
 }

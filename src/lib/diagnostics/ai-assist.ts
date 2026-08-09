@@ -1,9 +1,9 @@
 // src/lib/diagnostics/ai-assist.ts
 // Guardrailed AI troubleshooting generation (docs/TROUBLESHOOTING-ENGINE.md §5,
-// Gemini provider). The model only ever sees — and may only cite — a bounded
+// Gemini provider). The model only ever sees, and may only cite, a bounded
 // EVIDENCE PACK assembled from real records; a code-side validation layer then
 // strips anything it cannot prove before the UI renders it. The deterministic
-// engine's results always render regardless — this is an assist, not a source
+// engine's results always render regardless, this is an assist, not a source
 // of truth.
 import { db } from "@/lib/db";
 import {
@@ -31,7 +31,7 @@ export async function buildEvidencePack(
 ): Promise<EvidencePack> {
   const guides = await db.select().from(diagnosticGuides).where(eq(diagnosticGuides.equipmentId, equipmentId));
   const components = await db.select().from(componentRegistry).where(eq(componentRegistry.equipmentId, equipmentId));
-  // Whole-plant history — the engine's similarity scoring picks what's relevant,
+  // Whole-plant history, the engine's similarity scoring picks what's relevant,
   // and cross-machine learning is intentional (same guide as the GET route).
   // Bounded to the most recent cases so the pack can't grow without limit as
   // years of records accumulate.
@@ -56,7 +56,7 @@ export async function buildEvidencePack(
     items.push({
       id: `G:${g.id}`,
       kind: "GUIDE",
-      label: `Guide — ${trim(g.symptom, 60)}`,
+      label: `Guide, ${trim(g.symptom, 60)}`,
       text: `Symptom: ${trim(g.symptom, 150)}${g.errorCode ? ` [${g.errorCode}]` : ""}. Probable cause: ${trim(g.probableCause, 200)}. Resolution: ${trim(g.resolutionAction, 200)}. Confirmed ${g.successCount ?? 0}× before.`,
     });
   }
@@ -70,8 +70,8 @@ export async function buildEvidencePack(
     items.push({
       id: `H:${h.cmrfNumber}`,
       kind: "HISTORY",
-      label: `History — ${h.cmrfNumber}`,
-      text: `Fault: ${trim(h.observedFault || h.faultDescription, 180)}${h.errorCodes ? ` [${trim(h.errorCodes, 40)}]` : ""}. Verified root cause: ${trim(h.verifiedRootCause, 200)}. Parts: ${trim(h.partsReplaced, 80) || "—"}.`,
+      label: `History, ${h.cmrfNumber}`,
+      text: `Fault: ${trim(h.observedFault || h.faultDescription, 180)}${h.errorCodes ? ` [${trim(h.errorCodes, 40)}]` : ""}. Verified root cause: ${trim(h.verifiedRootCause, 200)}. Parts: ${trim(h.partsReplaced, 80) || "-"}.`,
     });
   }
 
@@ -88,7 +88,7 @@ export async function buildEvidencePack(
     items.push({
       id: `C:${c.componentTag}`,
       kind: "COMPONENT",
-      label: `${c.componentTag} — ${c.name}`,
+      label: `${c.componentTag}, ${c.name}`,
       text: `${c.componentTag}: ${c.name} (${c.type})${c.schematicReference ? `, ${c.schematicReference}` : ""}${c.status && c.status !== "OPERATIONAL" ? `, status ${c.status}` : ""}`,
     });
   }
@@ -100,13 +100,13 @@ export async function buildEvidencePack(
 
 const SYSTEM_CONTRACT = `You are the AI troubleshooting assistant inside LIMSL's maintenance management system, supporting qualified industrial maintenance technicians in a fabrication workshop.
 
-HARD RULES — violating any of these makes your output unusable:
+HARD RULES, violating any of these makes your output unusable:
 1. GROUNDING: You may only base diagnoses on the EVIDENCE PACK provided. Cite evidence by its exact id (e.g. "G:abc", "H:CMRF-2026-0007", "D:chunk1", "C:CB-12"). Never invent evidence ids.
 2. COMPONENTS: Only name component tags that appear in the evidence pack. Never invent a tag.
 3. INSUFFICIENT EVIDENCE: If the evidence does not support a confident diagnosis, set insufficientEvidence=true, explain what is missing in notes, and give at most one low-confidence hypothesis.
 4. SAFETY: Steps are for qualified personnel. Any step touching electrical, hydraulic, pneumatic or stored-energy systems MUST be preceded by isolation and verification of zero energy (LOTO) listed in safetyPrerequisites. Never instruct measurement on live equipment unless the step explicitly says it is a qualified live test with required PPE.
 5. CONFIDENCE: 0 to 1. Verified-history matches justify higher confidence than guides; manual passages lower; pure inference lowest.
-6. Output only the JSON — no prose outside it.`;
+6. Output only the JSON, no prose outside it.`;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -157,7 +157,7 @@ type RawResponse = { diagnoses: RawDiagnosis[]; insufficientEvidence: boolean; n
 
 export type AiDiagnosis = {
   cause: string;
-  confidence: number; // 0–100 for UI parity with the deterministic engine
+  confidence: number; // 0-100 for UI parity with the deterministic engine
   evidence: { id: string; label: string; kind: string }[];
   componentTags: { tag: string; verified: boolean }[];
   safetyPrerequisites: string[];
@@ -233,7 +233,7 @@ export async function aiDiagnose(
   const pack = await buildEvidencePack(equipment.id, equipment.category, symptom);
 
   const user = [
-    `MACHINE: ${equipment.assetId} — ${equipment.name} (category ${equipment.category})`,
+    `MACHINE: ${equipment.assetId}, ${equipment.name} (category ${equipment.category})`,
     `REPORTED SYMPTOM: ${symptom.slice(0, 400)}`,
     ``,
     `EVIDENCE PACK (cite by id):`,
@@ -254,20 +254,20 @@ export async function aiDiagnose(
 // ── Conversational diagnosis ─────────────────────────────────────────────────
 // The chat-style path: the technician works the fault turn by turn, reporting
 // what each suggested step actually produced, and the assistant narrows down.
-// Same grounding guardrails as the one-shot path — the evidence pack rides in
+// Same grounding guardrails as the one-shot path, the evidence pack rides in
 // the system instruction every turn so the model can never drift off-record.
 
 const CHAT_SYSTEM_CONTRACT = `You are the AI troubleshooting assistant inside LIMSL's maintenance management system, working a fault CONVERSATIONALLY with a qualified industrial maintenance technician on the shop floor.
 
-You are having a back-and-forth: you suggest a few concrete checks, the technician performs them and reports what they observed (and may attach photos of the panel/component), and you use that to narrow down. Keep each reply focused — a short natural-language message plus at most 3 recommended next steps. Do not dump an exhaustive plan up front; converge with the technician.
+You are having a back-and-forth: you suggest a few concrete checks, the technician performs them and reports what they observed (and may attach photos of the panel/component), and you use that to narrow down. Keep each reply focused, a short natural-language message plus at most 3 recommended next steps. Do not dump an exhaustive plan up front; converge with the technician.
 
-HARD RULES — violating any of these makes your output unusable:
+HARD RULES, violating any of these makes your output unusable:
 1. GROUNDING: Base your reasoning only on the EVIDENCE PACK provided below and on what the technician tells you. Cite evidence by its exact id (e.g. "G:abc", "H:CMRF-2026-0007", "D:chunk1", "C:CB-12") in evidenceIds. Never invent evidence ids.
 2. COMPONENTS: Only name component tags that appear in the evidence pack. Never invent a tag.
 3. INSUFFICIENT EVIDENCE: If you cannot yet form a confident hypothesis, set insufficientEvidence=true, ask ONE focused question in "question", and keep confidence low.
 4. SAFETY: These are qualified personnel. Any step touching electrical, hydraulic, pneumatic or stored-energy systems MUST be preceded by isolation and verification of zero energy (LOTO) in safetyPrerequisites. Never instruct a measurement on live equipment unless the step explicitly states it is a qualified live test with the required PPE.
 5. RESOLUTION: When the technician's feedback indicates the fault is fixed, set resolved=true and put the confirmed root cause in likelyCause.
-6. Output only the JSON — no prose outside it.`;
+6. Output only the JSON, no prose outside it.`;
 
 const CHAT_RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -311,7 +311,7 @@ type RawChatTurn = {
 };
 
 // One stored transcript message. Base64 image data is never kept on the session
-// row — photos are persisted to file storage and referenced by key (served via
+// row, photos are persisted to file storage and referenced by key (served via
 // the auth-gated /api/files route); the model sees the bytes only on the turn
 // they arrive.
 export type ChatMessage = {
@@ -399,7 +399,7 @@ export async function aiChatTurn(opts: {
   const system = [
     CHAT_SYSTEM_CONTRACT,
     ``,
-    `MACHINE: ${equipment.assetId} — ${equipment.name} (category ${equipment.category})`,
+    `MACHINE: ${equipment.assetId}, ${equipment.name} (category ${equipment.category})`,
     `ORIGINAL REPORTED SYMPTOM: ${symptom.slice(0, 400)}`,
     ``,
     `EVIDENCE PACK (cite by id):`,

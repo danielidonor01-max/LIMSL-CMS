@@ -1,5 +1,5 @@
 // src/lib/maintenance/condition.ts
-// Condition monitoring — readings taken to catch a failure before it happens.
+// Condition monitoring, readings taken to catch a failure before it happens.
 //
 // The reason this is the LAST thing in the plan rather than the first: a
 // thermography or vibration programme only pays off if someone actually takes
@@ -90,7 +90,7 @@ export type Trend = {
 const DAY = 86_400_000;
 
 // A bearing that runs 4 °C hotter every month is the thing worth catching, and
-// it is invisible in any single reading. Needs at least three points — two can
+// it is invisible in any single reading. Needs at least three points, two can
 // be noise, and calling two points a trend produces confident nonsense.
 export function trendOf(
   readings: Reading[],
@@ -105,8 +105,7 @@ export function trendOf(
     return { direction: "UNKNOWN", changePerMonth: null, projectedAlarmDate: null };
   }
 
-  // Least-squares slope over days, which tolerates irregular reading intervals —
-  // and real workshop readings are never on an even schedule.
+  // Least-squares slope over days, which tolerates irregular reading intervals,   // and real workshop readings are never on an even schedule.
   const t0 = Date.parse(`${usable[0].takenOn}T00:00:00Z`);
   const xs = usable.map((r) => (Date.parse(`${r.takenOn}T00:00:00Z`) - t0) / DAY);
   const ys = usable.map((r) => Number(r.value));
@@ -171,7 +170,7 @@ export function programmeHealth(
     overdue,
     neverRead,
     // Said plainly, because a condition-monitoring register that is mostly
-    // overdue is not a predictive programme — it is a list, and reporting it as
+    // overdue is not a predictive programme, it is a list, and reporting it as
     // a capability would be the flattering lie this codebase keeps refusing.
     keptUp: points.length > 0 && overdue + neverRead === 0,
   };

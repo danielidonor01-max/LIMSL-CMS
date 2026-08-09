@@ -1,5 +1,5 @@
 // src/components/EquipmentLog.tsx
-// The machine lifetime history log — a unified, filterable timeline of every
+// The machine lifetime history log, a unified, filterable timeline of every
 // action on a machine (PMs, CMs, inspections, accidents, transfers, diagnoses,
 // status changes, documents, notes), auto-populated by the flows and manually
 // extendable. Responsive: a vertical timeline that reads cleanly on phones and

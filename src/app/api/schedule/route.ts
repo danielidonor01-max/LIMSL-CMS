@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       activityType: body.activityType,
       taskDescription: body.taskDescription || null,
       // Falls back to the machine's own frequency, then to what its criticality
-      // implies — so a CRITICAL asset never quietly lands on the same interval
+      // implies, so a CRITICAL asset never quietly lands on the same interval
       // as a spare bench grinder just because nobody chose one.
       maintenanceFrequency:
         body.maintenanceFrequency || eq0.maintenanceFrequency || suggestedPmFrequency(eq0.criticality),

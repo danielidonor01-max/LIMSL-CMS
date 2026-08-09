@@ -1,7 +1,7 @@
 // src/app/api/import/[entity]/route.ts
 // Go-live data import. GET returns a CSV template for the entity; POST parses an
 // uploaded CSV/Excel file and either previews (mode=preview) or writes it
-// (mode=commit). Super-Admin only — this seeds the production register.
+// (mode=commit). Super-Admin only, this seeds the production register.
 import { NextResponse } from "next/server";
 import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";

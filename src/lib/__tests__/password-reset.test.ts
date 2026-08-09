@@ -12,7 +12,7 @@ import {
 } from "@/lib/auth/password-reset";
 
 // A reset table holding usable tokens hands out accounts to anyone who can read
-// the database — a dump, a stale backup, a console session.
+// the database, a dump, a stale backup, a console session.
 test("the stored value is a hash, never the token itself", () => {
   const { token, tokenHash } = generateResetToken();
   assert.notEqual(token, tokenHash);
@@ -102,7 +102,7 @@ test("a password containing the email local part is refused", () => {
   assert.equal(validateNewPassword("unrelated-phrase", "didonor@leemachinery.net").ok, true);
 });
 
-test("leading or trailing spaces are refused — they survive paste and confuse later sign-ins", () => {
+test("leading or trailing spaces are refused, they survive paste and confuse later sign-ins", () => {
   assert.equal(validateNewPassword(" leadingspace").ok, false);
   assert.equal(validateNewPassword("trailingspace ").ok, false);
 });

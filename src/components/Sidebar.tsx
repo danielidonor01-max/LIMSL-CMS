@@ -37,7 +37,7 @@ import { isSuperAdmin, canAccessPath } from "@/lib/roles";
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
 type NavSection = { section: string | null; items: NavItem[] };
 
-// Grouped navigation — related modules under a labelled section for clearer
+// Grouped navigation, related modules under a labelled section for clearer
 // information hierarchy instead of one long flat list.
 const NAV_SECTIONS: NavSection[] = [
   { section: null, items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true }] },
@@ -101,7 +101,7 @@ export default function Sidebar({
   useEffect(() => setMounted(true), []);
   const role = mounted ? (user as { role?: string })?.role : undefined;
 
-  // The mobile drawer could only be dismissed by tapping the backdrop — no key
+  // The mobile drawer could only be dismissed by tapping the backdrop, no key
   // closed it, which for a keyboard user is a dead end.
   useEffect(() => {
     if (!mobileOpen) return;

@@ -24,7 +24,7 @@ export default function NotificationBell() {
 
   useEffect(() => setMounted(true), []);
 
-  // A short two-tone chime via WebAudio — no audio asset to ship or load.
+  // A short two-tone chime via WebAudio, no audio asset to ship or load.
   const chime = () => {
     try {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -43,7 +43,7 @@ export default function NotificationBell() {
       });
       setTimeout(() => ctx.close(), 600);
     } catch {
-      /* audio blocked — fine */
+      /* audio blocked, fine */
     }
   };
 
@@ -52,11 +52,11 @@ export default function NotificationBell() {
     if (prefs.notifyDesktop && typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
         new Notification("LIMSL CMS", {
-          body: `${delta} new notification${delta > 1 ? "s" : ""} — ${count} unread`,
+          body: `${delta} new notification${delta > 1 ? "s" : ""}, ${count} unread`,
           tag: "limsl-cms-inbox",
         });
       } catch {
-        /* blocked — fine */
+        /* blocked, fine */
       }
     }
   };
@@ -102,7 +102,7 @@ export default function NotificationBell() {
 
   return (
     // The native `title` waited a second, could not be styled, never appeared
-    // on touch, and was not announced — on an icon-only control that was the
+    // on touch, and was not announced, on an icon-only control that was the
     // only label, delivered late and to some users only.
     <Tooltip label={unread > 0 ? `${unread} unread` : "Notifications"}>
       <Link
@@ -111,8 +111,8 @@ export default function NotificationBell() {
         // otherwise hears "Notifications" whether there are none or nine.
         aria-label={
           prefs.notifyInApp && unread > 0
-            ? `Notifications — ${unread} unread`
-            : "Notifications — none unread"
+            ? `Notifications, ${unread} unread`
+            : "Notifications, none unread"
         }
         className="relative grid place-items-center w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
       >

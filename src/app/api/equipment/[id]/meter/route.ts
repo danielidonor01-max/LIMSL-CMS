@@ -15,7 +15,7 @@ import {
 } from "@/lib/maintenance/meters";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 
-// The meter, its readings, and what they mean — computed server-side so the
+// The meter, its readings, and what they mean, computed server-side so the
 // twin, the schedule and any report can never disagree about whether a service
 // is due.
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -110,7 +110,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       category: "METER",
       source: "AUTO",
       title: body.isReset
-        ? `Meter replaced — restarted at ${check.reading} ${unit}`
+        ? `Meter replaced, restarted at ${check.reading} ${unit}`
         : `Meter read: ${check.reading} ${unit}`,
       detail: body.notes || null,
       occurredAt: readingDate,

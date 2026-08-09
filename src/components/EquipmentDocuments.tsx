@@ -183,7 +183,7 @@ export default function EquipmentDocuments({
               accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
               className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-200 file:text-slate-700 file:text-xs file:font-semibold"
             />
-            <p className="text-[10px] text-slate-400">PDF, images, Office docs, CSV or text — up to 25 MB.</p>
+            <p className="text-[10px] text-slate-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">

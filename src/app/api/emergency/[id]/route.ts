@@ -52,7 +52,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       // not fit for use, someone has to say what is wrong with it.
       if (verdict === "FAIL" && findings.length < 5) {
         return NextResponse.json(
-          { error: "Record what is wrong with it — a failed inspection with no finding is not evidence of anything." },
+          { error: "Record what is wrong with it, a failed inspection with no finding is not evidence of anything." },
           { status: 400 },
         );
       }
@@ -70,7 +70,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
       // A FAIL takes the item out of service. Leaving it SERVICEABLE would let a
       // failed inspection sit in the history while the headline still counted it
-      // as a working control — the exact gap this register exists to close.
+      // as a working control, the exact gap this register exists to close.
       const updates: Record<string, unknown> = {
         lastInspectionDate: inspectionDate,
         updatedAt: new Date().toISOString(),
@@ -88,7 +88,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         entityType: "emergency_equipment",
         entityId: id,
         entityDescription:
-          `${item.tagNumber} inspected ${inspectionDate} — ${verdict}` + (findings ? ` (${findings.slice(0, 80)})` : ""),
+          `${item.tagNumber} inspected ${inspectionDate}, ${verdict}` + (findings ? ` (${findings.slice(0, 80)})` : ""),
       });
 
       return NextResponse.json({ ok: true, verdict, status: updates.status ?? item.status });

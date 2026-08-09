@@ -5,7 +5,7 @@
 //   GET  ?documentId=X  → pages with preview + tile metadata (image URLs are
 //                         the auth-gated /api/files paths)
 //   GET  (no param)     → per-document summaries for this machine
-//   POST { documentId } → prepare the next unprepared page (bounded — call
+//   POST { documentId } → prepare the next unprepared page (bounded, call
 //                         repeatedly until `done`; Vercel-safe)
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";

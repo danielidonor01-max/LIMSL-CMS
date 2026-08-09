@@ -10,7 +10,7 @@ import { adherenceWindowFor, adherenceOf, suggestedPmFrequency } from "@/lib/mai
 
 // ── Availability ─────────────────────────────────────────────────────────────
 // The finding: planned downtime was excluded, so a machine stopped all day for a
-// PM still reported 100% available — and the metric could be improved simply by
+// PM still reported 100% available, and the metric could be improved simply by
 // classifying work as preventive.
 test("planned PM downtime reduces availability, not just breakdowns", () => {
   const withPm = availabilityOf(100, 0, 8);
@@ -35,9 +35,9 @@ test("availability floors at zero and returns null with no planned hours", () =>
 
 // ── Permit-to-work ───────────────────────────────────────────────────────────
 // The finding: the old metric was "approved ÷ raised", and a permit can only
-// become ACTIVE through a fully signed chain — so it trended to 100% by
+// become ACTIVE through a fully signed chain, so it trended to 100% by
 // construction. A safety KPI that cannot go down is not a control.
-test("PTW compliance CAN go down — an unclosed permit fails the metric", () => {
+test("PTW compliance CAN go down, an unclosed permit fails the metric", () => {
   const r = ptwComplianceOf([
     { approvedAt: "2026-01-01", status: "CLOSED" },
     { approvedAt: "2026-01-02", status: "EXPIRED" },

@@ -48,8 +48,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <OutboxTray />
         {/* Search anchors left, actions anchor right. Everything used to sit in
             one left-hugging run with no spacer, so on a wide screen the content
-            clustered into the first third and the rest of the bar was void —
-            which is what read as disorganised. The right cluster is grouped and
+            clustered into the first third and the rest of the bar was void,             which is what read as disorganised. The right cluster is grouped and
             separated from the passive indicator by a rule, so a primary action,
             a notification and an account control are not three equal things. */}
         <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-3 px-4 lg:px-6">

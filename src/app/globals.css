@@ -13,12 +13,12 @@
 
 /* ── Focus visibility ──────────────────────────────────────────────────────
    Components clear the browser outline (focus:outline-none) to style their own
-   focus, but most never replaced it — keyboard users could tab through the app
+   focus, but most never replaced it, keyboard users could tab through the app
    with nothing to show where they were. One :focus-visible ring restores it
    everywhere, without showing a ring on mouse clicks.
 
    `!important` is deliberate, and this is the rare case that earns it. The rule
-   was previously written with :where(), which has ZERO specificity — so every
+   was previously written with :where(), which has ZERO specificity, so every
    local `focus:outline-none` (Tailwind emits `.focus\:outline-none:focus`, a
    class plus a pseudo-class) beat it, and 47 of the 64 elements that clear the
    outline were left with no focus indicator at all. The fix silently did
@@ -72,7 +72,7 @@ select[size]:not([size="1"]) {
 }
 
 /* Compact density (a per-user preference). Tightens the two things that most
-   affect information density — page padding and table row height — without
+   affect information density, page padding and table row height, without
    touching component internals, so layouts stay intact. Specificity beats the
    Tailwind utility classes it overrides. */
 :root[data-density="compact"] main {
@@ -85,7 +85,7 @@ select[size]:not([size="1"]) {
   padding-bottom: 0.4rem;
 }
 /* The setting is labelled "List density", and several lists are cards rather
-   than tables — the registry below md, contractors, the drill log. Those
+   than tables, the registry below md, contractors, the drill log. Those
    ignored the preference entirely, so it appeared to do nothing on exactly the
    screens where space is tightest. Cards opt in with data-list-card. */
 :root[data-density="compact"] [data-list-card] {

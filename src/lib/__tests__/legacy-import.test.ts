@@ -1,6 +1,6 @@
 // Regression tests for the legacy-workbook classifiers. These decide what forty
 // years of hand-kept records become in the system, and the module's own contract
-// is that anything it cannot resolve becomes an ERROR the admin sees — never a
+// is that anything it cannot resolve becomes an ERROR the admin sees, never a
 // guess.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -32,7 +32,7 @@ test("corrective, breakdown and repair wording all map to CM", () => {
 });
 
 test("accident wording maps to ACCIDENT", () => {
-  assert.equal(classifyHistoryText("Accident during operation — operator injured"), "ACCIDENT");
+  assert.equal(classifyHistoryText("Accident during operation, operator injured"), "ACCIDENT");
   assert.equal(classifyHistoryText("ACCIDENT REPORT FILED"), "ACCIDENT");
 });
 
@@ -54,12 +54,12 @@ test("classification precedence is preventive > corrective > accident > calibrat
   assert.equal(classifyHistoryText("Preventive maintenance after the breakdown repair"), "PM");
   assert.equal(classifyHistoryText("Corrective repair following an accident"), "CM");
   assert.equal(classifyHistoryText("Repair and re-calibration of the gauge"), "CM");
-  assert.equal(classifyHistoryText("Accident damage — recalibrated afterwards"), "ACCIDENT");
+  assert.equal(classifyHistoryText("Accident damage, recalibrated afterwards"), "ACCIDENT");
 });
 
 test("the classifier is case-insensitive and tolerates the log's real spellings", () => {
   assert.equal(classifyHistoryText("pReVeNtIvE maintenance"), "PM");
-  // "preventative" is common in the hand-typed workbooks — it must not fall
+  // "preventative" is common in the hand-typed workbooks, it must not fall
   // through to NOTE, which would hide a PM from the machine's timeline.
   assert.equal(classifyHistoryText("Preventative maintenance carried out"), "PM");
   assert.equal(classifyHistoryText("PM done on the hydraulic unit"), "PM");
@@ -181,7 +181,7 @@ test("a UTC-midnight Date object keeps its calendar day", () => {
 test("dates keep their calendar day in any timezone", () => {
   // LIMSL runs at UTC+1. Reading UTC components off a LOCAL-midnight date
   // silently shifts every such record back a day, so the calendar day the cell
-  // reads as is the day that must be stored — in every timezone this suite runs.
+  // reads as is the day that must be stored, in every timezone this suite runs.
   const fromWords = cell("March 5, 2026");
   assert.equal(fromWords.error, null);
   assert.equal(fromWords.iso, "2026-03-05");

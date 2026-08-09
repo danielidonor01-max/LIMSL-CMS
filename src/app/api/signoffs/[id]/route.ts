@@ -48,8 +48,7 @@ export async function POST(
       }
       // Segregation of duties: a multi-level chain means multiple PEOPLE.
       // Seniority lets a manager cover a junior step, which previously let one
-      // senior sign an entire chain alone — including the HSE safety step —
-      // collapsing the control the chain exists to provide.
+      // senior sign an entire chain alone, including the HSE safety step,       // collapsing the control the chain exists to provide.
       const alreadySigned = chain.find(
         (s) => s.id !== step.id && s.status === "SIGNED" && s.signedById && s.signedById === user.id,
       );
@@ -58,7 +57,7 @@ export async function POST(
           {
             error:
               `You already signed "${alreadySigned.roleLabel}" on this record. ` +
-              `Each step must be signed by a different person — ask the responsible ${step.roleLabel} to sign.`,
+              `Each step must be signed by a different person, ask the responsible ${step.roleLabel} to sign.`,
           },
           { status: 409 },
         );
@@ -68,7 +67,7 @@ export async function POST(
       }
     }
 
-    // Signing a step your role does not name is an EXCEPTION — a Super Admin
+    // Signing a step your role does not name is an EXCEPTION, a Super Admin
     // stepping in for an absent manager, or a senior covering a junior. The
     // chain's intent is unchanged by that, so the exception has to justify
     // itself: an auditor's first question is "why did this person sign the
@@ -79,7 +78,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            `This step names ${step.roleLabel}. You may sign it, but the reason has to be recorded — ` +
+            `This step names ${step.roleLabel}. You may sign it, but the reason has to be recorded, ` +
             `say why you are signing in their place (at least a sentence).`,
           requiresOverrideReason: true,
           stepRoleLabel: step.roleLabel,
@@ -114,12 +113,12 @@ export async function POST(
       // must not have to notice that a role field differs from another role
       // field two columns away.
       entityDescription: isOverride
-        ? `${step.roleLabel} signed AS AN OVERRIDE by ${user.name} (${user.role}) — ${overrideReason}`
+        ? `${step.roleLabel} signed AS AN OVERRIDE by ${user.name} (${user.role}), ${overrideReason}`
         : `${step.roleLabel} ${action === "reject" ? "rejected" : "signed"}`,
     });
 
     // After a signature, notify whoever must sign next. After a rejection,
-    // notify the preparing role (step 1) — a rejection means rework, and the
+    // notify the preparing role (step 1), a rejection means rework, and the
     // person who owns the document must hear about it, not silence. Best-effort.
     if (action === "sign") {
       try {

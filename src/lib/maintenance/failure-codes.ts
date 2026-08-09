@@ -9,7 +9,7 @@
 // Free-text root cause can't aggregate; coded modes can.
 //
 // Keep this list SHORT. A taxonomy nobody can pick from accurately is worse than
-// none — every added code costs accuracy at the point of entry.
+// none, every added code costs accuracy at the point of entry.
 
 export type FailureModeCode = {
   code: string;
@@ -78,10 +78,10 @@ export const DETECTION_METHODS: { code: string; label: string }[] = [
 const BY_CODE = new Map(FAILURE_MODES.map((m) => [m.code, m]));
 
 export const failureModeLabel = (code: string | null | undefined): string =>
-  (code && BY_CODE.get(code)?.label) || "—";
+  (code && BY_CODE.get(code)?.label) || "-";
 
 export const detectionMethodLabel = (code: string | null | undefined): string =>
-  DETECTION_METHODS.find((d) => d.code === code)?.label ?? "—";
+  DETECTION_METHODS.find((d) => d.code === code)?.label ?? "-";
 
 // The modes worth offering for a given fault type, most relevant first.
 // UNKNOWN is always available: forcing a guess produces worse data than an

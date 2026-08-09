@@ -7,7 +7,7 @@ import { requireRoles } from "@/lib/authz";
 import { COMPLIANCE_WRITE_ROLES } from "@/lib/roles";
 import { assessContractor, assessPerson, summariseRegister } from "@/lib/hse/contractors";
 
-// Eligibility is computed here, not in the browser — the permit route enforces
+// Eligibility is computed here, not in the browser, the permit route enforces
 // the same rule, and two implementations of "may they work" would eventually
 // disagree about who is standing on the shop floor.
 export async function GET() {

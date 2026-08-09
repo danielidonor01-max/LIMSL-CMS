@@ -71,7 +71,7 @@ type DiagnoseResult = {
   aiReady?: boolean;
 };
 
-// ts_headline wraps matched terms in **…** — render those highlighted, safely
+// ts_headline wraps matched terms in **…**, render those highlighted, safely
 // (plain text split, no HTML injection).
 function Snippet({ text }: { text: string }) {
   const parts = text.split("**");
@@ -112,7 +112,7 @@ export default function TroubleshootPage() {
   const [resumeSession, setResumeSession] = useState<string | null>(null);
   type PastSession = { id: string; symptom: string; status: string; resolvedCause: string | null; startedByName: string | null; createdAt: string };
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
-  // One content region, three views — the page previously stacked engine
+  // One content region, three views, the page previously stacked engine
   // results, the AI panel and documentation into one long scroll with no
   // hierarchy; a segmented panel keeps a single focus of attention.
   const [panel, setPanel] = useState<"engine" | "ai" | "docs">("engine");
@@ -189,8 +189,7 @@ export default function TroubleshootPage() {
 
   const ctx = result ?? meta;
 
-  // Schematic *documents* (preparable into tiles) vs external diagram links —
-  // the diagnose route appends documents with their docType as `type`.
+  // Schematic *documents* (preparable into tiles) vs external diagram links,   // the diagnose route appends documents with their docType as `type`.
   const schematicDocs = (ctx?.schematics ?? []).filter(
     (s) => s.type === "ELECTRICAL_SCHEMATIC" || s.type === "OPERATIONAL_MANUAL",
   );
@@ -313,7 +312,7 @@ export default function TroubleshootPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* One content region, three views — segmented so the technician always
+        {/* One content region, three views, segmented so the technician always
             has a single focus instead of a long mixed scroll. */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1" role="tablist" aria-label="Diagnosis views">
@@ -489,7 +488,7 @@ export default function TroubleshootPage() {
             ))
           ))}
 
-          {/* AI diagnosis — chat-style, evidence-grounded, guardrailed server-side */}
+          {/* AI diagnosis, chat-style, evidence-grounded, guardrailed server-side */}
           {panel === "ai" && (meta.aiReady ? (
             <div className="bg-white border border-violet-200 rounded-xl overflow-hidden">
               <div className="px-5 py-3 border-b border-violet-100 bg-violet-50/50 flex items-center gap-2 flex-wrap">
@@ -518,7 +517,7 @@ export default function TroubleshootPage() {
           {panel === "docs" && (!result || (result.passages?.length ?? 0) === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-400">
               {!result
-                ? "Run a diagnosis first — matching manual and procedure passages appear here."
+                ? "Run a diagnosis first, matching manual and procedure passages appear here."
                 : "No documentation passages matched this symptom."}
             </div>
           ) : (
@@ -538,7 +537,7 @@ export default function TroubleshootPage() {
                       </span>
                       {p.pageStart != null && (
                         <span className="text-[10px] font-mono text-slate-400 shrink-0">
-                          p.{p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `–${p.pageEnd}` : ""}
+                          p.{p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `-${p.pageEnd}` : ""}
                         </span>
                       )}
                     </div>
@@ -627,7 +626,7 @@ export default function TroubleshootPage() {
                       <p className="text-[10px] text-slate-500 truncate mt-0.5">→ {s.resolvedCause}</p>
                     )}
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      {s.startedByName ?? "—"} · {(s.createdAt ?? "").slice(0, 10)}
+                      {s.startedByName ?? "-"} · {(s.createdAt ?? "").slice(0, 10)}
                     </p>
                   </button>
                 ))}
@@ -646,7 +645,7 @@ export default function TroubleshootPage() {
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-slate-900">{c.componentTag}</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded border ${c.status === "FAULTY" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
-                        {c.status ?? "—"}
+                        {c.status ?? "-"}
                       </span>
                     </div>
                     <p className="text-slate-500">{c.name}</p>
@@ -673,7 +672,7 @@ export default function TroubleshootPage() {
           schematicReference={viewer.reference}
           focus={viewer.focus}
           onComponentsChanged={() => {
-            // Registry changed (extraction confirm / click-to-tag) — refresh
+            // Registry changed (extraction confirm / click-to-tag), refresh
             // the machine context so new components flow into diagnoses.
             fetch(`/api/equipment/${assetId}/diagnose`)
               .then((r) => (r.ok ? r.json() : null))

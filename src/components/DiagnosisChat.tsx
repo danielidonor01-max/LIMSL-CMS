@@ -2,7 +2,7 @@
 // Chat-style AI diagnosis. The technician works the fault turn by turn; the
 // assistant grounds every reply in the machine's evidence pack (guardrails live
 // server-side). Starting a session logs a DIAGNOSIS entry to the machine
-// history — so the technician explicitly opts in ("log this and proceed").
+// history, so the technician explicitly opts in ("log this and proceed").
 // Built responsive: reads as a real chat on a shop-floor phone and on desktop.
 "use client";
 
@@ -194,9 +194,9 @@ export default function DiagnosisChat({
     setResolving(false);
     toast.success(
       d.learned === "created"
-        ? "Resolved, logged to history — and learned as a new diagnostic guide."
+        ? "Resolved, logged to history, and learned as a new diagnostic guide."
         : d.learned === "reinforced"
-          ? "Resolved, logged to history — known cause reinforced in the engine."
+          ? "Resolved, logged to history, known cause reinforced in the engine."
           : "Diagnosis resolved and logged to machine history.",
     );
   };
@@ -211,7 +211,7 @@ export default function DiagnosisChat({
         </p>
         <div className="flex items-start gap-2 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           <ShieldAlert className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>Starting logs this fault to the machine&apos;s history log. AI output is advisory — verify before acting and follow PTW/LOTO.</span>
+          <span>Starting logs this fault to the machine&apos;s history log. AI output is advisory, verify before acting and follow PTW/LOTO.</span>
         </div>
         {attachments.length > 0 && <AttachmentStrip attachments={attachments} onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))} />}
         <div className="flex flex-wrap items-center gap-2">
@@ -252,7 +252,7 @@ export default function DiagnosisChat({
       {status !== "OPEN" ? (
         <div className="border-t border-slate-200 px-4 py-3 bg-emerald-50/60 text-xs text-emerald-800 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4" />
-          {status === "RESOLVED" ? "Resolved — logged to machine history." : "Session closed."}
+          {status === "RESOLVED" ? "Resolved, logged to machine history." : "Session closed."}
         </div>
       ) : (
         <div className="border-t border-slate-200 p-3 space-y-2 bg-white">
@@ -279,8 +279,8 @@ export default function DiagnosisChat({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 // Send shortcut follows the user's preference (Account → Preferences
-                // → AI chat). Default: Enter is a plain new line — a stray Enter on a
-                // phone must not fire a half-typed report — and Ctrl/Cmd+Enter sends.
+                // → AI chat). Default: Enter is a plain new line, a stray Enter on a
+                // phone must not fire a half-typed report, and Ctrl/Cmd+Enter sends.
                 if (e.key !== "Enter") return;
                 if (prefs.chatEnterToSend ? !e.shiftKey : e.ctrlKey || e.metaKey) {
                   e.preventDefault();
@@ -446,7 +446,7 @@ function MessageBubble({
                 />
                 <span className={stepChecks?.[j] ? "line-through text-slate-400" : ""}>
                   {s.action}
-                  {s.expected && <span className="text-slate-500"> — expect: {s.expected}</span>}
+                  {s.expected && <span className="text-slate-500">, expect: {s.expected}</span>}
                   {s.ifNot && <span className="text-slate-400"> (if not: {s.ifNot})</span>}
                 </span>
               </label>
@@ -462,7 +462,7 @@ function MessageBubble({
                 className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
                   c.verified ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-rose-50 border-rose-200 text-rose-700"
                 }`}
-                title={c.verified ? "In the component registry" : "NOT in the component registry — unverified"}
+                title={c.verified ? "In the component registry" : "NOT in the component registry, unverified"}
               >
                 {c.tag}
                 {!c.verified && " ⚠"}

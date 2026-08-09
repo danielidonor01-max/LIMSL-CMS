@@ -1,5 +1,5 @@
 // src/app/api/equipment/locations/route.ts
-// The location picklist, derived from the register itself — no separate table
+// The location picklist, derived from the register itself, no separate table
 // to drift from reality. Free-typed "Bay 3" / "bay3" fragmented transfer
 // history and filters; offering what's already in use converges them without
 // blocking a genuinely new location (the UI keeps an "Other" escape hatch).

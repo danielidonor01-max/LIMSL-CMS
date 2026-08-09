@@ -52,7 +52,7 @@ export async function GET(
   }
 }
 
-// Cancel a permit. Approval and close-out are NOT actions here — they are driven
+// Cancel a permit. Approval and close-out are NOT actions here, they are driven
 // by the sign-off chains (see reconcilePermits), so a permit can never be marked
 // approved or closed without the required signatures.
 export async function PATCH(

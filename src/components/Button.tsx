@@ -1,6 +1,6 @@
 // src/components/Button.tsx
 // The single, standard button used across the app so every button looks and
-// behaves the same — consistent padding, icon spacing, sizes and variants.
+// behaves the same, consistent padding, icon spacing, sizes and variants.
 // Renders a <button> by default, or a Next <Link> when `href` is given.
 "use client";
 
@@ -14,7 +14,7 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition-all " +
   "disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none whitespace-nowrap";
 
-// md and lg carry a 44px minimum height — the platform touch-target floor. A
+// md and lg carry a 44px minimum height, the platform touch-target floor. A
 // technician wearing gloves cannot reliably hit the 32px these used to be.
 // sm stays compact for dense table rows, where taps are rarer and deliberate.
 const SIZES: Record<ButtonSize, string> = {

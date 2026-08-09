@@ -1,7 +1,6 @@
 // src/lib/diagnostics/retrieval.ts
 // Full-text retrieval over document_chunks for the troubleshooting module
-// (docs/TROUBLESHOOTING-ENGINE.md §3). Postgres FTS via websearch_to_tsquery —
-// tolerant of arbitrary technician input (quotes, dashes, error codes) — ranked
+// (docs/TROUBLESHOOTING-ENGINE.md §3). Postgres FTS via websearch_to_tsquery, // tolerant of arbitrary technician input (quotes, dashes, error codes), ranked
 // with ts_rank, snippeted with ts_headline. Plant-wide chunks (equipment_id
 // NULL, e.g. the maintenance procedure) surface for every machine.
 import { db } from "@/lib/db";
@@ -26,7 +25,7 @@ export async function searchPassages(
   const q = query.trim();
   if (q.length < 2) return [];
 
-  // websearch_to_tsquery ANDs terms — precise, but a multi-word symptom
+  // websearch_to_tsquery ANDs terms, precise, but a multi-word symptom
   // ("spindle stops burnt smell E-041") often has no single chunk containing
   // every word. Try strict first; fall back to OR for recall.
   const strict = await runSearch(equipmentId, q, limit);

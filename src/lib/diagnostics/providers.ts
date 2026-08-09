@@ -1,6 +1,5 @@
 // src/lib/diagnostics/providers.ts
-// Multi-provider AI with automatic failover. One call — generateJsonFailover —
-// walks every CONFIGURED provider in registry order (Gemini → Groq →
+// Multi-provider AI with automatic failover. One call, generateJsonFailover, // walks every CONFIGURED provider in registry order (Gemini → Groq →
 // OpenRouter → Mistral → Anthropic) and moves to the next on quota (429),
 // auth (401/403), payment (402) or server errors, so an exhausted free tier
 // hands over to the next key instead of failing the diagnosis. The guardrail
@@ -12,7 +11,7 @@ import { GeminiError, generateJsonChat, type GeminiTurn, type GeminiUsage } from
 export type AiTurn = GeminiTurn; // { role: "user" | "model", parts: [{text}|{inlineData}] }
 export type FailoverResult<T> = { data: T; model: string; provider: Provider; usage: GeminiUsage };
 
-// Default model per OpenAI-compatible provider — free-tier friendly choices.
+// Default model per OpenAI-compatible provider, free-tier friendly choices.
 const OPENAI_STYLE: Record<string, { base: string; model: string; extraHeaders?: Record<string, string> }> = {
   GROQ: { base: "https://api.groq.com/openai/v1", model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile" },
   OPENROUTER: {
@@ -70,7 +69,7 @@ async function callOpenAiStyle<T>(
   opts: { system: string; contents: AiTurn[]; schema: Record<string, unknown>; maxOutputTokens?: number },
 ): Promise<FailoverResult<T>> {
   const cfg = OPENAI_STYLE[provider];
-  // These providers don't take Gemini's responseSchema — the schema rides in the
+  // These providers don't take Gemini's responseSchema, the schema rides in the
   // system prompt and response_format pins the output to JSON.
   const system =
     `${opts.system}\n\nOUTPUT FORMAT: respond with ONLY a single JSON object matching this JSON Schema ` +
@@ -197,7 +196,7 @@ export async function generateJsonFailover<T>(opts: {
 }): Promise<FailoverResult<T>> {
   const chain = await configuredProviders();
   if (chain.length === 0) {
-    throw new GeminiError("No AI provider is configured — add an API key in App Settings.");
+    throw new GeminiError("No AI provider is configured, add an API key in App Settings.");
   }
 
   let lastErr: Error | null = null;
@@ -213,10 +212,9 @@ export async function generateJsonFailover<T>(opts: {
       return await callOpenAiStyle<T>(provider, key, opts);
     } catch (err) {
       // GeminiError with retryable=true (quota) and any skippable ProviderError
-      // hand over to the next provider; a hard config error also moves on —
-      // the whole point is that one dead provider never blocks the answer.
+      // hand over to the next provider; a hard config error also moves on,       // the whole point is that one dead provider never blocks the answer.
       lastErr = err instanceof Error ? err : new Error(String(err));
-      console.warn(`ai failover: ${provider} failed (${lastErr.message}) — trying next provider`);
+      console.warn(`ai failover: ${provider} failed (${lastErr.message}), trying next provider`);
     }
   }
   throw new GeminiError(

@@ -63,7 +63,7 @@ export default function RiskRegister() {
           <PageHeader
             icon={ShieldCheck}
             title="Maintenance Risk Log"
-            subtitle="Identified risks, how likely and how severe they are, and the controls put in place"
+            subtitle="Identified risks, their likelihood and severity, and the controls in place"
             backHref="/"
             backLabel="Dashboard"
           />

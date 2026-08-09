@@ -1,7 +1,7 @@
 // src/components/Toggle.tsx
 // The single on/off switch used for boolean settings across the app, so no page
-// ships a raw native checkbox for a preference. (Checklists — where an item is
-// genuinely "ticked" — keep real checkboxes; this is for enable/disable state.)
+// ships a raw native checkbox for a preference. (Checklists, where an item is
+// genuinely "ticked", keep real checkboxes; this is for enable/disable state.)
 "use client";
 
 export default function Toggle({

@@ -3,15 +3,15 @@
 //
 // Two rules make this safe to expose at all:
 //
-//   1. THE CALLER IS NEVER DELETED. Removing every account — including the one
-//      making the request — locks the organisation out of its own system with
+//   1. THE CALLER IS NEVER DELETED. Removing every account, including the one
+//      making the request, locks the organisation out of its own system with
 //      no way back in. The caller is always kept, whatever else goes.
 //
 //   2. Nothing that is referenced is deleted. A user id appears on signatures,
 //      audit rows, work orders and permits; deleting the row would either break
 //      a foreign key or, worse, orphan a signature and destroy the evidence
 //      trail the whole product exists to keep. Accounts that have DONE anything
-//      are deactivated instead — they can no longer sign in, and their history
+//      are deactivated instead, they can no longer sign in, and their history
 //      stays readable and attributable.
 //
 // This is a preview-then-confirm endpoint: GET reports what would happen, POST
@@ -72,7 +72,7 @@ async function buildPlan(actorId: string | null): Promise<Plan> {
     if (referenced.has(u.id)) {
       plan.toDeactivate.push({
         ...brief,
-        reason: "Has activity in the system — deactivated so their records stay attributable.",
+        reason: "Has activity in the system, deactivated so their records stay attributable.",
       });
       continue;
     }
@@ -118,7 +118,7 @@ export async function POST() {
     entityType: "user",
     entityId: "seed-users",
     entityDescription:
-      `Seed accounts cleared — ${plan.toDelete.length} deleted, ${plan.toDeactivate.length} deactivated ` +
+      `Seed accounts cleared, ${plan.toDelete.length} deleted, ${plan.toDeactivate.length} deactivated ` +
       `(had activity). ${plan.keptSelf?.email ?? "the signed-in account"} retained.`,
   });
 

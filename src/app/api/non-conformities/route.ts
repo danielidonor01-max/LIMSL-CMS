@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       detectedDate: new Date().toISOString().split("T")[0],
       // The detector defaults to the authenticated raiser. body.detectedBy stays
       // accepted for the auto-detect scan ("System Audit") and for a QA officer
-      // recording a detection reported by someone else — but the audit-log row
+      // recording a detection reported by someone else, but the audit-log row
       // below always pins WHO actually raised the record.
       detectedBy: body.detectedBy || gate.actor?.name || "System Audit",
       relatedEntityType: body.relatedEntityType || null,
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "non_conformity",
       entityId: newNc.id,
-      entityDescription: `NC ${ncNumber} raised (${newNc.severity}) — ${String(newNc.description).slice(0, 80)}`,
+      entityDescription: `NC ${ncNumber} raised (${newNc.severity}), ${String(newNc.description).slice(0, 80)}`,
     });
 
     return NextResponse.json(newNc, { status: 201 });

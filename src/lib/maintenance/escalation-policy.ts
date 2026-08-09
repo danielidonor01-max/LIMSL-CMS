@@ -1,8 +1,7 @@
 // src/lib/maintenance/escalation-policy.ts
 // How often the system chases people, and how hard.
 //
-// The problem this replaces: the digest reported STATE — "5 machines are down" —
-// which is true today, tomorrow and next Friday. Day one it is information. Day
+// The problem this replaces: the digest reported STATE, "5 machines are down", // which is true today, tomorrow and next Friday. Day one it is information. Day
 // five it is wallpaper. Day ten it is filtered to a folder, and the day a SIXTH
 // machine goes down nobody notices. An alert that repeats unchanged is training
 // people to ignore it.
@@ -11,7 +10,7 @@
 //   1. Send on CHANGE, not on state. Nothing new since last time → send nothing.
 //   2. Escalate by AGE, not by repetition. Same item, widening audience.
 //   3. Let someone say "handled, waiting on a part" and stop being told.
-//   4. Only then, frequency and send window — tuning a signal that already
+//   4. Only then, frequency and send window, tuning a signal that already
 //      means something, rather than muting one that does not.
 //
 // Everything here is pure so the policy can be trusted without a database.
@@ -27,9 +26,9 @@ export type EscalationPolicy = {
   tiers: EscalationTier[];
   /** Minimum days between digests to the same person. 1 = daily. */
   frequencyDays: number;
-  /** Hour of day (0–23, server time) the digest should go out. */
+  /** Hour of day (0-23, server time) the digest should go out. */
   sendHour: number;
-  /** Skip Saturday and Sunday — a workshop that does not run at the weekend. */
+  /** Skip Saturday and Sunday, a workshop that does not run at the weekend. */
   skipWeekends: boolean;
   /** Send even when nothing has changed. Off by default, and the whole point. */
   repeatUnchanged: boolean;
@@ -80,13 +79,13 @@ export function normalisePolicy(raw: unknown): EscalationPolicy {
 export function audienceForAge(ageDays: number, policy: EscalationPolicy): string[] {
   // A corrupt or negative age must still reach the first tier. Returning an
   // empty audience would make a broken date look identical to a healthy system
-  // with nothing to report — failing closed here loses the item entirely.
+  // with nothing to report, failing closed here loses the item entirely.
   const age = Number.isFinite(ageDays) ? Math.max(0, ageDays) : 0;
   const roles = policy.tiers.filter((t) => age >= t.afterDays).flatMap((t) => t.roles);
   return [...new Set(roles)];
 }
 
-// The tier an item has just crossed, if any — used to say "this has now been
+// The tier an item has just crossed, if any, used to say "this has now been
 // escalated to the Factory Manager" rather than repeating the same line.
 export function tierCrossed(
   previousAgeDays: number,
@@ -128,7 +127,7 @@ export function shouldSendDigest(input: {
   now?: Date;
   /**
    * "scheduled" is a cron tick and honours the send window; "manual" is someone
-   * pressing Run now and must always work — a button that silently does nothing
+   * pressing Run now and must always work, a button that silently does nothing
    * outside 07:00 is indistinguishable from a broken button.
    */
   trigger?: "manual" | "scheduled";
@@ -144,7 +143,7 @@ export function shouldSendDigest(input: {
 
   if (policy.skipWeekends) {
     const day = now.getDay();
-    if (day === 0 || day === 6) return { send: false, reason: "Weekend — digests are paused." };
+    if (day === 0 || day === 6) return { send: false, reason: "Weekend, digests are paused." };
   }
 
   // The send window. A digest before shift is useful; the same digest arriving
@@ -192,7 +191,7 @@ export function validateSnooze(
   const text = String(reason ?? "").trim();
   const date = String(until ?? "").slice(0, 10);
   if (text.length < MIN_SNOOZE_REASON_CHARS) {
-    return { ok: false, error: "Say what is being done about it — silence with no reason is just ignoring it." };
+    return { ok: false, error: "Say what is being done about it, silence with no reason is just ignoring it." };
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= todayISO) {
     return { ok: false, error: "Set a date in the future to be reminded again." };

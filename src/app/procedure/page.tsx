@@ -88,7 +88,7 @@ export default function ProcedurePage() {
       toast.error(d.error || "Failed to propose revision.");
       return;
     }
-    toast.success(`Revision ${d.revision} proposed — awaiting sign-off (Maint. Manager, Factory Manager, COO).`);
+    toast.success(`Revision ${d.revision} proposed. Awaiting Maintenance Manager, Factory Manager and COO.`);
     setEditing(false);
     load();
   };

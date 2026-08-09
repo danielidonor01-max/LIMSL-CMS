@@ -2,7 +2,7 @@
 // P1 schematic preprocessing (docs/TROUBLESHOOTING-ENGINE.md §2.3): render each
 // schematic PDF page at high DPI and cut it into systematic overlapping tiles.
 // Dense sheets lose their tag legibility when downscaled to screen/vision
-// resolution — the tiles preserve native detail, and the overlap guarantees
+// resolution, the tiles preserve native detail, and the overlap guarantees
 // every component symbol appears whole in at least one tile. Pure geometry +
 // rendering; no AI. The stored tiles double as the future vision-pipeline input.
 import { db } from "@/lib/db";
@@ -18,7 +18,7 @@ export const OVERLAP = 384;
 const STRIDE = TILE - OVERLAP;
 const PREVIEW_EDGE = 1600; // whole-page preview long edge (UI overview)
 const TARGET_DPI = 250;
-// Rendering memory cap — an uncapped A0 at 250 DPI is a ~370 MB RGBA canvas.
+// Rendering memory cap, an uncapped A0 at 250 DPI is a ~370 MB RGBA canvas.
 const MAX_RENDER_EDGE = Number(process.env.SCHEMATIC_RENDER_MAX_EDGE || 6000);
 
 export type TileRect = { x: number; y: number; w: number; h: number; row: number; col: number };
@@ -41,7 +41,7 @@ export function computeTileGrid(pageW: number, pageH: number): TileRect[] {
     }
   }
   // Clamping can make the last row/col coincide with its neighbor on small
-  // pages — drop exact duplicates.
+  // pages, drop exact duplicates.
   const seen = new Set<string>();
   return tiles.filter((t) => {
     const k = `${t.x},${t.y}`;
@@ -72,7 +72,7 @@ async function renderPage(
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const { createCanvas } = await import("@napi-rs/canvas");
 
-  // pdfjs transfers (detaches) the buffer it is given — hand it a copy so the
+  // pdfjs transfers (detaches) the buffer it is given, hand it a copy so the
   // caller can reuse `data` across multiple page renders.
   const loadingTask = pdfjs.getDocument({ data: data.slice(), useSystemFonts: true });
   const doc = await loadingTask.promise;
@@ -92,7 +92,7 @@ async function renderPage(
   ctx.fillRect(0, 0, width, height);
 
   await page.render({
-    // pdfjs's DOM types vs the Node canvas — structurally compatible at runtime.
+    // pdfjs's DOM types vs the Node canvas, structurally compatible at runtime.
     canvas: canvas as unknown as HTMLCanvasElement,
     canvasContext: ctx as unknown as CanvasRenderingContext2D,
     viewport,

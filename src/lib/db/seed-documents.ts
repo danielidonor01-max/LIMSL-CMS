@@ -39,7 +39,7 @@ export async function seedDocuments() {
       add({
         equipmentId: eq.id,
         docType: "ELECTRICAL_SCHEMATIC",
-        title: `Electrical Schematic — ${eq.name}`,
+        title: `Electrical Schematic, ${eq.name}`,
         status: i % 4 === 0 ? "REQUIRED" : "AVAILABLE",
         revision: "Rev 1",
         fileUrl: i % 4 === 0 ? null : `#/docs/${eq.assetId}/schematic.pdf`,
@@ -48,7 +48,7 @@ export async function seedDocuments() {
     add({
       equipmentId: eq.id,
       docType: "OPERATIONAL_MANUAL",
-      title: `Operational Manual — ${eq.name}`,
+      title: `Operational Manual, ${eq.name}`,
       status: "AVAILABLE",
       fileUrl: `#/docs/${eq.assetId}/manual.pdf`,
       notes: eq.oem ? `OEM: ${eq.oem}` : undefined,
@@ -56,7 +56,7 @@ export async function seedDocuments() {
     add({
       equipmentId: eq.id,
       docType: "SOP",
-      title: `Standard Operating Procedure — ${eq.name}`,
+      title: `Standard Operating Procedure, ${eq.name}`,
       status: i % 3 === 0 ? "REQUIRED" : "AVAILABLE",
       revision: "Rev 2",
       fileUrl: i % 3 === 0 ? null : `#/docs/${eq.assetId}/sop.pdf`,
@@ -69,7 +69,7 @@ export async function seedDocuments() {
       add({
         equipmentId: eq.id,
         docType: "CALIBRATION_REPORT",
-        title: `Calibration Certificate — ${eq.name}`,
+        title: `Calibration Certificate, ${eq.name}`,
         status: expired ? "EXPIRED" : "AVAILABLE",
         issuedDate: lastCal,
         expiryDate: nextCal,
@@ -84,7 +84,7 @@ export async function seedDocuments() {
       add({
         equipmentId: eq.id,
         docType: "PREMOB_REPORT",
-        title: `Pre-Mobilization / Load Test Report — ${eq.name}`,
+        title: `Pre-Mobilization / Load Test Report, ${eq.name}`,
         status: "AVAILABLE",
         issuedDate: issued,
         expiryDate: expiry,
@@ -102,7 +102,7 @@ export async function seedDocuments() {
   rows.forEach((r) => (byType[r.docType] = (byType[r.docType] ?? 0) + 1));
   console.log(`✅ ${rows.length} documents:`, JSON.stringify(byType));
   console.log(
-    `✅ flags — calibration: ${eqList.filter((e) => e.category === "MEASURING" || e.category === "CNC_HEAVY").length}, premob: ${eqList.filter((e) => e.category === "CRANE").length}`,
+    `✅ flags, calibration: ${eqList.filter((e) => e.category === "MEASURING" || e.category === "CNC_HEAVY").length}, premob: ${eqList.filter((e) => e.category === "CRANE").length}`,
   );
   console.log("🎉 Document register seed complete!");
 }

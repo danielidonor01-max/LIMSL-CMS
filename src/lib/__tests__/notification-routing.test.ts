@@ -1,6 +1,5 @@
 // Regression tests for the notification routing OVERLAY. Two properties matter:
-// an admin can silence an event, and an admin can re-address a role broadcast —
-// but nothing an admin does may strip a personally-targeted recipient or
+// an admin can silence an event, and an admin can re-address a role broadcast, // but nothing an admin does may strip a personally-targeted recipient or
 // accidentally empty the default audience.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -66,7 +65,7 @@ test("a role override never re-addresses a personally-targeted send", () => {
 
 test("an empty roles override does not wipe the default audience", () => {
   // Saving the settings form with every chip cleared must not silently make an
-  // enabled event reach nobody — silencing is done with the enabled toggle.
+  // enabled event reach nobody, silencing is done with the enabled toggle.
   const routing: RoutingMap = { BREAKDOWN: { enabled: true, roles: [] } };
   assert.deepEqual(applyRouting(routing, "BREAKDOWN", DEFAULT_ROLES, undefined), {
     roles: DEFAULT_ROLES,
@@ -117,14 +116,14 @@ test("every catalogue event can be silenced and every personal one keeps its rec
   }
 });
 
-test("the catalogue is well formed — unique events, labelled, personal flags set", () => {
+test("the catalogue is well formed, unique events, labelled, personal flags set", () => {
   const events = NOTIFY_EVENTS.map((e) => e.event);
   assert.equal(new Set(events).size, events.length, "duplicate event key in the catalogue");
   for (const e of NOTIFY_EVENTS) {
     assert.ok(e.label.trim().length > 0, `${e.event} has no label`);
     assert.ok(e.desc.trim().length > 0, `${e.event} has no description`);
     assert.equal(typeof e.personal, "boolean");
-    // Documented defaults are documentation only — but they must at least be a
+    // Documented defaults are documentation only, but they must at least be a
     // role list or explicitly null, never an empty array pretending to be one.
     assert.ok(e.defaultRoles === null || e.defaultRoles.length > 0, `${e.event} documents an empty audience`);
   }
@@ -134,7 +133,7 @@ test("the catalogue is well formed — unique events, labelled, personal flags s
 // The audiences were five hardcoded arrays at the dispatch sites plus a sixth
 // copy in the Settings catalogue used only for display. Nothing compared them,
 // so the roles an admin saw on screen could differ from the roles that actually
-// received the message — and the drift would be invisible from both ends.
+// received the message, and the drift would be invisible from both ends.
 test("the Settings catalogue shows the audience that actually dispatches", () => {
   const breakdown = NOTIFY_EVENTS.find((e) => e.event === "BREAKDOWN");
   assert.deepEqual(

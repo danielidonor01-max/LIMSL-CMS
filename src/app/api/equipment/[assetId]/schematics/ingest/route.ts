@@ -1,6 +1,6 @@
 // src/app/api/equipment/[assetId]/schematics/ingest/route.ts
 // Enqueue schematic PDFs for AI ingestion. The engine is scaffolded but OFF
-// until configured — jobs are created in PENDING and processed later.
+// until configured, jobs are created in PENDING and processed later.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { equipment, equipmentDocuments, schematicIngestionJobs } from "@/lib/db/schema";
@@ -76,7 +76,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ assetI
       processing: result,
       message: ready.ready
         ? `Enqueued ${created} schematic(s) for ingestion.`
-        : `Engine disabled — ${created} schematic(s) queued for future processing (${ready.reason}).`,
+        : `Engine disabled, ${created} schematic(s) queued for future processing (${ready.reason}).`,
     });
   } catch (error) {
     console.error("Ingest enqueue failed:", error);

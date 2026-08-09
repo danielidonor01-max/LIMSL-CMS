@@ -1,6 +1,6 @@
 // src/app/api/settings/route.ts
 // Organisation-wide app settings (single "singleton" row). GET is readable by any
-// authenticated user — the corrective form and KPI engine need the working-hours
+// authenticated user, the corrective form and KPI engine need the working-hours
 // window. PATCH is restricted to the Super Admin.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -37,7 +37,7 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
-    // Validate before writing — a bad window would silently break downtime maths.
+    // Validate before writing, a bad window would silently break downtime maths.
     for (const [key, label] of [["workDayStart", "Work start"], ["workDayEnd", "Work end"]] as const) {
       if (!TIME_RE.test(body[key] ?? "")) {
         return NextResponse.json({ error: `${label} must be a valid HH:MM time.` }, { status: 400 });

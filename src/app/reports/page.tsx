@@ -39,7 +39,7 @@ export default function ReportsPage() {
   const [kpi, setKpi] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Per-asset dossier picker. Defaults to the current year — the range an
+  // Per-asset dossier picker. Defaults to the current year, the range an
   // auditor asks for first.
   const [dossierAsset, setDossierAsset] = useState("");
   const [dossierFrom, setDossierFrom] = useState(`${new Date().getFullYear()}-01-01`);
@@ -208,7 +208,7 @@ export default function ReportsPage() {
                 <ShieldCheck className="w-4 h-4 text-emerald-600" /> ISO Evidence Reports
               </h3>
               <p className="text-[11px] text-slate-500 mb-4">
-                Branded, printable compliance registers for the audit file — print to paper or save as PDF; each also exports to CSV.
+                Branded, printable compliance registers for the audit file, print to paper or save as PDF; each also exports to CSV.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {EVIDENCE_REPORTS.map((r) => (
@@ -236,7 +236,7 @@ export default function ReportsPage() {
               </h3>
               <p className="text-[11px] text-slate-500 mb-4">
                 One machine, one date range, one document: identity, every work order, PM checklist, breakdown,
-                non-conformity, calibration and document — with downtime and availability for the period.
+                non-conformity, calibration and document, with downtime and availability for the period.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div className="flex flex-col gap-1 lg:col-span-2">

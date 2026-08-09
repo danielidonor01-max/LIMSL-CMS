@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 import { canManageUsers, ROLES } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
 
-// PATCH /api/users/[id] — update role, activation, or reset password. Super Admin only.
+// PATCH /api/users/[id], update role, activation, or reset password. Super Admin only.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

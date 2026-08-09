@@ -62,7 +62,7 @@ type User = {
   createdAt?: string | null;
 };
 
-// Write-permission sets, sourced from the canonical exports — never re-derived.
+// Write-permission sets, sourced from the canonical exports, never re-derived.
 // `short` is the column head in the matrix, where horizontal room is scarce.
 const PERMISSION_SETS: { label: string; short: string; roles: string[] }[] = [
   { label: "Maintenance write", short: "Maintenance", roles: MAINTENANCE_WRITE_ROLES },
@@ -95,7 +95,7 @@ const moduleLabel = (p: string) =>
   p.replace(/^\//, "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
 const deptLabel = (d?: string | null) => {
-  if (!d || d === "—") return null;
+  if (!d || d === ", ") return null;
   if (d === "QA_QC") return "QA/QC";
   return d.charAt(0) + d.slice(1).toLowerCase();
 };
@@ -125,14 +125,14 @@ export default function UsersAdminPage() {
   const { data: session, status } = useSession();
   const role = (session?.user as { role?: string })?.role;
 
-  // Session resolves client-side only — render nothing role-dependent pre-mount.
+  // Session resolves client-side only, render nothing role-dependent pre-mount.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const [list, setList] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageTab, setPageTab] = useState<"users" | "roles">("users");
-  // Clearing seed accounts previews before it acts — this is the one action in
+  // Clearing seed accounts previews before it acts, this is the one action in
   // the app that can lock everybody out, so it says exactly what it will do.
   const [clearPlan, setClearPlan] = useState<any>(null);
   const [clearing, setClearing] = useState(false);
@@ -191,7 +191,7 @@ export default function UsersAdminPage() {
   const [confirmDisable, setConfirmDisable] = useState<User | null>(null);
   const [disabling, setDisabling] = useState(false);
 
-  // Roles tab — "Change members" modal
+  // Roles tab, "Change members" modal
   const [membersRole, setMembersRole] = useState<string | null>(null);
   const [roleSaving, setRoleSaving] = useState<string | null>(null); // user id being reassigned
 
@@ -259,7 +259,7 @@ export default function UsersAdminPage() {
       toast.error(d.error || "Failed to update account.");
       return;
     }
-    toast.success(active ? `${u.name} re-enabled.` : `${u.name} disabled — they can no longer sign in.`);
+    toast.success(active ? `${u.name} re-enabled.` : `${u.name} disabled, they can no longer sign in.`);
     load();
   };
 
@@ -332,7 +332,7 @@ export default function UsersAdminPage() {
     return byRole;
   }, [list]);
 
-  // The matrix is a compliance artefact — an auditor asks to keep a copy, so it
+  // The matrix is a compliance artefact, an auditor asks to keep a copy, so it
   // leaves the app as a file rather than a screenshot.
   const exportMatrix = () => {
     downloadCSV(
@@ -340,7 +340,7 @@ export default function UsersAdminPage() {
       ROLES.map((r) => {
         const row: Record<string, unknown> = {
           Role: ROLE_LABELS[r] ?? r,
-          Department: deptLabel(ROLE_DEPARTMENT[r]) ?? "—",
+          Department: deptLabel(ROLE_DEPARTMENT[r]) ?? "-",
           "Sign-off rank": ROLE_RANK[r] ?? 0,
           "Active members": (membersByRole[r] ?? []).filter((m) => m.isActive !== false).length,
         };
@@ -354,7 +354,7 @@ export default function UsersAdminPage() {
   // Departments offered in the edit form come from the canonical role→department
   // map, so the list can never drift from roles.ts.
   const departments = useMemo(
-    () => Array.from(new Set(Object.values(ROLE_DEPARTMENT).filter((d) => d !== "—"))),
+    () => Array.from(new Set(Object.values(ROLE_DEPARTMENT).filter((d) => d !== ", "))),
     [],
   );
 
@@ -545,7 +545,7 @@ export default function UsersAdminPage() {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-slate-600">
-                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-slate-300">—</span>}
+                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-slate-300">, </span>}
                         </td>
                         <td className="py-3 px-4">
                           {u.phone || u.whatsapp ? (
@@ -562,7 +562,7 @@ export default function UsersAdminPage() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-slate-300">, </span>
                           )}
                         </td>
                         <td className="py-3 px-4">
@@ -572,7 +572,7 @@ export default function UsersAdminPage() {
                           )}
                         </td>
                         <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
-                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end">{kebabFor(u)}</div>
@@ -631,7 +631,7 @@ export default function UsersAdminPage() {
         open={!!clearPlan}
         onClose={() => setClearPlan(null)}
         title="Clear seed accounts"
-        subtitle="Preview — nothing has happened yet"
+        subtitle="Preview, nothing has happened yet"
       >
         {clearPlan && (
           <div className="space-y-4">
@@ -639,7 +639,7 @@ export default function UsersAdminPage() {
               <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
               <p>
                 <strong>Your own account is kept.</strong>{" "}
-                {clearPlan.keptSelf?.email ? <span className="font-mono">{clearPlan.keptSelf.email}</span> : null} — you
+                {clearPlan.keptSelf?.email ? <span className="font-mono">{clearPlan.keptSelf.email}</span> : null}, you
                 will still be able to sign in.
               </p>
             </div>
@@ -685,7 +685,7 @@ export default function UsersAdminPage() {
 
             {clearPlan.toDelete.length === 0 && clearPlan.toDeactivate.length === 0 && (
               <p className="text-xs text-slate-500">
-                There is nothing to clear — yours is the only account on the system.
+                There is nothing to clear, yours is the only account on the system.
               </p>
             )}
 
@@ -713,7 +713,7 @@ export default function UsersAdminPage() {
           <div className="flex items-start gap-2.5 p-3 rounded-lg bg-sky-50 border border-sky-100 text-sky-800 text-xs">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
-              Role <strong>definitions</strong> — write permissions, sign-off seniority and module scope — are
+              Role <strong>definitions</strong>, write permissions, sign-off seniority and module scope, are
               controlled in code (<span className="font-mono">src/lib/roles.ts</span>) and change only through a
               reviewed release, so they stay auditable for ISO 9001/45001. Role <strong>membership</strong> (who holds
               each role) is managed here and every change is audit-logged. A signer may sign steps of their own role or
@@ -722,7 +722,7 @@ export default function UsersAdminPage() {
           </div>
 
           {/* Cards answer "what can this role do". The matrix answers "who can do
-              this thing" — the direction an auditor reads, and the artefact they
+              this thing", the direction an auditor reads, and the artefact they
               ask for by name. */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
@@ -786,7 +786,7 @@ export default function UsersAdminPage() {
                             className={`py-3 px-3 text-center font-semibold ${
                               activeMembers === 0 ? "text-amber-600" : "text-slate-700"
                             }`}
-                            title={activeMembers === 0 ? "Nobody holds this role — any step requiring it cannot be signed" : undefined}
+                            title={activeMembers === 0 ? "Nobody holds this role, any step requiring it cannot be signed" : undefined}
                           >
                             {activeMembers}
                           </td>
@@ -798,7 +798,7 @@ export default function UsersAdminPage() {
                                 {has ? (
                                   <Check className="w-4 h-4 text-emerald-600 inline" aria-label="Yes" />
                                 ) : (
-                                  <span className="text-slate-300" aria-label="No">—</span>
+                                  <span className="text-slate-300" aria-label="No">, </span>
                                 )}
                               </td>
                             );
@@ -810,8 +810,7 @@ export default function UsersAdminPage() {
                 </table>
               </div>
               <p className="text-[11px] text-slate-500 px-4 py-3 border-t border-slate-200">
-                A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off —
-                QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
+                A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off,                 QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
                 <span className="text-amber-600 font-semibold">0 members</span> blocks every chain step that requires it.
               </p>
             </div>
@@ -857,7 +856,7 @@ export default function UsersAdminPage() {
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Write permissions</p>
                     {perms.length === 0 ? (
                       <p className="text-xs text-slate-400">
-                        {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only — no direct writes."}
+                        {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only, no direct writes."}
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
@@ -882,7 +881,7 @@ export default function UsersAdminPage() {
                       </div>
                     ) : (
                       <p className="text-xs text-slate-600">
-                        All modules{SETTINGS_WRITE_ROLES.includes(r) ? " — including Administration" : " (except Administration)"}
+                        All modules{SETTINGS_WRITE_ROLES.includes(r) ? ", including Administration" : " (except Administration)"}
                       </p>
                     )}
                   </div>
@@ -1022,7 +1021,7 @@ export default function UsersAdminPage() {
             <p className="text-emerald-700 font-mono text-lg font-semibold break-all">{tempPassword?.password}</p>
           </div>
           <p className="text-xs text-slate-500">
-            Shown once only — share it with the user now. They must change it at first login.
+            Shown once only, share it with the user now. They must change it at first login.
           </p>
           <div className="flex justify-end gap-2">
             <Button
@@ -1042,11 +1041,11 @@ export default function UsersAdminPage() {
         </div>
       </Modal>
 
-      {/* Roles tab — reassign members */}
+      {/* Roles tab, reassign members */}
       <Modal
         open={!!membersRole}
         onClose={() => setMembersRole(null)}
-        title={membersRole ? `Change members — ${ROLE_LABELS[membersRole]}` : "Change members"}
+        title={membersRole ? `Change members, ${ROLE_LABELS[membersRole]}` : "Change members"}
         subtitle="Pick a new role for any user; changes apply immediately and are audit-logged"
       >
         <div className="space-y-2">

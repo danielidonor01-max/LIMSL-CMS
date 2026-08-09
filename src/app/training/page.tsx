@@ -292,7 +292,7 @@ export default function TrainingPage() {
                             </td>
                             {skills.map((s) => {
                               const c = cell.get(`${p}|||${s}`);
-                              if (!c) return <td key={s} className="py-3 px-3 text-center text-slate-300">—</td>;
+                              if (!c) return <td key={s} className="py-3 px-3 text-center text-slate-300">, </td>;
                               const gap = c.level < (c.requiredLevel ?? 0);
                               const recert = isRecertDue(c);
                               return (
@@ -316,7 +316,7 @@ export default function TrainingPage() {
               )}
               {summary.gaps > 0 && (
                 <div className="px-5 py-3 border-t border-slate-200 flex items-center gap-2 text-[11px] text-rose-600">
-                  <AlertTriangle className="w-3.5 h-3.5" /> {summary.gaps} competency gap{summary.gaps > 1 ? "s" : ""} below required level (ringed) — schedule training to close.
+                  <AlertTriangle className="w-3.5 h-3.5" /> {summary.gaps} competency gap{summary.gaps > 1 ? "s" : ""} below required level (ringed), schedule training to close.
                 </div>
               )}
             </div>
@@ -364,8 +364,8 @@ export default function TrainingPage() {
                             <div className="font-medium text-slate-900">{t.trainingTitle}</div>
                             {t.trainer && <div className="text-[10px] text-slate-500">by {t.trainer}</div>}
                           </td>
-                          <td className="py-2.5 px-4 text-slate-700">{t.employeeName ?? "—"}</td>
-                          <td className="py-2.5 px-4 text-slate-500">{t.type ?? "—"}</td>
+                          <td className="py-2.5 px-4 text-slate-700">{t.employeeName ?? "-"}</td>
+                          <td className="py-2.5 px-4 text-slate-500">{t.type ?? "-"}</td>
                           <td className="py-2.5 px-4 font-mono text-slate-500">{formatDate(t.plannedDate)}</td>
                           <td className="py-2.5 px-4">
                             <Badge
@@ -386,7 +386,7 @@ export default function TrainingPage() {
                                 <Award className="w-3.5 h-3.5" /> Issued
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-[11px]">—</span>
+                              <span className="text-slate-400 text-[11px]">, </span>
                             )}
                           </td>
                           {canWrite && (

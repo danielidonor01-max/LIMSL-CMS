@@ -1,7 +1,7 @@
 // src/components/Field.tsx
 // One form-field surface for the whole app. Seventeen pages each declared their
 // own `const field = "..."` and they had quietly diverged into three different
-// focus behaviours and two different greys — so the same input looked and
+// focus behaviours and two different greys, so the same input looked and
 // behaved differently depending on which page you were on.
 //
 // FIELD_CLASS is exported for the many places that render a bare <input> or
@@ -38,8 +38,7 @@ export default function Field({
   const errorId = htmlFor ? `${htmlFor}-error` : undefined;
 
   // The message was rendered next to the control but never linked to it, so a
-  // screen reader announced the field and the error as unrelated fragments —
-  // "Insurance expires… edit blank" and, somewhere else entirely, "Enter a date
+  // screen reader announced the field and the error as unrelated fragments,   // "Insurance expires… edit blank" and, somewhere else entirely, "Enter a date
   // in the future". aria-describedby is what makes them one statement.
   //
   // Only a single element child is decorated; anything else is left untouched
@@ -63,7 +62,7 @@ export default function Field({
       {label && (
         <label htmlFor={htmlFor} className={LABEL_CLASS}>
           {label}
-          {/* Required is marked, not implied — a form where nothing is marked
+          {/* Required is marked, not implied, a form where nothing is marked
               teaches the user that nothing is required until submit fails. The
               asterisk is decorative; aria-required carries it to the control. */}
           {required && <span className="text-rose-500 ml-0.5" aria-hidden="true">*</span>}

@@ -32,7 +32,7 @@ test("every host classification has a human label", () => {
   }
 });
 
-test("consumer mailboxes are identified — this is what triggers the warning", () => {
+test("consumer mailboxes are identified, this is what triggers the warning", () => {
   assert.equal(isConsumerDomain("automation.io.u.123@gmail.com"), true);
   assert.equal(isConsumerDomain("someone@outlook.com"), true);
   assert.equal(isConsumerDomain("didonor@leemachinery.net"), false);

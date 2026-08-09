@@ -158,7 +158,7 @@ test("nothing outstanding means nothing to say", () => {
   assert.equal(r.send, false);
 });
 
-// Everything being fixed is worth one message — then silence.
+// Everything being fixed is worth one message, then silence.
 test("the last item clearing is reported once", () => {
   const r = shouldSendDigest({
     policy: P,

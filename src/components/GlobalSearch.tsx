@@ -1,6 +1,6 @@
 // src/components/GlobalSearch.tsx
 // Global search. Three things it previously lacked on desktop, where it lives:
-//   • a keyboard shortcut — a search you can only reach with a mouse is not a
+//   • a keyboard shortcut, a search you can only reach with a mouse is not a
 //     power feature, it is a decoration;
 //   • arrow-key navigation of the results, so the shortcut leads somewhere;
 //   • combobox semantics, so a screen reader is told a listbox appeared and how

@@ -37,7 +37,7 @@ export async function PATCH(
     const nc = currentRecords[0];
 
     // ── Close-out gate (ISO 9001 10.2.1/10.2.2, ISO 45001 10.2) ──────────────
-    // An NC used to close on a status change alone — no root cause, no action,
+    // An NC used to close on a status change alone, no root cause, no action,
     // no verification, no signatures. The clause requires evidence of the
     // action taken AND of its effectiveness, so close-out now demands the same
     // rigour a machine breakdown already does.
@@ -50,7 +50,7 @@ export async function PATCH(
       if (!correctiveAction) missing.push("the corrective action taken");
       if (missing.length) {
         return NextResponse.json(
-          { error: `Close-out requires ${missing.join(" and ")} — ISO 9001 10.2.2 requires this evidence to be retained.` },
+          { error: `Close-out requires ${missing.join(" and ")}, ISO 9001 10.2.2 requires this evidence to be retained.` },
           { status: 400 },
         );
       }
@@ -64,7 +64,7 @@ export async function PATCH(
           {
             error:
               `Close-out requires the ${entityType === "SAFETY_INCIDENT" ? "incident investigation" : "corrective-action"} ` +
-              `sign-off chain — ${summary.signed} of ${summary.total} signatures are in place, including the ` +
+              `sign-off chain, ${summary.signed} of ${summary.total} signatures are in place, including the ` +
               `effectiveness verification. Complete the chain on this record first.`,
           },
           { status: 409 },
@@ -86,7 +86,7 @@ export async function PATCH(
       .where(eq(nonConformities.id, resolvedParams.id))
       .returning();
 
-    // Every NC state change is auditable evidence — especially the close-out.
+    // Every NC state change is auditable evidence, especially the close-out.
     await db.insert(auditLog).values({
       id: nanoid(),
       userId: gate.actor?.id ?? null,

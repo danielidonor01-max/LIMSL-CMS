@@ -54,7 +54,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   }
 
   // Parse arrays. Items may be plain strings or {step, description}/{name} objects
-  // depending on how the WMS was created — normalise to text for rendering.
+  // depending on how the WMS was created, normalise to text for rendering.
   const asText = (v: unknown): string =>
     typeof v === "string"
       ? v
@@ -188,8 +188,8 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             <div className="flex items-start gap-2 text-[11px] text-slate-500">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" />
               <span>
-                Status is set by the sign-off chain below — it becomes <strong>APPROVED</strong> only when all four
-                signatures are captured. Prepared by {wms.preparedByName ?? "—"}.
+                Status is set by the sign-off chain below, it becomes <strong>APPROVED</strong> only when all four
+                signatures are captured. Prepared by {wms.preparedByName ?? "-"}.
               </span>
             </div>
           </div>

@@ -1,18 +1,17 @@
 // src/lib/diagnostics/extract-tags.ts
-// P2-lite component extraction — NO AI, NO API key. CAD-exported schematic PDFs
+// P2-lite component extraction, NO AI, NO API key. CAD-exported schematic PDFs
 // carry their text layer, and pdfjs exposes every string WITH its coordinates.
 // Filtering those strings through the IEC-style tag grammar and a prefix
-// dictionary yields component candidates with exact positions — deterministic
+// dictionary yields component candidates with exact positions, deterministic
 // and pixel-accurate, no OCR/vision uncertainty. Scanned (IMAGE_ONLY) sheets
 // yield nothing here; they wait for the vision pipeline (or click-to-tag).
 //
-// Coordinates: PDF points, TOP-LEFT origin (y flipped from PDF user space) —
-// resolution-independent, so the viewer maps them onto any rendered size via
+// Coordinates: PDF points, TOP-LEFT origin (y flipped from PDF user space), // resolution-independent, so the viewer maps them onto any rendered size via
 // scale = renderedWidth / pageWidthPts.
 
 export type TagCandidate = {
   tag: string;
-  name: string; // dictionary guess — editable in review
+  name: string; // dictionary guess, editable in review
   type: string; // ELECTRICAL | HYDRAULIC | PNEUMATIC | CONTROL | MECHANICAL
   page: number;
   bbox: { x: number; y: number; w: number; h: number }; // points, top-left origin
@@ -65,7 +64,7 @@ const PREFIX_DICT: Record<string, { name: string; type: string }> = {
 
 // "CB-12", "K1", "TB2-14", "PSU1", "PLC-IN-0", "-K1" (IEC leading dash) …
 // Prefix letters, optional short alpha segment (PLC-IN), digits, optional
-// suffix segments. At least one digit is mandatory — bare words never match.
+// suffix segments. At least one digit is mandatory, bare words never match.
 const TAG_RE = /^[-+]?([A-Z]{1,4})(?:-[A-Z]{1,3})?-?\d{1,4}(?:[-/.][A-Z0-9]{1,4}){0,2}$/;
 
 export function classifyTag(raw: string): { tag: string; name: string; type: string } | null {

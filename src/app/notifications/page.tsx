@@ -47,7 +47,7 @@ const DELIVERY_LABELS: Record<string, string> = {
   // survive the case where the message was accepted and then quarantined.
   SENT: "handed to the mail server",
   QUEUED: "queued",
-  SKIPPED: "not sent — no contact or channel",
+  SKIPPED: "not sent, no contact or channel",
   FAILED: "failed",
 };
 
@@ -190,7 +190,7 @@ export default function NotificationsPage() {
         </div>
 
         <p className="text-[11px] text-slate-400 text-center">
-          WhatsApp delivery is best-effort — an alert always lands here in-app even if the message can&apos;t be delivered.
+          WhatsApp delivery is best-effort, an alert always lands here in-app even if the message can&apos;t be delivered.
         </p>
       </main>
     </div>

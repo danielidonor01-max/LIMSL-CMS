@@ -5,11 +5,11 @@
 // It previously covered four: equipment, work orders, corrective and WMS. Every
 // module added afterwards silently did not join, so by the end of Phase 6 the
 // search bar could not find permits, spares, calibration instruments, emergency
-// equipment, contractors or non-conformities — the majority of the app. That is
+// equipment, contractors or non-conformities, the majority of the app. That is
 // the failure mode this file's shape now guards against: the searchable set is
 // a declared list, and a test asserts it covers the modules that exist.
 //
-// Filtering happens IN SQL (ILIKE + LIMIT, selected columns only) — this runs on
+// Filtering happens IN SQL (ILIKE + LIMIT, selected columns only), this runs on
 // every keystroke of the typeahead, so it must never load whole tables into JS.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -215,7 +215,7 @@ export async function GET(request: Request) {
       })),
       ...trnRows.map((t) => ({
         type: "Training",
-        label: t.employeeName ?? "—",
+        label: t.employeeName ?? "-",
         sub: t.trainingTitle ?? "",
         href: `/training`,
       })),

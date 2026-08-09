@@ -4,7 +4,7 @@
 // ./legacy-parse.ts (pure, DB-free); this half matches parsed rows against the
 // live register and writes them. Same contract as ./entities.ts: preview and
 // commit run identical validation, rows fail individually, and a re-import
-// updates or skips — it never duplicates.
+// updates or skips, it never duplicates.
 import { db } from "@/lib/db";
 import { equipment, calibrationRecords, equipmentLog, maintenanceSchedule, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -53,7 +53,7 @@ const errMsg = (e: unknown): string => (e instanceof Error ? e.message : String(
 
 // Normalized-contains match of a free-text machine name against the register.
 // Returns EVERY matching machine: several machines legitimately share a name
-// ("Beveling Machine" ×2) and differ only by asset id/serial — the caller
+// ("Beveling Machine" ×2) and differ only by asset id/serial, the caller
 // decides whether multiple hits mean "apply to each" (schedule) or "ambiguous"
 // (history, where an event belongs to exactly one machine).
 function matchEquipmentByName(
@@ -127,7 +127,7 @@ async function processRegister(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
       seenTags.add(r.leeTag);
     }
 
-    // Tag-less rows are the facility systems — matched by name so a re-import
+    // Tag-less rows are the facility systems, matched by name so a re-import
     // finds the LEE/SYS record it created the first time round.
     const existingId = r.leeTag ? byAsset.get(r.leeTag) : byName.get(normName(r.name));
     const action: ImportAction = errors.length ? "error" : existingId ? "update" : "create";
@@ -234,7 +234,7 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
 
   for (const sheet of sheets) {
     // Resolve the machine: asset code first, then the form-block description,
-    // then the sheet tab (Excel truncates tabs at 31 chars — contains-match
+    // then the sheet tab (Excel truncates tabs at 31 chars, contains-match
     // absorbs that).
     let equipmentId = sheet.assetCode ? byAsset.get(sheet.assetCode) : undefined;
     const resolveErrors: string[] = [];
@@ -242,12 +242,12 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
       for (const candidate of [sheet.description, sheet.sheetName]) {
         if (!candidate) continue;
         const m = matchEquipmentByName(candidate, all);
-        // A history event belongs to exactly ONE machine — a multi-hit name is
+        // A history event belongs to exactly ONE machine, a multi-hit name is
         // genuinely ambiguous here (unlike the schedule, which fans out).
         if (m.hits.length === 1) { equipmentId = m.hits[0].id; break; }
         resolveErrors.push(
           m.hits.length > 1
-            ? `"${candidate}" matches ${m.hits.length} machines (${m.hits.slice(0, 3).map((e) => e.assetId).join(", ")}) — add the asset code to the sheet to pick one`
+            ? `"${candidate}" matches ${m.hits.length} machines (${m.hits.slice(0, 3).map((e) => e.assetId).join(", ")}), add the asset code to the sheet to pick one`
             : m.error ?? `No equipment matches "${candidate}"`,
         );
       }
@@ -262,7 +262,7 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
             : `Sheet has no asset code and no name match: ${resolveErrors.join("; ") || "none"}`,
         );
       }
-      preview.push({ row: ++n, label: `${sheet.sheetName} — whole sheet skipped`, action: "error", errors });
+      preview.push({ row: ++n, label: `${sheet.sheetName}, whole sheet skipped`, action: "error", errors });
       continue;
     }
 
@@ -275,7 +275,7 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
       const dateIso = row.date.iso ?? "";
 
       if (!errors.length && existingKeys.has(dupKey(equipmentId, dateIso, title))) {
-        errors.push("Already in the machine log — skipped");
+        errors.push("Already in the machine log, skipped");
       }
 
       const action: ImportAction = errors.length ? "error" : "create";
@@ -332,7 +332,7 @@ function mapActivityType(raw: string): string | null {
 
 // Category names drift between sheets ("Heavy Duty CNC" vs "CNC Maachines
 // Heavy Duty") and the S/N ordering drifts too (the quarter sheets swap
-// Others/Measuring Instruments) — so match on word overlap first and use the
+// Others/Measuring Instruments), so match on word overlap first and use the
 // S/N only to break ties or as a last resort ("Press Brake…" ↔ "Heavy Duty
 // CNC" share no words but share S/N 3).
 function matchCategory(sn: string, category: string, categories: LegacyCategoryInfo[]): LegacyCategoryInfo | null {
@@ -476,7 +476,7 @@ async function processSchedule(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
   } else if (parsed.categories.length > 0) {
     for (const cat of parsed.categories) {
       const frequency = mapFrequency(cat.frequencyRaw);
-      expand(cat, nextOccurrence(frequency), "PM", null, cat.responsible || null, `Overview r${cat.excelRow} (no calendar marks — next ${cat.frequencyRaw || "occurrence"})`);
+      expand(cat, nextOccurrence(frequency), "PM", null, cat.responsible || null, `Overview r${cat.excelRow} (no calendar marks, next ${cat.frequencyRaw || "occurrence"})`);
     }
   }
 
@@ -540,7 +540,7 @@ export async function processLegacyImport(
   try {
     wb = await loadWorkbook(data);
   } catch {
-    throw new Error("Could not read the workbook — save it as .xlsx or .xlsm and try again.");
+    throw new Error("Could not read the workbook, save it as .xlsx or .xlsm and try again.");
   }
   if (kind === "register") return processRegister(wb, actor, commit);
   if (kind === "history") return processHistory(wb, actor, commit);

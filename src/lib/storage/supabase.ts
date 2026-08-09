@@ -1,5 +1,5 @@
 // src/lib/storage/supabase.ts
-// Supabase Storage backend (cloud) over the REST API — no SDK dependency.
+// Supabase Storage backend (cloud) over the REST API, no SDK dependency.
 // Activate with STORAGE_PROVIDER=SUPABASE and set SUPABASE_URL,
 // SUPABASE_SERVICE_KEY, SUPABASE_BUCKET. Files stay private; serveFile returns a
 // short-lived signed URL that the /api/files route redirects to.

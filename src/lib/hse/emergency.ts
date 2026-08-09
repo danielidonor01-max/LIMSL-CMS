@@ -1,18 +1,18 @@
 // src/lib/hse/emergency.ts
-// Emergency preparedness — ISO 45001 clause 8.2.
+// Emergency preparedness, ISO 45001 clause 8.2.
 //
 // The register exists to stop one specific sentence being true: "we have forty
 // fire extinguishers." An extinguisher that is present but discharged, expired,
 // or last inspected three years ago is not a fire extinguisher; it is a red
 // cylinder that people will reach for and find useless. So a headcount is not
-// the number this register reports — readiness is, and an item is ready only
+// the number this register reports, readiness is, and an item is ready only
 // when it is serviceable, in date, AND inspected within its interval.
 //
 // The same applies to drills: a drill programme measured by "we did one" says
 // nothing. What an auditor asks is whether they happen at the required
 // frequency, and whether the deficiencies they surfaced were closed.
 
-// The five systems LIMSL actually operates lead the list — fire alarm, smoke
+// The five systems LIMSL actually operates lead the list, fire alarm, smoke
 // detection, lightning arrestors, earthing and spill kits. The rest stay
 // available because most sites also hold extinguishers and first aid, and
 // removing a type would orphan any record already filed against it.
@@ -52,8 +52,7 @@ export const EMERGENCY_TYPE_LABELS: Record<EmergencyEquipmentType, string> = {
 };
 
 // Sensible statutory-ish defaults; every item can override its own interval.
-// Lightning protection and earthing are tested annually (IEC 62305 practice) —
-// they are measured installations rather than things you eyeball monthly, which
+// Lightning protection and earthing are tested annually (IEC 62305 practice), // they are measured installations rather than things you eyeball monthly, which
 // is why their interval is an order of magnitude longer than an extinguisher's.
 export const DEFAULT_INSPECTION_INTERVAL_DAYS: Record<string, number> = {
   FIRE_ALARM: 30,
@@ -82,7 +81,7 @@ export type ServiceState = "SERVICEABLE" | "DEFECTIVE" | "MISSING" | "REMOVED";
 export type Readiness = {
   ready: boolean;
   severity: "ok" | "warn" | "fail";
-  // Every reason it is not ready, not just the first one found — an item can be
+  // Every reason it is not ready, not just the first one found, an item can be
   // both expired and overdue, and fixing one leaves it unusable.
   reasons: string[];
   inspection: "OK" | "DUE_SOON" | "OVERDUE" | "NEVER_INSPECTED";
@@ -140,7 +139,7 @@ export function assessReadiness(
   }
 
   if (inspection === "NEVER_INSPECTED") {
-    reasons.push("Never inspected — there is no evidence it works.");
+    reasons.push("Never inspected, there is no evidence it works.");
   } else if (inspection === "OVERDUE") {
     reasons.push(`Inspection overdue by ${Math.abs(daysUntilInspection ?? 0)} day(s).`);
   }
@@ -157,7 +156,7 @@ export function assessReadiness(
     }
   }
   if (expiry === "EXPIRED") {
-    reasons.push(`Expired ${Math.abs(daysUntilExpiry ?? 0)} day(s) ago — it must not be relied on.`);
+    reasons.push(`Expired ${Math.abs(daysUntilExpiry ?? 0)} day(s) ago, it must not be relied on.`);
   }
 
   // ── Physical state ────────────────────────────────────────────────────────
@@ -166,7 +165,7 @@ export function assessReadiness(
 
   // A removed item is out of service on purpose. It is not a failure, and
   // counting it as one would push people to delete records instead of retiring
-  // them — losing the history an auditor asks for.
+  // them, losing the history an auditor asks for.
   if (status === "REMOVED") {
     return {
       ready: false,
@@ -271,7 +270,7 @@ export function drillProgrammeStatus(
 }
 
 // A drill that surfaced problems and closed none of them is a drill that taught
-// the organisation nothing — which is precisely what an auditor probes.
+// the organisation nothing, which is precisely what an auditor probes.
 export function drillFollowUp(drills: { deficiencies?: string | null; correctiveActions?: string | null }[]): {
   withDeficiencies: number;
   unresolved: number;

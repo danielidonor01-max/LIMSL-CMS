@@ -1,6 +1,6 @@
 // src/lib/kpi/compute.ts
-// Computes maintenance KPIs from the ACTUAL operational data — work orders,
-// corrective/RCA breakdowns, PM schedule, permits, non-conformities — instead of
+// Computes maintenance KPIs from the ACTUAL operational data, work orders,
+// corrective/RCA breakdowns, PM schedule, permits, non-conformities, instead of
 // static seed numbers. This is the source of truth for the KPI dashboard and the
 // ISO evidence reports.
 //
@@ -8,8 +8,7 @@
 // "scheduled to run" the production hours defined by the Super-Admin working-hours
 // settings (window, lunch, working days) counted over the real calendar of each
 // month; downtime comes from the recorded corrective total_downtime_hours (itself
-// production-time, from the same settings). Change the settings and the baseline —
-// and therefore availability and MTBF — move with it. Nothing here is hardcoded.
+// production-time, from the same settings). Change the settings and the baseline, // and therefore availability and MTBF, move with it. Nothing here is hardcoded.
 import { db } from "@/lib/db";
 import {
   equipment,
@@ -63,7 +62,7 @@ export async function computeKpis(now = new Date()) {
     const breakdowns = cms.filter((c) => inMonth(c.reportedDate, key));
     const downtimeHours = breakdowns.reduce((a, c) => a + (c.totalDowntimeHours ?? 0), 0);
     // Denominator is EVERY breakdown in the period, not just those with a
-    // downtime window recorded — leaving the window blank used to delete a bad
+    // downtime window recorded, leaving the window blank used to delete a bad
     // repair from MTTR altogether. Records missing a window are counted and
     // surfaced so the number can be read honestly.
     const missingWindow = breakdowns.filter((c) => (c.totalDowntimeHours ?? 0) <= 0).length;
@@ -118,7 +117,7 @@ export async function computeKpis(now = new Date()) {
     };
   });
 
-  // ── Trailing-window aggregates (real) — last 6 months ─────────────────────
+  // ── Trailing-window aggregates (real), last 6 months ─────────────────────
   const windowCms = cms.filter((c) => months.includes((c.reportedDate ?? "").slice(0, 7)));
   const windowDowntime = windowCms.reduce((a, c) => a + (c.totalDowntimeHours ?? 0), 0);
   const windowRepaired = windowCms.filter((c) => (c.totalDowntimeHours ?? 0) > 0);
@@ -162,7 +161,7 @@ export async function computeKpis(now = new Date()) {
   const woCompletionRate = wos.length ? completedWo / wos.length : null;
 
   // PTW close-out discipline. The old metric asked "of permits raised, how many
-  // got approved" — and since a permit can ONLY become ACTIVE via a fully signed
+  // got approved", and since a permit can ONLY become ACTIVE via a fully signed
   // chain, it trended to 100% by construction: a safety KPI that could not go
   // down. What actually matters is whether authorised work was closed out
   // properly, so the isolation was signed off inside the permit's validity.
@@ -177,10 +176,10 @@ export async function computeKpis(now = new Date()) {
 
   // ── Per-equipment drill-down (real) ───────────────────────────────────────
   // Surface only assets that either broke down in the window or are currently
-  // not operational — an auditor cares about the movers, not 30 healthy rows.
+  // not operational, an auditor cares about the movers, not 30 healthy rows.
   const plannedHoursPerAsset = plannedHoursPerAssetWindow;
   const STATUS_REMARK: Record<string, string> = {
-    BROKEN_DOWN: "Down — needs repair",
+    BROKEN_DOWN: "Down, needs repair",
     UNDER_MAINTENANCE: "Under maintenance",
     AWAITING_PARTS: "Awaiting parts",
     DECOMMISSIONED: "Decommissioned",

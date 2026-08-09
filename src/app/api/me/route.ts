@@ -1,5 +1,5 @@
 // src/app/api/me/route.ts
-// Self-service account endpoint — every authenticated user manages THEIR OWN
+// Self-service account endpoint, every authenticated user manages THEIR OWN
 // profile and preferences here (distinct from /api/users/[id], which is the
 // Super Admin's account administration). Never lets a user change their own role
 // or active status.

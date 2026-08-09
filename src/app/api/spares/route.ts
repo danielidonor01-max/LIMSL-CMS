@@ -9,7 +9,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { spareRisk } from "@/lib/maintenance/spares";
 
 // Every spare joined to the machine it is held for, with its risk already
-// computed — the client should never have to re-derive whether a shortfall
+// computed, the client should never have to re-derive whether a shortfall
 // matters, or it will drift from the register and the KPI layer.
 export async function GET() {
   try {

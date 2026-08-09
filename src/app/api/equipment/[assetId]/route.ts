@@ -16,7 +16,7 @@ export async function GET(
     const assetIdKey = resolvedParams.assetId; // E.g., LEE-PE-1904
     const assetIdOriginal = assetIdKey.replace(/-/g, "/"); // Convert to LEE/PE/1904
 
-    // Accept the dash-form asset id, the raw slash form, AND a DB id — the
+    // Accept the dash-form asset id, the raw slash form, AND a DB id, the
     // sibling routes (/log, /diagnose) already do; this one 404ing on
     // DB-id URLs while its sub-resources succeeded was a real trap.
     const records = await db
@@ -91,7 +91,7 @@ export async function PATCH(
           await logEquipmentEvent({
             equipmentId: before.id,
             category: "TRANSFER",
-            title: `Relocated: ${before.location || "—"} → ${body.location}`,
+            title: `Relocated: ${before.location || "-"} → ${body.location}`,
             source: "AUTO",
             performedById: gate.actor?.id ?? null,
             performedByName: gate.actor?.name ?? null,

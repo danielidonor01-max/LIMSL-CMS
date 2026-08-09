@@ -68,7 +68,7 @@ export default function MeterCard({
   if (!data) return null;
 
   const configured = data.currentMeter !== null || data.meterServiceInterval !== null;
-  // Nothing set up and nobody able to set it up — don't take space on the page.
+  // Nothing set up and nobody able to set it up, don't take space on the page.
   if (!configured && !canWrite) return null;
 
   const unit = data.meterUnit ? METER_UNIT_SHORT[data.meterUnit] : "";
@@ -133,13 +133,13 @@ export default function MeterCard({
       {!configured ? (
         <p className="text-xs text-slate-500 leading-relaxed">
           This machine is serviced by the calendar. For a compressor, crane or genset that is a proxy for how hard it
-          actually works — record a meter reading and a service interval to schedule on real usage instead.
+          actually works, record a meter reading and a service interval to schedule on real usage instead.
         </p>
       ) : (
         <>
           <div className="flex items-baseline gap-3 flex-wrap">
             <span className="text-3xl font-bold text-slate-900 tabular-nums">
-              {data.currentMeter ?? "—"}
+              {data.currentMeter ?? "-"}
             </span>
             <span className="text-xs text-slate-500">
               {data.meterUnit ? METER_UNIT_LABELS[data.meterUnit] : ""}
@@ -205,7 +205,7 @@ export default function MeterCard({
                       {r.reading} {unit}
                       {r.isReset ? " · meter replaced" : ""}
                     </span>
-                    <span className="text-slate-400 truncate">{r.recordedByName ?? "—"}</span>
+                    <span className="text-slate-400 truncate">{r.recordedByName ?? "-"}</span>
                   </li>
                 ))}
               </ul>

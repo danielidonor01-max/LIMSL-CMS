@@ -22,7 +22,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       .catch(() => setMachineName("LIMSL Production Asset"));
 
     // The QR points at the ACTION screen, not the record. Whoever scans this
-    // label is standing at the machine with one job in mind — asking them what
+    // label is standing at the machine with one job in mind, asking them what
     // they came to do beats opening a four-tab desktop page on a phone.
     const scanUrl = `${window.location.origin}/equipment/${assetIdKey}/do`;
 

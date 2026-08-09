@@ -12,7 +12,7 @@
 // has a predictable shape: an automated message from a free consumer mailbox
 // (gmail.com, yahoo.com, outlook.com) addressed into a corporate tenant. Google
 // Workspace and Microsoft 365 both treat that as suspicious, and Microsoft in
-// particular quarantines rather than bounces — the message is not in Junk, it is
+// particular quarantines rather than bounces, the message is not in Junk, it is
 // in a portal the recipient has probably never opened.
 
 import { resolveMx } from "node:dns/promises";
@@ -109,7 +109,7 @@ export async function diagnoseRecipient(
       severity: "fail",
       headline: `${domain} publishes no mail server (no MX record), so no mail can be delivered to it.`,
       actions: [
-        `Confirm the address is spelt correctly — ${recipient}`,
+        `Confirm the address is spelt correctly, ${recipient}`,
         `If the domain is new, its DNS may not have propagated yet.`,
         `Until ${domain} has an MX record, use an address on a domain that does.`,
       ],
@@ -121,7 +121,7 @@ export async function diagnoseRecipient(
     return {
       ...base,
       severity: "ok",
-      headline: `${domain} receives mail via ${hostLabel}, and the CMS authenticates as an address on that same domain — this is internal mail and should arrive reliably.`,
+      headline: `${domain} receives mail via ${hostLabel}, and the CMS authenticates as an address on that same domain, this is internal mail and should arrive reliably.`,
       actions: [],
     };
   }
@@ -136,12 +136,12 @@ export async function diagnoseRecipient(
         `${domain} receives mail via ${hostLabel}, but the CMS sends as a ${senderDomain} address. ` +
         `Automated mail from a consumer mailbox into a corporate tenant is filtered hard` +
         (quarantines
-          ? " — and Microsoft-style filtering QUARANTINES rather than bounces, so the message is neither in the inbox nor in Junk, and nobody is told."
+          ? ", and Microsoft-style filtering QUARANTINES rather than bounces, so the message is neither in the inbox nor in Junk, and nobody is told."
           : " and usually lands in Junk."),
       actions: [
         quarantines
           ? `Ask the ${domain} administrator to check the quarantine (Microsoft 365: security.microsoft.com → Review → Quarantine) and release the message. That confirms the diagnosis in under a minute.`
-          : `Check the recipient's Junk/Spam folder first — that confirms the diagnosis in under a minute.`,
+          : `Check the recipient's Junk/Spam folder first, that confirms the diagnosis in under a minute.`,
         `The real fix: authenticate as a ${domain} mailbox instead. Set SMTP_HOST=smtp.office365.com, SMTP_PORT=587, SMTP_SECURE=false, and SMTP_USER/SMTP_PASS to a ${domain} account. Mail then travels inside the tenant and is effectively never filtered.`,
         `Alternative: use a transactional relay (Resend, SendGrid, Postmark) with SPF, DKIM and DMARC published for ${domain}. This is the right answer if the CMS must mail several external domains.`,
         `Interim: have the ${domain} administrator allow-list ${senderAddress} as a trusted sender.`,
@@ -149,7 +149,7 @@ export async function diagnoseRecipient(
     };
   }
 
-  // Cross-domain but sending from a real domain — workable, but only if that
+  // Cross-domain but sending from a real domain, workable, but only if that
   // domain's authentication records are actually published.
   return {
     ...base,
@@ -157,7 +157,7 @@ export async function diagnoseRecipient(
     headline: `${domain} receives mail via ${hostLabel}. The CMS sends as ${senderDomain}, so delivery depends on ${senderDomain}'s SPF, DKIM and DMARC records being correct.`,
     actions: [
       `Check the recipient's Junk/Spam folder.`,
-      `Verify SPF, DKIM and DMARC are published for ${senderDomain} — without them a corporate receiver will distrust the message.`,
+      `Verify SPF, DKIM and DMARC are published for ${senderDomain}, without them a corporate receiver will distrust the message.`,
       `If ${domain} is your own organisation, authenticating as a ${domain} mailbox removes the problem entirely.`,
     ],
   };

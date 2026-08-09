@@ -58,7 +58,7 @@ export const equipmentDocuments = pgTable("equipment_documents", {
   docType: text("doc_type").notNull(), // ELECTRICAL_SCHEMATIC | OPERATIONAL_MANUAL | SOP | CALIBRATION_REPORT | PREMOB_REPORT | DATASHEET | WARRANTY | OTHER
   title: text("title").notNull(),
   fileUrl: text("file_url"), // external URL, OR the auth-gated serving path for an uploaded file
-  // Uploaded-file metadata (via the storage layer — local disk or cloud).
+  // Uploaded-file metadata (via the storage layer, local disk or cloud).
   fileKey: text("file_key"), // opaque storage key
   fileName: text("file_name"), // original filename
   mimeType: text("mime_type"),
@@ -67,7 +67,7 @@ export const equipmentDocuments = pgTable("equipment_documents", {
   issuedDate: text("issued_date"),
   expiryDate: text("expiry_date"),
   revision: text("revision"),
-  pdfKind: text("pdf_kind").default("UNKNOWN"), // TEXT_SELECTABLE | IMAGE_ONLY | UNKNOWN — used by the (future) schematic ingestion engine
+  pdfKind: text("pdf_kind").default("UNKNOWN"), // TEXT_SELECTABLE | IMAGE_ONLY | UNKNOWN, used by the (future) schematic ingestion engine
   notes: text("notes"),
   uploadedBy: text("uploaded_by"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -85,7 +85,7 @@ export const users = pgTable("users", {
   department: text("department"), // MAINTENANCE | QA_QC | HSE | FACTORY | MANAGEMENT
   phone: text("phone"),
   whatsapp: text("whatsapp"),
-  preferences: text("preferences"), // JSON: per-user prefs (landing, density, notify) — see src/lib/user-prefs.ts
+  preferences: text("preferences"), // JSON: per-user prefs (landing, density, notify), see src/lib/user-prefs.ts
   isActive: boolean("is_active").default(true),
   mustChangePassword: boolean("must_change_password").default(false),
   createdBy: text("created_by"),
@@ -112,7 +112,7 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   // headline ISO metric unfalsifiable. daysLate is stamped at completion and
   // compliance is judged against a frequency-scaled window.
   daysLate: integer("days_late"),
-  // A deferral is a decision someone must own — a risk accepted, approved and
+  // A deferral is a decision someone must own, a risk accepted, approved and
   // reviewed. Without it, deferral happens by silence and never appears in any
   // register. Status gains DEFERRED alongside SCHEDULED/COMPLETED/OVERDUE.
   deferredReason: text("deferred_reason"),
@@ -234,7 +234,7 @@ export const permits = pgTable("permits", {
   controlMeasures: text("control_measures"),
   // Supporting documents/flow for the permit (shown to every signer):
   //  • an APPROVED Work Method Statement, and
-  //  • a structured Job Hazard Analysis — JSON array of
+  //  • a structured Job Hazard Analysis, JSON array of
   //    { task, hazards, controls, residualRisk }.
   wmsId: text("wms_id").references(() => wmsDocuments.id),
   jha: text("jha"), // JSON array of JHA rows
@@ -243,7 +243,7 @@ export const permits = pgTable("permits", {
   areaBarricaded: boolean("area_barricaded").default(false),
   issuedById: text("issued_by_id").references(() => users.id),
   // The permit holder: the named, accountable person the permit is issued to. A
-  // permit is not valid without one — "Maintenance Team" is not accountable to an
+  // permit is not valid without one, "Maintenance Team" is not accountable to an
   // auditor, a person is. (issuedToId/issuedToName are the legacy free-text
   // fields, superseded by these; kept only so the migration stays additive.)
   permitHolderId: text("permit_holder_id").references(() => users.id),
@@ -307,9 +307,9 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   // eight fault types on a machine-level record: you could not see that the
   // same contactor keeps welding shut across three welding sets, or that one
   // CNC has a recurring hydraulic-pump pattern. Two coded fields plus a link to
-  // the component registry buy the entire reliability capability — a full
+  // the component registry buy the entire reliability capability, a full
   // five-level hierarchy would be bloat for 33 assets.
-  failureMode: text("failure_mode"), // coded — see lib/maintenance/failure-codes.ts
+  failureMode: text("failure_mode"), // coded, see lib/maintenance/failure-codes.ts
   detectionMethod: text("detection_method"), // OPERATOR | PM_INSPECTION | BREAKDOWN | CONDITION_MONITORING | CALIBRATION | AUDIT
   componentId: text("component_id").references(() => componentRegistry.id),
   verifiedRootCause: text("verified_root_cause"),
@@ -387,7 +387,7 @@ export const oemRegistry = pgTable("oem_registry", {
 // ─── Contractor control (ISO 45001 8.1.4.2) ─────────────────────────────────
 // A contractor register that does not stop anybody working is a spreadsheet.
 // The obligation is not to hold certificates; it is to not let someone onto a
-// live machine without them — so these rows gate permit issue.
+// live machine without them, so these rows gate permit issue.
 // ─── Escalation state ───────────────────────────────────────────────────────
 // What each person was last told, so the next digest can report the CHANGE
 // rather than restating the situation. Without this the digest is stateless and
@@ -415,7 +415,7 @@ export const escalationSnoozes = pgTable("escalation_snoozes", {
 
 // ─── Password reset ─────────────────────────────────────────────────────────
 // The token is stored HASHED. A reset table holding usable tokens is a table
-// that hands out accounts to anyone who can read it — a database dump, a rogue
+// that hands out accounts to anyone who can read it, a database dump, a rogue
 // backup, a support engineer with a console. What we keep is a digest we can
 // compare against, and the only copy of the real token is the one in the email.
 export const passwordResets = pgTable("password_resets", {
@@ -519,8 +519,8 @@ export const emergencyDrills = pgTable("emergency_drills", {
 });
 
 // ─── Condition monitoring ───────────────────────────────────────────────────
-// A measurement point on a machine — "motor drive-end bearing", "main panel
-// busbar" — with the two thresholds that make a reading actionable.
+// A measurement point on a machine, "motor drive-end bearing", "main panel
+// busbar", with the two thresholds that make a reading actionable.
 export const conditionPoints = pgTable("condition_points", {
   id: text("id").primaryKey(),
   equipmentId: text("equipment_id").notNull().references(() => equipment.id),
@@ -566,8 +566,8 @@ export const meterReadings = pgTable("meter_readings", {
 // AWAITING_PARTS was a status the system could set and count as downtime, with
 // nothing behind it: no record of which part, whether it was on order, or
 // whether one should have been on the shelf. For a critical machine, a spare
-// sitting below its minimum is a predicted outage with a known length — the
-// supplier's lead time — and that is the only thing here worth building.
+// sitting below its minimum is a predicted outage with a known length, the
+// supplier's lead time, and that is the only thing here worth building.
 export const spareParts = pgTable("spare_parts", {
   id: text("id").primaryKey(),
   partNumber: text("part_number").notNull(),
@@ -639,7 +639,7 @@ export const calibrationRecords = pgTable("calibration_records", {
   certificateUrl: text("certificate_url"),
   status: text("status").default("CURRENT"), // CURRENT | DUE_SOON | OVERDUE | OUT_OF_SERVICE
   // ISO 9001 7.1.5.2(a): measurement traceability. "Calibrated by: Ade" is not
-  // traceability — the standard the instrument was measured against, and the
+  // traceability, the standard the instrument was measured against, and the
   // accredited body that did it, are the evidence an auditor asks for.
   traceableTo: text("traceable_to"), // e.g. "NMI / NIST via ref std SN-4471"
   referenceStandardId: text("reference_standard_id"),
@@ -651,7 +651,7 @@ export const calibrationRecords = pgTable("calibration_records", {
 
 // Every calibration EVENT, retained forever. calibration_records is the
 // instrument master; rolling an instrument forward used to UPDATE that row,
-// overwriting the previous date, certificate and result — so a 3-year history
+// overwriting the previous date, certificate and result, so a 3-year history
 // could never be produced (ISO 9001 7.5.3 + 7.1.5.2). Events are append-only.
 export const calibrationEvents = pgTable(
   "calibration_events",
@@ -680,7 +680,7 @@ export const calibrationEvents = pgTable(
 
 // ISO 45001 8.1.2: an isolation is a list of energy sources made safe, each
 // with a lock/tag and a named person who applied and removed it. It was one
-// boolean (permits.lotoApplied) — indefensible for a shop with electrical,
+// boolean (permits.lotoApplied), indefensible for a shop with electrical,
 // hydraulic, pneumatic, stored and gravitational energy on the same machine.
 export const isolationPoints = pgTable(
   "isolation_points",
@@ -707,7 +707,7 @@ export const nonConformities = pgTable("non_conformities", {
   id: text("id").primaryKey(),
   ncNumber: text("nc_number").notNull().unique(),
   // MISSED_PM | KPI_BREACH | SAFETY_INCIDENT | OVERDUE_CA | OVERDUE_CALIBRATION
-  // | CALIBRATION_FAILURE (instrument found out of tolerance — distinct from
+  // | CALIBRATION_FAILURE (instrument found out of tolerance, distinct from
   // being merely overdue; triggers the 7.1.5.2 validity assessment) | AUDIT_FINDING
   type: text("type").notNull(),
   severity: text("severity").notNull().default("MEDIUM"), // LOW | MEDIUM | HIGH | CRITICAL
@@ -812,7 +812,7 @@ export const competencyMatrix = pgTable("competency_matrix", {
 // One row per person per notifiable event. It is BOTH the in-app inbox (shown to
 // `userId`) and the delivery outbox (WhatsApp). Recorded regardless of whether an
 // external channel is configured, so alerts are never silently lost and there is
-// an audit trail. deliveryStatus is honest — QUEUED until actually sent.
+// an audit trail. deliveryStatus is honest, QUEUED until actually sent.
 export const notifications = pgTable(
   "notifications",
   {
@@ -863,7 +863,7 @@ export const componentRegistry = pgTable("component_registry", {
   technicalSpecs: text("technical_specs"), // JSON string
   status: text("status").default("OPERATIONAL"), // OPERATIONAL | FAULTY | REPLACED
   // Exact schematic location (P2-lite): which document/page the component sits
-  // on, with its bounding box in PDF points (top-left origin) — resolution-
+  // on, with its bounding box in PDF points (top-left origin), resolution-
   // independent, so the viewer maps it onto any rendered size. Null for
   // registry entries that only carry a textual schematicReference.
   schematicDocId: text("schematic_doc_id").references(() => equipmentDocuments.id),
@@ -905,7 +905,7 @@ export const signoffs = pgTable(
     signedById: text("signed_by_id").references(() => users.id),
     signedByName: text("signed_by_name"),
     signedByRole: text("signed_by_role"),
-    // A step signed by someone other than the role it names — a Super Admin
+    // A step signed by someone other than the role it names, a Super Admin
     // stepping in, or a manager covering an absent junior. The chain's intent
     // still stands: this is an exception, so it is recorded AS an exception with
     // a stated reason, rather than looking identical to a normal signature.
@@ -924,14 +924,14 @@ export const signoffs = pgTable(
 );
 
 // Per-series atomic counters backing document numbers (WO-2026-0031 etc.).
-// Numbers must NEVER be derived from count() or a max() scan — concurrent
+// Numbers must NEVER be derived from count() or a max() scan, concurrent
 // creates collide, and count-based numbering reuses numbers after deletion.
 export const docCounters = pgTable("doc_counters", {
   series: text("series").primaryKey(), // e.g. "WO-2026", "PTW-2026"
   value: integer("value").notNull().default(0),
 });
 
-// ─── Schematic Ingestion Jobs (engine scaffolding — disabled until configured) ─
+// ─── Schematic Ingestion Jobs (engine scaffolding, disabled until configured) ─
 // Queue of schematic PDFs awaiting AI extraction of components / nets / zones.
 // Runs only when SCHEMATIC_INGESTION_ENABLED and a provider (e.g. Anthropic) is
 // configured; otherwise jobs sit in PENDING for future processing.
@@ -975,7 +975,7 @@ export const procedureRevisions = pgTable("procedure_revisions", {
 // ─── App Settings ────────────────────────────────────────────────────────────
 // Single-row (id = "singleton") organisation settings, administered by the Super
 // Admin. The working-hours window drives production-time downtime accounting and
-// the availability/MTBF baseline — see src/lib/worktime.ts. Never hardcode these.
+// the availability/MTBF baseline, see src/lib/worktime.ts. Never hardcode these.
 export const appSettings = pgTable("app_settings", {
   id: text("id").primaryKey().default("singleton"),
   workDayStart: text("work_day_start").notNull().default("08:00"), // "HH:MM"
@@ -984,7 +984,7 @@ export const appSettings = pgTable("app_settings", {
   lunchEnd: text("lunch_end").default("13:00"),
   workingDays: text("working_days").notNull().default("[1,2,3,4,5]"), // JSON weekday nums, 0=Sun..6=Sat
   weekendOvertime: boolean("weekend_overtime").notNull().default(false),
-  // JSON {event: {enabled, roles|null}} — admin overrides for who gets what;
+  // JSON {event: {enabled, roles|null}}, admin overrides for who gets what;
   // null/absent event = code defaults (see lib/notifications/routing.ts).
   notificationRouting: text("notification_routing"),
   escalationPolicy: text("escalation_policy"),
@@ -995,7 +995,7 @@ export const appSettings = pgTable("app_settings", {
 
 // ─── Document Chunks ─────────────────────────────────────────────────────────
 // Retrieval corpus for the troubleshooting module (P0 of the troubleshooting
-// engine — see docs/TROUBLESHOOTING-ENGINE.md §2.2). Text documents (manuals,
+// engine, see docs/TROUBLESHOOTING-ENGINE.md §2.2). Text documents (manuals,
 // SOPs) and the approved maintenance procedure are chunked here; a GIN
 // full-text index makes them searchable from /diagnose. equipmentId NULL means
 // plant-wide (e.g. the maintenance procedure applies to every machine).
@@ -1006,7 +1006,7 @@ export const documentChunks = pgTable(
     equipmentId: text("equipment_id").references(() => equipment.id),
     documentId: text("document_id").references(() => equipmentDocuments.id),
     sourceType: text("source_type").notNull(), // DOCUMENT | PROCEDURE
-    sourceLabel: text("source_label").notNull(), // e.g. "Operating Manual — Stako CNC" / "Maintenance Procedure Rev 2"
+    sourceLabel: text("source_label").notNull(), // e.g. "Operating Manual. Stako CNC" / "Maintenance Procedure Rev 2"
     chunkIndex: integer("chunk_index").notNull(),
     heading: text("heading"),
     pageStart: integer("page_start"),
@@ -1058,7 +1058,7 @@ export const schematicTiles = pgTable(
 // ─── API Credentials ─────────────────────────────────────────────────────────
 // Provider API keys managed from CMS Settings (Super Admin). Keys are stored
 // AES-256-GCM-encrypted with a key derived from AUTH_SECRET (src/lib/crypto.ts)
-// and are never returned to the client — only `keyHint` (last 4 chars) is.
+// and are never returned to the client, only `keyHint` (last 4 chars) is.
 // Environment variables (e.g. GEMINI_API_KEY) override the DB when set, so
 // hosted deployments can keep secrets in platform env if preferred.
 export const apiCredentials = pgTable("api_credentials", {
@@ -1100,7 +1100,7 @@ export const equipmentLog = pgTable(
 // ─── Diagnosis Sessions ──────────────────────────────────────────────────────
 // A guided (chat-style) AI troubleshooting session: the running conversation,
 // the technician's step-by-step feedback, and the outcome. Created only once a
-// technician chooses to log the fault and proceed — and it feeds the machine
+// technician chooses to log the fault and proceed, and it feeds the machine
 // log + the diagnostic-guide learning loop on resolution.
 export const diagnosisSessions = pgTable(
   "diagnosis_sessions",

@@ -35,7 +35,7 @@ export default function NewCorrectiveRequest() {
           const data = await res.json();
           setEquipmentList(data);
           // Deep links (?equipmentId=…) from the twin / dashboard / QR flow
-          // preselect the machine you're standing at — no re-picking.
+          // preselect the machine you're standing at, no re-picking.
           const wanted = new URLSearchParams(window.location.search).get("equipmentId");
           const match = wanted && data.find((e: { id: string; assetId?: string }) => e.id === wanted || e.assetId === wanted.replace(/-/g, "/"));
           if (match) setEquipmentId(match.id);
@@ -57,11 +57,11 @@ export default function NewCorrectiveRequest() {
     setSaving(true);
     try {
       // Reporting a fault is the one thing that must never be lost to a dead
-      // spot — it is usually being done standing next to a stopped machine.
+      // spot, it is usually being done standing next to a stopped machine.
       const machine = equipmentList.find((e: any) => e.id === equipmentId);
       const outcome = await submitOrQueue({
         url: "/api/corrective",
-        label: `Fault report — ${machine?.assetId ?? "equipment"}${machine?.name ? ` (${machine.name})` : ""}`,
+        label: `Fault report, ${machine?.assetId ?? "equipment"}${machine?.name ? ` (${machine.name})` : ""}`,
         body: {
           equipmentId,
           faultType,
@@ -80,20 +80,20 @@ export default function NewCorrectiveRequest() {
       }
 
       if (!outcome.sent) {
-        toast.success("Saved on this phone — the fault will be logged as soon as you have signal.");
+        toast.success("Saved on this phone, the fault will be logged as soon as you have signal.");
         router.push("/corrective");
         return;
       }
 
       if (!outcome.response.ok) {
         const d = await outcome.response.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't log the fault — check your connection and try again.");
+        toast.error(d.error || "Couldn't log the fault, check your connection and try again.");
         return;
       }
       toast.success("Fault logged. Maintenance leadership and HSE have been notified.");
       router.push("/corrective");
     } catch {
-      toast.error("Couldn't log the fault — check your connection and try again.");
+      toast.error("Couldn't log the fault, check your connection and try again.");
     } finally {
       setSaving(false);
     }

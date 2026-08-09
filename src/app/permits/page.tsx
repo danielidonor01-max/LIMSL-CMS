@@ -110,13 +110,13 @@ export default function PermitsList() {
                         )}
                       </div>
                       <h3 className="text-sm font-bold text-slate-900">
-                        {rec.assetId ? `${rec.assetId} — ` : ""}
+                        {rec.assetId ? `${rec.assetId}, ` : ""}
                         {rec.equipmentName || "Equipment"}
                       </h3>
                       <p className="text-xs text-slate-600 max-w-xl line-clamp-1">{rec.workDescription}</p>
                       <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
                         <div className="flex items-center gap-1">
-                          <User className="w-3.5 h-3.5" /> Holder: {rec.permitHolderName || "—"}
+                          <User className="w-3.5 h-3.5" /> Holder: {rec.permitHolderName || "-"}
                         </div>
                         {rec.expiryDate && (
                           <div className="flex items-center gap-1">
@@ -128,7 +128,7 @@ export default function PermitsList() {
                       {pending && (
                         <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-semibold">
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          Work may not begin — {signed}/{total} signatures
+                          Work may not begin, {signed}/{total} signatures
                         </div>
                       )}
                       {rec.status === "EXPIRED" && (

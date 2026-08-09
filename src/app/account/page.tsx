@@ -1,5 +1,5 @@
 // src/app/account/page.tsx
-// Self-service account page — every user manages their own profile and
+// Self-service account page, every user manages their own profile and
 // preferences here (no admin rights needed). Distinct from /settings/users
 // (Super Admin account administration) and /settings (org-wide app settings).
 "use client";
@@ -113,7 +113,7 @@ export default function AccountPage() {
           </div>
           <p className="text-xs text-slate-500">
             {me?.jobTitle ? `${me.jobTitle} · ` : ""}
-            {me?.department ?? ""} · Manage your profile and preferences
+            {me?.department ?? ""}
           </p>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function AccountPage() {
           </div>
         </div>
         <p className="text-[11px] text-slate-400">
-          Your role and department are managed by a Super Admin. Changing your email changes the address you sign in with.
+          Your role and department are set by a Super Admin. Your email is also your sign-in address.
         </p>
       </section>
 
@@ -190,7 +190,7 @@ export default function AccountPage() {
               );
             })}
           </div>
-          <p className="text-[11px] text-slate-400">Compact tightens tables and page spacing to fit more on screen.</p>
+          <p className="text-[11px] text-slate-500">Compact fits more on screen by tightening tables, lists and page spacing.</p>
         </div>
 
         {/* Notifications */}
@@ -198,7 +198,7 @@ export default function AccountPage() {
           <label className={label}><Bell className="w-3 h-3 inline mr-1" />Notifications</label>
           <ToggleRow
             title="Email notifications"
-            desc="Receive reminders, escalations and sign-off requests by email (when email delivery is configured)."
+            desc="Reminders, escalations and sign-off requests, sent by email."
             checked={prefs.notifyEmail}
             onChange={(v) => savePrefs({ ...prefs, notifyEmail: v })}
           />
@@ -216,13 +216,13 @@ export default function AccountPage() {
           />
           <ToggleRow
             title="Desktop (system) notifications"
-            desc="Show a Windows notification for new alerts — your browser will ask for permission once."
+            desc="Show a system notification for new alerts. Your browser asks permission once."
             checked={prefs.notifyDesktop}
             onChange={async (v) => {
               if (v && typeof Notification !== "undefined" && Notification.permission !== "granted") {
                 const perm = await Notification.requestPermission();
                 if (perm !== "granted") {
-                  toast.error("Permission declined — desktop notifications stay off.");
+                  toast.error("Permission declined. Desktop notifications stay off.");
                   return;
                 }
               }
@@ -236,7 +236,7 @@ export default function AccountPage() {
           <label className={label}><Sparkles className="w-3 h-3 inline mr-1" />AI chat</label>
           <ToggleRow
             title="Enter key sends the message"
-            desc="Off: Enter starts a new line — send with Ctrl+Enter or the Send button. On: Enter sends; Shift+Enter starts a new line."
+            desc="Off: Enter starts a new line, send with Ctrl+Enter or the Send button. On: Enter sends; Shift+Enter starts a new line."
             checked={prefs.chatEnterToSend}
             onChange={(v) => savePrefs({ ...prefs, chatEnterToSend: v })}
           />

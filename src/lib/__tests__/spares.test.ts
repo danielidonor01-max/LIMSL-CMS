@@ -64,7 +64,7 @@ test("a critical machine with no spare reports the outage it is already booked f
 test("below minimum still has cover, so exposure is zero but it is still at risk", () => {
   const r = spareRisk({ quantityOnHand: 1, minimumQuantity: 3, leadTimeDays: 30, equipmentCriticality: "CRITICAL" });
   assert.equal(r.atRisk, true);
-  assert.equal(r.exposureDays, 0, "there is one on the shelf — the machine does not stop today");
+  assert.equal(r.exposureDays, 0, "there is one on the shelf, the machine does not stop today");
   assert.match(r.headline, /Below minimum/);
 });
 
@@ -85,7 +85,7 @@ test("on order lowers the grade where there is still cover on the shelf", () => 
 
 // A purchase order is not a spare. If the machine fails this afternoon the wait
 // is identical whether or not someone has raised a PO, so the grade must not
-// soften — that would be the register telling a comfortable lie.
+// soften, that would be the register telling a comfortable lie.
 test("on order does NOT downgrade a critical part that is entirely absent", () => {
   const notOrdered = spareRisk({ quantityOnHand: 0, minimumQuantity: 1, leadTimeDays: 30, equipmentCriticality: "CRITICAL" });
   const ordered = spareRisk({ quantityOnHand: 0, minimumQuantity: 1, leadTimeDays: 30, equipmentCriticality: "CRITICAL", onOrder: true });

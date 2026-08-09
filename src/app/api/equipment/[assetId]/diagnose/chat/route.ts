@@ -1,8 +1,8 @@
 // src/app/api/equipment/[assetId]/diagnose/chat/route.ts
 // Chat-style, guardrailed AI diagnosis (Gemini). The technician works the fault
 // turn by turn; each turn is grounded in the same evidence pack as the one-shot
-// path. A session is only opened — and a DIAGNOSIS entry only written to the
-// machine history log — when the technician explicitly starts the AI chat
+// path. A session is only opened, and a DIAGNOSIS entry only written to the
+// machine history log, when the technician explicitly starts the AI chat
 // ("log this and proceed"); the deterministic search alone never logs.
 //   GET  ?session=<id>  → load a session transcript (resume / deep-link)
 //   GET  (no param)     → list this machine's past sessions
@@ -58,7 +58,7 @@ function sanitizeImages(input: unknown): GeminiImage[] {
   return out;
 }
 
-// Panel/component photos are compliance evidence — persist them to file storage
+// Panel/component photos are compliance evidence, persist them to file storage
 // and keep only the keys on the transcript (never base64 in the session row).
 // Served back through the auth-gated /api/files route. Best-effort: a storage
 // failure must not block the diagnosis turn.
@@ -80,7 +80,7 @@ async function persistImages(images: GeminiImage[], sessionId: string): Promise<
   return keys;
 }
 
-// Feed a confirmed resolution back into the deterministic engine — the same
+// Feed a confirmed resolution back into the deterministic engine, the same
 // learning the one-shot path does. A cause the guides already know gets
 // reinforced; a new one becomes a new guide, seeded with the assistant's last
 // suggested checks as the diagnostic steps.
@@ -219,11 +219,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
           .set({
             title:
               action === "resolve"
-                ? `AI diagnosis — resolved · "${s.symptom.slice(0, 100)}"`
-                : `AI diagnosis — closed · "${s.symptom.slice(0, 100)}"`,
+                ? `AI diagnosis, resolved · "${s.symptom.slice(0, 100)}"`
+                : `AI diagnosis, closed · "${s.symptom.slice(0, 100)}"`,
             detail:
               action === "resolve"
-                ? `Root cause: ${resolvedCause}${resolutionNote ? ` — ${resolutionNote}` : ""}`
+                ? `Root cause: ${resolvedCause}${resolutionNote ? `, ${resolutionNote}` : ""}`
                 : "Diagnosis session closed without a confirmed cause.",
           })
           .where(eq(equipmentLog.id, s.logId));
@@ -299,7 +299,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
         action: "AI_CHAT",
         entityType: "diagnosis_session",
         entityId: sessionId,
-        entityDescription: `AI diagnosis started (${model}) — "${symptom.slice(0, 80)}" · ${usage.inputTokens}in/${usage.outputTokens}out · ${evidenceCount} evidence items`,
+        entityDescription: `AI diagnosis started (${model}), "${symptom.slice(0, 80)}" · ${usage.inputTokens}in/${usage.outputTokens}out · ${evidenceCount} evidence items`,
       });
 
       return NextResponse.json({ sessionId, status: "OPEN", messages, model });

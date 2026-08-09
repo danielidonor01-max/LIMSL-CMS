@@ -30,8 +30,7 @@ export async function POST(request: Request) {
     if (!user || user.isActive === false) return NextResponse.json(SAME_ANSWER);
 
     if (!emailReady().ready) {
-      // Nothing can be delivered, so issuing a token would strand it. Say so —
-      // this is an admin misconfiguration, not a secret.
+      // Nothing can be delivered, so issuing a token would strand it. Say so,       // this is an admin misconfiguration, not a secret.
       return NextResponse.json(
         { error: "Email is not configured on this deployment, so a reset link cannot be sent. Ask a Super Admin to reset your password directly." },
         { status: 503 },
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
       `A password reset was requested for your account.\n\n` +
         `Open the link below to choose a new password. It expires in ${RESET_TTL_MINUTES} minutes and can only be used once.\n\n` +
         `${link}\n\n` +
-        `If you did not request this, you can ignore this email — your password has not changed.`,
+        `If you did not request this, you can ignore this email, your password has not changed.`,
     );
 
     // The request is logged; the token is not. An audit trail holding live

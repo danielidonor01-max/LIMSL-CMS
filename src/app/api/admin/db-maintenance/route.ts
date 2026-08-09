@@ -1,7 +1,7 @@
 // src/app/api/admin/db-maintenance/route.ts
 // One-click performance-index migration, run by the Super Admin from Settings.
 // Exists because schema changes are normally applied from a developer machine
-// (drizzle-kit push) — this lets the DEPLOYED app bring its own database up to
+// (drizzle-kit push), this lets the DEPLOYED app bring its own database up to
 // date. Every statement is CREATE INDEX IF NOT EXISTS: idempotent, safe to run
 // repeatedly, never touches data.
 import { NextResponse } from "next/server";
@@ -13,7 +13,7 @@ import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 
 // Kept in lockstep with the index tuples in src/lib/db/schema.ts. Also carries
-// additive column migrations (IF NOT EXISTS — idempotent, data-safe).
+// additive column migrations (IF NOT EXISTS, idempotent, data-safe).
 const INDEXES: [string, string][] = [
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
   ["app_settings.escalation_policy", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS escalation_policy text"],
@@ -42,7 +42,7 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["escalation_snoozes_entity_uq", "CREATE UNIQUE INDEX IF NOT EXISTS escalation_snoozes_entity_uq ON escalation_snoozes (entity_type, entity_id)"],
-  // Phase 1 — ISO evidence tables and columns (additive, data-safe).
+  // Phase 1, ISO evidence tables and columns (additive, data-safe).
   ["calibration_records.traceability", "ALTER TABLE calibration_records ADD COLUMN IF NOT EXISTS traceable_to text, ADD COLUMN IF NOT EXISTS reference_standard_id text, ADD COLUMN IF NOT EXISTS lab_name text, ADD COLUMN IF NOT EXISTS lab_accreditation_no text, ADD COLUMN IF NOT EXISTS accreditation_body text"],
   [
     "calibration_events",
@@ -77,7 +77,7 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["isolation_points_permit_idx", "CREATE INDEX IF NOT EXISTS isolation_points_permit_idx ON isolation_points (permit_id)"],
-  // Phase 4b — schedule adherence, deferral register, failure taxonomy.
+  // Phase 4b, schedule adherence, deferral register, failure taxonomy.
   ["maintenance_schedule.adherence", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS days_late integer, ADD COLUMN IF NOT EXISTS deferred_reason text, ADD COLUMN IF NOT EXISTS deferred_by_id text, ADD COLUMN IF NOT EXISTS deferred_by_name text, ADD COLUMN IF NOT EXISTS deferred_at text, ADD COLUMN IF NOT EXISTS deferred_review_date text"],
   ["corrective_maintenance.failure_taxonomy", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS failure_mode text, ADD COLUMN IF NOT EXISTS detection_method text, ADD COLUMN IF NOT EXISTS component_id text"],
   [
@@ -94,9 +94,9 @@ const INDEXES: [string, string][] = [
   ],
   ["password_resets_user_idx", "CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets (user_id)"],
   ["password_resets_token_idx", "CREATE INDEX IF NOT EXISTS password_resets_token_idx ON password_resets (token_hash)"],
-  // Sign-off overrides — a step signed by someone other than the role it names.
+  // Sign-off overrides, a step signed by someone other than the role it names.
   ["signoffs.override", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS is_override boolean DEFAULT false, ADD COLUMN IF NOT EXISTS override_reason text"],
-  // Phase 6f — condition monitoring.
+  // Phase 6f, condition monitoring.
   [
     "condition_points",
     `CREATE TABLE IF NOT EXISTS condition_points (
@@ -129,7 +129,7 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["condition_readings_point_idx", "CREATE INDEX IF NOT EXISTS condition_readings_point_idx ON condition_readings (point_id)"],
-  // Phase 6e — contractor control (ISO 45001 8.1.4.2).
+  // Phase 6e, contractor control (ISO 45001 8.1.4.2).
   [
     "contractors",
     `CREATE TABLE IF NOT EXISTS contractors (
@@ -168,7 +168,7 @@ const INDEXES: [string, string][] = [
   ],
   ["contractor_personnel_contractor_idx", "CREATE INDEX IF NOT EXISTS contractor_personnel_contractor_idx ON contractor_personnel (contractor_id)"],
   ["permits.contractor", "ALTER TABLE permits ADD COLUMN IF NOT EXISTS contractor_id text"],
-  // Phase 6c — emergency preparedness (ISO 45001 8.2).
+  // Phase 6c, emergency preparedness (ISO 45001 8.2).
   [
     "emergency_equipment",
     `CREATE TABLE IF NOT EXISTS emergency_equipment (
@@ -224,7 +224,7 @@ const INDEXES: [string, string][] = [
       created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
     )`,
   ],
-  // Phase 6b — meter / run-hours servicing.
+  // Phase 6b, meter / run-hours servicing.
   ["equipment.meters", "ALTER TABLE equipment ADD COLUMN IF NOT EXISTS meter_unit text, ADD COLUMN IF NOT EXISTS current_meter real, ADD COLUMN IF NOT EXISTS meter_updated_at text, ADD COLUMN IF NOT EXISTS meter_service_interval real, ADD COLUMN IF NOT EXISTS meter_at_last_service real"],
   [
     "meter_readings",
@@ -241,7 +241,7 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["meter_readings_equipment_idx", "CREATE INDEX IF NOT EXISTS meter_readings_equipment_idx ON meter_readings (equipment_id)"],
-  // Phase 6a — critical spares register.
+  // Phase 6a, critical spares register.
   [
     "spare_parts",
     `CREATE TABLE IF NOT EXISTS spare_parts (

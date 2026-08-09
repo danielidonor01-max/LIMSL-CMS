@@ -5,8 +5,7 @@
 //   • Deferring changes the activity's STATUS. It is a risk formally accepted,
 //     and it leaves the overdue figure.
 //   • Snoozing changes nothing about the record. The item is still overdue, it
-//     still counts against PM compliance, it still appears on the schedule —
-//     it just stops generating a daily reminder to someone already dealing with
+//     still counts against PM compliance, it still appears on the schedule, //     it just stops generating a daily reminder to someone already dealing with
 //     it. Quieting a reminder is not the same as excusing the work, and a
 //     system that offers only the second forces people to misuse it.
 import { NextResponse } from "next/server";
@@ -62,7 +61,7 @@ export async function POST(request: Request) {
       action: "UPDATE",
       entityType: entityType === "SCHEDULE" ? "maintenance_schedule" : "corrective_maintenance",
       entityId,
-      entityDescription: `Reminders quietened until ${check.until} — ${check.reason}`,
+      entityDescription: `Reminders quietened until ${check.until}, ${check.reason}`,
     });
 
     return NextResponse.json({ ok: true, until: check.until });

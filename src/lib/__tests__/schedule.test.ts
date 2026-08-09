@@ -34,7 +34,7 @@ test("a leap day rolls to 28 Feb on a non-leap anniversary", () => {
   assert.equal(nextPlannedDate("2028-02-29", "MONTHLY"), "2028-03-29");
 });
 
-test("clamping is lossy — the programme does not spring back to the 31st", () => {
+test("clamping is lossy, the programme does not spring back to the 31st", () => {
   // Documented consequence of clamping: stepping month by month from a 31st
   // settles on the clamped day rather than tracking each month's last day.
   const feb = nextPlannedDate("2026-01-31", "MONTHLY");
@@ -111,7 +111,7 @@ test("an unparseable date yields null", () => {
   assert.equal(nextPlannedDate("15/01/2026", "MONTHLY"), null);
 });
 
-test("a full ISO timestamp is accepted — only the date part is used", () => {
+test("a full ISO timestamp is accepted, only the date part is used", () => {
   assert.equal(nextPlannedDate("2026-01-15T00:00:00.000Z", "MONTHLY"), "2026-02-15");
   assert.equal(nextPlannedDate("2026-01-31T23:59:00", "MONTHLY"), "2026-02-28");
 });

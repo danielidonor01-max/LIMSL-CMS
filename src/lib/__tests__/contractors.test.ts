@@ -17,7 +17,7 @@ test("a company with current insurance and induction may work", () => {
   assert.deepEqual(e.reasons, []);
 });
 
-// The three things that silently lapse — nobody gets an email from their
+// The three things that silently lapse, nobody gets an email from their
 // insurer's expiry date, which is why this belongs in the permit system.
 test("expired insurance blocks the contractor", () => {
   const e = assessContractor({ ...ok, insuranceExpiryDate: "2026-08-07" }, TODAY);

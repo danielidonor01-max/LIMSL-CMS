@@ -189,7 +189,7 @@ export default function WorkOrdersPage() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 font-mono text-slate-500">{formatDate(r.plannedDate)}</td>
-                      <td className="py-3 px-4 text-slate-700">{r.technicianName ?? "—"}</td>
+                      <td className="py-3 px-4 text-slate-700">{r.technicianName ?? "-"}</td>
                       <td className="py-3 px-4">
                         <Badge className={WO_STATUS_BADGE[r.status]}>
                           {WO_STATUS_LABELS[r.status] ?? r.status}

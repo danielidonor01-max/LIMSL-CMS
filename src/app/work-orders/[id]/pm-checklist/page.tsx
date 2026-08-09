@@ -29,7 +29,7 @@ type User = { id: string; name: string; role: string };
 const STATUS_OPTIONS = ["OK", "NOT_OK", "NA"];
 
 // Nothing starts ticked. Every item arrived pre-set to "OK", so a "complete"
-// checklist could be filed without a single line being read — the PM record
+// checklist could be filed without a single line being read, the PM record
 // became a formality. A deliberate answer per item is the whole point.
 const mkItems = (tasks: JobTask[]): Item[] =>
   tasks.map((t) => ({ item: t.item, status: "", remarks: "", criteria: t.criteria, unit: t.unit, value: "" }));
@@ -100,7 +100,7 @@ export default function PMChecklistPage() {
 
       // The checklist is the machine's OWN task list. A crane gets brake-wear
       // and rope checks; a compressor gets separator dP; an earthing system
-      // gets loop impedance — instead of all three getting "gearbox oil level".
+      // gets loop impedance, instead of all three getting "gearbox oil level".
       const category = woData?.equipment?.category ?? null;
       const plan = jobPlanFor(category);
       setPlanTitle(plan.title);
@@ -131,7 +131,7 @@ export default function PMChecklistPage() {
     patch: Partial<Item>,
   ) => setter(list.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
 
-  // Validate, then open the attestation modal — the technician must confirm the
+  // Validate, then open the attestation modal, the technician must confirm the
   // PTW and safety controls were actually signed and true before we submit.
   const requestSubmit = () => {
     setError(null);
@@ -143,13 +143,12 @@ export default function PMChecklistPage() {
       setError("Technician name and signature are required.");
       return;
     }
-    // Every task needs a deliberate answer. An unanswered item is not "OK" —
-    // it is a task nobody performed, and filing it as complete would be a
+    // Every task needs a deliberate answer. An unanswered item is not "OK",     // it is a task nobody performed, and filing it as complete would be a
     // false record.
     const unanswered = [...visual, ...functional, ...lubrication, ...electrical].filter((i) => !i.status);
     if (unanswered.length) {
       setError(
-        `${unanswered.length} task${unanswered.length === 1 ? " has" : "s have"} no result recorded — ` +
+        `${unanswered.length} task${unanswered.length === 1 ? " has" : "s have"} no result recorded, ` +
         `mark each OK, NOT OK or NA. First: "${unanswered[0].item}".`,
       );
       return;
@@ -168,7 +167,7 @@ export default function PMChecklistPage() {
       // when the connection returns.
       const outcome = await submitOrQueue({
         url: "/api/pm-checklists",
-        label: `PM checklist — ${wo?.equipment?.assetId ?? "work order"} ${wo?.workOrderNumber ?? ""}`.trim(),
+        label: `PM checklist, ${wo?.equipment?.assetId ?? "work order"} ${wo?.workOrderNumber ?? ""}`.trim(),
         dedupeKey: `pm-checklist:${id}`,
         body: {
           workOrderId: id,
@@ -197,7 +196,7 @@ export default function PMChecklistPage() {
       if (!outcome.sent) {
         // Keep the draft: nothing is filed until the queue drains, and the
         // outbox tray is now carrying it.
-        toast.success("Saved on this phone — it will file itself once you have signal.");
+        toast.success("Saved on this phone, it will file itself once you have signal.");
         router.push(`/work-orders/${id}`);
         return;
       }
@@ -258,7 +257,7 @@ export default function PMChecklistPage() {
           </div>
         </div>
 
-        {/* Offer back what the last visit left unsaved — never apply it
+        {/* Offer back what the last visit left unsaved, never apply it
             silently, since a stale draft could overwrite a fresh start. */}
         {draft && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -291,7 +290,7 @@ export default function PMChecklistPage() {
             <p>
               Task list: <strong>{planTitle}</strong>.
               {planIsGeneric
-                ? " No plan is defined for this equipment category yet, so the general machine list is in use — record anything type-specific under observations."
+                ? " No plan is defined for this equipment category yet, so the general machine list is in use, record anything type-specific under observations."
                 : " Tasks and acceptance criteria are specific to this equipment category."}
             </p>
           </div>
@@ -451,7 +450,7 @@ export default function PMChecklistPage() {
         </div>
       </main>
 
-      {/* Safety attestation — confirm PTW & controls were actually signed and true */}
+      {/* Safety attestation, confirm PTW & controls were actually signed and true */}
       <Modal
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
@@ -463,7 +462,7 @@ export default function PMChecklistPage() {
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               You are completing PM for <strong>{wo?.workOrderNumber}</strong>. If a Permit-to-Work is attached to
-              this job, it must already be <strong>signed off and active</strong> — the server will reject this
+              this job, it must already be <strong>signed off and active</strong>, the server will reject this
               submission otherwise.
             </span>
           </div>
@@ -517,7 +516,7 @@ function Info({ label, value, mono }: { label: string; value?: string | null; mo
   return (
     <div>
       <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
-      <p className={`text-slate-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
+      <p className={`text-slate-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "-"}</p>
     </div>
   );
 }
@@ -540,7 +539,7 @@ function ChecklistEditor({
         {title}
       </h3>
       <div className="space-y-2">
-        {/* This is the most-tapped control in the product — sixty-plus of them
+        {/* This is the most-tapped control in the product, sixty-plus of them
             per checklist, pressed on a phone, often with gloves on. They were
             22px tall and 4px apart. Full-width segmented control at the touch
             floor, stacked on small screens. */}
@@ -548,7 +547,7 @@ function ChecklistEditor({
           <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-2 py-2 border-b border-slate-100 last:border-0">
             <div className="flex-1 min-w-0">
               <span className="text-sm sm:text-xs text-slate-700">{it.item}</span>
-              {/* What "OK" actually means — a tick against an unstated standard
+              {/* What "OK" actually means, a tick against an unstated standard
                   is not evidence. */}
               {it.criteria && <p className="text-[11px] text-slate-400 mt-0.5">{it.criteria}</p>}
             </div>

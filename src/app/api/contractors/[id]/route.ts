@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!existing) return NextResponse.json({ error: "Contractor not found" }, { status: 404 });
 
     // Suspending is a safety decision that stops permits being issued, so it
-    // carries a reason — "why is this company barred" is the first question
+    // carries a reason, "why is this company barred" is the first question
     // anyone will ask, including the company.
     if (body.action === "suspend") {
       const reason = String(body.suspensionReason ?? "").trim();
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         action: "UPDATE",
         entityType: "contractor",
         entityId: id,
-        entityDescription: `${existing.companyName} SUSPENDED — ${reason}`,
+        entityDescription: `${existing.companyName} SUSPENDED, ${reason}`,
       });
       return NextResponse.json({ ok: true, status: "SUSPENDED" });
     }
@@ -78,7 +78,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     await db.update(contractors).set(set).where(eq(contractors.id, id));
 
-    // Renewing a certificate is the event worth recording — it is the evidence
+    // Renewing a certificate is the event worth recording, it is the evidence
     // that the gate was opened deliberately.
     if (set.insuranceExpiryDate || set.inductionValidUntil) {
       await db.insert(auditLog).values({
@@ -89,7 +89,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         entityType: "contractor",
         entityId: id,
         entityDescription:
-          `${existing.companyName} paperwork updated —` +
+          `${existing.companyName} paperwork updated , ` +
           (set.insuranceExpiryDate ? ` insurance to ${set.insuranceExpiryDate}` : "") +
           (set.inductionValidUntil ? ` induction to ${set.inductionValidUntil}` : ""),
       });

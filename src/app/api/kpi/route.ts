@@ -1,5 +1,5 @@
 // src/app/api/kpi/route.ts
-// KPIs are computed live from real operational data — see src/lib/kpi/compute.ts.
+// KPIs are computed live from real operational data, see src/lib/kpi/compute.ts.
 import { NextResponse } from "next/server";
 import { computeKpis } from "@/lib/kpi/compute";
 

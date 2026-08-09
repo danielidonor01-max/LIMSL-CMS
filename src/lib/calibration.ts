@@ -1,13 +1,13 @@
 // src/lib/calibration.ts
 // calibrationRecords is the ONE calibration truth for a machine. Whatever the
 // register shows about calibration (the requiresCalibration flag, the due date,
-// the overdue state) is derived from those records — never maintained by hand
+// the overdue state) is derived from those records, never maintained by hand
 // in parallel. Every writer of calibration records (the calibration API, the
 // legacy register import) calls syncEquipmentCalibration() after its write so
 // the equipment flag can never drift from the records that justify it.
 //
 // calibrationRecords is now the instrument MASTER only. The history of what was
-// actually measured lives in append-only calibrationEvents — rolling an
+// actually measured lives in append-only calibrationEvents, rolling an
 // instrument forward used to overwrite the previous date, certificate and
 // result, which made a calibration history impossible to produce (ISO 9001
 // 7.1.5.2 / 7.5.3). The master's date/status columns are a derived cache of the
@@ -31,7 +31,7 @@ export const AS_LEFT_VALUES = ["IN_TOLERANCE", "ADJUSTED", "REJECTED"] as const;
 export const VERDICT_VALUES = ["PASS", "FAIL"] as const;
 
 // 7.1.5.2(a): "traceable to international or national measurement standards".
-// A name in "calibrated by" is not traceability — either the standard the
+// A name in "calibrated by" is not traceability, either the standard the
 // instrument was measured against, or the laboratory that performed the
 // calibration, has to be on the record for the certificate to mean anything.
 export const TRACEABILITY_REQUIRED_MESSAGE =
@@ -46,7 +46,7 @@ export function traceabilityError(input: { traceableTo?: unknown; labName?: unkn
 }
 
 // Returns the canonical enum value, or null when the caller sent something that
-// isn't one — a silent fallback would record a calibration result nobody stated.
+// isn't one, a silent fallback would record a calibration result nobody stated.
 export function normalizeCalibrationEnum<T extends string>(
   raw: unknown,
   allowed: readonly T[],
@@ -72,7 +72,7 @@ export function statusForNextDate(nextDate: string | null | undefined, now: numb
 }
 
 // An instrument found outside tolerance casts doubt backwards over everything
-// measured with it; a failed calibration is not a "due soon" — it is unusable.
+// measured with it; a failed calibration is not a "due soon", it is unusable.
 export function isSuspectCalibration(ev: { verdict?: string | null; asFound?: string | null }): boolean {
   return ev.verdict === "FAIL" || ev.asFound === "OUT_OF_TOLERANCE";
 }
@@ -109,7 +109,7 @@ export function outOfToleranceNcDescription(input: {
   const asFound = input.asFound ?? "NOT_CHECKED";
   const asLeft = input.asLeft ?? "not recorded";
   const head =
-    `Measuring instrument failed calibration — ${input.instrumentName}${sn}. ` +
+    `Measuring instrument failed calibration, ${input.instrumentName}${sn}. ` +
     `Calibration on ${input.calibrationDate} returned ${input.verdict} (as-found ${asFound}, as-left ${asLeft})${cert}. `;
 
   const window = input.lastGoodDate
@@ -131,7 +131,7 @@ export function outOfToleranceNcDescription(input: {
   );
 }
 
-// Order key for "which event is newest" — the calibration date is what matters,
+// Order key for "which event is newest", the calibration date is what matters,
 // with the insertion timestamp breaking ties between two events dated the same
 // day (a re-calibration after an adjustment on the same visit).
 export function eventOrderKey(ev: { calibrationDate?: string | null; createdAt?: string | null }): string {
@@ -147,7 +147,7 @@ export function newestEvent<T extends { calibrationDate?: string | null; created
 
 // A machine can carry several calibrated instruments. Its "latest" is the most
 // recent calibration event across them; its due date is the SOONEST instrument
-// due date — one overdue instrument makes the whole machine overdue. Events are
+// due date, one overdue instrument makes the whole machine overdue. Events are
 // preferred over the master row wherever both exist: the master is only a cache
 // and instruments registered before the event table exists have no events yet.
 export async function getCalibrationStatus(equipmentId: string): Promise<CalibrationStatus> {
@@ -194,7 +194,7 @@ export async function getCalibrationStatus(equipmentId: string): Promise<Calibra
 // Derive equipment.requiresCalibration from the records. The schema carries no
 // per-equipment next-calibration column (due dates live only on the records),
 // so the flag is the whole derived surface. Records only ever *prove* a
-// calibration requirement — an empty set doesn't disprove one (a machine can be
+// calibration requirement, an empty set doesn't disprove one (a machine can be
 // flagged before its first certificate arrives), so the flag is never cleared.
 export async function syncEquipmentCalibration(equipmentId: string): Promise<void> {
   const [rec] = await db

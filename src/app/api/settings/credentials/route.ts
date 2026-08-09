@@ -1,12 +1,12 @@
 // src/app/api/settings/credentials/route.ts
 // Super-Admin management of provider API keys (CMS Settings → AI Provider API
-// Keys). Keys are encrypted at rest and NEVER returned — responses carry only
+// Keys). Keys are encrypted at rest and NEVER returned, responses carry only
 // the masked hint. Every change is audit-logged.
 //
 //   GET               → provider statuses (configured, source ENV|DB, hint)
-//   POST              → { provider, key }         — save (encrypt + audit)
-//   POST ?action=test → { provider, key? }        — live-validate a key (or the stored one)
-//   DELETE            → { provider }              — remove stored key
+//   POST              → { provider, key }, save (encrypt + audit)
+//   POST ?action=test → { provider, key? }, live-validate a key (or the stored one)
+//   DELETE            → { provider }, remove stored key
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/db/schema";
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     if (isTest) {
       const key = typeof body.key === "string" && body.key.trim() ? body.key.trim() : await getApiKey(provider);
-      if (!key) return NextResponse.json({ ok: false, detail: "No key to test — enter or save one first." });
+      if (!key) return NextResponse.json({ ok: false, detail: "No key to test, enter or save one first." });
       const result = await testApiKey(provider, key);
       return NextResponse.json(result);
     }

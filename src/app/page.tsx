@@ -101,7 +101,7 @@ export default function Home() {
   useEffect(() => setMounted(true), []);
 
   // Stale-while-revalidate: cached data paints instantly on revisit, then
-  // refreshes in the background — the four dashboard reads no longer block.
+  // refreshes in the background, the four dashboard reads no longer block.
   const { data: stats, loading: statsLoading } = useApi<Stat[]>("/api/dashboard/stats", []);
   const { data: attentionData } = useApi<{ items: AttentionItem[] } | null>("/api/dashboard/attention", null);
   const attention = attentionData?.items ?? [];
@@ -117,7 +117,7 @@ export default function Home() {
   const loading = statsLoading;
 
   // Lead with whatever is worst. Where everything is green the first tile is
-  // still the leader — it just reads as reassurance rather than an alarm.
+  // still the leader, it just reads as reassurance rather than an alarm.
   const { hero, rest } = useMemo(() => {
     const order: Record<string, number> = { danger: 0, warning: 1, success: 2 };
     const ranked = [...stats].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
@@ -153,7 +153,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Needs attention — Phase 6 added four registers that each compute a
+        {/* Needs attention. Phase 6 added four registers that each compute a
             "this is not right" figure, and none of them reached anywhere a
             person would look. A register nobody visits is a register nobody
             acts on. Renders nothing at all when everything is clean, because a
@@ -198,7 +198,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Your jobs — the technician's dashboard used to be an executive KPI
+        {/* Your jobs, the technician's dashboard used to be an executive KPI
             board with an empty approver's card. This is their actual work. */}
         {myJobs.length > 0 && (
           <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
@@ -242,7 +242,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* My sign-offs — what's awaiting THIS user's signature, across every module */}
+        {/* My sign-offs, what's awaiting THIS user's signature, across every module */}
         {signoffs.length > 0 && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
             <div className="px-5 py-3 border-b border-emerald-200 flex items-center gap-2">
@@ -290,7 +290,7 @@ export default function Home() {
                   Critical Breakdown: {eq.name} ({eq.assetId})
                 </p>
                 <p className="text-xs text-rose-700/80">
-                  Status is Broken Down — raise a corrective request and RCA.
+                  Status is Broken Down, raise a corrective request and RCA.
                 </p>
               </div>
             </div>
@@ -314,7 +314,7 @@ export default function Home() {
         ) : (
           // Four equal tiles asked the reader to work out which one mattered.
           // The worst-status figure is promoted, so the board leads with the
-          // thing that needs a decision — and reads as reassurance only when
+          // thing that needs a decision, and reads as reassurance only when
           // everything genuinely is fine.
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {hero && (
@@ -388,11 +388,11 @@ export default function Home() {
                   {critical.map((eq) => (
                     <tr key={eq.id} className="hover:bg-slate-50 text-slate-700">
                       <td className="py-3 font-medium text-slate-900">
-                        {/* Asset IDs carry slashes (LEE/PE/1904) — routes take the dash form. */}
+                        {/* Asset IDs carry slashes (LEE/PE/1904), routes take the dash form. */}
                         <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-emerald-600">{eq.name}</Link>
                       </td>
                       <td className="py-3 font-mono text-slate-500">{eq.assetId}</td>
-                      <td className="py-3">{eq.location ?? eq.bay ?? "—"}</td>
+                      <td className="py-3">{eq.location ?? eq.bay ?? "-"}</td>
                       <td className="py-3">
                         <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                           {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}

@@ -32,7 +32,7 @@ test("a category with no bespoke plan falls back to the general one, and says so
   assert.ok(jobPlanFor("OTHER").sections.flatMap((s) => s.tasks).length >= 10);
 });
 
-// These used to borrow the heavy-CNC plan. They now answer for themselves — a
+// These used to borrow the heavy-CNC plan. They now answer for themselves, a
 // bench router is not asked about tool-change cycles, and a press brake is asked
 // about stopping time and two-hand control instead of spindle temperature.
 test("light CNC and press/roll/shear have their own plans, not the heavy one", () => {
@@ -75,11 +75,11 @@ test("every plan category is a real equipment category", () => {
 
 // The reverse direction, which is the one that actually regressed. Phase 5 added
 // the SYS asset type with category SYSTEM; the job plans predate it, so every
-// facility system quietly landed on the generic checklist — back on exactly the
+// facility system quietly landed on the generic checklist, back on exactly the
 // "one list for everything" finding the audit raised. CNC_LIGHT and
 // PRESS_ROLL_SHEAR were borrowing the heavy-CNC plan, which asked a bench router
 // about tool-change cycles and a press brake about spindle bearing temperature.
-test("every equipment category has its own plan — none borrows or falls back", () => {
+test("every equipment category has its own plan, none borrows or falls back", () => {
   const borrowing = Object.keys(EQUIPMENT_CATEGORY_LABELS)
     // OTHER is the honest catch-all and is meant to use the general plan.
     .filter((c) => c !== "OTHER")
@@ -88,7 +88,7 @@ test("every equipment category has its own plan — none borrows or falls back",
   assert.deepEqual(
     borrowing,
     [],
-    `these categories have no plan of their own: ${borrowing.join(", ")} — ` +
+    `these categories have no plan of their own: ${borrowing.join(", ")}, ` +
       `a technician asked a question with no answer learns to tick without reading`,
   );
 });
@@ -99,9 +99,9 @@ test("a new category cannot be added without a plan going unnoticed", () => {
     assert.equal(hasBespokePlan(cat), true, `${cat} falls back to the generic checklist`);
     const plan = jobPlanFor(cat);
     assert.equal(plan.category, cat, `${cat} is served ${plan.category}'s plan, not its own`);
-    // Substance, not section count — an earthing installation legitimately has
+    // Substance, not section count, an earthing installation legitimately has
     // nothing to lubricate, and penalising that would push someone to pad it.
     const tasks = plan.sections.reduce((n, sec) => n + sec.tasks.length, 0);
-    assert.ok(tasks >= 6, `${cat}'s plan has only ${tasks} tasks — too thin to be a real inspection`);
+    assert.ok(tasks >= 6, `${cat}'s plan has only ${tasks} tasks, too thin to be a real inspection`);
   }
 });

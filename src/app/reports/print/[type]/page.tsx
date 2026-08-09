@@ -39,13 +39,13 @@ const REPORTS: Record<string, ReportDef> = {
     ],
     map: (p) => ({
       permit: p.permitNumber,
-      asset: p.assetId ?? "—",
-      equipment: p.equipmentName ?? "—",
-      holder: p.permitHolderName ?? "—",
+      asset: p.assetId ?? "-",
+      equipment: p.equipmentName ?? "-",
+      holder: p.permitHolderName ?? "-",
       status: p.status,
-      issued: p.issuedDate ? formatDate(p.issuedDate) : "—",
-      expiry: p.expiryDate ? formatDate(p.expiryDate) : "—",
-      approval: p.approval ? `${p.approval.signed}/${p.approval.total}` : "—",
+      issued: p.issuedDate ? formatDate(p.issuedDate) : ", ",
+      expiry: p.expiryDate ? formatDate(p.expiryDate) : ", ",
+      approval: p.approval ? `${p.approval.signed}/${p.approval.total}` : ", ",
     }),
   },
   "pm-completion": {
@@ -62,12 +62,12 @@ const REPORTS: Record<string, ReportDef> = {
       { key: "completed", label: "Completed" },
     ],
     map: (s) => ({
-      planned: s.plannedDate ? formatDate(s.plannedDate) : "—",
-      asset: s.assetId ?? "—",
-      equipment: s.equipmentName ?? "—",
-      responsible: s.responsiblePersonName ?? "—",
+      planned: s.plannedDate ? formatDate(s.plannedDate) : ", ",
+      asset: s.assetId ?? "-",
+      equipment: s.equipmentName ?? "-",
+      responsible: s.responsiblePersonName ?? "-",
       status: s.status,
-      completed: s.completedDate ? formatDate(s.completedDate) : "—",
+      completed: s.completedDate ? formatDate(s.completedDate) : ", ",
     }),
     summary: (rows) => {
       const today = new Date().toISOString().slice(0, 10);
@@ -97,11 +97,11 @@ const REPORTS: Record<string, ReportDef> = {
     ],
     map: (c) => ({
       instrument: c.instrumentName,
-      serial: c.serialNumber ?? "—",
-      last: c.lastCalibrationDate ? formatDate(c.lastCalibrationDate) : "—",
-      next: c.nextCalibrationDate ? formatDate(c.nextCalibrationDate) : "—",
-      cert: c.certificateNumber ?? "—",
-      status: c.status ?? "—",
+      serial: c.serialNumber ?? "-",
+      last: c.lastCalibrationDate ? formatDate(c.lastCalibrationDate) : ", ",
+      next: c.nextCalibrationDate ? formatDate(c.nextCalibrationDate) : ", ",
+      cert: c.certificateNumber ?? "-",
+      status: c.status ?? "-",
     }),
   },
   competency: {
@@ -120,12 +120,12 @@ const REPORTS: Record<string, ReportDef> = {
     ],
     map: (c) => ({
       person: c.employeeName,
-      role: c.role ?? "—",
+      role: c.role ?? "-",
       skill: c.skillArea,
       level: `${c.level} · ${LEVELS[c.level] ?? ""}`,
       required: `${c.requiredLevel ?? 0} · ${LEVELS[c.requiredLevel ?? 0] ?? ""}`,
       gap: c.level < (c.requiredLevel ?? 0) ? "GAP" : "OK",
-      recert: c.expiryDate ? formatDate(c.expiryDate) : "—",
+      recert: c.expiryDate ? formatDate(c.expiryDate) : ", ",
     }),
   },
   "non-conformity": {
@@ -144,8 +144,8 @@ const REPORTS: Record<string, ReportDef> = {
       nc: n.ncNumber,
       type: n.type,
       severity: n.severity,
-      detected: n.detectedDate ? formatDate(n.detectedDate) : "—",
-      by: n.detectedBy ?? "—",
+      detected: n.detectedDate ? formatDate(n.detectedDate) : ", ",
+      by: n.detectedBy ?? "-",
       status: n.status,
     }),
   },
@@ -189,7 +189,7 @@ export default function PrintReportPage({ params }: { params: Promise<{ type: st
     <PrintableReport
       title={def.title}
       reference={def.ref}
-      generatedBy={session?.user?.name ?? "—"}
+      generatedBy={session?.user?.name ?? "-"}
       generatedAt={generatedAt}
       columns={def.columns}
       rows={rows}

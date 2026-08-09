@@ -1,7 +1,7 @@
 // src/lib/db/ingest-docs-backfill.ts
 // One-shot backfill of the troubleshooting retrieval corpus: chunks every
 // already-uploaded text document plus the approved maintenance procedure into
-// document_chunks. Idempotent — safe to re-run anytime (each source's chunks
+// document_chunks. Idempotent, safe to re-run anytime (each source's chunks
 // are replaced, not duplicated).
 //
 //   export DATABASE_URL=postgresql://...   # then:
@@ -14,7 +14,7 @@ async function main() {
   console.log("📚 Backfilling document chunks...");
 
   const proc = await ingestApprovedProcedure();
-  console.log(`  ${proc.status === "INGESTED" ? "✅" : "⏭️"} ${proc.source}: ${proc.status}${proc.reason ? ` (${proc.reason})` : ""} — ${proc.chunks} chunks`);
+  console.log(`  ${proc.status === "INGESTED" ? "✅" : "⏭️"} ${proc.source}: ${proc.status}${proc.reason ? ` (${proc.reason})` : ""}, ${proc.chunks} chunks`);
 
   const docs = await db.select().from(equipmentDocuments);
   const withFiles = docs.filter((d) => d.fileKey);
@@ -38,7 +38,7 @@ async function main() {
     }
   }
 
-  console.log(`\n🎉 Backfill complete — ${ingested} ingested, ${skipped} skipped.`);
+  console.log(`\n🎉 Backfill complete, ${ingested} ingested, ${skipped} skipped.`);
 }
 
 main()

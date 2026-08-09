@@ -70,7 +70,7 @@ export async function POST(
       action: "AI_DIAGNOSE",
       entityType: "equipment",
       entityId: e.id,
-      entityDescription: `AI analysis (${result.model}) — "${symptom.slice(0, 80)}" · ${result.usage.inputTokens}in/${result.usage.outputTokens}out tokens · ${result.diagnoses.length} diagnoses from ${result.evidenceCount} evidence items`,
+      entityDescription: `AI analysis (${result.model}), "${symptom.slice(0, 80)}" · ${result.usage.inputTokens}in/${result.usage.outputTokens}out tokens · ${result.diagnoses.length} diagnoses from ${result.evidenceCount} evidence items`,
     });
 
     return NextResponse.json(result);

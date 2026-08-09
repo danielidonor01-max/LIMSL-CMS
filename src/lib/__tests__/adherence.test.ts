@@ -11,7 +11,7 @@ import {
 import { failureModesFor, isFailureMode, failureModeLabel, FAILURE_MODES, DETECTION_METHODS } from "@/lib/maintenance/failure-codes";
 
 // The finding: "completed" said nothing about WHEN, so a PM planned in January
-// and done in June counted as fully compliant — the headline ISO metric could
+// and done in June counted as fully compliant, the headline ISO metric could
 // not be failed.
 test("a PM done long after its planned date is NOT compliant", () => {
   const r = adherenceOf("2026-01-05", "2026-06-30", "MONTHLY");
@@ -26,7 +26,7 @@ test("on time and early both count as on time", () => {
   assert.ok(adherenceOf("2026-03-10", "2026-03-04", "MONTHLY").daysLate < 0);
 });
 
-test("the window scales with frequency — a week late means different things", () => {
+test("the window scales with frequency, a week late means different things", () => {
   // Five days late: nearly a whole cycle on a weekly task, trivial on an annual.
   assert.equal(adherenceOf("2026-03-02", "2026-03-07", "WEEKLY").compliant, false);
   assert.equal(adherenceOf("2026-03-02", "2026-03-07", "ANNUAL").compliant, true);
@@ -85,8 +85,8 @@ test("failure codes are unique, labelled, and recognisable", () => {
     assert.equal(isFailureMode(m.code), true);
   }
   assert.equal(isFailureMode("MADE_UP"), false);
-  assert.equal(failureModeLabel("MADE_UP"), "—");
-  assert.equal(failureModeLabel(null), "—");
+  assert.equal(failureModeLabel("MADE_UP"), "-");
+  assert.equal(failureModeLabel(null), "-");
 });
 
 test("detection methods distinguish caught-by-PM from found-on-breakdown", () => {

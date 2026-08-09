@@ -1,6 +1,6 @@
 // src/app/equipment/[assetId]/do/page.tsx
 // The screen a QR scan lands on. Scanning a machine's label used to open the
-// digital twin — a four-tab, table-heavy, desktop-shaped page — while the
+// digital twin, a four-tab, table-heavy, desktop-shaped page, while the
 // person holding the phone was standing at the machine with exactly one
 // intention. This asks what they came to do and gets out of the way: three
 // thumb-sized choices, each already carrying the machine, so reporting a fault
@@ -130,7 +130,7 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
 
   return (
     <div className="p-4 sm:p-6 max-w-lg w-full mx-auto space-y-5">
-      {/* Which machine you're standing at — confirm before acting. */}
+      {/* Which machine you're standing at, confirm before acting. */}
       <div className="bg-white border border-slate-200 rounded-xl p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

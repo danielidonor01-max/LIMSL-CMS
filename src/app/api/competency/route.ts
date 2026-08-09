@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         action: "UPDATE",
         entityType: "competency",
         entityId: existing[0].id,
-        entityDescription: `Competency re-assessed — ${body.employeeName} · ${body.skillArea} → level ${level}`,
+        entityDescription: `Competency re-assessed, ${body.employeeName} · ${body.skillArea} → level ${level}`,
       });
       return NextResponse.json(updated);
     }
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "competency",
       entityId: row.id,
-      entityDescription: `Competency recorded — ${row.employeeName} · ${row.skillArea} level ${level}`,
+      entityDescription: `Competency recorded, ${row.employeeName} · ${row.skillArea} level ${level}`,
     });
     return NextResponse.json(row, { status: 201 });
   } catch (error) {

@@ -48,7 +48,7 @@ export default function EquipmentEditPage() {
       setError("Failed to save changes.");
       return;
     }
-    // Asset ID may have changed — navigate to its (possibly new) URL key.
+    // Asset ID may have changed, navigate to its (possibly new) URL key.
     const newKey = String(form.assetId || "").replace(/\//g, "-");
     router.push(`/equipment/${newKey}`);
     router.refresh();
@@ -146,7 +146,7 @@ export default function EquipmentEditPage() {
           <div>
             <label className={label}>Maintenance Frequency</label>
             <Select value={form.maintenanceFrequency ?? ""} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
-              <option value="">—</option>
+              <option value="">, </option>
               {FREQUENCIES.map((f) => <option key={f} value={f}>{FREQUENCY_LABELS[f] ?? f}</option>)}
             </Select>
           </div>

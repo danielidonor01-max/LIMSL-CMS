@@ -1,8 +1,8 @@
 // src/app/api/dashboard/attention/route.ts
 // What needs someone today, drawn from the registers that hold it.
 //
-// Phase 6 added four registers — spares, emergency equipment, contractors,
-// condition monitoring — and each computes a "this is not right" figure. None
+// Phase 6 added four registers, spares, emergency equipment, contractors,
+// condition monitoring, and each computes a "this is not right" figure. None
 // of them reached anywhere a person would look. A maintenance manager opening
 // the CMS on Monday could not see that two extinguishers were expired and a
 // critical spare was out of stock; they had to already suspect it and go
@@ -96,7 +96,7 @@ export async function GET() {
         key: "emergency",
         severity: "danger",
         title: `${ready.notReady} emergency item${ready.notReady === 1 ? "" : "s"} not ready`,
-        detail: `Of ${ready.inService} in service — expired, defective, missing or never inspected`,
+        detail: `Of ${ready.inService} in service, expired, defective, missing or never inspected`,
         href: "/emergency",
         cta: "Open register",
       });
@@ -110,7 +110,7 @@ export async function GET() {
         title: prog.status === "NEVER" ? "No evacuation drill on record" : "Evacuation drill overdue",
         detail:
           prog.status === "NEVER"
-            ? "ISO 45001 8.2 asks for periodic drills — none has been recorded"
+            ? "ISO 45001 8.2 asks for periodic drills, none has been recorded"
             : `Last held ${prog.lastDrillDate} · ${prog.daysSince} days ago`,
         href: "/emergency",
         cta: "Record a drill",

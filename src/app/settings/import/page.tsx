@@ -19,13 +19,13 @@ type Credential = { email: string; tempPassword: string };
 type Result = { preview: PreviewRow[]; summary: Summary; credentials?: Credential[] };
 
 const TABS: { key: TabKey; label: string; blurb: string }[] = [
-  { key: "equipment", label: "Equipment Register", blurb: "The 33-machine asset register. Matched by Asset ID — re-importing updates, never duplicates." },
+  { key: "equipment", label: "Equipment Register", blurb: "The 33-machine asset register. Matched by Asset ID, re-importing updates, never duplicates." },
   { key: "schedule", label: "Maintenance Schedule", blurb: "Planned PM/inspection activities, linked to equipment by Asset ID." },
   { key: "users", label: "User Roster", blurb: "People & roles. New users get a temporary password shown once, here." },
-  { key: "components", label: "Components", blurb: "Electrical-panel component lists (tag, name, type) per machine — powers the troubleshooting engine even without schematics. Matched by Asset ID + Tag." },
-  { key: "legacy-register", label: "Legacy: LIMS Log", blurb: "The \"LIMS Maintenance Log\" workbook (.xlsm) exactly as kept — equipment, calibration and PM dates from the \"Maintenance Log Database\" sheet. Matched by LEE Tag; facility systems without a tag get an auto-assigned LEE/SYS id." },
-  { key: "legacy-history", label: "Legacy: History Log", blurb: "The \"EQUIPMENT HISTORY LOG\" workbook — one sheet per machine. Every dated A–H tick row becomes a machine-log entry; rows already in the log are skipped, so re-importing is safe." },
-  { key: "legacy-schedule", label: "Legacy: Annual Schedule", blurb: "The \"Annual Maintenance Master Schedule\" workbook — PM/CM marks on the quarterly calendar sheets become schedule entries for each machine listed under the category's Asset IDs." },
+  { key: "components", label: "Components", blurb: "Electrical-panel component lists (tag, name, type) per machine, powers the troubleshooting engine even without schematics. Matched by Asset ID + Tag." },
+  { key: "legacy-register", label: "Legacy: LIMS Log", blurb: "The \"LIMS Maintenance Log\" workbook (.xlsm) exactly as kept, equipment, calibration and PM dates from the \"Maintenance Log Database\" sheet. Matched by LEE Tag; facility systems without a tag get an auto-assigned LEE/SYS id." },
+  { key: "legacy-history", label: "Legacy: History Log", blurb: "The \"EQUIPMENT HISTORY LOG\" workbook, one sheet per machine. Every dated A-H tick row becomes a machine-log entry; rows already in the log are skipped, so re-importing is safe." },
+  { key: "legacy-schedule", label: "Legacy: Annual Schedule", blurb: "The \"Annual Maintenance Master Schedule\" workbook, PM/CM marks on the quarterly calendar sheets become schedule entries for each machine listed under the category's Asset IDs." },
 ];
 
 const ACTION_BADGE: Record<ImportAction, string> = {
@@ -92,7 +92,7 @@ export default function DataImportPage() {
 
   const send = async (mode: "preview" | "commit") => {
     if (!file && !spFile) {
-      toast.error("Choose a file — upload one or pick it from SharePoint.");
+      toast.error("Choose a file, upload one or pick it from SharePoint.");
       return;
     }
     setBusy(mode);
@@ -294,7 +294,7 @@ export default function DataImportPage() {
             {committed.credentials && committed.credentials.length > 0 && (
               <div className="border border-amber-500/20 bg-amber-500/5 rounded-lg p-4 space-y-2">
                 <p className="text-xs font-semibold text-amber-800">
-                  Temporary passwords for {committed.credentials.length} new user(s) — shown once. Share securely; each user must change it on first login.
+                  Temporary passwords for {committed.credentials.length} new user(s), shown once. Share securely; each user must change it on first login.
                 </p>
                 <div className="space-y-1">
                   {committed.credentials.map((c) => (
@@ -304,7 +304,7 @@ export default function DataImportPage() {
                         <span className="text-slate-900 font-semibold">{c.tempPassword}</span>
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText(`${c.email} — ${c.tempPassword}`);
+                            navigator.clipboard.writeText(`${c.email}, ${c.tempPassword}`);
                             setCopied(c.email);
                             setTimeout(() => setCopied(null), 1500);
                           }}
@@ -325,7 +325,7 @@ export default function DataImportPage() {
       </section>
 
       {/* SharePoint file picker */}
-      <Modal open={spOpen} onClose={() => setSpOpen(false)} title="Import from SharePoint" subtitle="Excel files on the connected site — newest first">
+      <Modal open={spOpen} onClose={() => setSpOpen(false)} title="Import from SharePoint" subtitle="Excel files on the connected site, newest first">
         {spLoading ? (
           <div className="py-10 flex justify-center text-slate-400">
             <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />

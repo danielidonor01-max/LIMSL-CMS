@@ -2,7 +2,7 @@
 // Provider API keys, managed from CMS Settings and consumed by AI providers.
 // Resolution order: environment variable (platform-managed secret wins) → DB
 // (AES-GCM encrypted, set via Settings UI). Consumers only ever call
-// getApiKey(provider) — where the key lives is an admin decision, not code.
+// getApiKey(provider), where the key lives is an admin decision, not code.
 import { db } from "@/lib/db";
 import { apiCredentials } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -12,9 +12,9 @@ import { encryptSecret, decryptSecret } from "@/lib/crypto";
 // quota/auth error on one provider, the next configured one takes over.
 export const PROVIDERS = {
   GEMINI: { label: "Google Gemini", envVar: "GEMINI_API_KEY", note: "Free tier available (AI Studio)" },
-  GROQ: { label: "Groq (Llama)", envVar: "GROQ_API_KEY", note: "Free tier, very fast — console.groq.com" },
-  OPENROUTER: { label: "OpenRouter", envVar: "OPENROUTER_API_KEY", note: "Free models available — openrouter.ai" },
-  MISTRAL: { label: "Mistral", envVar: "MISTRAL_API_KEY", note: "Free tier — console.mistral.ai" },
+  GROQ: { label: "Groq (Llama)", envVar: "GROQ_API_KEY", note: "Free tier, very fast, console.groq.com" },
+  OPENROUTER: { label: "OpenRouter", envVar: "OPENROUTER_API_KEY", note: "Free models available, openrouter.ai" },
+  MISTRAL: { label: "Mistral", envVar: "MISTRAL_API_KEY", note: "Free tier, console.mistral.ai" },
   ANTHROPIC: { label: "Anthropic Claude", envVar: "ANTHROPIC_API_KEY", note: "Pay-as-you-go credits" },
 } as const;
 export type Provider = keyof typeof PROVIDERS;
@@ -37,7 +37,7 @@ export async function getApiKey(provider: Provider): Promise<string | null> {
   try {
     return decryptSecret(row.encryptedKey);
   } catch (err) {
-    // AUTH_SECRET rotated since the key was saved — the admin must re-enter it.
+    // AUTH_SECRET rotated since the key was saved, the admin must re-enter it.
     console.warn(`credentials: cannot decrypt ${provider} key (AUTH_SECRET changed?)`, err);
     return null;
   }
@@ -119,7 +119,7 @@ export async function testApiKey(provider: Provider, key: string): Promise<{ ok:
         });
         break;
       case "OPENROUTER":
-        // /key returns the key's own metadata (limits/usage) — authoritative
+        // /key returns the key's own metadata (limits/usage), authoritative
         // validity check, free.
         res = await fetch("https://openrouter.ai/api/v1/key", {
           headers: { Authorization: `Bearer ${key}` },

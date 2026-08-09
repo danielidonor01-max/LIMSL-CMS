@@ -9,7 +9,7 @@ import { canManageUsers, ROLES, ROLE_DEPARTMENT } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
 import { validatePassword } from "@/lib/password-policy";
 
-// Safe columns — never return the password hash.
+// Safe columns, never return the password hash.
 const safeColumns = {
   id: users.id,
   name: users.name,
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/users — create a user. Super Admin only.
+// POST /api/users, create a user. Super Admin only.
 export async function POST(request: Request) {
   try {
     const session = await auth();

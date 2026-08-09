@@ -1,6 +1,6 @@
 // src/lib/import/legacy-parse.ts
 // Pure workbook-shape parsers for the three legacy LIMSL registers (no DB
-// access — the DB-aware half lives in ./legacy.ts). Each parser tolerates the
+// access, the DB-aware half lives in ./legacy.ts). Each parser tolerates the
 // quirks the real files contain: merged cells that repeat values, formula
 // cells, d/m/y date strings mixed with Date objects, "N/A"/"Nill" markers, and
 // per-sheet layout drift. Anything it cannot resolve becomes a row-level error
@@ -53,7 +53,7 @@ function checkYear(iso: string): ParsedDate {
 
 // The calendar date a Date OBJECT represents, without a timezone shift.
 // ExcelJS hands back UTC-midnight dates, while Date.parse of a hand-typed
-// string ("March 5, 2026") yields LOCAL midnight — reading UTC components off
+// string ("March 5, 2026") yields LOCAL midnight, reading UTC components off
 // the latter loses a day everywhere east of Greenwich (LIMSL runs at UTC+1).
 // Whichever midnight it actually sits on is the one that names the day.
 function calendarIso(d: Date): string {
@@ -281,7 +281,7 @@ export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[]
       if (at(ws, r, 2).toUpperCase() === "A" && at(ws, r, 3).toUpperCase() === "B") { headerRow = r; break; }
     }
     if (!headerRow) {
-      sheet.errors.push(`Sheet "${ws.name}": could not find the A–H tick header row`);
+      sheet.errors.push(`Sheet "${ws.name}": could not find the A-H tick header row`);
       sheets.push(sheet);
       continue;
     }
@@ -302,13 +302,13 @@ export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[]
       const row = ws.getRow(r);
       const rawDate = row.getCell(1).value;
       // Every sheet ends with a LEGEND footer block explaining the tick
-      // letters — the log table stops there.
+      // letters, the log table stops there.
       if (/^legend\b/i.test(cellText(rawDate))) break;
       const description = descCol ? clean(at(ws, r, descCol)) : "";
       const remark = remarkCol ? clean(at(ws, r, remarkCol)) : "";
       const ticks = tickCols.filter((t) => row.getCell(t.col).value === true).map((t) => t.letter);
       const hasDate = rawDate != null && cellText(rawDate) !== "";
-      // A row with neither a description nor a tick says nothing — including
+      // A row with neither a description nor a tick says nothing, including
       // bare pre-filled dates. Skip, don't error.
       if (!description && ticks.length === 0) continue;
       sheet.rows.push({
@@ -326,7 +326,7 @@ export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[]
 
 // ── 3. Annual maintenance master schedule ────────────────────────────────────
 // The category-overview sheet maps each category to free-text machine names and
-// a frequency; the calendar sheets (annual + Q1–Q4) carry PM/CM marks in
+// a frequency; the calendar sheets (annual + Q1-Q4) carry PM/CM marks in
 // day-numbered columns whose anchor date sits in row 3 of the same column.
 
 export type LegacyCategoryInfo = {
@@ -441,7 +441,7 @@ export function parseScheduleWorkbook(wb: ExcelJS.Workbook): LegacyScheduleParse
     for (let r = headerRow + 1; r <= ws.rowCount; r++) {
       const category = clean(at(ws, r, catCol));
       // Calendar sheets end with a merged "Legend:" band that repeats across
-      // every day column — the schedule table stops there.
+      // every day column, the schedule table stops there.
       if (/^legend\b/i.test(category) || /^legend\b/i.test(at(ws, r, 1))) break;
       if (!category) continue;
       for (const { col, day } of dayCols) {

@@ -82,8 +82,7 @@ export async function PATCH(
     const [current] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
     if (!current) return NextResponse.json({ error: "Work order not found" }, { status: 404 });
 
-    // Preventive/inspection work orders complete ONLY through the PM checklist —
-    // that's where the safety attestations, signatures and schedule roll live.
+    // Preventive/inspection work orders complete ONLY through the PM checklist,     // that's where the safety attestations, signatures and schedule roll live.
     // Every other type (corrective, emergency, calibration) completes here with
     // a mandatory summary of what was done, so they can't strand IN_PROGRESS.
     const isPreventive = current.type === "PREVENTIVE" || current.type === "INSPECTION";
@@ -103,7 +102,7 @@ export async function PATCH(
 
     // Work may not begin under an unapproved permit. If a PTW has been raised for
     // this work order, it must be fully signed (ACTIVE) before the job starts.
-    // Work orders with no permit at all are unaffected — not every job needs one.
+    // Work orders with no permit at all are unaffected, not every job needs one.
     if (body.status === "IN_PROGRESS") {
       await reconcilePermits();
       const linked = await db.select().from(permits).where(eq(permits.workOrderId, id));
@@ -112,7 +111,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              `Permit ${blocking.permitNumber} is ${blocking.status.replace("_", " ").toLowerCase()} — ` +
+              `Permit ${blocking.permitNumber} is ${blocking.status.replace("_", " ").toLowerCase()}, ` +
               `work cannot begin until the Permit-to-Work is signed and approved.`,
           },
           { status: 409 },
@@ -128,7 +127,7 @@ export async function PATCH(
     if (completing) {
       updates.completionDate = new Date().toISOString().slice(0, 10);
       // Real labour hours. actualDuration was written by NO path, so the
-      // maintenance backlog KPI was openWOs x 2h — an assumption presented as
+      // maintenance backlog KPI was openWOs x 2h, an assumption presented as
       // a man-hour measurement in management review. Optional but requested at
       // completion, and now the only thing that makes backlog-vs-capacity real.
       const hours = Number(body.actualDuration);
@@ -142,7 +141,7 @@ export async function PATCH(
     await db.update(workOrders).set(updates).where(eq(workOrders.id, id));
 
     // Cancelling frees the linked schedule occurrence so a replacement WO can be
-    // raised — otherwise the occurrence points at a dead WO forever and its PM
+    // raised, otherwise the occurrence points at a dead WO forever and its PM
     // silently never happens.
     if (body.status === "CANCELLED" && current.scheduleId) {
       await db
@@ -160,7 +159,7 @@ export async function PATCH(
       entityId: id,
       changes: JSON.stringify(updates),
       entityDescription: completing
-        ? `${current.workOrderNumber} completed — ${String(body.completionNotes).slice(0, 120)}`
+        ? `${current.workOrderNumber} completed, ${String(body.completionNotes).slice(0, 120)}`
         : `${current.workOrderNumber} updated`,
     });
 
@@ -185,13 +184,13 @@ export async function PATCH(
       }
     }
 
-    // Tell the newly-assigned technician — the person actually doing the job was
+    // Tell the newly-assigned technician, the person actually doing the job was
     // previously the only party never notified. Best-effort.
     if (body.technicianId && body.technicianId !== current.technicianId) {
       try {
         await notify({
           event: "GENERAL",
-          title: `Work order assigned to you — ${current.workOrderNumber}`,
+          title: `Work order assigned to you, ${current.workOrderNumber}`,
           body: `${current.title}. Priority ${(updates.priority as string) ?? current.priority}. Open the work order for details.`,
           linkPath: `/work-orders/${id}`,
           relatedEntityType: "work_order",

@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     await db.insert(equipmentDocuments).values(doc);
 
     // Chunk the document into the troubleshooting retrieval corpus (and detect
-    // pdfKind). Best-effort — an extraction failure must never fail the upload.
+    // pdfKind). Best-effort, an extraction failure must never fail the upload.
     let ingestion: { status: string; chunks: number } | null = null;
     if (doc.fileKey) {
       try {

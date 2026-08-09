@@ -38,7 +38,7 @@ export async function PATCH(request: Request) {
       .where(eq(riskRegister.id, body.id))
       .returning();
 
-    // Risk-register changes are compliance evidence — always leave a trail.
+    // Risk-register changes are compliance evidence, always leave a trail.
     await db.insert(auditLog).values({
       id: nanoid(),
       userId: gate.actor?.id ?? null,
@@ -46,7 +46,7 @@ export async function PATCH(request: Request) {
       action: body.status === "CLOSED" ? "CLOSE" : "UPDATE",
       entityType: "risk_register",
       entityId: String(body.id),
-      entityDescription: `Risk item updated${body.status ? ` — status ${body.status}` : ""}`,
+      entityDescription: `Risk item updated${body.status ? `, status ${body.status}` : ""}`,
     });
 
     return NextResponse.json(updated[0] || { success: true });

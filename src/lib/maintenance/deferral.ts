@@ -1,7 +1,7 @@
 // src/lib/maintenance/deferral.ts
 // Deferring maintenance is a risk acceptance. Before this existed there was no
 // legitimate way to record one, so real deferrals happened by silence: the
-// activity simply went overdue and stayed there — no justification, no owner,
+// activity simply went overdue and stayed there, no justification, no owner,
 // and no date anyone had agreed to look at it again.
 //
 // Two rules make a deferral auditable rather than a hiding place:
@@ -35,7 +35,7 @@ export function validateDeferral({ reason, reviewDate, today }: DeferralInput): 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(review) || review <= today) {
     return {
       ok: false,
-      error: "Set a review date in the future — a deferral without one is just an overdue activity.",
+      error: "Set a review date in the future, a deferral without one is just an overdue activity.",
     };
   }
   return { ok: true, reason: text.slice(0, MAX_DEFERRAL_REASON_CHARS), reviewDate: review };

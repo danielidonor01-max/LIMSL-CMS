@@ -11,7 +11,7 @@ const sw = readFileSync(join(process.cwd(), "public", "sw.js"), "utf8");
 const middleware = readFileSync(join(process.cwd(), "src", "middleware.ts"), "utf8");
 
 // Assertions about what the worker DOES must read the code, not the prose that
-// explains it — the header comment says "not stale-while-revalidate", and a
+// explains it, the header comment says "not stale-while-revalidate", and a
 // naive search finds that and fails.
 const swCode = sw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
@@ -58,7 +58,7 @@ test("the middleware matcher lets /sw.js through unauthenticated", () => {
   assert.match(middleware, /sw\\\\\.js/, "sw.js must be excluded from the auth matcher");
 });
 
-test("the offline page is public — a sign-in form cannot submit with no network", () => {
+test("the offline page is public, a sign-in form cannot submit with no network", () => {
   const authConfig = readFileSync(join(process.cwd(), "src", "auth.config.ts"), "utf8");
   assert.match(authConfig, /"\/offline"/);
 });

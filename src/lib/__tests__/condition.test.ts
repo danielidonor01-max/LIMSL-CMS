@@ -11,7 +11,7 @@ import {
 } from "@/lib/maintenance/condition";
 
 // Two thresholds, because one collapses "watch it and plan" and "stop and
-// intervene" into the same response — which in practice means the alert is
+// intervene" into the same response, which in practice means the alert is
 // ignored until it is an alarm.
 test("alert and alarm are distinct verdicts", () => {
   assert.equal(verdictFor(50, 70, 90), "NORMAL");
@@ -116,7 +116,7 @@ test("a falling trend is recognised and projects nothing", () => {
   assert.equal(r.projectedAlarmDate, null);
 });
 
-test("already past the alarm projects nothing — it is not a forecast any more", () => {
+test("already past the alarm projects nothing, it is not a forecast any more", () => {
   const r = trendOf(
     [
       { value: 95, takenOn: "2026-06-01" },
@@ -177,7 +177,7 @@ test("a fully current register is kept up", () => {
   assert.equal(h.overdue, 0);
 });
 
-test("an empty register is not kept up — there is nothing being monitored", () => {
+test("an empty register is not kept up, there is nothing being monitored", () => {
   assert.equal(programmeHealth([], "2026-08-08").keptUp, false);
 });
 

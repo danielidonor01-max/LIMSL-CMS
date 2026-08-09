@@ -49,7 +49,7 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
       ) setOpen(false);
     };
     const onScroll = () => setOpen(false);
-    // Escape must close a menu — without it a keyboard user who opens one has
+    // Escape must close a menu, without it a keyboard user who opens one has
     // no way out but to tab through every item.
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
