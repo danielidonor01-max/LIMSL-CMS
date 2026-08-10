@@ -1,7 +1,15 @@
 // src/app/api/permits/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, users, wmsDocuments, isolationPoints, contractors } from "@/lib/db/schema";
+import {
+  permits,
+  equipment,
+  users,
+  wmsDocuments,
+  jhaDocuments,
+  isolationPoints,
+  contractors,
+} from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -10,68 +18,25 @@ import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
+import { reconcilePermits } from "@/lib/hse/permit-reconcile";
+import {
+  DEFAULT_PERMIT_VALIDITY_DAYS,
+  normaliseValidityDays,
+  expiryDateOf,
+} from "@/lib/hse/permit-validity";
+import {
+  validateWorkTypes,
+  missingMandatoryPrecautions,
+  WORK_AREA_PRECAUTIONS,
+  PPE_REQUIREMENTS,
+  REQUIRED_DOCUMENTS,
+  unmarkedItems,
+  type ChecklistMarks,
+} from "@/lib/hse/permit-form";
 
-// A Permit-to-Work is valid for one working day. It must be re-raised the next
-// day, never renewed, this is fixed policy, not a per-permit setting.
-export const PERMIT_VALIDITY_HOURS = 24;
-
-// A permit's status is driven by its signatures, never by a button.
-//  • PENDING_APPROVAL → ACTIVE once the PTW chain is fully signed (work may begin)
-//  • ACTIVE → CLOSED once the close-out chain is fully signed
-//  • PENDING_APPROVAL/ACTIVE → EXPIRED once the 24h window lapses (must be reissued)
-// Same reconcile-on-read pattern the Procedure module uses.
-export async function reconcilePermits() {
-  const all = await db.select().from(permits);
-  const now = new Date();
-
-  for (const p of all) {
-    const lapsed = !!p.expiryDate && new Date(p.expiryDate) < now;
-
-    if (p.status === "PENDING_APPROVAL") {
-      const chain = await getSignoffChain("PERMIT", p.id);
-      if (chain.length && chainSummary(chain).complete) {
-        await db
-          .update(permits)
-          .set({ status: "ACTIVE", approvedAt: new Date().toISOString() })
-          .where(eq(permits.id, p.id));
-        // Authorised, open the close-out chain so the job can be signed off later.
-        await ensureSignoffChain("PERMIT_CLOSEOUT", p.id);
-      } else if (lapsed) {
-        // A permit not fully signed within its day lapses, it cannot be
-        // approved the next day; a fresh permit must be raised.
-        await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
-      }
-      continue;
-    }
-
-    // A permit that WAS authorised (approvedAt set) put real isolation on real
-    // machinery. If it then lapses, that isolation still exists in the field and
-    // someone still has to sign "isolation removed, safe to re-energise", so an
-    // EXPIRED permit must remain closable. Previously only ACTIVE permits were
-    // checked, which left the HSE de-isolation step permanently unsignable and
-    // equipment isolated with no record of who removed the locks.
-    if (p.status === "ACTIVE" || (p.status === "EXPIRED" && p.approvedAt)) {
-      const closeout = await getSignoffChain("PERMIT_CLOSEOUT", p.id);
-      if (closeout.length && chainSummary(closeout).complete) {
-        await db
-          .update(permits)
-          // CLOSED_LATE is honest: the work was closed out, but after the
-          // permit's validity window, an auditable distinction.
-          .set({
-            status: p.status === "EXPIRED" ? "CLOSED_LATE" : "CLOSED",
-            closedAt: new Date().toISOString(),
-          })
-          .where(eq(permits.id, p.id));
-        continue;
-      }
-      if (lapsed && p.status === "ACTIVE") {
-        await db.update(permits).set({ status: "EXPIRED" }).where(eq(permits.id, p.id));
-        // Keep the close-out chain available on the now-expired permit.
-        await ensureSignoffChain("PERMIT_CLOSEOUT", p.id);
-      }
-    }
-  }
-}
+// Status transitions and the seven-day validity live in lib/hse/permit-reconcile.ts,
+// re-exported so existing callers keep working.
+export { reconcilePermits } from "@/lib/hse/permit-reconcile";
 
 export async function GET() {
   try {
@@ -156,63 +121,152 @@ export async function POST(request: Request) {
       }
     }
 
-    // ISO 45001 6.1.2: a permit with no hazards and no controls is a signature
-    // ritual. The JHA was optional, so a permit could be raised, fully signed
-    // and made ACTIVE carrying zero hazard content.
-    const jha = Array.isArray(body.jha)
-      ? body.jha.filter((r: { task?: string; hazard?: string; control?: string }) => r?.hazard?.trim() && r?.control?.trim())
-      : [];
-    if (jha.length === 0 && !String(body.hazardsIdentified ?? "").trim()) {
+    // ── The document chain ────────────────────────────────────────────────
+    // A permit is the last document in WO -> WMS -> JHA -> PTW, and each link
+    // is verified server-side. The form filters its dropdowns, but a direct API
+    // call would otherwise attach a draft method statement or an unapproved
+    // hazard analysis and undo the whole chain.
+    if (!body.jhaId) {
       return NextResponse.json(
-        {
-          error:
-            "Identify at least one hazard and its control measure before raising the permit, " +
-            "a permit without hazard content cannot authorise work (ISO 45001 6.1.2).",
-        },
+        { error: "Select the approved Job Hazard Analysis this permit is issued against." },
         { status: 400 },
       );
     }
+    const [jhaDoc] = await db
+      .select()
+      .from(jhaDocuments)
+      .where(eq(jhaDocuments.id, body.jhaId))
+      .limit(1);
+    if (!jhaDoc) {
+      return NextResponse.json({ error: "The selected Job Hazard Analysis was not found." }, { status: 400 });
+    }
+    if (jhaDoc.status !== "APPROVED") {
+      return NextResponse.json(
+        {
+          error:
+            `${jhaDoc.jhaNumber} is ${String(jhaDoc.status).toLowerCase().replace(/_/g, " ")}. ` +
+            `A permit is issued against an approved hazard analysis, not one still being reviewed.`,
+        },
+        { status: 409 },
+      );
+    }
 
-    // The UI filters the WMS list to APPROVED client-side only; a direct API
-    // call could attach a DRAFT or REJECTED method statement, undermining the
-    // WMS approval chain. Verify server-side.
-    if (body.wmsId) {
-      const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, body.wmsId)).limit(1);
-      if (!wms) return NextResponse.json({ error: "The selected Work Method Statement was not found." }, { status: 400 });
-      if (wms.status !== "APPROVED") {
+    // The method statement and work order come from the analysis rather than
+    // being re-picked, so the four documents can never point at different jobs.
+    const wmsId = jhaDoc.wmsId ?? null;
+    if (wmsId) {
+      const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, wmsId)).limit(1);
+      if (wms && wms.status !== "APPROVED") {
         return NextResponse.json(
-          { error: `WMS ${wms.wmsNumber} is ${String(wms.status).toLowerCase().replace(/_/g, " ")}, only an APPROVED method statement may back a permit.` },
+          {
+            error:
+              `WMS ${wms.wmsNumber} is ${String(wms.status).toLowerCase().replace(/_/g, " ")}. ` +
+              `It has been revised since the hazard analysis was approved, so the analysis must be revised too.`,
+          },
           { status: 409 },
         );
       }
     }
 
-    const permitNumber = await nextDocNumber("PTW");
+    // ── The permit face ───────────────────────────────────────────────────
+    const typeCheck = validateWorkTypes(body.workTypes);
+    if (!typeCheck.ok) {
+      return NextResponse.json({ error: typeCheck.error }, { status: 400 });
+    }
 
-    // Fixed one-working-day validity, permits are re-raised, never renewed.
-    const expiryDate = new Date(Date.now() + PERMIT_VALIDITY_HOURS * 3600 * 1000).toISOString();
+    const marks = (raw: unknown): ChecklistMarks => {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+      return Object.fromEntries(
+        Object.entries(raw as Record<string, unknown>).filter(
+          ([, v]) => v === "YES" || v === "NO" || v === "NA",
+        ),
+      ) as ChecklistMarks;
+    };
+    const documentMarks = marks(body.documentMarks);
+    const precautionMarks = marks(body.precautionMarks);
+    const ppeMarks = marks(body.ppeMarks);
+
+    // Every line on the paper form is ticked or crossed before it is signed. A
+    // blank line is nobody having considered the control, and a permit issued
+    // with blanks is a permit whose checklist was never actually run.
+    const blanks = [
+      ...unmarkedItems(REQUIRED_DOCUMENTS, documentMarks),
+      ...unmarkedItems(WORK_AREA_PRECAUTIONS, precautionMarks),
+      ...unmarkedItems(PPE_REQUIREMENTS, ppeMarks),
+    ];
+    if (blanks.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            `${blanks.length} line(s) on the permit have been left blank. ` +
+            `Mark every line yes, no or not applicable: ${blanks.slice(0, 4).join(", ")}` +
+            `${blanks.length > 4 ? ` and ${blanks.length - 4} more` : ""}.`,
+          blanks,
+        },
+        { status: 400 },
+      );
+    }
+
+    // Hot work without a fire watch is the permit failing at the one thing it
+    // exists to do, so the controls the work type demands are refused at issue
+    // rather than noticed afterwards.
+    const missing = missingMandatoryPrecautions(typeCheck.workTypes, precautionMarks);
+    if (missing.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            `The type of work selected requires these controls to be in place: ${missing.join(", ")}. ` +
+            `Tick them, or change the type of work.`,
+          missing,
+        },
+        { status: 400 },
+      );
+    }
+
+    const startDate = String(body.startDate ?? new Date().toISOString().slice(0, 10)).slice(0, 10);
+    const validityDays = normaliseValidityDays(body.validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS);
+
+    const permitNumber = await nextDocNumber("PTW");
 
     const newPermit = {
       id: nanoid(),
       permitNumber,
-      workOrderId: body.workOrderId || null,
+      taskNo: body.taskNo ? String(body.taskNo).slice(0, 20) : null,
+      // Inherited from the hazard analysis so the chain cannot fork.
+      workOrderId: jhaDoc.workOrderId ?? body.workOrderId ?? null,
       equipmentId: body.equipmentId,
       workDescription: body.workDescription,
       hazardsIdentified: body.hazardsIdentified || "",
       controlMeasures: body.controlMeasures || "",
-      wmsId: body.wmsId || null,
-      jha: jha.length ? JSON.stringify(jha) : null,
+      wmsId,
+      jhaId: jhaDoc.id,
       lotoApplied: body.lotoApplied || false,
-      ppeRequired: body.ppeRequired ? JSON.stringify(body.ppeRequired) : "[]",
+      ppeRequired: jhaDoc.ppeRequired ?? "[]",
       areaBarricaded: body.areaBarricaded || false,
+
+      workTypes: JSON.stringify(typeCheck.workTypes),
+      facility: body.facility || null,
+      workArea: body.workArea || jhaDoc.workArea || null,
+      zoneClassification: body.zoneClassification || null,
+      startDate,
+      startTime: body.startTime || null,
+      durationHours: Number.isFinite(Number(body.durationHours)) ? Number(body.durationHours) : null,
+      workerCount: Number.isFinite(Number(body.workerCount)) ? Math.trunc(Number(body.workerCount)) : null,
+      permitDepartment: body.permitDepartment || "HSE",
+      validityDays,
+      documentMarks: JSON.stringify(documentMarks),
+      precautionMarks: JSON.stringify(precautionMarks),
+      ppeMarks: JSON.stringify(ppeMarks),
+      additionalRequirements: body.additionalRequirements || null,
+      renewalDays: null,
+
       issuedById: gate.actor?.id ?? null,
       permitHolderId: holder.id,
       permitHolderName: holder.name,
-      // Recorded so the permit itself shows who was on site, not just which of
-      // our own people signed for them.
       contractorId: body.contractorId || null,
       issuedDate: new Date().toISOString(),
-      expiryDate,
+      expiryDate: expiryDateOf(startDate, validityDays),
+      supersedesPermitId: body.supersedesPermitId || null,
       // Raised unapproved, work may not begin until the chain is fully signed.
       status: "PENDING_APPROVAL",
     };
@@ -253,7 +307,9 @@ export async function POST(request: Request) {
       );
     }
 
-    await ensureSignoffChain("PERMIT", newPermit.id, newPermit.permitNumber);
+    await ensureSignoffChain("PERMIT", newPermit.id, newPermit.permitNumber, {
+      PERMIT_HOLDER: { id: holder.id, name: holder.name },
+    });
 
     return NextResponse.json(newPermit, { status: 201 });
   } catch (error: any) {

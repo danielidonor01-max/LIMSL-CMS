@@ -1,388 +1,468 @@
 // src/app/permits/new/page.tsx
+// The permit face, in the order it appears on paper. Someone who has filled the
+// printed form for years should recognise this screen, and someone holding both
+// should not have to translate between them.
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShieldCheck, Loader2, Trash2 } from "lucide-react";
+import { ShieldCheck, Loader2, FileText, ShieldAlert, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
+import TriStateChecklist, { type TriState } from "@/components/TriStateChecklist";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { ROLE_LABELS } from "@/lib/roles";
+import {
+  PERMIT_WORK_TYPES,
+  ZONE_CLASSIFICATIONS,
+  REQUIRED_DOCUMENTS,
+  WORK_AREA_PRECAUTIONS,
+  PPE_REQUIREMENTS,
+  mandatoryPrecautionsFor,
+  missingMandatoryPrecautions,
+} from "@/lib/hse/permit-form";
+import { DEFAULT_PERMIT_VALIDITY_DAYS, expiryDateOf } from "@/lib/hse/permit-validity";
+
+type Marks = Record<string, TriState>;
 
 function NewPermitForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillEquipmentId = searchParams.get("equipmentId") || "";
-  const workOrderId = searchParams.get("workOrderId") || "";
+  const prefillJhaId = searchParams.get("jhaId") || "";
+
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [userList, setUserList] = useState<any[]>([]);
-  const [wmsList, setWmsList] = useState<any[]>([]);
-  const [loadingEq, setLoadingEq] = useState(true);
+  const [jhaList, setJhaList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Form states
+  const [jhaId, setJhaId] = useState(prefillJhaId);
+  const [taskNo, setTaskNo] = useState("");
+  const [workTypes, setWorkTypes] = useState<string[]>([]);
+  const [facility, setFacility] = useState("Factory");
+  const [workArea, setWorkArea] = useState("");
+  const [zoneClassification, setZoneClassification] = useState<string>(ZONE_CLASSIFICATIONS[0]);
   const [equipmentId, setEquipmentId] = useState("");
   const [workDescription, setWorkDescription] = useState("");
-  const [hazardsIdentified, setHazardsIdentified] = useState("");
-  const [controlMeasures, setControlMeasures] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [startTime, setStartTime] = useState("08:00");
+  const [durationHours, setDurationHours] = useState("8");
+  const [workerCount, setWorkerCount] = useState("1");
+  const [permitDepartment, setPermitDepartment] = useState("HSE");
+  const [validityDays, setValidityDays] = useState(String(DEFAULT_PERMIT_VALIDITY_DAYS));
+  const [permitHolderId, setPermitHolderId] = useState("");
+
+  const [documentMarks, setDocumentMarks] = useState<Marks>({});
+  const [precautionMarks, setPrecautionMarks] = useState<Marks>({});
+  const [ppeMarks, setPpeMarks] = useState<Marks>({});
+  const [additionalRequirements, setAdditionalRequirements] = useState("");
   const [lotoApplied, setLotoApplied] = useState(false);
   const [areaBarricaded, setAreaBarricaded] = useState(false);
-  const [permitHolderId, setPermitHolderId] = useState("");
-  const [wmsId, setWmsId] = useState("");
-  // Structured JHA: task step → hazards → controls → residual risk.
-  const [jha, setJha] = useState<{ task: string; hazards: string; controls: string; residualRisk: string }[]>([
-    { task: "", hazards: "", controls: "", residualRisk: "LOW" },
-  ]);
-
-  // PPE checklist
-  const [ppeChecked, setPpeChecked] = useState<Record<string, boolean>>({
-    safetyShoes: true,
-    helmet: true,
-    safetyGlasses: true,
-    earProtection: false,
-    gloves: true,
-    harness: false,
-  });
 
   useEffect(() => {
-    async function loadEquipment() {
-      try {
-        const res = await fetch("/api/equipment");
-        if (res.ok) {
-          const data = await res.json();
-          setEquipmentList(data);
-          if (prefillEquipmentId && data.some((e: any) => e.id === prefillEquipmentId)) {
-            setEquipmentId(prefillEquipmentId);
-          } else if (data.length > 0) {
-            setEquipmentId(data[0].id);
-          }
+    Promise.all([
+      fetch("/api/equipment").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/users").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/jha").then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([eqs, users, jhas]) => {
+        setEquipmentList(Array.isArray(eqs) ? eqs : []);
+        setUserList(Array.isArray(users) ? users : []);
+        setJhaList(Array.isArray(jhas) ? jhas.filter((j: any) => j.status === "APPROVED") : []);
+        if (prefillEquipmentId && Array.isArray(eqs) && eqs.some((e: any) => e.id === prefillEquipmentId)) {
+          setEquipmentId(prefillEquipmentId);
         }
-      } catch (err) {
-        console.error("Failed to load machinery list:", err);
-      } finally {
-        setLoadingEq(false);
-      }
-    }
-    loadEquipment();
-
-    // The permit holder must be a real, accountable person, load the user list.
-    fetch("/api/users")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => setUserList(Array.isArray(d) ? d : []))
-      .catch(() => {});
-
-    // Only APPROVED WMS documents may be attached as a supporting document.
-    fetch("/api/wms")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => setWmsList(Array.isArray(d) ? d.filter((w: any) => w.status === "APPROVED") : []))
-      .catch(() => {});
+      })
+      .catch(() => toast.error("Could not load the permit form data."))
+      .finally(() => setLoading(false));
   }, [prefillEquipmentId]);
 
-  const handlePpeChange = (key: string) => {
-    setPpeChecked({ ...ppeChecked, [key]: !ppeChecked[key] });
-  };
+  const selectedJha = useMemo(() => jhaList.find((j) => j.id === jhaId), [jhaList, jhaId]);
 
-  const addJhaRow = () => setJha((rows) => [...rows, { task: "", hazards: "", controls: "", residualRisk: "LOW" }]);
-  const removeJhaRow = (i: number) => setJha((rows) => rows.filter((_, idx) => idx !== i));
-  const updateJha = (i: number, field: string, value: string) =>
-    setJha((rows) => rows.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
+  // The analysis already names the machine, the area and the PPE. Retyping them
+  // onto the permit is how the two documents end up disagreeing.
+  useEffect(() => {
+    if (!selectedJha) return;
+    if (selectedJha.equipmentId && !equipmentId) setEquipmentId(selectedJha.equipmentId);
+    if (selectedJha.workArea && !workArea) setWorkArea(selectedJha.workArea);
+    if (!workDescription && selectedJha.title) setWorkDescription(selectedJha.title);
+  }, [selectedJha, equipmentId, workArea, workDescription]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const mandatory = useMemo(() => mandatoryPrecautionsFor(workTypes).map((m) => m.key), [workTypes]);
+  const missing = useMemo(
+    () => missingMandatoryPrecautions(workTypes, precautionMarks),
+    [workTypes, precautionMarks],
+  );
+
+  const expiresOn = useMemo(() => {
+    const days = Number(validityDays);
+    if (!startDate || !Number.isFinite(days) || days < 1) return null;
+    return expiryDateOf(startDate, days);
+  }, [startDate, validityDays]);
+
+  const toggleWorkType = (value: string) =>
+    setWorkTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!equipmentId) return;
-    if (!permitHolderId) {
-      toast.error("Assign a permit holder, a permit needs a named, accountable person.");
-      return;
+
+    if (!jhaId) return toast.error("Select the approved Job Hazard Analysis this permit is issued against.");
+    if (workTypes.length === 0) return toast.error("Select at least one type of work.");
+    if (!equipmentId) return toast.error("Select the machine or system being worked on.");
+    if (!workDescription.trim()) return toast.error("Describe the work.");
+    if (!permitHolderId) return toast.error("Name the permit holder.");
+    if (missing.length > 0) {
+      return toast.error(`The work type selected requires: ${missing.join(", ")}.`);
     }
 
     setSaving(true);
-    const ppeArray = Object.entries(ppeChecked)
-      .filter(([_, checked]) => checked)
-      .map(([key]) => key);
-
     try {
       const res = await fetch("/api/permits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          jhaId,
+          taskNo: taskNo.trim() || null,
+          workTypes,
+          facility: facility.trim() || null,
+          workArea: workArea.trim() || null,
+          zoneClassification,
           equipmentId,
-          workOrderId: workOrderId || null,
-          workDescription,
-          hazardsIdentified,
-          controlMeasures,
-          wmsId: wmsId || null,
-          jha: jha.filter((r) => r.task.trim() || r.hazards.trim()),
+          workDescription: workDescription.trim(),
+          startDate,
+          startTime,
+          durationHours: durationHours ? Number(durationHours) : null,
+          workerCount: workerCount ? Number(workerCount) : null,
+          permitDepartment,
+          validityDays: Number(validityDays),
+          permitHolderId,
+          documentMarks,
+          precautionMarks,
+          ppeMarks,
+          additionalRequirements: additionalRequirements.trim() || null,
           lotoApplied,
           areaBarricaded,
-          permitHolderId,
-          ppeRequired: ppeArray,
         }),
       });
-
-      if (res.ok) {
-        const p = await res.json();
-        toast.success(`${p.permitNumber} raised. Work may not begin until it is signed off.`);
-        router.push(`/permits/${p.id}`);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || "Failed to issue Permit-to-Work.");
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Could not raise the permit.");
+        return;
       }
-    } catch (err) {
-      console.error("Failed to raise PTW:", err);
-      toast.error("Failed to issue Permit-to-Work.");
+      toast.success(`${d.permitNumber} raised. It needs the full signature chain before work may begin.`);
+      router.push(`/permits/${d.id}`);
     } finally {
       setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ShieldCheck}
-          title="Raise Permit-to-Work"
-          subtitle="Declare the work, its hazards and its controls before isolation begins"
+          title="Raise a Permit to Work"
+          subtitle="The last document in the chain. It authorises the work, records the week it ran, and closes it."
           backHref="/permits"
-          backLabel="Permits to Work"
+          backLabel="Permits"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
-          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
-            Permit-to-Work Safe Isolation Request
-          </h2>
 
-          {/* Machine Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Select Target Machinery</label>
-            {loadingEq ? (
-              <div className="flex items-center text-xs text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-600 mr-2" /> Loading equipment list...
-              </div>
+        <form onSubmit={submit} className="space-y-6">
+          {/* The chain behind the permit */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-emerald-600" /> Approved hazard analysis
+            </h3>
+            <Select value={jhaId} onChange={setJhaId} className="w-full">
+              <option value="">Select the analysis this permit is issued against</option>
+              {jhaList.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.jhaNumber} · {j.title}
+                </option>
+              ))}
+            </Select>
+            {jhaList.length === 0 ? (
+              <p className="text-[11px] text-amber-700">
+                No approved hazard analysis yet. The chain runs work order, then method statement,
+                then hazard analysis, then this permit, and each one has to be approved before the
+                next can be raised.
+              </p>
             ) : (
-              <Select
-                value={equipmentId}
-                onChange={(v) => setEquipmentId(v)}
-                className="w-full"
-                required
-              >
-                {equipmentList.map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.assetId} - {eq.name} ({eq.location})
-                  </option>
-                ))}
-              </Select>
+              selectedJha && (
+                <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
+                  {selectedJha.wmsNumber && (
+                    <span className="inline-flex items-center gap-1">
+                      <FileText className="w-3 h-3" /> {selectedJha.wmsNumber}
+                    </span>
+                  )}
+                  <span>The work order and method statement are inherited from this analysis.</span>
+                </div>
+              )
             )}
           </div>
 
-          {/* Work Description */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Detailed Work Scope Description</label>
-            <textarea
-              required
-              placeholder="Describe what parts will be isolated, what technical procedures will be performed..."
-              value={workDescription}
-              onChange={(e) => setWorkDescription(e.target.value)}
-              className="w-full h-24 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
+          {/* Type of work */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Type of work</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Determines which controls are mandatory below.
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {PERMIT_WORK_TYPES.map((t) => {
+                  const on = workTypes.includes(t.value);
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => toggleWorkType(t.value)}
+                      aria-pressed={on}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                        on
+                          ? "bg-emerald-600 border-emerald-600 text-white"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className={LABEL_CLASS}>Facility</label>
+                <input value={facility} onChange={(e) => setFacility(e.target.value)} className={FIELD_CLASS} />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Work area</label>
+                <input
+                  value={workArea}
+                  onChange={(e) => setWorkArea(e.target.value)}
+                  placeholder="e.g. Bay 1"
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Zone classification</label>
+                <Select value={zoneClassification} onChange={setZoneClassification} className="w-full">
+                  {ZONE_CLASSIFICATIONS.map((z) => (
+                    <option key={z} value={z}>
+                      {z}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>Machine or system</label>
+              <Select value={equipmentId} onChange={setEquipmentId} className="w-full">
+                <option value="">Select</option>
+                {equipmentList.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.assetId} · {e.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>Description of work</label>
+              <textarea
+                value={workDescription}
+                onChange={(e) => setWorkDescription(e.target.value)}
+                rows={2}
+                placeholder="e.g. Cutting of metal plates"
+                className={FIELD_CLASS}
+              />
+            </div>
+          </div>
+
+          {/* Timing and validity */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-slate-900">When and who</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <label className={LABEL_CLASS}>Start date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Time</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Duration (hours)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={durationHours}
+                  onChange={(e) => setDurationHours(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Number of workers</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={workerCount}
+                  onChange={(e) => setWorkerCount(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className={LABEL_CLASS}>Permit department</label>
+                <input
+                  value={permitDepartment}
+                  onChange={(e) => setPermitDepartment(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Validity period (days)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={validityDays}
+                  onChange={(e) => setValidityDays(e.target.value)}
+                  className={FIELD_CLASS}
+                />
+                {expiresOn && (
+                  <p className="text-[10px] text-slate-500 mt-1">Expires after {expiresOn}.</p>
+                )}
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Task no.</label>
+                <input
+                  value={taskNo}
+                  onChange={(e) => setTaskNo(e.target.value)}
+                  placeholder="From the paper pad"
+                  className={FIELD_CLASS}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>Permit holder</label>
+              <Select value={permitHolderId} onChange={setPermitHolderId} className="w-full">
+                <option value="">Select the person the permit is issued to</option>
+                {userList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} · {ROLE_LABELS[u.role] ?? u.role}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-[10px] text-slate-500 mt-1">
+                He signs the permit himself, and nobody signs that line for him.
+              </p>
+            </div>
+          </div>
+
+          {/* The checklists */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-emerald-600" /> The permit checklists
+            </h3>
+
+            <TriStateChecklist
+              title="Required documents to be attached"
+              items={REQUIRED_DOCUMENTS}
+              value={documentMarks}
+              onChange={setDocumentMarks}
             />
-          </div>
 
-          {/* Hazards & Control */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Identified Hazards</label>
-              <textarea
-                placeholder="e.g. Electrical shocks, high voltage terminal exposure, heavy components falls..."
-                value={hazardsIdentified}
-                onChange={(e) => setHazardsIdentified(e.target.value)}
-                className="w-full h-20 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Hazard Control Measures</label>
-              <textarea
-                placeholder="e.g. Double barrier block isolations, current test verification, safety harnesses..."
-                value={controlMeasures}
-                onChange={(e) => setControlMeasures(e.target.value)}
-                className="w-full h-20 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-none resize-none"
-              />
-            </div>
-          </div>
+            <TriStateChecklist
+              title="Work area and safety precautions"
+              hint="Ticked means in place. Crossed means not required for this job."
+              items={WORK_AREA_PRECAUTIONS}
+              value={precautionMarks}
+              onChange={setPrecautionMarks}
+              highlightKeys={mandatory}
+            />
 
-          {/* Supporting WMS */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Work Method Statement (supporting document)</label>
-            <Select
-              value={wmsId}
-              onChange={(v) => setWmsId(v)}
-              className="w-full"
-            >
-              <option value="">. No WMS linked , </option>
-              {wmsList.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.wmsNumber}, {w.title}
-                </option>
-              ))}
-            </Select>
-            <p className="text-[10px] text-slate-500">
-              Only <strong>approved</strong> WMS documents can be attached. Shown to every signer.
-            </p>
-          </div>
+            <TriStateChecklist
+              title="PPE requirement"
+              items={PPE_REQUIREMENTS}
+              value={ppeMarks}
+              onChange={setPpeMarks}
+            />
 
-          {/* Job Hazard Analysis (JHA) */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Job Hazard Analysis (JHA)</label>
-              <button
-                type="button"
-                onClick={addJhaRow}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-md px-2 py-1 transition-colors focus:outline-none"
-              >
-                + Add task step
-              </button>
-            </div>
-            <div className="space-y-3">
-              {jha.map((row, i) => (
-                <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step {i + 1}</span>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={row.residualRisk}
-                        onChange={(v) => updateJha(i, "residualRisk", v)}
-                        ariaLabel="Residual risk"
-                      >
-                        <option value="LOW">Residual: Low</option>
-                        <option value="MEDIUM">Residual: Medium</option>
-                        <option value="HIGH">Residual: High</option>
-                      </Select>
-                      <button
-                        type="button"
-                        onClick={() => removeJhaRow(i)}
-                        disabled={jha.length === 1}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 disabled:opacity-30 focus:outline-none"
-                        title="Remove step"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  <textarea
-                    placeholder="Task / work step, what is being done"
-                    value={row.task}
-                    onChange={(e) => updateJha(i, "task", e.target.value)}
-                    rows={2}
-                    className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <textarea
-                      placeholder="Hazards"
-                      value={row.hazards}
-                      onChange={(e) => updateJha(i, "hazards", e.target.value)}
-                      rows={2}
-                      className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
-                    />
-                    <textarea
-                      placeholder="Controls"
-                      value={row.controls}
-                      onChange={(e) => updateJha(i, "controls", e.target.value)}
-                      rows={2}
-                      className="w-full bg-white border border-slate-200 rounded p-2 text-[11px] focus:outline-none focus:border-emerald-400 resize-none"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-[10px] text-slate-500">Task step → hazards → controls → residual risk. Reviewed by every signer before approval.</p>
-          </div>
-
-          {/* PPE Checklist */}
-          <div className="space-y-2.5">
-            <label className="text-xs font-semibold text-slate-500 uppercase block">Required Personal Protective Equipment (PPE)</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-slate-100 rounded border border-slate-200">
-              {Object.entries(ppeChecked).map(([key, checked]) => (
-                <label key={key} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => handlePpeChange(key)}
-                    className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-3.5 h-3.5"
-                  />
-                  <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Safety Confirmations checkboxes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={lotoApplied}
-                onChange={() => setLotoApplied(!lotoApplied)}
-                className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-4 h-4"
-              />
-              <div className="text-xs">
-                <p className="font-bold text-slate-900">Isolation & LOTO Applied</p>
-                <p className="text-[10px] text-slate-500">Lock-out Tag-out locks and isolation labels are securely placed</p>
+            {missing.length > 0 && (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
+                <p className="text-[11px] font-semibold text-amber-900">
+                  The type of work selected requires these controls
+                </p>
+                <p className="text-[11px] text-amber-800 mt-0.5">{missing.join(", ")}</p>
               </div>
-            </label>
+            )}
 
-            <label className="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={areaBarricaded}
-                onChange={() => setAreaBarricaded(!areaBarricaded)}
-                className="rounded border-slate-200 bg-slate-100 text-emerald-500 focus:ring-0 w-4 h-4"
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={lotoApplied}
+                  onChange={(e) => setLotoApplied(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600"
+                />
+                Lock-out / tag-out applied
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={areaBarricaded}
+                  onChange={(e) => setAreaBarricaded(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600"
+                />
+                Area barricaded
+              </label>
+            </div>
+
+            <div>
+              <label className={LABEL_CLASS}>Additional requirements</label>
+              <textarea
+                value={additionalRequirements}
+                onChange={(e) => setAdditionalRequirements(e.target.value)}
+                rows={2}
+                placeholder="e.g. Adhere to all HSE standards and procedures"
+                className={FIELD_CLASS}
               />
-              <div className="text-xs">
-                <p className="font-bold text-slate-900">Area Safety Barricaded</p>
-                <p className="text-[10px] text-slate-500">Safety warning signs placed and physical boundaries are established</p>
-              </div>
-            </label>
+            </div>
           </div>
 
-          {/* Permit Holder */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">
-              Permit Holder <span className="text-rose-600">*</span>
-            </label>
-            <Select
-              required
-              value={permitHolderId}
-              onChange={(v) => setPermitHolderId(v)}
-              className="w-full"
-            >
-              <option value="" disabled>
-                Select the accountable person…
-              </option>
-              {userList.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}, {ROLE_LABELS[u.role] ?? u.role}
-                </option>
-              ))}
-            </Select>
-            <p className="text-[10px] text-slate-500">
-              The person who holds this permit and is accountable for the work party (usually the Foreman).
-            </p>
-          </div>
-
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
-            <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>
-              Valid for <strong>one working day</strong>, the permit must be re-raised tomorrow, not renewed.
-              Raising it does <strong>not</strong> authorise work: it must be signed by the Foreman, Maintenance
-              Manager, HSE and Factory Manager before work may begin.
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 justify-end pt-3">
-            <Button variant="secondary" href="/permits">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => router.push("/permits")}>
               Cancel
             </Button>
-            <Button type="submit" disabled={saving} loading={saving}>
-              Issue Permit-to-Work
+            <Button type="submit" icon={ShieldCheck} loading={saving}>
+              Raise permit
             </Button>
           </div>
         </form>

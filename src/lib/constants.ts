@@ -110,6 +110,7 @@ export const PERMIT_STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Active",
   CLOSED: "Closed",
   CLOSED_LATE: "Closed after expiry",
+  CLOSED_WORK_ONGOING: "Closed, work ongoing",
   EXPIRED: "Expired, not closed",
   CANCELLED: "Cancelled",
 };
@@ -120,6 +121,7 @@ export const PERMIT_STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
   CLOSED: "bg-slate-500/10 text-slate-600 border-slate-500/20",
   CLOSED_LATE: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+  CLOSED_WORK_ONGOING: "bg-sky-500/10 text-sky-700 border-sky-500/20",
   EXPIRED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
   CANCELLED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };

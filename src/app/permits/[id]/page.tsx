@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Printer,
   FileText,
+  ClipboardList,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import SignoffChain from "@/components/SignoffChain";
@@ -24,6 +25,11 @@ import { useSession } from "next-auth/react";
 import { PERMIT_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
 import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
+import PermitRenewalGrid from "@/components/PermitRenewalGrid";
+import PermitHandback from "@/components/PermitHandback";
+import PermitFace from "@/components/PermitFace";
+import type { RenewalDay, RenewalSummary } from "@/lib/hse/permit-validity";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 type Permit = {
   id: string;
@@ -41,8 +47,44 @@ type Permit = {
   approvedAt: string | null;
   status: string;
   jha: string | null;
+  taskNo: string | null;
+  workTypes: string | null;
+  facility: string | null;
+  workArea: string | null;
+  zoneClassification: string | null;
+  startDate: string | null;
+  startTime: string | null;
+  durationHours: number | null;
+  workerCount: number | null;
+  permitDepartment: string | null;
+  validityDays: number | null;
+  documentMarks: string | null;
+  precautionMarks: string | null;
+  ppeMarks: string | null;
+  additionalRequirements: string | null;
+  handbackOutcome: string | null;
+  handbackReason: string | null;
+  handbackByName: string | null;
+  handbackAt: string | null;
+  handovers: string | null;
+  acceptedByName: string | null;
+  acceptedByDept: string | null;
+  acceptedAt: string | null;
+  closureReason: string | null;
+  closureNote: string | null;
   equipment: { name: string; assetId: string; location: string | null } | null;
   wms: { id: string; wmsNumber: string; title: string; status: string } | null;
+  jhaDocument: { id: string; jhaNumber: string; title: string; status: string; steps: string | null } | null;
+  workOrder: { id: string; workOrderNumber: string; title: string; status: string } | null;
+  supersedes: { id: string; permitNumber: string } | null;
+  supersededBy: { id: string; permitNumber: string } | null;
+  validity: {
+    startDate: string;
+    validityDays: number;
+    days: string[];
+    marks: Record<string, RenewalDay>;
+    summary: RenewalSummary;
+  } | null;
   closeout: { total: number; signed: number; complete: boolean } | null;
 };
 
@@ -64,6 +106,14 @@ export default function PermitDetail() {
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && PERMIT_WRITE_ROLES.includes(role ?? "");
+  // The AHS block on paper. HSE issues the permit but does not renew it, the
+  // supervisor holding the asset does.
+  const canRenew =
+    mounted &&
+    ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "FOREMAN", "HSE"].includes(role ?? "");
+  const canHandback = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  const canAccept =
+    mounted && ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "HSE"].includes(role ?? "");
 
   const [permit, setPermit] = useState<Permit | null>(null);
   const [loading, setLoading] = useState(true);
@@ -240,62 +290,95 @@ export default function PermitDetail() {
             </div>
           )}
 
-          {/* Supporting documents: linked WMS + JHA (shown to every signer) */}
-          <div className="pt-4 border-t border-slate-200 space-y-4">
-            <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Supporting Documents</h3>
-            <div>
-              <p className="text-[11px] text-slate-500 mb-1">Work Method Statement</p>
-              {permit.wms ? (
+          {/* The chain behind this permit. Every signer should be able to walk
+              back to the work order that authorised the job. */}
+          <div className="pt-4 border-t border-slate-200">
+            <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Authorising documents
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {permit.workOrder && (
+                <Link
+                  href={`/work-orders/${permit.workOrder.id}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300"
+                >
+                  <ClipboardList className="w-3.5 h-3.5" /> {permit.workOrder.workOrderNumber}
+                </Link>
+              )}
+              {permit.wms && (
                 <Link
                   href={`/wms/${permit.wms.id}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300"
+                >
+                  <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber}
+                </Link>
+              )}
+              {permit.jhaDocument && (
+                <Link
+                  href={`/jha/${permit.jhaDocument.id}`}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100"
                 >
-                  <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber}, {permit.wms.title}
-                  <span className="text-[9px] font-bold uppercase">{permit.wms.status}</span>
+                  <ShieldAlert className="w-3.5 h-3.5" /> {permit.jhaDocument.jhaNumber}
                 </Link>
-              ) : (
-                <p className="text-xs text-slate-400">No WMS linked.</p>
               )}
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500 mb-1">Job Hazard Analysis (JHA)</p>
-              {jhaRows.length === 0 ? (
-                <p className="text-xs text-slate-400">No JHA recorded.</p>
-              ) : (
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-left text-[11px]">
-                    <thead>
-                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                        <th className="py-1.5 px-2 font-medium">Task Step</th>
-                        <th className="py-1.5 px-2 font-medium">Hazards</th>
-                        <th className="py-1.5 px-2 font-medium">Controls</th>
-                        <th className="py-1.5 px-2 font-medium">Residual</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {jhaRows.map((r, i) => (
-                        <tr key={i} className="text-slate-700">
-                          <td className="py-1.5 px-2 align-top">{r.task || "-"}</td>
-                          <td className="py-1.5 px-2 align-top">{r.hazards || "-"}</td>
-                          <td className="py-1.5 px-2 align-top">{r.controls || "-"}</td>
-                          <td className="py-1.5 px-2 align-top">
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                              r.residualRisk === "HIGH" ? "bg-rose-500/10 text-rose-600"
-                              : r.residualRisk === "MEDIUM" ? "bg-amber-500/10 text-amber-700"
-                              : "bg-emerald-500/10 text-emerald-700"
-                            }`}>
-                              {r.residualRisk || "LOW"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {!permit.workOrder && !permit.wms && !permit.jhaDocument && (
+                <p className="text-xs text-slate-400">
+                  Raised before the document chain was enforced, so it carries no linked documents.
+                </p>
               )}
             </div>
           </div>
+
+          {/* Permits either side of this one, when a job ran over several weeks. */}
+          {(permit.supersedes || permit.supersededBy) && (
+            <div className="pt-4 border-t border-slate-200">
+              <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Continuation
+              </h3>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {permit.supersedes && (
+                  <Link
+                    href={`/permits/${permit.supersedes.id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:border-slate-300"
+                  >
+                    Continues {permit.supersedes.permitNumber}
+                  </Link>
+                )}
+                {permit.supersededBy && (
+                  <Link
+                    href={`/permits/${permit.supersededBy.id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:border-slate-300"
+                  >
+                    Continued under {permit.supersededBy.permitNumber}
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* The permit face: work types and the three checklists as marked. */}
+        <PermitFace permit={permit} />
+
+        {/* Validity and renewal, one column per day of the period. */}
+        {permit.validity && (
+          <PermitRenewalGrid
+            permitId={permit.id}
+            days={permit.validity.days}
+            marks={permit.validity.marks}
+            summary={permit.validity.summary}
+            canRenew={canRenew && isActive}
+            onSaved={load}
+          />
+        )}
+
+        {/* Handback, handover and work acceptance. */}
+        <PermitHandback
+          permit={permit}
+          canHandback={canHandback && !isPending}
+          canAccept={canAccept}
+          onSaved={load}
+        />
 
         {/* Authorisation chain, must be complete before work begins */}
         <SignoffChain

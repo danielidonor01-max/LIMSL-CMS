@@ -1,14 +1,15 @@
 // src/app/api/permits/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, auditLog, wmsDocuments } from "@/lib/db/schema";
+import { permits, equipment, auditLog, wmsDocuments, jhaDocuments, workOrders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { PERMIT_WRITE_ROLES } from "@/lib/roles";
 import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
-import { reconcilePermits } from "../route";
+import { reconcilePermits, startDateOf, parseRenewals } from "@/lib/hse/permit-reconcile";
+import { normaliseValidityDays, permitDays, renewalSummary } from "@/lib/hse/permit-validity";
 
 export async function GET(
   _request: Request,
@@ -32,17 +33,70 @@ export async function GET(
     const approvalChain = await getSignoffChain("PERMIT", id);
     const closeoutChain = await getSignoffChain("PERMIT_CLOSEOUT", id);
 
-    // Supporting documents: the linked WMS (if any).
+    // The chain behind the permit: the work order that authorised the job, the
+    // method statement for it, and the hazard analysis it was issued against.
     let wms = null;
     if (permit.wmsId) {
       const [w] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, permit.wmsId)).limit(1);
       wms = w ? { id: w.id, wmsNumber: w.wmsNumber, title: w.title, status: w.status } : null;
     }
 
+    let jha = null;
+    if (permit.jhaId) {
+      const [j] = await db.select().from(jhaDocuments).where(eq(jhaDocuments.id, permit.jhaId)).limit(1);
+      jha = j
+        ? { id: j.id, jhaNumber: j.jhaNumber, title: j.title, status: j.status, steps: j.steps }
+        : null;
+    }
+
+    let workOrder = null;
+    if (permit.workOrderId) {
+      const [w] = await db.select().from(workOrders).where(eq(workOrders.id, permit.workOrderId)).limit(1);
+      workOrder = w
+        ? { id: w.id, workOrderNumber: w.workOrderNumber, title: w.title, status: w.status }
+        : null;
+    }
+
+    // Permits either side of this one, so an auditor can walk a job that ran
+    // over several weeks in both directions.
+    let supersedes = null;
+    if (permit.supersedesPermitId) {
+      const [prev] = await db
+        .select({ id: permits.id, permitNumber: permits.permitNumber })
+        .from(permits)
+        .where(eq(permits.id, permit.supersedesPermitId))
+        .limit(1);
+      supersedes = prev ?? null;
+    }
+    let supersededBy = null;
+    if (permit.supersededByPermitId) {
+      const [next] = await db
+        .select({ id: permits.id, permitNumber: permits.permitNumber })
+        .from(permits)
+        .where(eq(permits.id, permit.supersededByPermitId))
+        .limit(1);
+      supersededBy = next ?? null;
+    }
+
+    const start = startDateOf(permit);
+    const validityDays = normaliseValidityDays(permit.validityDays);
+    const today = new Date().toISOString().slice(0, 10);
+
     return NextResponse.json({
       ...permit,
       equipment: eq1 ?? null,
       wms,
+      jhaDocument: jha,
+      workOrder,
+      supersedes,
+      supersededBy,
+      validity: {
+        startDate: start,
+        validityDays,
+        days: permitDays(start, validityDays),
+        marks: parseRenewals(permit.renewalDays),
+        summary: renewalSummary(start, validityDays, parseRenewals(permit.renewalDays), today),
+      },
       approval: chainSummary(approvalChain),
       closeout: closeoutChain.length ? chainSummary(closeoutChain) : null,
     });
