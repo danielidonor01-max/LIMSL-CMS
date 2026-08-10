@@ -118,6 +118,7 @@ const INDEXES: [string, string][] = [
   ["signoffs.signer", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS signer_user_id text, ADD COLUMN IF NOT EXISTS signer_user_name text"],
   // Management authorising commencement, recorded on the work order itself.
   ["work_orders.approval", "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS approved_by_id text, ADD COLUMN IF NOT EXISTS approved_by_name text, ADD COLUMN IF NOT EXISTS approved_at text, ADD COLUMN IF NOT EXISTS rejected_reason text"],
+  ["work_orders.retrospective", "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS approval_retrospective boolean DEFAULT false"],
   // The Work Method Statement names the work order it was drafted against. The
   // column existed and nothing ever wrote to it.
   ["wms_documents.work_order", "ALTER TABLE wms_documents ADD COLUMN IF NOT EXISTS work_order_id text"],

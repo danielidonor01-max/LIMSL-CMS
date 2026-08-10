@@ -167,6 +167,10 @@ export const workOrders = pgTable("work_orders", {
   approvedByName: text("approved_by_name"),
   approvedAt: text("approved_at"),
   rejectedReason: text("rejected_reason"),
+  // Emergency work commences before it is signed for, and the exception is
+  // recorded rather than hidden: this stays true for the life of the record, so
+  // "authorised after the fact" is still legible once approvedAt is filled in.
+  approvalRetrospective: boolean("approval_retrospective").default(false),
   wmsId: text("wms_id"),
   permitId: text("permit_id"),
   cmsId: text("cms_id"), // linked corrective maintenance

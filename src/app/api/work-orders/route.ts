@@ -16,6 +16,8 @@ import { notify } from "@/lib/notifications";
 import { suggestedWoPriority } from "@/lib/maintenance/adherence";
 import { ensureSignoffChain } from "@/lib/signoff/service";
 import { reconcileWorkOrderApprovals, WO_APPROVAL_ENTITY } from "@/lib/work-order-approval";
+import { commencementFor } from "@/lib/maintenance/work-order-commencement";
+import { BREAKDOWN_NOTIFY_ROLES } from "@/lib/roles";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
@@ -29,6 +31,8 @@ export async function GET() {
         workOrderNumber: workOrders.workOrderNumber,
         type: workOrders.type,
         status: workOrders.status,
+        approvalRetrospective: workOrders.approvalRetrospective,
+        approvedAt: workOrders.approvedAt,
         priority: workOrders.priority,
         title: workOrders.title,
         plannedDate: workOrders.plannedDate,
@@ -110,6 +114,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const commencement = commencementFor(body.type);
+
     const newWo = {
       id,
       workOrderNumber,
@@ -117,9 +123,11 @@ export async function POST(request: Request) {
       equipmentId: body.equipmentId,
       scheduleId: body.scheduleId || null,
       priority: body.priority || suggestedWoPriority(eqRow?.criticality),
-      // Raised as a request. Management authorising commencement is the whole
-      // point of the work order, and it is signed, not assumed.
-      status: "PENDING_APPROVAL",
+      // Management authorising commencement is the whole point of the work
+      // order, and it is signed, not assumed. An emergency is the one exception:
+      // it starts now and is signed for afterwards.
+      status: commencement.status,
+      approvalRetrospective: commencement.retrospective,
       title: body.title,
       description: body.description || "",
       plannedDate: body.plannedDate || null,
@@ -149,8 +157,32 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "work_order",
       entityId: id,
-      entityDescription: `${workOrderNumber}, ${body.title}, raised for approval`,
+      entityDescription: commencement.retrospective
+        ? `${workOrderNumber}, ${body.title}, EMERGENCY commenced before approval`
+        : `${workOrderNumber}, ${body.title}, raised for approval`,
     });
+
+    // The control that makes the emergency exception safe is that management
+    // hears about it immediately rather than discovering it at the next audit.
+    if (commencement.retrospective) {
+      try {
+        await notify({
+          event: "GENERAL",
+          title: `Emergency work started without approval, ${workOrderNumber}`,
+          body:
+            `${newWo.title}. ` +
+            `${body.description ? `${String(body.description).slice(0, 160)}. ` : ""}` +
+            `Work has commenced under the emergency exception. It still needs the same two ` +
+            `signatures, collected after the fact.`,
+          linkPath: `/work-orders/${id}`,
+          relatedEntityType: "work_order",
+          relatedEntityId: id,
+          roles: BREAKDOWN_NOTIFY_ROLES,
+        });
+      } catch (err) {
+        console.warn("work-order emergency: notify failed", err);
+      }
+    }
 
     // Tell the assigned technician their job exists. Best-effort.
     if (newWo.technicianId) {
@@ -158,7 +190,7 @@ export async function POST(request: Request) {
         await notify({
           event: "GENERAL",
           title: `Work order assigned to you, ${workOrderNumber}`,
-          body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. Awaiting approval to commence.`,
+          body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. ${commencement.retrospective ? "Emergency, start now." : "Awaiting approval to commence."}`,
           linkPath: `/work-orders/${id}`,
           relatedEntityType: "work_order",
           relatedEntityId: id,

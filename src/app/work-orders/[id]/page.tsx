@@ -18,6 +18,7 @@ import {
   User,
   Users,
   Lock,
+  Siren,
   ShieldCheck,
   CheckCircle2,
 } from "lucide-react";
@@ -28,6 +29,10 @@ import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import WorkOrderParts from "@/components/WorkOrderParts";
 import AssignPeople, { type Person } from "@/components/AssignPeople";
+import {
+  isAwaitingRetrospectiveApproval,
+  retrospectiveApprovalAgeDays,
+} from "@/lib/maintenance/work-order-commencement";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -181,6 +186,23 @@ export default function WorkOrderDetailPage() {
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
         </Link>
+
+        {/* An emergency that started before it was signed for. This has to be
+            loud: the exception is only defensible while it is visible. */}
+        {isAwaitingRetrospectiveApproval(wo) && (
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900">
+            <Siren className="w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold">Started under the emergency exception</p>
+              <p className="text-xs mt-0.5">
+                Work commenced without management approval because this is an emergency. The same two
+                signatures are still required, collected after the fact.
+                {retrospectiveApprovalAgeDays(wo.createdAt, new Date().toISOString().slice(0, 10)) > 0 &&
+                  ` Outstanding for ${retrospectiveApprovalAgeDays(wo.createdAt, new Date().toISOString().slice(0, 10))} day(s).`}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Header card */}
         <div className="bg-white border border-slate-200 rounded-xl p-6">
@@ -369,7 +391,9 @@ export default function WorkOrderDetailPage() {
         <SignoffChain
           entityType="WORK_ORDER"
           entityId={String(id)}
-          title="Approval to Commence"
+          title={
+            wo.approvalRetrospective ? "Retrospective Approval, required" : "Approval to Commence"
+          }
         />
       </main>
 

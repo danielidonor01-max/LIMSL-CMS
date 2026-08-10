@@ -27,6 +27,8 @@ type WorkOrder = {
   workOrderNumber: string;
   type: string;
   status: string;
+  approvalRetrospective: boolean | null;
+  approvedAt: string | null;
   priority: string;
   title: string;
   plannedDate: string | null;
@@ -191,6 +193,11 @@ export default function WorkOrdersPage() {
                       <td className="py-3 px-4 font-mono text-slate-500">{formatDate(r.plannedDate)}</td>
                       <td className="py-3 px-4 text-slate-700">{r.technicianName ?? "-"}</td>
                       <td className="py-3 px-4">
+                        {r.approvalRetrospective && !r.approvedAt && (
+                          <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">
+                            Unsigned emergency
+                          </Badge>
+                        )}
                         <Badge className={WO_STATUS_BADGE[r.status]}>
                           {WO_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
