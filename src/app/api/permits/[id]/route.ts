@@ -99,6 +99,22 @@ export async function GET(
       },
       approval: chainSummary(approvalChain),
       closeout: closeoutChain.length ? chainSummary(closeoutChain) : null,
+      // The printed permit carries the signatures themselves, not a count of
+      // them: it is filed as the evidence that the work was authorised.
+      approvalSteps: approvalChain.map((c) => ({
+        roleLabel: c.roleLabel,
+        status: c.status,
+        signedByName: c.signedByName,
+        signedAt: c.signedAt,
+        signatureData: c.signatureData,
+      })),
+      closeoutSteps: closeoutChain.map((c) => ({
+        roleLabel: c.roleLabel,
+        status: c.status,
+        signedByName: c.signedByName,
+        signedAt: c.signedAt,
+        signatureData: c.signatureData,
+      })),
     });
   } catch (error: any) {
     console.error("Failed to fetch permit:", error);

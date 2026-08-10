@@ -28,6 +28,7 @@ import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
 import PermitRenewalGrid from "@/components/PermitRenewalGrid";
 import PermitHandback from "@/components/PermitHandback";
 import PermitFace from "@/components/PermitFace";
+import PermitPrintSheet from "@/components/PermitPrintSheet";
 import type { RenewalDay, RenewalSummary } from "@/lib/hse/permit-validity";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
@@ -86,6 +87,16 @@ type Permit = {
     summary: RenewalSummary;
   } | null;
   closeout: { total: number; signed: number; complete: boolean } | null;
+  approvalSteps: SignoffStep[];
+  closeoutSteps: SignoffStep[];
+};
+
+type SignoffStep = {
+  roleLabel: string;
+  status: string;
+  signedByName: string | null;
+  signedAt: string | null;
+  signatureData: string | null;
 };
 
 type JhaRow = { task: string; hazards: string; controls: string; residualRisk: string };
@@ -174,7 +185,17 @@ export default function PermitDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <main className="flex-1 p-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 max-w-4xl w-full mx-auto">
+        {/* The filed document. A printed screenshot of this page would not be
+            the same paper the pad produces, and the two have to be readable
+            side by side. */}
+        <PermitPrintSheet
+          permit={permit}
+          chain={permit.approvalSteps ?? []}
+          closeout={permit.closeoutSteps ?? []}
+        />
+
+        <div className="screen-only space-y-6">
         <div className="no-print">
           <Link href="/permits" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
             <ArrowLeft className="w-3.5 h-3.5" /> All permits
@@ -395,6 +416,7 @@ export default function PermitDetail() {
             title="Close-out, work complete & isolation removed"
           />
         )}
+        </div>
       </main>
     </div>
   );
