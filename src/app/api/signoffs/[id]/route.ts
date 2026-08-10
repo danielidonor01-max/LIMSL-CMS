@@ -31,7 +31,23 @@ export async function POST(
       return NextResponse.json({ error: "This step is already signed" }, { status: 409 });
     }
 
-    if (!canSignStep(user.role, step.role)) {
+    // A step bound to a named person is not a role check. The permit holder
+    // attests that HE will observe the precautions; another technician signing
+    // that line is attesting to something he has no standing to attest to.
+    // Super Admin may still step in, and it lands in the override path below
+    // where it has to be justified.
+    if (step.signerUserId && step.signerUserId !== user.id && user.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          error:
+            `This step is ${step.signerUserName ?? "another person"}'s to sign. ` +
+            `${step.roleLabel} attests personally and cannot be signed on their behalf.`,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (!step.signerUserId && !canSignStep(user.role, step.role)) {
       return NextResponse.json(
         { error: `This step must be signed by ${step.roleLabel}. Your role is not authorised.` },
         { status: 403 },
@@ -72,7 +88,11 @@ export async function POST(
     // chain's intent is unchanged by that, so the exception has to justify
     // itself: an auditor's first question is "why did this person sign the
     // Maintenance Manager's step", and "they were allowed to" is not an answer.
-    const isOverride = action === "sign" && user.role !== step.role;
+    // On a person-bound step the named signer is never an override, whatever
+    // their role: they are exactly who the step asks for. Anyone else is.
+    const isOverride =
+      action === "sign" &&
+      (step.signerUserId ? step.signerUserId !== user.id : user.role !== step.role);
     const overrideReason = String(body.overrideReason ?? "").trim();
     if (isOverride && overrideReason.length < 10) {
       return NextResponse.json(

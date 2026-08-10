@@ -162,9 +162,70 @@ test("every declared chain is non-empty, uses canonical roles and has a required
       );
       assert.ok(s.roleLabel.trim().length > 0, `${entityType} step ${s.role} has no label`);
     }
+    // A repeated role is normally a bug: with one person per role in a shop this
+    // size, the chain could never be completed. PERMIT is the one deliberate
+    // exception, because the printed permit genuinely carries two Foreman-level
+    // signatures (the applicant and the site supervisor) from two different
+    // people, and two Technician-level ones (the permit holder, who is bound to
+    // a named person, and the affected custodian). Person-level segregation is
+    // enforced at signing time, so the repeat still means two humans.
     const roles = chain.map((s) => s.role);
-    assert.equal(new Set(roles).size, roles.length, `${entityType} repeats a role in its chain`);
+    if (entityType !== "PERMIT") {
+      assert.equal(new Set(roles).size, roles.length, `${entityType} repeats a role in its chain`);
+    }
   }
+});
+
+test("the permit chain matches the signature blocks on the printed form", () => {
+  const chain = CHAINS.PERMIT;
+  assert.deepEqual(
+    chain.map((s) => s.roleLabel),
+    [
+      "Permit Applicant (PA)",
+      "Asset Holder Supervisor (AHS)",
+      "Asset Holder Site Supervisor (AHSS)",
+      "Permit Holder (PH)",
+      "Affected Custodian (AC)",
+    ],
+  );
+  // The Contractor Supervisor block is not here on purpose: LIMSL permits cover
+  // internal work only, and a step nobody ever signs is a step people learn to
+  // skip.
+  assert.equal(
+    chain.some((s) => s.roleLabel.includes("Contractor")),
+    false,
+  );
+  // Only the affected custodian is optional. A permit missing any of the other
+  // four is not a permit.
+  assert.deepEqual(
+    chain.filter((s) => !s.required).map((s) => s.roleLabel),
+    ["Affected Custodian (AC)"],
+  );
+});
+
+test("the permit holder step is bound to a person, not to a role", () => {
+  const ph = CHAINS.PERMIT.find((s) => s.roleLabel.startsWith("Permit Holder"));
+  assert.equal(ph?.signer, "PERMIT_HOLDER");
+  // Nothing else in any chain is person-bound; a stray binding would silently
+  // lock a step to whoever happened to be named on the record.
+  for (const [entityType, chain] of Object.entries(CHAINS)) {
+    for (const s of chain) {
+      if (s.signer) {
+        assert.equal(entityType, "PERMIT", `${entityType} has an unexpected person-bound step`);
+      }
+    }
+  }
+});
+
+test("the document chain runs work order, then WMS, then JHA, then permit", () => {
+  // Each document's chain must exist for the flow to be enforceable at all.
+  for (const entityType of ["WORK_ORDER", "WMS", "JHA", "PERMIT"]) {
+    assert.ok(CHAINS[entityType]?.length > 0, `${entityType} has no sign-off chain`);
+  }
+  // HSE prepares the JHA. It is the handover point from maintenance to safety,
+  // and if HSE is not the first step the analysis is being written by the same
+  // department whose work it is meant to challenge.
+  assert.equal(CHAINS.JHA[0].role, "HSE");
 });
 
 test("every declared chain unlocks strictly in declaration order", () => {

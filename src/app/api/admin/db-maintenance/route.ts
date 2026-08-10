@@ -113,6 +113,74 @@ const INDEXES: [string, string][] = [
   ["password_resets_token_idx", "CREATE INDEX IF NOT EXISTS password_resets_token_idx ON password_resets (token_hash)"],
   // Sign-off overrides, a step signed by someone other than the role it names.
   ["signoffs.override", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS is_override boolean DEFAULT false, ADD COLUMN IF NOT EXISTS override_reason text"],
+  // A step bound to one named person rather than to a role: the permit holder
+  // signs the permit issued to him, nobody signs it for him.
+  ["signoffs.signer", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS signer_user_id text, ADD COLUMN IF NOT EXISTS signer_user_name text"],
+  // Management authorising commencement, recorded on the work order itself.
+  ["work_orders.approval", "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS approved_by_id text, ADD COLUMN IF NOT EXISTS approved_by_name text, ADD COLUMN IF NOT EXISTS approved_at text, ADD COLUMN IF NOT EXISTS rejected_reason text"],
+  // The Work Method Statement names the work order it was drafted against. The
+  // column existed and nothing ever wrote to it.
+  ["wms_documents.work_order", "ALTER TABLE wms_documents ADD COLUMN IF NOT EXISTS work_order_id text"],
+  // Job Hazard Analysis as its own approved document, third in the chain.
+  [
+    "jha_documents",
+    `CREATE TABLE IF NOT EXISTS jha_documents (
+      id text PRIMARY KEY,
+      jha_number text NOT NULL UNIQUE,
+      title text NOT NULL,
+      revision integer NOT NULL DEFAULT 0,
+      wms_id text,
+      work_order_id text,
+      equipment_id text,
+      work_area text,
+      steps text,
+      ppe_required text,
+      emergency_arrangements text,
+      status text NOT NULL DEFAULT 'DRAFT',
+      prepared_by_id text,
+      prepared_by_name text,
+      prepared_date text,
+      approved_at text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["jha_wms_idx", "CREATE INDEX IF NOT EXISTS jha_wms_idx ON jha_documents (wms_id)"],
+  // The permit face as printed, plus the daily renewal grid, handback, handover,
+  // work acceptance and the supersession link.
+  [
+    "permits.paper_form",
+    `ALTER TABLE permits
+       ADD COLUMN IF NOT EXISTS task_no text,
+       ADD COLUMN IF NOT EXISTS jha_id text,
+       ADD COLUMN IF NOT EXISTS work_types text,
+       ADD COLUMN IF NOT EXISTS facility text,
+       ADD COLUMN IF NOT EXISTS work_area text,
+       ADD COLUMN IF NOT EXISTS zone_classification text,
+       ADD COLUMN IF NOT EXISTS start_date text,
+       ADD COLUMN IF NOT EXISTS start_time text,
+       ADD COLUMN IF NOT EXISTS duration_hours real,
+       ADD COLUMN IF NOT EXISTS worker_count integer,
+       ADD COLUMN IF NOT EXISTS permit_department text,
+       ADD COLUMN IF NOT EXISTS validity_days integer NOT NULL DEFAULT 7,
+       ADD COLUMN IF NOT EXISTS document_marks text,
+       ADD COLUMN IF NOT EXISTS precaution_marks text,
+       ADD COLUMN IF NOT EXISTS ppe_marks text,
+       ADD COLUMN IF NOT EXISTS additional_requirements text,
+       ADD COLUMN IF NOT EXISTS renewal_days text,
+       ADD COLUMN IF NOT EXISTS handback_outcome text,
+       ADD COLUMN IF NOT EXISTS handback_reason text,
+       ADD COLUMN IF NOT EXISTS handback_by_name text,
+       ADD COLUMN IF NOT EXISTS handback_at text,
+       ADD COLUMN IF NOT EXISTS handovers text,
+       ADD COLUMN IF NOT EXISTS accepted_by_name text,
+       ADD COLUMN IF NOT EXISTS accepted_by_dept text,
+       ADD COLUMN IF NOT EXISTS accepted_at text,
+       ADD COLUMN IF NOT EXISTS supersedes_permit_id text,
+       ADD COLUMN IF NOT EXISTS superseded_by_permit_id text,
+       ADD COLUMN IF NOT EXISTS closure_reason text,
+       ADD COLUMN IF NOT EXISTS closure_note text`,
+  ],
+  ["permits_supersedes_idx", "CREATE INDEX IF NOT EXISTS permits_supersedes_idx ON permits (supersedes_permit_id)"],
   // Phase 6f, condition monitoring.
   [
     "condition_points",

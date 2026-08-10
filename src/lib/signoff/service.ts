@@ -10,7 +10,13 @@ export { isStepUnlocked };
 
 // Create the sign-off chain rows for an entity if they don't already exist.
 // On first creation, notify whoever must sign the first step.
-export async function ensureSignoffChain(entityType: string, entityId: string, reference?: string) {
+export async function ensureSignoffChain(
+  entityType: string,
+  entityId: string,
+  reference?: string,
+  // Named signers for steps the chain binds to a person rather than a role.
+  boundSigners?: { PERMIT_HOLDER?: { id: string; name: string } | null },
+) {
   const existing = await db
     .select()
     .from(signoffs)
@@ -20,16 +26,21 @@ export async function ensureSignoffChain(entityType: string, entityId: string, r
   const steps = chainFor(entityType);
   if (steps.length === 0) return [];
 
-  const rows = steps.map((s, i) => ({
-    id: nanoid(),
-    entityType,
-    entityId,
-    stepOrder: i + 1,
-    role: s.role,
-    roleLabel: s.roleLabel,
-    required: s.required,
-    status: "PENDING" as const,
-  }));
+  const rows = steps.map((s, i) => {
+    const bound = s.signer ? boundSigners?.[s.signer] : null;
+    return {
+      id: nanoid(),
+      entityType,
+      entityId,
+      stepOrder: i + 1,
+      role: s.role,
+      roleLabel: s.roleLabel,
+      required: s.required,
+      signerUserId: bound?.id ?? null,
+      signerUserName: bound?.name ?? null,
+      status: "PENDING" as const,
+    };
+  });
   // Two concurrent first-accesses both reach this insert; the unique index on
   // (entity_type, entity_id, step_order) makes the loser a no-op instead of a
   // duplicated chain, and both callers return the canonical rows.
@@ -66,9 +77,14 @@ export async function getSignoffChain(entityType: string, entityId: string) {
 // document) the old signatures no longer attest to anything, drop the chain and
 // start a fresh one so every step must sign the CURRENT content. The old steps'
 // audit-log entries remain; only the live chain resets.
-export async function resetSignoffChain(entityType: string, entityId: string, reference?: string) {
+export async function resetSignoffChain(
+  entityType: string,
+  entityId: string,
+  reference?: string,
+  boundSigners?: { PERMIT_HOLDER?: { id: string; name: string } | null },
+) {
   await db
     .delete(signoffs)
     .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)));
-  return ensureSignoffChain(entityType, entityId, reference);
+  return ensureSignoffChain(entityType, entityId, reference, boundSigners);
 }

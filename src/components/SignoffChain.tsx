@@ -17,6 +17,8 @@ type Step = {
   role: string;
   roleLabel: string;
   required: boolean | null;
+  signerUserId: string | null;
+  signerUserName: string | null;
   status: string;
   signedByName: string | null;
   signedByRole: string | null;
@@ -38,6 +40,7 @@ export default function SignoffChain({
 }) {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role;
+  const userId = (session?.user as { id?: string })?.id;
   const [chain, setChain] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);
   const [openStep, setOpenStep] = useState<string | null>(null);
@@ -112,7 +115,12 @@ export default function SignoffChain({
         <ol className="space-y-2">
           {chain.map((step) => {
             const unlocked = isStepUnlocked(chain, step.stepOrder);
-            const mine = canSignStep(role, step.role);
+            // A person-bound step belongs to one named individual, not to a
+            // role. Showing it as signable to every technician invites them to
+            // click and be refused.
+            const mine = step.signerUserId
+              ? step.signerUserId === userId || role === "SUPER_ADMIN"
+              : canSignStep(role, step.role);
             const canSign = step.status === "PENDING" && unlocked && mine;
             const isOpen = openStep === step.id;
             return (
@@ -134,6 +142,11 @@ export default function SignoffChain({
                         <Badge className={ROLE_BADGE[step.role] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
                           {ROLE_LABELS[step.role] ?? step.role}
                         </Badge>
+                        {step.signerUserName && (
+                          <span className="text-[10px] font-medium text-slate-600">
+                            {step.signerUserName} only
+                          </span>
+                        )}
                         {!step.required && <span className="text-[9px] text-slate-400">optional</span>}
                         {step.status === "SIGNED" && step.signedByName && (
                           <span className="text-[10px] text-slate-500">

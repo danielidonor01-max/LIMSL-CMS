@@ -6,7 +6,15 @@
 // These are intentionally data-driven so the exact roles/steps can be tuned
 // later without touching the sign-off engine.
 
-export type ChainStep = { role: string; roleLabel: string; required: boolean };
+// `signer: "PERMIT_HOLDER"` binds the step to the one person the record names
+// rather than to a role. The permit holder signs the permit issued to him, and
+// no other technician can sign it in his place.
+export type ChainStep = {
+  role: string;
+  roleLabel: string;
+  required: boolean;
+  signer?: "PERMIT_HOLDER";
+};
 
 // Preventive Maintenance checklist sign-off:
 //   Technician performs → Foreman verifies → QA/QC checks records → Maintenance
@@ -51,14 +59,44 @@ export const PROCEDURE_CHAIN: ChainStep[] = [
   { role: "COO", roleLabel: "Approved (COO)", required: true },
 ];
 
-// Permit-to-Work authorisation. A permit is raised against a named permit holder
-// and must be fully signed BEFORE any work begins, a permit sits in
-// PENDING_APPROVAL and only becomes ACTIVE when every step below is signed.
+// Permit-to-Work authorisation, matching the signature blocks on the printed
+// LIMSL permit. HSE issues the permit, so HSE does not appear as a step: raising
+// it IS the HSE act. The four blocks below are the ones signed on paper.
+//
+// PA and AHSS are both Foreman-level and that is deliberate, not a duplication
+// error: on the paper permit they are two different people, the foreman who
+// applied for the permit and the foreman supervising the site. The sign-off
+// engine already refuses to let one person sign two steps of the same chain, so
+// this reads on screen exactly as it reads on paper. (With only one Foreman
+// account in the system the AHSS step will need a senior to cover it.)
 export const PTW_CHAIN: ChainStep[] = [
-  { role: "FOREMAN", roleLabel: "Requested by (Foreman)", required: true },
+  { role: "FOREMAN", roleLabel: "Permit Applicant (PA)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Asset Holder Supervisor (AHS)", required: true },
+  { role: "FOREMAN", roleLabel: "Asset Holder Site Supervisor (AHSS)", required: true },
+  {
+    role: "TECHNICIAN",
+    roleLabel: "Permit Holder (PH)",
+    required: true,
+    signer: "PERMIT_HOLDER",
+  },
+  { role: "TECHNICIAN", roleLabel: "Affected Custodian (AC)", required: false },
+];
+
+// Job Hazard Analysis approval. HSE prepares it from an approved Work Method
+// Statement; the Maintenance Manager confirms the job is described as it will
+// actually be done, and the Factory Manager approves it. No permit may be raised
+// against a JHA that has not finished this.
+export const JHA_CHAIN: ChainStep[] = [
+  { role: "HSE", roleLabel: "Prepared by (HSE)", required: true },
   { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
-  { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
-  { role: "FACTORY_MANAGER", roleLabel: "Final approval (Factory Manager)", required: true },
+  { role: "FACTORY_MANAGER", roleLabel: "Approved by (Factory Manager)", required: true },
+];
+
+// Management authorising commencement. This is what a work order IS at LIMSL,
+// and until now it was implied by the work order merely existing.
+export const WORK_ORDER_CHAIN: ChainStep[] = [
+  { role: "FOREMAN", roleLabel: "Raised by (Foreman)", required: true },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Approved to commence (Maintenance Manager)", required: true },
 ];
 
 // Permit-to-Work close-out. Raised once the permit is ACTIVE and the job is done:
@@ -98,6 +136,8 @@ export const CHAINS: Record<string, ChainStep[]> = {
   PM_CHECKLIST: PM_CHAIN,
   CORRECTIVE: CM_CHAIN,
   WMS: WMS_CHAIN,
+  JHA: JHA_CHAIN,
+  WORK_ORDER: WORK_ORDER_CHAIN,
   PROCEDURE: PROCEDURE_CHAIN,
   PERMIT: PTW_CHAIN,
   PERMIT_CLOSEOUT: PTW_CLOSEOUT_CHAIN,

@@ -159,6 +159,14 @@ export const workOrders = pgTable("work_orders", {
   // work order stays with technicianId.
   assistantIds: text("assistant_ids"), // JSON array of user ids
   supervisorId: text("supervisor_id").references(() => users.id),
+  // Management authorising commencement. The work order IS that authorisation
+  // at LIMSL, so it is raised as PENDING_APPROVAL and nothing downstream (a
+  // method statement, a job hazard analysis, a permit, or the work itself) may
+  // proceed until it is approved.
+  approvedById: text("approved_by_id").references(() => users.id),
+  approvedByName: text("approved_by_name"),
+  approvedAt: text("approved_at"),
+  rejectedReason: text("rejected_reason"),
   wmsId: text("wms_id"),
   permitId: text("permit_id"),
   cmsId: text("cms_id"), // linked corrective maintenance
@@ -239,9 +247,39 @@ export const wmsDocuments = pgTable("wms_documents", {
 });
 
 // ─── Permits (PTW) ──────────────────────────────────────────────────────────
+// ─── Job Hazard Analysis ─────────────────────────────────────────────────────
+// The third document in the chain. HSE receives an approved Work Method
+// Statement, analyses the job step by step, and that analysis is approved before
+// any permit can be raised against it. It used to be three free-text boxes typed
+// into the permit itself, which meant the JHA was never reviewed by anyone: it
+// arrived already attached to the thing it was supposed to gate.
+export const jhaDocuments = pgTable("jha_documents", {
+  id: text("id").primaryKey(),
+  jhaNumber: text("jha_number").notNull().unique(), // JHA-2026-XXXX
+  title: text("title").notNull(),
+  revision: integer("revision").notNull().default(0),
+  wmsId: text("wms_id").references(() => wmsDocuments.id),
+  workOrderId: text("work_order_id").references(() => workOrders.id),
+  equipmentId: text("equipment_id").references(() => equipment.id),
+  workArea: text("work_area"),
+  // JSON array of { step, hazards, controls, residualRisk, responsible }
+  steps: text("steps"),
+  ppeRequired: text("ppe_required"), // JSON array of PPE keys
+  emergencyArrangements: text("emergency_arrangements"),
+  status: text("status").notNull().default("DRAFT"), // DRAFT | UNDER_REVIEW | APPROVED | REJECTED | SUPERSEDED
+  preparedById: text("prepared_by_id").references(() => users.id),
+  preparedByName: text("prepared_by_name"),
+  preparedDate: text("prepared_date"),
+  approvedAt: text("approved_at"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("jha_wms_idx").on(t.wmsId)]);
+
 export const permits = pgTable("permits", {
   id: text("id").primaryKey(),
   permitNumber: text("permit_number").notNull().unique(),
+  // The handwritten task number in the corner of the paper form, kept so a
+  // scanned permit and its record can still be matched by eye.
+  taskNo: text("task_no"),
   workOrderId: text("work_order_id").references(() => workOrders.id),
   equipmentId: text("equipment_id").notNull().references(() => equipment.id),
   workDescription: text("work_description").notNull(),
@@ -252,10 +290,54 @@ export const permits = pgTable("permits", {
   //  • a structured Job Hazard Analysis, JSON array of
   //    { task, hazards, controls, residualRisk }.
   wmsId: text("wms_id").references(() => wmsDocuments.id),
-  jha: text("jha"), // JSON array of JHA rows
+  jhaId: text("jha_id").references(() => jhaDocuments.id),
+  jha: text("jha"), // legacy inline JHA rows, superseded by jhaId
   lotoApplied: boolean("loto_applied").default(false),
   ppeRequired: text("ppe_required"), // JSON array
   areaBarricaded: boolean("area_barricaded").default(false),
+
+  // ── The permit face, as printed ───────────────────────────────────────────
+  workTypes: text("work_types"), // JSON array: COLD_WORK | HOT_WORK | CONFINED_SPACE | EXCAVATION | ENERGIZED_SYSTEM
+  facility: text("facility"),
+  workArea: text("work_area"),
+  zoneClassification: text("zone_classification"),
+  startDate: text("start_date"),
+  startTime: text("start_time"),
+  durationHours: real("duration_hours"),
+  workerCount: integer("worker_count"),
+  permitDepartment: text("permit_department"),
+  validityDays: integer("validity_days").notNull().default(7),
+  // Tri-state marks keyed by checklist key: YES | NO | NA. A blank is nobody
+  // having considered the line, which is not the same as crossing it out.
+  documentMarks: text("document_marks"),
+  precautionMarks: text("precaution_marks"),
+  ppeMarks: text("ppe_marks"),
+  additionalRequirements: text("additional_requirements"),
+
+  // ── Validity & Renewal ────────────────────────────────────────────────────
+  // One entry per calendar day of the validity period, keyed by date. Weekend
+  // days are ordinary days here: the paper grid has a column for them.
+  renewalDays: text("renewal_days"),
+
+  // ── Handback, handover and closure ────────────────────────────────────────
+  handbackOutcome: text("handback_outcome"), // COMPLETED | SUSPENDED
+  handbackReason: text("handback_reason"),
+  handbackByName: text("handback_by_name"),
+  handbackAt: text("handback_at"),
+  handovers: text("handovers"), // JSON array of { from, to, at }
+  acceptedByName: text("accepted_by_name"),
+  acceptedByDept: text("accepted_by_dept"),
+  acceptedAt: text("accepted_at"),
+
+  // ── Supersession ──────────────────────────────────────────────────────────
+  // A permit whose week ran out with the job unfinished is closed as work
+  // ongoing and continued under a successor. The pair is a chain an auditor can
+  // walk in both directions.
+  supersedesPermitId: text("supersedes_permit_id"),
+  supersededByPermitId: text("superseded_by_permit_id"),
+  closureReason: text("closure_reason"), // COMPLETED | WORK_ONGOING | CANCELLED
+  closureNote: text("closure_note"),
+
   issuedById: text("issued_by_id").references(() => users.id),
   // The permit holder: the named, accountable person the permit is issued to. A
   // permit is not valid without one, "Maintenance Team" is not accountable to an
@@ -930,6 +1012,11 @@ export const signoffs = pgTable(
     role: text("role").notNull(), // required role for this step
     roleLabel: text("role_label").notNull(), // e.g. "Performed by", "Verified by", "Approved by"
     required: boolean("required").notNull().default(true),
+    // Most steps name a ROLE. A few name a PERSON: the permit holder signs the
+    // permit issued to him, and no other technician can sign it for him. Left
+    // null the step behaves exactly as before.
+    signerUserId: text("signer_user_id").references(() => users.id),
+    signerUserName: text("signer_user_name"),
     status: text("status").notNull().default("PENDING"), // PENDING | SIGNED | REJECTED
     signedById: text("signed_by_id").references(() => users.id),
     signedByName: text("signed_by_name"),
