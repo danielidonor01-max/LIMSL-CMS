@@ -213,6 +213,10 @@ export const wmsDocuments = pgTable("wms_documents", {
   id: text("id").primaryKey(),
   wmsNumber: text("wms_number").notNull().unique(), // WMS-2026-XXXX
   title: text("title").notNull(),
+  // The approved work order this method statement was drafted for. It is the
+  // first link in the WO -> WMS -> JHA -> PTW chain, and every document
+  // downstream inherits the work order from here.
+  workOrderId: text("work_order_id").references(() => workOrders.id),
   revision: integer("revision").notNull().default(0),
   machinesScope: text("machines_scope"), // JSON array of equipment names
   equipmentIds: text("equipment_ids"), // JSON array

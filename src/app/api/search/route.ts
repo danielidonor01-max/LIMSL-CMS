@@ -18,6 +18,7 @@ import {
   workOrders,
   correctiveMaintenance,
   wmsDocuments,
+  jhaDocuments,
   permits,
   spareParts,
   calibrationRecords,
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
     // Escape LIKE wildcards so a literal "%" in the query can't blow up the scan.
     const pat = `%${q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
 
-    const [eqRows, woRows, cmRows, wmsRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows] =
+    const [eqRows, woRows, cmRows, wmsRows, jhaRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows] =
       await Promise.all([
         db
           .select({ name: equipment.name, assetId: equipment.assetId, location: equipment.location })
@@ -87,6 +88,16 @@ export async function GET(request: Request) {
           .select({ id: wmsDocuments.id, wmsNumber: wmsDocuments.wmsNumber, title: wmsDocuments.title })
           .from(wmsDocuments)
           .where(or(ilike(wmsDocuments.wmsNumber, pat), ilike(wmsDocuments.title, pat)))
+          .limit(PER_ENTITY),
+        db
+          .select({
+            id: jhaDocuments.id,
+            jhaNumber: jhaDocuments.jhaNumber,
+            title: jhaDocuments.title,
+            status: jhaDocuments.status,
+          })
+          .from(jhaDocuments)
+          .where(or(ilike(jhaDocuments.jhaNumber, pat), ilike(jhaDocuments.title, pat)))
           .limit(PER_ENTITY),
         db
           .select({
@@ -176,6 +187,12 @@ export async function GET(request: Request) {
         label: w.wmsNumber,
         sub: w.title,
         href: `/wms/${w.id}`,
+      })),
+      ...jhaRows.map((j) => ({
+        type: "JHA",
+        label: j.jhaNumber,
+        sub: j.title,
+        href: `/jha/${j.id}`,
       })),
       ...ptwRows.map((p) => ({
         type: "Permit",

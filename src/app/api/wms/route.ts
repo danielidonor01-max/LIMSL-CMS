@@ -1,7 +1,7 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments, equipment } from "@/lib/db/schema";
+import { wmsDocuments, equipment, workOrders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -77,13 +77,42 @@ export async function POST(request: Request) {
     if (gate.res) return gate.res;
 
     const body = await request.json();
-    
+
+    // A method statement describes how an authorised job will be done. Drafting
+    // one against a work order management has not approved gets the sequence
+    // backwards: the method is written for work nobody has sanctioned yet.
+    if (!body.workOrderId) {
+      return NextResponse.json(
+        { error: "Select the approved work order this method statement is written for." },
+        { status: 400 },
+      );
+    }
+    const [wo] = await db
+      .select()
+      .from(workOrders)
+      .where(eq(workOrders.id, body.workOrderId))
+      .limit(1);
+    if (!wo) return NextResponse.json({ error: "Work order not found." }, { status: 400 });
+    if (wo.status === "PENDING_APPROVAL") {
+      return NextResponse.json(
+        { error: `${wo.workOrderNumber} has not been approved to commence. Approve it before drafting the method statement.` },
+        { status: 409 },
+      );
+    }
+    if (wo.status === "CANCELLED") {
+      return NextResponse.json(
+        { error: `${wo.workOrderNumber} was cancelled.` },
+        { status: 409 },
+      );
+    }
+
     const wmsNumber = await nextDocNumber("WMS");
 
     const newWms = {
       id: nanoid(),
       wmsNumber,
       title: body.title,
+      workOrderId: body.workOrderId,
       revision: body.revision || 0,
       machinesScope: body.machinesScope ? JSON.stringify(body.machinesScope) : "[]",
       equipmentIds: body.equipmentIds ? JSON.stringify(body.equipmentIds) : "[]",

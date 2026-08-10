@@ -24,6 +24,8 @@ export default function NewWms() {
   const [qualityControlRequirements, setQualityControlRequirements] = useState("");
   const [emergencyRequirements, setEmergencyRequirements] = useState("");
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
+  const [workOrderId, setWorkOrderId] = useState("");
+  const [workOrders, setWorkOrders] = useState<any[]>([]);
 
   // Procedure Steps
   const [steps, setSteps] = useState<string[]>([""]);
@@ -43,6 +45,22 @@ export default function NewWms() {
       }
     }
     loadEquipment();
+  }, []);
+
+  // Only approved work orders. A method statement is written for a job
+  // management has already authorised, so an unapproved work order is not a
+  // valid parent for one.
+  useEffect(() => {
+    fetch("/api/work-orders")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) =>
+        setWorkOrders(
+          Array.isArray(d)
+            ? d.filter((w: any) => w.status !== "PENDING_APPROVAL" && w.status !== "CANCELLED")
+            : [],
+        ),
+      )
+      .catch(() => setWorkOrders([]));
   }, []);
 
   const addStepField = () => {
@@ -77,6 +95,7 @@ export default function NewWms() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
+          workOrderId,
           purpose,
           scope,
           mobilization,
@@ -124,6 +143,28 @@ export default function NewWms() {
           <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
             Create Work Method Statement (WMS)
           </h2>
+
+          {/* The job this method statement is written for */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase">Approved Work Order</label>
+            <select
+              required
+              value={workOrderId}
+              onChange={(e) => setWorkOrderId(e.target.value)}
+              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
+            >
+              <option value="">Select the work order this method statement covers</option>
+              {workOrders.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.workOrderNumber} · {w.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-500">
+              Only work orders approved to commence appear here. The permit raised at the end of
+              this chain references back to it.
+            </p>
+          </div>
 
           {/* Document Title */}
           <div className="space-y-2">

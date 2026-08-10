@@ -17,6 +17,7 @@ import {
   Calendar,
   User,
   Users,
+  Lock,
   ShieldCheck,
   CheckCircle2,
 } from "lucide-react";
@@ -203,6 +204,11 @@ export default function WorkOrderDetailPage() {
 
             {/* Actions */}
             <div className="flex flex-col gap-2 shrink-0">
+              {wo.status === "PENDING_APPROVAL" && (
+                <span className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold">
+                  <Lock className="w-4 h-4" /> Awaiting approval
+                </span>
+              )}
               {wo.status === "OPEN" && (
                 <button
                   onClick={() => patch({ status: "IN_PROGRESS" })}
@@ -358,6 +364,13 @@ export default function WorkOrderDetailPage() {
             title="PM Approval & Sign-off"
           />
         )}
+        {/* Management authorising commencement. This is what the work order IS,
+            and until it is signed nothing downstream may proceed. */}
+        <SignoffChain
+          entityType="WORK_ORDER"
+          entityId={String(id)}
+          title="Approval to Commence"
+        />
       </main>
 
       <AssignPeople

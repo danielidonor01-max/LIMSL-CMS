@@ -14,10 +14,15 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { notify } from "@/lib/notifications";
 import { suggestedWoPriority } from "@/lib/maintenance/adherence";
+import { ensureSignoffChain } from "@/lib/signoff/service";
+import { reconcileWorkOrderApprovals, WO_APPROVAL_ENTITY } from "@/lib/work-order-approval";
 
 // List all work orders, joined with their equipment.
 export async function GET() {
   try {
+    // Approvals signed since the last read land before anyone sees the list.
+    await reconcileWorkOrderApprovals();
+
     const rows = await db
       .select({
         id: workOrders.id,
@@ -112,7 +117,9 @@ export async function POST(request: Request) {
       equipmentId: body.equipmentId,
       scheduleId: body.scheduleId || null,
       priority: body.priority || suggestedWoPriority(eqRow?.criticality),
-      status: "OPEN",
+      // Raised as a request. Management authorising commencement is the whole
+      // point of the work order, and it is signed, not assumed.
+      status: "PENDING_APPROVAL",
       title: body.title,
       description: body.description || "",
       plannedDate: body.plannedDate || null,
@@ -133,6 +140,8 @@ export async function POST(request: Request) {
         .where(eq(maintenanceSchedule.id, body.scheduleId));
     }
 
+    await ensureSignoffChain(WO_APPROVAL_ENTITY, id, workOrderNumber);
+
     await db.insert(auditLog).values({
       id: nanoid(),
       userId: gate.actor?.id ?? null,
@@ -140,7 +149,7 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "work_order",
       entityId: id,
-      entityDescription: `${workOrderNumber}, ${body.title}`,
+      entityDescription: `${workOrderNumber}, ${body.title}, raised for approval`,
     });
 
     // Tell the assigned technician their job exists. Best-effort.
@@ -149,7 +158,7 @@ export async function POST(request: Request) {
         await notify({
           event: "GENERAL",
           title: `Work order assigned to you, ${workOrderNumber}`,
-          body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. Open the work order for details.`,
+          body: `${newWo.title}. Priority ${newWo.priority}${newWo.plannedDate ? `, planned ${newWo.plannedDate}` : ""}. Awaiting approval to commence.`,
           linkPath: `/work-orders/${id}`,
           relatedEntityType: "work_order",
           relatedEntityId: id,

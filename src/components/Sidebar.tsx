@@ -17,6 +17,7 @@ import {
   Building2,
   Gauge,
   ShieldAlert,
+  Biohazard,
   ShieldCheck,
   AlertOctagon,
   ScrollText,
@@ -61,6 +62,7 @@ const NAV_SECTIONS: NavSection[] = [
     section: "Safety & Compliance",
     items: [
       { href: "/wms", label: "WMS", icon: FileText },
+      { href: "/jha", label: "Job Hazard Analysis", icon: Biohazard },
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
       { href: "/emergency", label: "Emergency Prep", icon: Siren },
       { href: "/contractors", label: "Contractors", icon: HardHat },

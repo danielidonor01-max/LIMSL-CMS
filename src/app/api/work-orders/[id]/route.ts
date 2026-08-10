@@ -16,6 +16,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { notify } from "@/lib/notifications";
 import { logEquipmentEvent } from "@/lib/equipment-log";
+import { reconcileWorkOrderApprovals, approvalBlockMessage } from "@/lib/work-order-approval";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
 export async function GET(
@@ -24,6 +25,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    await reconcileWorkOrderApprovals();
 
     const wo = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
     if (wo.length === 0) {
@@ -103,6 +106,16 @@ export async function PATCH(
     // Work may not begin under an unapproved permit. If a PTW has been raised for
     // this work order, it must be fully signed (ACTIVE) before the job starts.
     // Work orders with no permit at all are unaffected, not every job needs one.
+    // Work may not begin on a work order management has not approved. The work
+    // order IS the authorisation to commence, so starting one that is still
+    // PENDING_APPROVAL is doing the job before it was sanctioned.
+    if (body.status === "IN_PROGRESS" && current.status === "PENDING_APPROVAL") {
+      return NextResponse.json(
+        { error: approvalBlockMessage(current.workOrderNumber) },
+        { status: 409 },
+      );
+    }
+
     if (body.status === "IN_PROGRESS") {
       await reconcilePermits();
       const linked = await db.select().from(permits).where(eq(permits.workOrderId, id));

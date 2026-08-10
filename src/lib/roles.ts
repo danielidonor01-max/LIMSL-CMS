@@ -94,8 +94,8 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
 // (SUPER_ADMIN + management + maintenance team) have full access. Drives both the
 // sidebar nav and the page-level guard so they never disagree.
 export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
-  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
-  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
+  QA_QC: ["/", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
+  HSE: ["/", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
   VIEWER: ["/", "/equipment", "/procedure", "/reports"],
 };
 
@@ -191,6 +191,11 @@ export const COMPLIANCE_ESCALATION_ROLES = [
   "MAINTENANCE_MANAGER",
   "QA_QC",
 ];
+
+// Roles permitted to draft a Job Hazard Analysis. HSE owns it: the JHA is the
+// point where safety examines the method statement maintenance wrote, and a
+// department that analyses its own work is not analysing it.
+export const JHA_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
 // Roles that participate in a Work Method Statement (prepare/review/approve).
 export const WMS_WRITE_ROLES = [
