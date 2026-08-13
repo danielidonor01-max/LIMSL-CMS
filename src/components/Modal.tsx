@@ -30,6 +30,24 @@ export default function Modal({
   const restoreTo = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
+  // Callers pass onClose as an inline arrow (`onClose={() => setOpen(false)}`),
+  // which is a NEW function on every parent render. With onClose in the effect's
+  // dependency array below, every keystroke in the dialog re-rendered the parent,
+  // changed the identity of onClose, and so tore the effect down and set it up
+  // again. The teardown returns focus to whatever opened the dialog, and the
+  // setup then focuses the dialog's first control, so typing one character threw
+  // the caret out of the field you were typing in. Every form in the app is a
+  // dialog, so every form in the app could only be filled one character per
+  // click.
+  //
+  // The handler is read through a ref instead, so the effect depends only on
+  // whether the dialog is open, which is the only thing that should set up or
+  // tear down focus management.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
 
@@ -48,7 +66,7 @@ export default function Modal({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !panelRef.current) return;
@@ -74,7 +92,7 @@ export default function Modal({
       document.body.style.overflow = overflow;
       restoreTo.current?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

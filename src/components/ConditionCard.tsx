@@ -33,6 +33,15 @@ type Point = {
   readings: { id: string; value: number; takenOn: string; verdict: string }[];
 };
 
+// Declared at module scope on purpose. A component defined inside another is a
+// new type on every render, so React unmounts and remounts its subtree, which is
+// how an input loses focus mid-typing.
+function TrendIcon({ dir }: { dir: string }) {
+  if (dir === "RISING") return <TrendingUp className="w-3.5 h-3.5 text-rose-600" />;
+  if (dir === "FALLING") return <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />;
+  return <Minus className="w-3.5 h-3.5 text-slate-400" />;
+}
+
 export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: string; canWrite: boolean }) {
   const [data, setData] = useState<{ points: Point[]; health: any } | null>(null);
   const [addPoint, setAddPoint] = useState(false);
@@ -77,14 +86,6 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
     }
   };
 
-  const TrendIcon = ({ dir }: { dir: string }) =>
-    dir === "RISING" ? (
-      <TrendingUp className="w-3.5 h-3.5 text-rose-600" />
-    ) : dir === "FALLING" ? (
-      <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
-    ) : (
-      <Minus className="w-3.5 h-3.5 text-slate-400" />
-    );
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">

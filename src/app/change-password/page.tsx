@@ -15,6 +15,23 @@ const RULES: { label: string; test: (p: string) => boolean }[] = [
   { label: "Contains a symbol (! ? # $)", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+// Declared at module scope on purpose. A component defined inside another is a
+// new type on every render, so React unmounts and remounts its subtree, which is
+// how an input loses focus mid-typing.
+function Reveal({ show, onToggle }: { show: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+      aria-label={show ? "Hide passwords" : "Show passwords"}
+      tabIndex={-1}
+    >
+      {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+    </button>
+  );
+}
+
 export default function ChangePasswordPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -89,18 +106,6 @@ export default function ChangePasswordPage() {
   const inputClass =
     "w-full px-3.5 py-2.5 pr-11 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all";
 
-  const Reveal = () => (
-    <button
-      type="button"
-      onClick={() => setShow((v) => !v)}
-      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-      aria-label={show ? "Hide passwords" : "Show passwords"}
-      tabIndex={-1}
-    >
-      {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-    </button>
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md">
@@ -140,7 +145,7 @@ export default function ChangePasswordPage() {
                   autoComplete="current-password"
                   required
                 />
-                <Reveal />
+                <Reveal show={show} onToggle={() => setShow((v) => !v)} />
               </div>
             </div>
 
@@ -158,7 +163,7 @@ export default function ChangePasswordPage() {
                   autoComplete="new-password"
                   required
                 />
-                <Reveal />
+                <Reveal show={show} onToggle={() => setShow((v) => !v)} />
               </div>
               {newPassword.length > 0 && (
                 <ul className="grid grid-cols-2 gap-1.5 mt-2.5">
@@ -186,7 +191,7 @@ export default function ChangePasswordPage() {
                   autoComplete="new-password"
                   required
                 />
-                <Reveal />
+                <Reveal show={show} onToggle={() => setShow((v) => !v)} />
               </div>
               {confirmPassword.length > 0 && (
                 <p className={`flex items-center gap-1.5 text-[11px] mt-2 ${matches ? "text-emerald-600" : "text-rose-500"}`}>

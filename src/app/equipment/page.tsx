@@ -43,6 +43,18 @@ const NEEDS_ATTENTION = new Set(["BROKEN_DOWN", "AWAITING_PARTS", "UNDER_MAINTEN
 
 type TypeTab = "ALL" | AssetPrefix;
 
+// Declared at module scope on purpose. A component defined inside another is a
+// new type on every render, so React unmounts and remounts its subtree, which is
+// how an input loses focus mid-typing.
+function SortIcon({ field, active, direction }: { field: string; active: string; direction: string }) {
+  if (active !== field) return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />;
+  return direction === "asc" ? (
+    <ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
+  ) : (
+    <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+  );
+}
+
 export default function EquipmentList() {
   const { data: equipmentList, loading, error, refresh } = useApi<any[]>("/api/equipment", []);
   const [search, setSearch] = useState("");
@@ -147,15 +159,6 @@ export default function EquipmentList() {
     c === "ALL" ? "All categories" : EQUIPMENT_CATEGORY_LABELS[c] ?? c.replaceAll("_", " ");
   const statusLabel = (s: string) =>
     s === "ALL" ? "All statuses" : EQUIPMENT_STATUS_LABELS[s] ?? s.replaceAll("_", " ");
-
-  const SortIcon = ({ field }: { field: string }) =>
-    sortField !== field ? (
-      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-    ) : sortDirection === "asc" ? (
-      <ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
-    ) : (
-      <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
-    );
 
   const rowActions = (eq: any) => {
     const urlParam = (eq.assetId || "").replace(/\//g, "-");
@@ -332,12 +335,12 @@ export default function EquipmentList() {
                     <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold select-none">
                       <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("name")}>
                         <div className="flex items-center gap-1">
-                          Name <SortIcon field="name" />
+                          Name <SortIcon active={sortField} direction={sortDirection} field="name" />
                         </div>
                       </th>
                       <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("assetId")}>
                         <div className="flex items-center gap-1">
-                          Asset ID <SortIcon field="assetId" />
+                          Asset ID <SortIcon active={sortField} direction={sortDirection} field="assetId" />
                         </div>
                       </th>
                       <th className="py-3.5 px-4">Category</th>
