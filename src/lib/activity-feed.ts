@@ -55,7 +55,29 @@ const VERB: Record<string, string> = {
   REJECT: "rejected",
   APPROVE: "approved",
   LOGIN: "signed in",
+  // The diagnosis engine writes its own action names in lower case, and
+  // "Daniel ai_chat a diagnosis" is what came out the other side.
+  AI_CHAT: "ran",
+  AI_DIAGNOSE: "ran",
 };
+
+// The AI routes record the model, the token counts and how many pieces of
+// evidence were used. That belongs in the audit log: it is real provenance and
+// real cost, and an auditor asking how a diagnosis was reached needs it. It
+// does not belong on a maintenance manager's dashboard, where
+// "913in/350out · 6 evidence items" is telemetry addressed to nobody in the
+// building. Trimmed for the summary only; /audit/logs still holds all of it.
+const TELEMETRY = [
+  /\s*·\s*\d+in\/\d+out(\s+tokens)?/gi,
+  /\s*·\s*\d+\s+evidence items?/gi,
+  /\s*\((?:gemini|claude|gpt|anthropic)[^)]*\)/gi,
+];
+
+export function stripTelemetry(text: string): string {
+  let out = text;
+  for (const re of TELEMETRY) out = out.replace(re, "");
+  return out.replace(/\s{2,}/g, " ").replace(/\s*·\s*$/, "").trim();
+}
 
 const ENTITY: Record<string, string> = {
   work_order: "work order",
@@ -94,7 +116,7 @@ export type ActivityLine = {
 
 export function toActivityLine(row: AuditRow): ActivityLine {
   const who = row.userName?.trim() || "The system";
-  const verb = VERB[row.action] ?? row.action.toLowerCase();
+  const verb = VERB[row.action.toUpperCase()] ?? row.action.toLowerCase().replace(/_/g, " ");
   const what = entityLabel(row.entityType);
 
   return {
@@ -102,7 +124,7 @@ export function toActivityLine(row: AuditRow): ActivityLine {
     // A signature is against a step, not against a noun, so it reads
     // differently: "signed a permit" rather than "signed permit".
     headline: `${who} ${verb} ${verb === "signed in" ? "" : `a ${what}`}`.trim(),
-    detail: row.entityDescription?.trim() || null,
+    detail: stripTelemetry(row.entityDescription ?? "") || null,
     timestamp: row.timestamp,
   };
 }

@@ -14,6 +14,7 @@ import AccountMenu from "./AccountMenu";
 import QuickActions from "./QuickActions";
 import PlantStatus from "./PlantStatus";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
+import { pageTitle } from "@/lib/page-title";
 
 // Global chrome: left vertical sidebar + top bar with global search.
 // The login page renders bare (no chrome). Pages the current role may not access
@@ -28,6 +29,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
   // Close the mobile drawer whenever the route changes.
   useEffect(() => setNavOpen(false), [pathname]);
+
+  // Name the browser tab. Every page inherited the root title, so anyone
+  // working with the schedule, a work order and a permit open at once was
+  // choosing between identical labels by remembering which tab was which.
+  // These are client components and cannot export Next's metadata, so it is set
+  // on navigation instead.
+  useEffect(() => {
+    document.title = pageTitle(pathname);
+  }, [pathname]);
 
   if (bare) return <>{children}</>;
 

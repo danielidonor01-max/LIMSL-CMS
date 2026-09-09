@@ -1,7 +1,14 @@
 // src/lib/__tests__/activity-feed.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isOperational, toActivityLine, operationalFeed, entityLabel, type AuditRow } from "../activity-feed";
+import {
+  isOperational,
+  toActivityLine,
+  operationalFeed,
+  entityLabel,
+  stripTelemetry,
+  type AuditRow,
+} from "../activity-feed";
 
 const row = (over: Partial<AuditRow> = {}): AuditRow => ({
   id: "a1",
@@ -80,4 +87,38 @@ test("the feed filters before it caps, so noise cannot crowd out the work", () =
 
 test("an empty log produces an empty feed rather than throwing", () => {
   assert.deepEqual(operationalFeed([]), []);
+});
+
+test("AI telemetry is trimmed from the summary, not from the audit trail", () => {
+  // Verbatim from the re-audit's screenshot of the dashboard.
+  const line = toActivityLine(
+    row({
+      action: "ai_chat",
+      entityType: "diagnosis_session",
+      entityDescription: "AI chat turn (gemini:gemini-flash-latest) \u00b7 913in/350out \u00b7 6 evidence items",
+    }),
+  );
+  assert.equal(line.headline, "Daniel Idonor ran a diagnosis");
+  assert.equal(line.detail, "AI chat turn");
+});
+
+test("token counts, evidence counts and model names all go", () => {
+  assert.equal(
+    stripTelemetry('AI analysis (gemini-2.0), "spindle noise" \u00b7 120in/80out tokens \u00b7 4 evidence items'),
+    'AI analysis, "spindle noise"',
+  );
+});
+
+test("an ordinary description is left exactly as written", () => {
+  assert.equal(stripTelemetry("WO-2026-0031, Quarterly PM"), "WO-2026-0031, Quarterly PM");
+  // A figure that is not telemetry must survive: 6 evidence items is telemetry,
+  // 6 machines is the record.
+  assert.equal(stripTelemetry("Marked 6 machines for inspection"), "Marked 6 machines for inspection");
+});
+
+test("a description that was only telemetry becomes null rather than an empty line", () => {
+  assert.equal(
+    toActivityLine(row({ entityDescription: "\u00b7 913in/350out \u00b7 6 evidence items" })).detail,
+    null,
+  );
 });
