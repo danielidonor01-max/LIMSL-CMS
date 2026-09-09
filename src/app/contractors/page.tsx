@@ -275,7 +275,7 @@ export default function ContractorsPage() {
               <EmptyState
                 icon={HardHat}
                 title="No contractors registered"
-                message="Add the companies that come on site, OEM engineers, electricians, riggers. Recording their insurance expiry and induction date is what lets the system refuse a permit when either has lapsed."
+                message="No contractors on the register. Add the companies that come on site, with their insurance and induction dates, so a permit can be refused when cover lapses."
                 actionLabel={canWrite ? "Add the first contractor" : undefined}
                 onAction={canWrite ? () => setShowAdd(true) : undefined}
               />

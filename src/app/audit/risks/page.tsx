@@ -99,7 +99,7 @@ export default function RiskRegister() {
                 <EmptyState
                   icon={ShieldCheck}
                   title="No risks recorded"
-                  message="The risk log is empty. Risks raised against maintenance processes will appear here for mitigation and sign-off."
+                  message="No risks logged. Raise one to record its likelihood, consequence and controls."
                 />
               )
             ) : (
@@ -185,7 +185,7 @@ export default function RiskRegister() {
               <EmptyState
                 icon={ShieldCheck}
                 title="No risk selected"
-                message="Pick a risk from the list to record the controls put in place, or to review its likelihood and consequence scores."
+                message="Pick a risk to record its controls or review its scores."
               />
             )}
           </div>

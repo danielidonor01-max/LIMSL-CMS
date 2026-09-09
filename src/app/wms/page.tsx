@@ -118,7 +118,7 @@ export default function WmsList() {
                 <EmptyState
                   icon={FileText}
                   title="No work method statements yet"
-                  message="A WMS sets out how a job is to be done safely and must be approved before the work starts. Draft the first one here."
+                  message="No method statements yet. Each one sets out how a job will be done, and must be approved before work starts."
                   actionLabel="Draft New WMS"
                   actionHref="/wms/new"
                 />

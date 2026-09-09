@@ -81,7 +81,7 @@ export default function PermitsList() {
             <EmptyState
               icon={ShieldCheck}
               title="No permits raised yet"
-              message="A permit to work must be signed and approved before isolation work begins. Raise one against the equipment being worked on."
+              message="No permits raised. A permit must be fully signed before work begins."
               actionLabel={canIssue ? "Raise PTW" : undefined}
               actionHref={canIssue ? "/permits/new" : undefined}
             />

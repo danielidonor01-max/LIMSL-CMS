@@ -161,7 +161,7 @@ export default function JhaListPage() {
               title={rows.length === 0 ? "No hazard analysis yet" : "Nothing matches that"}
               message={
                 rows.length === 0
-                  ? "A job hazard analysis is written against an approved Work Method Statement, and a permit cannot be raised until it is approved."
+                  ? "No hazard analysis yet. Each one is written against an approved method statement, and a permit needs one."
                   : "Try a different search or tab."
               }
               actionLabel={rows.length === 0 ? "New Analysis" : undefined}

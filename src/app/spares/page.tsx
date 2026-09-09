@@ -300,7 +300,7 @@ function SparesRegister() {
               <EmptyState
                 icon={Package}
                 title="No spares registered yet"
-                message="Start with the parts for your CRITICAL machines. Recording a minimum level and a supplier lead time is what turns a parts list into a warning you get weeks before a breakdown."
+                message="No spares registered. Start with the parts for your critical machines, and set a minimum level so you are warned before the shelf is empty."
                 actionLabel={canWrite ? "Add the first part" : undefined}
                 onAction={canWrite ? () => setShowCreate(true) : undefined}
               />

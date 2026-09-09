@@ -137,7 +137,7 @@ export default function CorrectiveMaintenanceList() {
                 <EmptyState
                   icon={AlertTriangle}
                   title="No breakdowns logged"
-                  message="Nothing has been reported as broken down. When a machine fails, report it here so the fault, its root cause and the repair are on record."
+                  message="No breakdowns reported. When a machine fails, report it here so the fault and the repair are on record."
                   actionLabel="Report Machinery Fault"
                   actionHref="/corrective/new"
                 />

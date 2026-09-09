@@ -43,13 +43,18 @@ const CHANNEL_LABELS: Record<string, string> = {
 };
 
 const DELIVERY_LABELS: Record<string, string> = {
-  // "Sent" overstates it: SMTP acceptance is not delivery. The wording has to
-  // survive the case where the message was accepted and then quarantined.
-  SENT: "handed to the mail server",
+  // "Sent" would overstate it, since SMTP acceptance is not delivery, but that
+  // distinction only matters to us. It is no longer shown for a message that
+  // went out, so only the two states a person can act on need wording.
+  SENT: "sent",
   QUEUED: "queued",
-  SKIPPED: "not sent, no contact or channel",
-  FAILED: "failed",
+  SKIPPED: "not sent, no contact details on file",
+  FAILED: "could not be sent",
 };
+
+// The two delivery states that change what somebody does: add a phone number or
+// an email, or find out why the server refused it.
+const NEEDS_ATTENTION = new Set(["SKIPPED", "FAILED"]);
 
 const EVENT_ICON: Record<string, React.ElementType> = {
   PTW_SIGN_REQUEST: ShieldCheck,
@@ -165,15 +170,20 @@ export default function NotificationsPage() {
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-500 flex-wrap">
                         <span className="font-mono">{formatDate(n.createdAt)}</span>
-                        <span className="inline-flex items-center gap-1">
-                          {n.channel === "EMAIL" ? <Mail className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
-                          <span
-                            className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? "bg-ink-100 text-ink-500 border-ink-200"}`}
-                          >
-                            {CHANNEL_LABELS[n.channel] ?? n.channel} ·{" "}
-                            {DELIVERY_LABELS[n.deliveryStatus] ?? n.deliveryStatus.toLowerCase()}
+                        {/* Only when it needs a decision. A message that went
+                            out as expected is not news, and saying so on every
+                            row buried the two states that are. */}
+                        {NEEDS_ATTENTION.has(n.deliveryStatus) && (
+                          <span className="inline-flex items-center gap-1">
+                            {n.channel === "EMAIL" ? <Mail className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                            <span
+                              className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? "bg-ink-100 text-ink-500 border-ink-200"}`}
+                            >
+                              {CHANNEL_LABELS[n.channel] ?? n.channel} ·{" "}
+                              {DELIVERY_LABELS[n.deliveryStatus] ?? n.deliveryStatus.toLowerCase()}
+                            </span>
                           </span>
-                        </span>
+                        )}
                       </div>
                       {/* The reason was recorded and shown to nobody. */}
                       {n.deliveryStatus === "FAILED" && n.deliveryError && (

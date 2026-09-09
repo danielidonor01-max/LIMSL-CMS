@@ -18,6 +18,7 @@ import DashboardHero from "@/components/DashboardHero";
 import MetricPanel, { type Metric } from "@/components/MetricPanel";
 import { formatDate } from "@/lib/utils";
 import { useApi } from "@/lib/api-cache";
+import { operationalFeed } from "@/lib/activity-feed";
 import { ROLE_LABELS, canAccessPath } from "@/lib/roles";
 import {
   EQUIPMENT_STATUS_BADGE,
@@ -374,16 +375,11 @@ export default function Home() {
               {activity.length === 0 && (
                 <p className="text-xs text-ink-500">No recorded activity yet.</p>
               )}
-              {activity.slice(0, 6).map((act) => (
-                <div key={act.id} className="flex gap-3 text-xs leading-relaxed border-l-2 border-ink-200 pl-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold tracking-wider text-[11px] text-brand-600">{act.action}</span>
-                      <span className="text-[11px] text-ink-500 font-mono">{formatDate(act.timestamp)}</span>
-                    </div>
-                    <p className="font-medium text-ink-900 capitalize">{act.entityType.replace(/_/g, " ")}</p>
-                    <p className="text-ink-500 text-xs">{act.entityDescription ?? `by ${act.userName ?? "system"}`}</p>
-                  </div>
+              {operationalFeed(activity).map((act) => (
+                <div key={act.id} className="border-l-2 border-line pl-3">
+                  <p className="text-xs font-medium text-ink-900">{act.headline}</p>
+                  {act.detail && <p className="text-xs text-ink-500 mt-0.5">{act.detail}</p>}
+                  <p className="text-[11px] text-ink-400 mt-0.5">{formatDate(act.timestamp)}</p>
                 </div>
               ))}
             </div>

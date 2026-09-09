@@ -254,7 +254,7 @@ export default function TrainingPage() {
                 <EmptyState
                   icon={ClipboardCheck}
                   title="No competency assessments recorded"
-                  message="The skills matrix builds itself from assessments. Record the first one to see who is qualified for what, and where the gaps are."
+                  message="No assessments recorded. The skills matrix builds itself once you record the first one."
                   actionLabel={canWrite ? "Record Assessment" : undefined}
                   onAction={
                     canWrite

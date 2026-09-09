@@ -383,7 +383,7 @@ export default function EmergencyPage() {
                 <EmptyState
                   icon={ShieldAlert}
                   title="No emergency or safety equipment registered"
-                  message="Start with the fire alarm system, smoke detectors, lightning arrestors, earthing and spill kits. Recording where each one is and how often it must be checked is what turns installed equipment into evidence that it works."
+                  message="No safety equipment registered yet. Add the fire alarms, smoke detectors, lightning arrestors, earthing and spill kits to start the inspection record."
                   actionLabel={canWrite ? "Add the first item" : undefined}
                   onAction={canWrite ? () => setShowItem(true) : undefined}
                 />
@@ -468,7 +468,7 @@ export default function EmergencyPage() {
               <EmptyState
                 icon={Siren}
                 title="No drills recorded"
-                message="ISO 45001 asks for periodic emergency drills, and for evidence that what they surfaced was acted on. Record the next one here, including anything that went wrong, which is the part that matters."
+                message="No drills recorded. Log each one with what it surfaced and what was done about it."
                 actionLabel={canWrite ? "Record a drill" : undefined}
                 onAction={canWrite ? () => setShowDrill(true) : undefined}
               />

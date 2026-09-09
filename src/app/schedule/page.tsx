@@ -499,7 +499,7 @@ export default function SchedulePage() {
               <EmptyState
                 icon={ShieldCheck}
                 title="Nothing is being deferred"
-                message="No maintenance has been formally put off. When work has to wait, defer it here rather than letting it run overdue, the reason, the person accepting the risk and the review date are all recorded."
+                message="Nothing has been deferred. When work has to wait, defer it here rather than letting it run overdue."
                 actionLabel="View all activities"
                 onAction={() => setTab("all")}
               />
