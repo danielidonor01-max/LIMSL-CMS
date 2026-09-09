@@ -1,6 +1,7 @@
 // src/app/calibration/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -218,11 +219,39 @@ export default function CalibrationPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-4">
-              <Stat icon={<CheckCircle2 className="w-4 h-4 text-brand-600" />} label="Current" value={summary.CURRENT ?? 0} tone="border-brand-200 bg-brand-50" />
-              <Stat icon={<Clock className="w-4 h-4 text-warn-600" />} label="Due Soon" value={summary.DUE_SOON ?? 0} tone="border-warn-200 bg-warn-50" />
-              <Stat icon={<AlertTriangle className="w-4 h-4 text-danger-600" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-danger-200 bg-danger-50" />
-            </div>
+            <MetricPanel
+              columns={3}
+              label="Calibration status"
+              metrics={[
+                {
+                  key: "current",
+                  label: "Current",
+                  count: summary.CURRENT ?? 0,
+                  value: String(summary.CURRENT ?? 0),
+                  status: "plain",
+                  icon: CheckCircle2,
+                  description: "In date and traceable",
+                },
+                {
+                  key: "due",
+                  label: "Due soon",
+                  count: summary.DUE_SOON ?? 0,
+                  value: String(summary.DUE_SOON ?? 0),
+                  status: "warning",
+                  icon: Clock,
+                  description: "Book these before they lapse",
+                },
+                {
+                  key: "overdue",
+                  label: "Overdue",
+                  count: summary.OVERDUE ?? 0,
+                  value: String(summary.OVERDUE ?? 0),
+                  status: "danger",
+                  icon: AlertTriangle,
+                  description: "Readings taken with these are not traceable",
+                },
+              ]}
+            />
 
             <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
@@ -557,18 +586,6 @@ function Meta({ label, value, mono = false }: { label: string; value: string | n
     <div>
       <dt className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider">{label}</dt>
       <dd className={`text-ink-700 ${mono ? "font-mono" : ""}`}>{value || "-"}</dd>
-    </div>
-  );
-}
-
-function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number; tone: string }) {
-  return (
-    <div className={`p-4 rounded-xl border ${tone}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
-        {icon}
-      </div>
-      <div className="text-2xl font-bold mt-2 text-ink-900">{value}</div>
     </div>
   );
 }

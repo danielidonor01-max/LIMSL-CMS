@@ -1,6 +1,7 @@
 // src/app/permits/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
 import { useState, useEffect } from "react";
@@ -66,12 +67,42 @@ export default function PermitsList() {
           }
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Stat label="Awaiting Sign-off" value={awaiting} text="text-warn-600" />
-          <Stat label="Approved / Active" value={active} text="text-brand-600" />
-          <Stat label="Expired" value={expired} text="text-danger-600" />
-          <Stat label="Total Permits" value={records.length} text="text-ink-900" />
-        </div>
+        <MetricPanel
+          label="Permit status"
+          metrics={[
+            {
+              key: "awaiting",
+              label: "Awaiting sign-off",
+              count: awaiting,
+              value: String(awaiting),
+              status: "warning",
+              description: "Raised, not yet authorised to start",
+            },
+            {
+              key: "active",
+              label: "Approved and active",
+              count: active,
+              value: String(active),
+              status: "plain",
+              description: "Work may proceed under these",
+            },
+            {
+              key: "expired",
+              label: "Expired",
+              count: expired,
+              value: String(expired),
+              status: "danger",
+              description: "Validity ran out before close-out",
+            },
+            {
+              key: "total",
+              label: "Total permits",
+              count: records.length,
+              value: String(records.length),
+              status: "plain",
+            },
+          ]}
+        />
 
         <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           {loading ? (
@@ -135,15 +166,6 @@ export default function PermitsList() {
           )}
         </div>
       </main>
-    </div>
-  );
-}
-
-function Stat({ label, value, text }: { label: string; value: number; text: string }) {
-  return (
-    <div className="p-4 bg-ink-100 border border-ink-200 rounded-xl">
-      <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</p>
-      <h2 className={`text-2xl font-bold mt-2 ${text}`}>{value}</h2>
     </div>
   );
 }

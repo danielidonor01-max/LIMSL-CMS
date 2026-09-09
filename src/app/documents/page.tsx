@@ -1,6 +1,7 @@
 // src/app/documents/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
@@ -117,12 +118,47 @@ export default function DocumentsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat label="Doc Compliance" value={`${summary.compliance}%`} tone="border-brand-200 bg-brand-50" text="text-brand-600" icon={<CheckCircle2 className="w-4 h-4 text-brand-600" />} />
-            <Stat label="On File" value={String(summary.available)} tone="border-ink-200 bg-white" text="text-ink-900" icon={<FolderOpen className="w-4 h-4 text-ink-400" />} />
-            <Stat label="Missing" value={String(summary.missing)} tone="border-danger-200 bg-danger-50" text="text-danger-600" icon={<FileWarning className="w-4 h-4 text-danger-600" />} />
-            <Stat label="Expired" value={String(summary.expired)} tone="border-warn-200 bg-warn-50" text="text-warn-600" icon={<Clock className="w-4 h-4 text-warn-600" />} />
-          </div>
+          <MetricPanel
+            label="Document compliance"
+            metrics={[
+              {
+                key: "compliance",
+                label: "Doc compliance",
+                // A percentage is a scale, not a count, so no zero rule: 0%
+                // compliance genuinely is the alarming case.
+                value: `${summary.compliance}%`,
+                status: summary.compliance >= 90 ? "plain" : "danger",
+                icon: CheckCircle2,
+                description: "Machines with every required document on file",
+              },
+              {
+                key: "available",
+                label: "On file",
+                count: summary.available,
+                value: String(summary.available),
+                status: "plain",
+                icon: FolderOpen,
+              },
+              {
+                key: "missing",
+                label: "Missing",
+                count: summary.missing,
+                value: String(summary.missing),
+                status: "danger",
+                icon: FileWarning,
+                description: "Never supplied or never uploaded",
+              },
+              {
+                key: "expired",
+                label: "Expired",
+                count: summary.expired,
+                value: String(summary.expired),
+                status: "warning",
+                icon: Clock,
+                description: "On file but out of date",
+              },
+            ]}
+          />
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
@@ -261,18 +297,6 @@ export default function DocumentsPage() {
           <p className="text-xs text-ink-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
         </>
       )}
-    </div>
-  );
-}
-
-function Stat({ label, value, tone, text, icon }: { label: string; value: string; tone: string; text: string; icon: React.ReactNode }) {
-  return (
-    <div className={`p-4 rounded-xl border ${tone}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
-        {icon}
-      </div>
-      <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );
 }

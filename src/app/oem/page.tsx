@@ -1,6 +1,7 @@
 // src/app/oem/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -232,12 +233,41 @@ export default function OemPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat label="Vendors" value={String(summary.total)} tone="border-ink-200 bg-ink-50" text="text-ink-900" />
-              <Stat label="Active Warranty" value={String(summary.active)} tone="border-brand-200 bg-brand-50" text="text-brand-600" />
-              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-warn-200 bg-warn-50" text="text-warn-600" />
-              <Stat label="Expired" value={String(summary.expired)} tone="border-danger-200 bg-danger-50" text="text-danger-600" />
-            </div>
+            <MetricPanel
+              label="Warranty status"
+              metrics={[
+                {
+                  key: "total",
+                  label: "Vendors",
+                  count: summary.total,
+                  value: String(summary.total),
+                  status: "plain",
+                },
+                {
+                  key: "active",
+                  label: "Active warranty",
+                  count: summary.active,
+                  value: String(summary.active),
+                  status: "plain",
+                  description: "A repair on these may be chargeable to the OEM",
+                },
+                {
+                  key: "expiring",
+                  label: "Expiring within 60 days",
+                  count: summary.expiringSoon,
+                  value: String(summary.expiringSoon),
+                  status: "warning",
+                  description: "Renew or plan around the loss of cover",
+                },
+                {
+                  key: "expired",
+                  label: "Expired",
+                  count: summary.expired,
+                  value: String(summary.expired),
+                  status: "danger",
+                },
+              ]}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {vendors.length === 0 && (
@@ -493,15 +523,6 @@ function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () 
     <div className="flex gap-3 justify-end pt-2">
       <Button variant="secondary" type="button" onClick={onCancel}>Cancel</Button>
       <Button variant="primary" type="submit" loading={saving}>{label}</Button>
-    </div>
-  );
-}
-
-function Stat({ label, value, tone, text }: { label: string; value: string; tone: string; text: string }) {
-  return (
-    <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
-      <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );
 }

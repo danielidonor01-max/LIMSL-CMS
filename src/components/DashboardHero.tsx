@@ -46,6 +46,15 @@ function headline(s: HeroState): { text: string; lead: { href: string; label: st
       lead: { href: "/work-orders", label: "Review and sign" },
     };
   }
+  // Naming the fleet is stronger than naming the absence of a problem. "Nothing
+  // is overdue" is a fact about paperwork; "All 70 machines are running" is a
+  // fact about the plant, and it is the one a supervisor came to check.
+  if (s.totalEquipment > 0 && s.operational === s.totalEquipment) {
+    return {
+      text: `All ${s.totalEquipment} machines are running${who}.`,
+      lead: { href: "/schedule", label: "Open the schedule" },
+    };
+  }
   return {
     text: `Nothing is overdue${who}.`,
     lead: { href: "/schedule", label: "Open the schedule" },
@@ -152,7 +161,17 @@ export default function DashboardHero(props: { state: HeroState }) {
 }
 
 function HeroStat({ label, value, tone }: { label: string; value: number; tone: "plain" | "warn" | "bad" }) {
-  const colour = tone === "bad" ? "text-danger-400" : tone === "warn" ? "text-warn-400" : "text-white";
+  // The same zero rule as everywhere else, which this component was breaking:
+  // "0 overdue" rendered in the same white as "2 down", so a real number and an
+  // empty one had identical weight on the one panel meant to be read fastest.
+  const colour =
+    value === 0
+      ? "text-nav-text"
+      : tone === "bad"
+        ? "text-danger-400"
+        : tone === "warn"
+          ? "text-warn-400"
+          : "text-white";
   return (
     <div>
       <dd className={`text-xl font-semibold leading-none tabular-nums ${colour}`}>{value}</dd>
