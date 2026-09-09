@@ -112,7 +112,7 @@ export default function DocumentsPage() {
       />
 
       {loading ? (
-        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           <TableSkeleton rows={6} cols={4} />
         </div>
       ) : (
@@ -147,7 +147,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Accordion: one row per machine, expand to reveal its documents */}
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden divide-y divide-ink-200">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden divide-y divide-ink-200">
             {groups.length === 0 ? (
               filtersActive ? (
                 <EmptyState

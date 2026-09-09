@@ -146,7 +146,7 @@ export default function ReportsPage() {
     router.push(`/reports/print/asset-history?${qs.toString()}`);
   };
 
-  const reportCard = "bg-white border border-ink-200 rounded-xl p-5";
+  const reportCard = "bg-surface border border-line rounded-2xl shadow-card p-5";
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -163,7 +163,7 @@ export default function ReportsPage() {
         />
 
         {loading || !kpi ? (
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={4} />
           </div>
         ) : (
@@ -296,7 +296,7 @@ export default function ReportsPage() {
 
 function Head({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-4">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-4">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}

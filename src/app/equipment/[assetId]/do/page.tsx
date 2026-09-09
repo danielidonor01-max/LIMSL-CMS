@@ -131,7 +131,7 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
   return (
     <div className="p-4 sm:p-6 max-w-lg w-full mx-auto space-y-5">
       {/* Which machine you're standing at, confirm before acting. */}
-      <div className="bg-white border border-ink-200 rounded-xl p-4">
+      <div className="bg-surface border border-line rounded-2xl shadow-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-lg font-bold tracking-tight text-ink-900 truncate">{eq.name}</h1>
@@ -156,7 +156,7 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
             <Link
               key={a.title}
               href={a.href}
-              className="flex items-center gap-4 bg-white border border-ink-200 rounded-xl p-4 min-h-[76px] hover:border-brand-300 hover:shadow-sm active:scale-[0.99] transition-all group"
+              className="flex items-center gap-4 bg-surface border border-line rounded-2xl shadow-card p-4 min-h-[76px] hover:border-brand-300 hover:shadow-sm active:scale-[0.99] transition-all group"
             >
               <div className={`p-3 rounded-xl border shrink-0 ${toneMap[a.tone]}`}>
                 <Icon className="w-6 h-6" />

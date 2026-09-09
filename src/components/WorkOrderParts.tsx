@@ -111,7 +111,7 @@ export default function WorkOrderParts({
   };
 
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-5 space-y-3">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <Package className="w-4 h-4 text-cyan-600" /> Parts used

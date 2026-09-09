@@ -357,7 +357,7 @@ export default function EmergencyPage() {
 
         {/* ── Equipment register ── */}
         {tab === "register" && (
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             {error && !loading ? (
               <LoadError what="the emergency register" onRetry={refresh} />
             ) : loading ? (
@@ -460,7 +460,7 @@ export default function EmergencyPage() {
 
         {/* ── Drill log ── */}
         {tab === "drills" && (
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={4} cols={4} />
             ) : !data?.drills.length ? (

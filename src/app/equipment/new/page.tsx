@@ -116,7 +116,7 @@ export default function NewEquipmentPage() {
         backLabel="Back to registry"
       />
 
-      <form onSubmit={submit} className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
+      <form onSubmit={submit} className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
         {/* What kind of asset, decided first, because it drives everything below */}
         <fieldset>
           <legend className={LABEL_CLASS}>What are you adding?</legend>

@@ -147,7 +147,7 @@ export default function GlobalSearch() {
           id="global-search-results"
           role="listbox"
           aria-label="Search results"
-          className="absolute top-full mt-2 w-full bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto"
+          className="absolute top-full mt-2 w-full bg-surface border border-line rounded-2xl shadow-card shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto"
         >
           {results.length === 0 && !loading ? (
             <div className="px-4 py-6 text-center text-xs text-ink-500">No matches for “{q}”.</div>

@@ -205,7 +205,7 @@ export default function CalibrationPage() {
         />
 
         {loading ? (
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={7} />
           </div>
         ) : (
@@ -223,7 +223,7 @@ export default function CalibrationPage() {
               <Stat icon={<AlertTriangle className="w-4 h-4 text-danger-600" />} label="Overdue" value={summary.OVERDUE ?? 0} tone="border-danger-200 bg-danger-50" />
             </div>
 
-            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>

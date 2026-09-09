@@ -105,7 +105,7 @@ export default function NonConformityRegister() {
         </div>
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-white border border-ink-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-xs">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
@@ -129,7 +129,7 @@ export default function NonConformityRegister() {
             </div>
           </div>
 
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : (
@@ -194,7 +194,7 @@ export default function NonConformityRegister() {
 
         {/* Right Side: NC Action Log & Resolution */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-6">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-6">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Non-Conformity Action Center
             </h2>

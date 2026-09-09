@@ -188,7 +188,7 @@ export default function DataImportPage() {
       </div>
 
       {/* Uploader */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <p className="text-xs text-ink-500">{active.blurb}</p>
 
         <div className="flex flex-wrap items-center gap-3">

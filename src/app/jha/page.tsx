@@ -95,15 +95,15 @@ export default function JhaListPage() {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-white border border-ink-200 rounded-xl">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
             <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Awaiting approval</p>
             <h2 className="text-2xl font-bold text-warn-600 mt-2">{awaiting}</h2>
           </div>
-          <div className="p-4 bg-white border border-ink-200 rounded-xl">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
             <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Approved</p>
             <h2 className="text-2xl font-bold text-brand-600 mt-2">{approved}</h2>
           </div>
-          <div className="p-4 bg-white border border-ink-200 rounded-xl">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
             <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Total</p>
             <h2 className="text-2xl font-bold text-ink-900 mt-2">{rows.length}</h2>
           </div>
@@ -134,7 +134,7 @@ export default function JhaListPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           {error ? (
             <LoadError onRetry={refresh} />
           ) : loading ? (

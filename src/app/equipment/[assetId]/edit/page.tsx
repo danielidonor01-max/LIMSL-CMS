@@ -89,7 +89,7 @@ export default function EquipmentEditPage() {
         </div>
       </div>
 
-      <form onSubmit={save} className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
+      <form onSubmit={save} className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
         {error && (
           <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-danger-600 text-xs">{error}</div>
         )}

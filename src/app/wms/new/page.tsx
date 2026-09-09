@@ -139,7 +139,7 @@ export default function NewWms() {
           backHref="/wms"
           backLabel="Work Method Statements"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-white border border-ink-200 rounded-xl space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-6">
           <h2 className="text-sm font-bold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
             Create Work Method Statement (WMS)
           </h2>

@@ -458,7 +458,7 @@ export default function UsersAdminPage() {
       {pageTab === "users" && (
         <>
           {/* Toolbar */}
-          <div className="p-4 bg-white border border-ink-200 rounded-xl flex flex-col md:flex-row gap-3 md:items-center">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card flex flex-col md:flex-row gap-3 md:items-center">
             <div className="relative flex-1 md:max-w-xs">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-400" />
               <input
@@ -485,7 +485,7 @@ export default function UsersAdminPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-white border border-ink-200 rounded-xl">
+          <div className="hidden md:block bg-surface border border-line rounded-2xl shadow-card">
             <div className="overflow-x-auto rounded-xl">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -589,7 +589,7 @@ export default function UsersAdminPage() {
           <div className="md:hidden space-y-3">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white border border-ink-200 rounded-xl p-4 animate-pulse flex items-center gap-3">
+                <div key={i} className="bg-surface border border-line rounded-2xl shadow-card p-4 animate-pulse flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-ink-100 shrink-0" />
                   <div className="flex-1 space-y-1.5">
                     <div className="h-3 w-32 bg-ink-100 rounded" />
@@ -598,14 +598,14 @@ export default function UsersAdminPage() {
                 </div>
               ))
             ) : filtered.length === 0 ? (
-              <div className="bg-white border border-ink-200 rounded-xl py-12 text-center text-ink-500">
+              <div className="bg-surface border border-line rounded-2xl shadow-card py-12 text-center text-ink-500">
                 <UsersIcon className="w-8 h-8 mx-auto text-ink-300 mb-2" />
                 <p className="text-sm font-semibold text-ink-600">No users match</p>
                 <p className="text-xs text-ink-400 mt-0.5">Adjust the search or filters, or add a new user.</p>
               </div>
             ) : (
               filtered.map((u) => (
-                <div key={u.id} className="bg-white border border-ink-200 rounded-xl p-4">
+                <div key={u.id} className="bg-surface border border-line rounded-2xl shadow-card p-4">
                   <div className="flex items-start gap-3">
                     <Avatar name={u.name} />
                     <div className="min-w-0 flex-1">
@@ -751,7 +751,7 @@ export default function UsersAdminPage() {
           </div>
 
           {roleView === "matrix" && (
-            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -822,7 +822,7 @@ export default function UsersAdminPage() {
               const perms = PERMISSION_SETS.filter((p) => p.roles.includes(r));
               const paths = ROLE_ALLOWED_PATHS[r];
               return (
-                <div key={r} className="bg-white border border-ink-200 rounded-xl p-5 flex flex-col gap-3">
+                <div key={r} className="bg-surface border border-line rounded-2xl shadow-card p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>

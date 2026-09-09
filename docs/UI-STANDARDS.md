@@ -34,6 +34,48 @@ pass.
 `violet`, `teal` and `orange` remain raw. They are categorical identity colours
 for roles rather than system states; see `docs/DESIGN-BRIEF.md`.
 
+### Surfaces
+
+| Token | Value | Use |
+|---|---|---|
+| `canvas` | `#f4f6fb` | The page behind everything |
+| `surface` | white | Cards, panels, the top bar |
+| `nav` | `#10131c` | The sidebar, and the dark button variant |
+| `nav-raised` / `nav-active` | | Sidebar hover and active item |
+| `nav-text` / `nav-text-active` / `nav-label` | | Sidebar text, active text, section labels |
+
+The navigation is the one dark surface in a light application. Its greys are a
+separate ramp from `ink`, which is tuned for text on white and turns muddy when
+inverted.
+
+**Secondary text sitting directly on the canvas uses `ink-600`, not `ink-500`.**
+`ink-500` measures 4.32:1 there, under the 4.5:1 floor. On a white card
+`ink-500` is correct and measures 4.76:1. This is the one place the two differ,
+and it is why the canvas is not as dark as the reference product's.
+
+### Cards
+
+`bg-surface border border-line rounded-2xl shadow-card`. The shadow is a
+1px hairline lift, never a drop shadow: on a dense compliance screen a real
+shadow under every card turns the page into gravel.
+
+For a row of related figures use `<MetricPanel>` rather than separate cards.
+One panel with hairline dividers reads as a single object, which is what a set
+of related measures is.
+
+### Buttons
+
+`primary` (brand), `secondary`, `danger`, `ghost`, `subtle`, and `dark`. Use
+`dark` for the one lead action on a page that already has brand-coloured
+controls, where a second green button would compete with them rather than lead
+them.
+
+### Badges
+
+`<Badge dot>` adds a leading status dot in the current text colour. Reserve it
+for a status that is live right now rather than a classification. If everything
+has a dot it stops meaning "currently true".
+
 ## Type scale
 
 Fixed steps — don't use sizes outside this set:

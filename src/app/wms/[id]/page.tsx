@@ -91,7 +91,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-6">
           {/* Main Document Details */}
-          <div className="p-6 bg-white border border-ink-200 rounded-xl space-y-6">
+          <div className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-6">
             <div className="border-b border-ink-200 pb-4">
               <h2 className="text-xl font-bold text-ink-900">{wms.title}</h2>
               <p className="text-xs text-ink-500 mt-1">Revision: {wms.revision} | Prepared by: {wms.preparedByName}</p>
@@ -163,7 +163,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
         {/* Right Side: authorisation status + sign-off chain */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               WMS Document Status
             </h2>

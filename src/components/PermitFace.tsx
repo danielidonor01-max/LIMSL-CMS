@@ -106,7 +106,7 @@ export default function PermitFace({
   if (types.length === 0 && anyMarks === 0) return null;
 
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">The permit face</h3>

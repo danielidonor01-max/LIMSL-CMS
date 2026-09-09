@@ -180,7 +180,7 @@ function NewPermitForm() {
 
         <form onSubmit={submit} className="space-y-6">
           {/* The chain behind the permit */}
-          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-brand-600" /> Approved hazard analysis
             </h3>
@@ -213,7 +213,7 @@ function NewPermitForm() {
           </div>
 
           {/* Type of work */}
-          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <div>
               <h3 className="text-sm font-semibold text-ink-900">Type of work</h3>
               <p className="text-[11px] text-ink-500 mt-0.5">
@@ -292,7 +292,7 @@ function NewPermitForm() {
           </div>
 
           {/* Timing and validity */}
-          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <h3 className="text-sm font-semibold text-ink-900">When and who</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
@@ -387,7 +387,7 @@ function NewPermitForm() {
           </div>
 
           {/* The checklists */}
-          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-6">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-6">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-brand-600" /> The permit checklists
             </h3>

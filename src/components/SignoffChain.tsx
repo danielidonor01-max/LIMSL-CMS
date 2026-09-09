@@ -87,7 +87,7 @@ export default function SignoffChain({
   const summary = chainSummary(chain);
 
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-brand-600" /> {title}

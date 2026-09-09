@@ -311,7 +311,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-6">
           {/* Fault Specifications Card */}
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Breakdown Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
@@ -364,7 +364,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           )}
 
           {/* Root Cause Analysis (RCA) Card */}
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-5">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-5">
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
               <span className="px-2 py-0.5 rounded bg-ink-100 border border-ink-200 text-[10px] font-mono font-semibold text-ink-500">
@@ -510,7 +510,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-6">
           {/* Corrective Actions Tracking Log (CATL) */}
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Corrective Action Log</h2>
 
             {/* Existing actions list */}
@@ -579,7 +579,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Closeout & Approvals */}
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Completion Sign-off</h2>
 
             {record.status === "CLOSED" ? (

@@ -224,18 +224,18 @@ export default function TroubleshootPage() {
             <div className="h-3 w-64 bg-ink-100 rounded animate-pulse" />
           </div>
         </div>
-        <div className="h-28 bg-white border border-ink-200 rounded-xl p-5">
+        <div className="h-28 bg-surface border border-line rounded-2xl shadow-card p-5">
           <div className="h-3 w-56 bg-ink-100 rounded animate-pulse mb-3" />
           <div className="h-11 bg-ink-100 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="h-12 bg-ink-100 rounded-xl animate-pulse" />
-            <div className="h-40 bg-white border border-ink-200 rounded-xl animate-pulse" />
+            <div className="h-40 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
           </div>
           <div className="space-y-4">
-            <div className="h-32 bg-white border border-ink-200 rounded-xl animate-pulse" />
-            <div className="h-48 bg-white border border-ink-200 rounded-xl animate-pulse" />
+            <div className="h-32 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
+            <div className="h-48 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ export default function TroubleshootPage() {
       </div>
 
       {/* Symptom input */}
-      <div className="bg-white border border-ink-200 rounded-xl p-5 space-y-3">
+      <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
         <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
           Describe the fault, symptom, or error code
         </label>
@@ -347,11 +347,11 @@ export default function TroubleshootPage() {
           </div>
 
           {panel === "engine" && (!result ? (
-            <div className="bg-white border border-ink-200 rounded-xl p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
               Enter a symptom and run the engine to see ranked probable causes.
             </div>
           ) : result.diagnoses.length === 0 ? (
-            <div className="bg-white border border-ink-200 rounded-xl p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
               No confident match found. Resolve the fault, then record the outcome so the engine learns it.
               {meta.aiReady && (
                 <div className="mt-3">
@@ -369,7 +369,7 @@ export default function TroubleshootPage() {
             </div>
           ) : (
             result.diagnoses.map((d) => (
-              <div key={d.rank} className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+              <div key={d.rank} className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
@@ -507,7 +507,7 @@ export default function TroubleshootPage() {
               />
             </div>
           ) : (
-            <div className="bg-white border border-ink-200 rounded-xl p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
               No AI provider is configured. Add an API key in{" "}
               <Link href="/settings?tab=ai" className="text-brand-600 hover:underline">App Settings → AI Providers</Link> to enable the assistant.
             </div>
@@ -515,13 +515,13 @@ export default function TroubleshootPage() {
 
           {/* Manuals & procedure passages (FTS over document_chunks) */}
           {panel === "docs" && (!result || (result.passages?.length ?? 0) === 0 ? (
-            <div className="bg-white border border-ink-200 rounded-xl p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
               {!result
                 ? "Run a diagnosis first, matching manual and procedure passages appear here."
                 : "No documentation passages matched this symptom."}
             </div>
           ) : (
-            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
               <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-info-600" />
                 <h3 className="text-sm font-semibold text-ink-900">Relevant documentation</h3>
@@ -553,7 +553,7 @@ export default function TroubleshootPage() {
 
         {/* Schematics + component sidebar */}
         <div className="space-y-4">
-          <div className="bg-white border border-ink-200 rounded-xl p-5">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4 text-brand-600" /> Schematics to consult
             </h3>
@@ -595,7 +595,7 @@ export default function TroubleshootPage() {
           </div>
 
           {pastSessions.length > 0 && (
-            <div className="bg-white border border-ink-200 rounded-xl p-5">
+            <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
               <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
                 <HistoryIcon className="w-4 h-4 text-violet-600" /> Past AI diagnoses
               </h3>
@@ -634,7 +634,7 @@ export default function TroubleshootPage() {
             </div>
           )}
 
-          <div className="bg-white border border-ink-200 rounded-xl p-5">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
               <Cpu className="w-4 h-4 text-brand-600" /> Component registry (BOM)
             </h3>

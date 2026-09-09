@@ -237,7 +237,7 @@ export default function PermitDetail() {
         )}
 
         {/* Permit header */}
-        <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+        <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 flex-wrap">

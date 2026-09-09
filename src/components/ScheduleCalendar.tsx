@@ -93,7 +93,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
   const selectedRows = selected ? byDay.get(selected) ?? [] : [];
 
   return (
-    <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+    <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-ink-200">
         <div className="flex items-center gap-2">

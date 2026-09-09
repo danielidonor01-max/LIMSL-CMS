@@ -74,7 +74,7 @@ export default function PermitsList() {
           <Stat label="Total Permits" value={records.length} text="text-ink-900" />
         </div>
 
-        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={4} />
           ) : records.length === 0 ? (

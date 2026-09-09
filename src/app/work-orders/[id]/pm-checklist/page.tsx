@@ -233,7 +233,7 @@ export default function PMChecklistPage() {
   }
 
   const eq = wo.equipment;
-  const sectionCls = "bg-white border border-ink-200 rounded-xl p-6 space-y-4";
+  const sectionCls = "bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4";
   const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
     <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>;
@@ -533,7 +533,7 @@ function ChecklistEditor({
   onChange: (idx: number, patch: Partial<Item>) => void;
 }) {
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-3">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-3">
       <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
         <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>
         {title}

@@ -146,7 +146,7 @@ function NewWorkOrderForm() {
             <span className="text-xs ml-2">Loading…</span>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 bg-white border border-ink-200 rounded-xl p-6">
+          <form onSubmit={submit} className="space-y-5 bg-surface border border-line rounded-2xl shadow-card p-6">
             {error && (
               <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-danger-700 text-xs">
                 {error}

@@ -160,7 +160,7 @@ function AssetHistoryDossier() {
       </div>
 
       <main className="max-w-5xl w-full mx-auto p-6 print:p-0 print:max-w-none">
-        <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:rounded-none print:p-0 space-y-6">
+        <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-6">
           {/* Letterhead */}
           <div className="flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
             <div className="flex items-center gap-3">

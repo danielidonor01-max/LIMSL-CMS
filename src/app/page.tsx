@@ -14,6 +14,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import DashboardHero from "@/components/DashboardHero";
+import MetricPanel, { type Metric } from "@/components/MetricPanel";
 import { formatDate } from "@/lib/utils";
 import { useApi } from "@/lib/api-cache";
 import { ROLE_LABELS, canAccessPath } from "@/lib/roles";
@@ -29,18 +31,6 @@ type AttentionItem = {
   detail: string;
   href: string;
   cta: string;
-};
-
-const TILE_PANEL: Record<string, string> = {
-  danger: "bg-danger-50 border-danger-200",
-  warning: "bg-warn-50 border-warn-200",
-  success: "bg-brand-50 border-brand-200",
-};
-
-const TILE_TEXT: Record<string, string> = {
-  danger: "text-danger-600",
-  warning: "text-warn-600",
-  success: "text-brand-600",
 };
 
 type SignoffItem = {
@@ -116,13 +106,11 @@ export default function Home() {
   const myJobs = myWork.items ?? [];
   const loading = statsLoading;
 
-  // Lead with whatever is worst. Where everything is green the first tile is
+  // Lead with whatever is worst. Where everything is green the first figure is
   // still the leader, it just reads as reassurance rather than an alarm.
-  const { hero, rest } = useMemo(() => {
+  const ranked = useMemo(() => {
     const order: Record<string, number> = { danger: 0, warning: 1, success: 2 };
-    const ranked = [...stats].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
-    const lead = ranked[0];
-    return { hero: lead, rest: stats.filter((s) => s !== lead) };
+    return [...stats].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
   }, [stats]);
 
 
@@ -141,16 +129,20 @@ export default function Home() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
 
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-        {/* Role-aware greeting */}
+        {/* The opening statement. It replaced "Welcome, Daniel", which used the
+            most valuable line on the screen to say nothing. */}
         {mounted && session?.user && (
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-ink-900">
-                {firstName ? `Welcome, ${firstName}` : "Welcome"}
-              </h1>
-              <p className="text-xs text-ink-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
-            </div>
-          </div>
+          <DashboardHero
+            state={{
+              firstName,
+              roleLabel: ROLE_LABELS[role ?? ""] ?? role ?? "",
+              brokenDown: brokenDown.length,
+              totalEquipment: equipment.length,
+              operational: equipment.filter((e) => e.status === "OPERATIONAL").length,
+              overdue: myWork.overdueCount ?? 0,
+              awaitingSignature: signoffs.length,
+            }}
+          />
         )}
 
         {/* Needs attention. Phase 6 added four registers that each compute a
@@ -161,7 +153,7 @@ export default function Home() {
         {attention.length > 0 && (
           <section
             aria-labelledby="attention-heading"
-            className="rounded-xl border border-ink-200 bg-white overflow-hidden"
+            className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden"
           >
             <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-warn-600" />
@@ -201,7 +193,7 @@ export default function Home() {
         {/* Your jobs, the technician's dashboard used to be an executive KPI
             board with an empty approver's card. This is their actual work. */}
         {myJobs.length > 0 && (
-          <div className="rounded-xl border border-ink-200 bg-white overflow-hidden">
+          <div className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
             <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2 flex-wrap">
               <ClipboardList className="w-4 h-4 text-brand-600" />
               <h3 className="text-sm font-bold text-ink-900">Your jobs</h3>
@@ -312,63 +304,28 @@ export default function Home() {
             <span className="text-xs text-ink-500 ml-2">Loading live metrics…</span>
           </div>
         ) : (
-          // Four equal tiles asked the reader to work out which one mattered.
-          // The worst-status figure is promoted, so the board leads with the
-          // thing that needs a decision, and reads as reassurance only when
-          // everything genuinely is fine.
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {hero && (
-              <div className={`lg:col-span-1 p-6 rounded-xl border ${TILE_PANEL[hero.status] ?? TILE_PANEL.success} flex flex-col justify-between`}>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
-                    {hero.status === "success" ? "Best measure" : "Needs attention"}
-                  </span>
-                  <div className={`p-2 rounded-lg bg-white/70 ${TILE_TEXT[hero.status] ?? TILE_TEXT.success}`}>
-                    {React.createElement(iconMap[hero.code] || Activity, { className: "w-5 h-5" })}
-                  </div>
-                </div>
-                <div className="mt-5">
-                  <p className="text-sm font-semibold text-ink-700">{hero.title}</p>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-5xl font-bold tracking-tight text-ink-900">{hero.value}</span>
-                    <span className="text-xs font-mono text-ink-500">/ {hero.target}</span>
-                  </div>
-                  <p className="text-xs text-ink-600 mt-2">{hero.desc}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {rest.map((stat, i) => {
-                const Icon = iconMap[stat.code] || Activity;
-                return (
-                  <div
-                    key={i}
-                    className={`p-4 rounded-xl border ${TILE_PANEL[stat.status] ?? TILE_PANEL.success} flex flex-col justify-between`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
-                        {stat.title}
-                      </span>
-                      <Icon className={`w-4 h-4 shrink-0 ${TILE_TEXT[stat.status] ?? TILE_TEXT.success}`} />
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-bold tracking-tight text-ink-900">{stat.value}</span>
-                        <span className="text-[10px] font-mono text-ink-500">/ {stat.target}</span>
-                      </div>
-                      <p className="text-[11px] text-ink-500 mt-1.5 line-clamp-2">{stat.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          // Ordered worst-first, so the board still leads with the thing that
+          // needs a decision. That ordering used to be expressed by promoting
+          // one tile to double size and tinting all four by status, which
+          // shouted at the reader four times over. The figure carries its own
+          // state now and the panel stays quiet.
+          <MetricPanel
+            label="Key measures"
+            metrics={ranked.map((s) => ({
+              key: s.code,
+              label: s.title,
+              value: s.value,
+              target: s.target,
+              description: s.desc,
+              icon: iconMap[s.code] ?? Activity,
+              status: (s.status as Metric["status"]) ?? "plain",
+            }))}
+          />
         )}
 
         {/* Critical machinery + recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="lg:col-span-2 p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-ink-900">Critical Machinery Status</h3>
               <Link href="/equipment" className="text-xs text-brand-600 hover:underline">View All Assets</Link>
@@ -406,7 +363,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-ink-900">Recent Activity</h3>
               {mounted && canAccessPath(role ?? "", "/audit/logs") && (

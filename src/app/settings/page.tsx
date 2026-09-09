@@ -595,7 +595,7 @@ export default function AppSettingsPage() {
       </div>
 
       {/* Working hours */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-5">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
         <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-600" /> Daily Working Window
         </h3>
@@ -628,7 +628,7 @@ export default function AppSettingsPage() {
       </section>
 
       {/* Working days */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-brand-600" /> Production Days
         </h3>
@@ -662,7 +662,7 @@ export default function AppSettingsPage() {
       </section>
 
       {/* Live downtime preview */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Downtime Preview</h3>
         <p className="text-xs text-ink-500">Test the current (unsaved) settings against any outage window.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -692,7 +692,7 @@ export default function AppSettingsPage() {
       {tab === "ai" && (
       <div className="space-y-6">
       {/* AI provider API keys */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-brand-600" /> AI Provider API Keys
         </h3>
@@ -817,7 +817,7 @@ export default function AppSettingsPage() {
       {tab === "sharepoint" && (
       <div className="space-y-6">
       {/* SharePoint (Microsoft 365) connection */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <Cloud className="w-4 h-4 text-brand-600" /> SharePoint Connection
@@ -936,7 +936,7 @@ export default function AppSettingsPage() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-4 bg-white border border-ink-200 rounded-xl p-4 hover:border-brand-300 hover:shadow-sm transition-all group"
+            className="flex items-center gap-4 bg-surface border border-line rounded-2xl shadow-card p-4 hover:border-brand-300 hover:shadow-sm transition-all group"
           >
             <div className="p-2.5 rounded-lg bg-brand-50 text-brand-600 border border-brand-100 shrink-0">
               <Icon className="w-5 h-5" />
@@ -952,7 +952,7 @@ export default function AppSettingsPage() {
         </div>
 
         {/* Database maintenance, self-service migration for the deployed DB. */}
-        <section className="bg-white border border-ink-200 rounded-xl p-4 space-y-2.5">
+        <section className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-brand-600" />
             <h3 className="text-sm font-semibold text-ink-900">Database maintenance</h3>
@@ -998,7 +998,7 @@ export default function AppSettingsPage() {
       {tab === "notifications" && (
       <div className="space-y-6">
       {/* Email delivery */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-600" /> Email Delivery
@@ -1227,7 +1227,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       </section>
 
       {/* Overdue escalations */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <BellRing className="w-4 h-4 text-brand-600" /> Maintenance Reminders &amp; Escalations
         </h3>
@@ -1364,7 +1364,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       </section>
 
       {/* Notification routing, who gets what */}
-      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <BellRing className="w-4 h-4 text-brand-600" /> Notification Routing

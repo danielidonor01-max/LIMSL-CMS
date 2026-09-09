@@ -285,7 +285,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <ConditionCard equipmentId={eq.id} canWrite={canWrite} />
 
               {/* General Specs */}
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
                 <h3 className="text-sm font-bold tracking-wide text-ink-900">Equipment Specifications</h3>
                 <p className="text-xs text-ink-500 leading-relaxed">
                   {eq.notes || "No description recorded for this asset."}
@@ -308,7 +308,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               </div>
 
               {/* Basic History */}
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
                 <h3 className="text-sm font-bold tracking-wide text-ink-900">Maintenance Diagnostics</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -335,7 +335,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
             {/* Sidebar quick facts */}
             <div className="space-y-6">
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
                 <h3 className="text-sm font-bold tracking-wide text-ink-900">Asset Facts</h3>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between border-b border-ink-200 pb-2">
@@ -361,7 +361,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: BOM components list */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-bold tracking-wide text-ink-900">Component Bill of Materials (BOM)</h3>
                   <span className="text-[10px] text-ink-500 font-mono">{components.length} components registered</span>
@@ -455,7 +455,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         {activeTab === "safety" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-3">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-3">
                 <div className="flex items-center gap-2 text-brand-600">
                   <ShieldCheck className="w-5 h-5" />
                   <h3 className="text-sm font-bold tracking-wide">Safety & Compliance</h3>
@@ -469,7 +469,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             </div>
 
             <div className="space-y-6">
-              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-3">
+              <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-3">
                 <h3 className="text-sm font-bold tracking-wide text-ink-900">Warranty Coverage</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
@@ -494,7 +494,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         )}
 
         {activeTab === "history" && (
-          <div className="bg-white border border-ink-200 rounded-xl p-5">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
             <div className="flex items-center gap-2 mb-4">
               <History className="w-4 h-4 text-brand-600" />
               <h3 className="text-sm font-bold tracking-wide text-ink-900">Machine History Log</h3>

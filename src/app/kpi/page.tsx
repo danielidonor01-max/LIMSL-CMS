@@ -193,7 +193,7 @@ export default function KpiPage() {
         />
 
         {loading || !data ? (
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
@@ -311,7 +311,7 @@ export default function KpiPage() {
 
             {/* Per-equipment drill-down */}
             {data.perEquipment.length > 0 && (
-              <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+              <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
                 <div className="px-5 py-3 border-b border-ink-200">
                   <h3 className="text-sm font-semibold text-ink-900">Per-Equipment Drill-Down (latest)</h3>
                 </div>
@@ -376,7 +376,7 @@ function ChartCard({
   data?: Record<string, string | number>[];
 }) {
   return (
-    <div className="bg-white border border-ink-200 rounded-xl p-5">
+    <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
       <h3 className="text-sm font-semibold text-ink-900 mb-4">{title}</h3>
       <div role="img" aria-label={`${title}. The same figures are given in the table below.`}>
         {children}

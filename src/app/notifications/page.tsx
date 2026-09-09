@@ -131,7 +131,7 @@ export default function NotificationsPage() {
           }
         />
 
-        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (

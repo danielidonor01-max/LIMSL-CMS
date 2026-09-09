@@ -205,7 +205,7 @@ export default function WorkOrderDetailPage() {
         )}
 
         {/* Header card */}
-        <div className="bg-white border border-ink-200 rounded-xl p-6">
+        <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -290,7 +290,7 @@ export default function WorkOrderDetailPage() {
         </div>
 
         {/* People on the job */}
-        <div className="bg-white border border-ink-200 rounded-xl p-6">
+        <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
@@ -312,7 +312,7 @@ export default function WorkOrderDetailPage() {
 
         {/* Equipment card */}
         {eq && (
-          <div className="bg-white border border-ink-200 rounded-xl p-6">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
             <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
               <Wrench className="w-4 h-4 text-brand-600" /> Equipment
             </h3>
@@ -334,7 +334,7 @@ export default function WorkOrderDetailPage() {
 
         {/* Completed checklist view */}
         {checklist && (
-          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-brand-600" /> PM Checklist. Signed Off
             </h3>

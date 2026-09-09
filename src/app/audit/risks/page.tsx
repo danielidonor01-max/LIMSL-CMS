@@ -70,7 +70,7 @@ export default function RiskRegister() {
         </div>
         {/* Risk Register List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-white border border-ink-200 rounded-xl">
+          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
@@ -83,7 +83,7 @@ export default function RiskRegister() {
             </div>
           </div>
 
-          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : filteredRisks.length === 0 ? (
@@ -143,7 +143,7 @@ export default function RiskRegister() {
 
         {/* Right Side: Risk Assessment Details */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-6">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-6">
             <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Risk Mitigation & Controls
             </h2>

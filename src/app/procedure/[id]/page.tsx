@@ -49,7 +49,7 @@ export default function ProcedureRevisionPage() {
         </button>
       </div>
 
-      <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:p-0">
+      <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:p-0">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
             <p className="text-[10px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document · Historical</p>
