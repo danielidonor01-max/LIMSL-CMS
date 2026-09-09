@@ -101,7 +101,7 @@ function NewJhaForm() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
         <PageHeader
           icon={ShieldAlert}
           title="New Job Hazard Analysis"
@@ -110,7 +110,7 @@ function NewJhaForm() {
           backLabel="Hazard analyses"
         />
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-8">
           <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <div>
               <label className={LABEL_CLASS}>Approved Work Method Statement</label>
@@ -122,7 +122,7 @@ function NewJhaForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-ink-500 mt-1">
+              <p className="text-[11px] text-ink-500 mt-1">
                 {wmsList.length === 0
                   ? "No approved method statements yet. A WMS must finish its approval chain before it can be analysed."
                   : "Only approved method statements appear here. Analysing an unapproved method assesses work that may still change."}
@@ -167,7 +167,7 @@ function NewJhaForm() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-ink-900">Job steps</h3>
-                <p className="text-[11px] text-ink-500 mt-0.5">
+                <p className="text-xs text-ink-500 mt-0.5">
                   One row per step of the job. Every step needs its hazard and the control for it.
                 </p>
               </div>
@@ -180,7 +180,7 @@ function NewJhaForm() {
               {steps.map((s, i) => (
                 <div key={i} className="border border-ink-200 rounded-lg p-3 space-y-2.5">
                   <div className="flex items-start gap-2">
-                    <span className="mt-2 text-[10px] font-mono font-semibold text-ink-400 w-5 shrink-0">
+                    <span className="mt-2 text-[11px] font-mono font-semibold text-ink-400 w-5 shrink-0">
                       {i + 1}
                     </span>
                     <input
@@ -256,7 +256,7 @@ function NewJhaForm() {
                       type="button"
                       onClick={() => togglePpe(p.key)}
                       aria-pressed={on}
-                      className={`px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${
+                      className={`px-2.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                         on
                           ? "bg-brand-600 border-brand-600 text-white"
                           : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
@@ -267,7 +267,7 @@ function NewJhaForm() {
                   );
                 })}
               </div>
-              <p className="text-[10px] text-ink-500 mt-1.5">
+              <p className="text-[11px] text-ink-500 mt-1.5">
                 Carried onto the permit raised against this analysis.
               </p>
             </div>

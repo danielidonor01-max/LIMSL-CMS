@@ -52,11 +52,11 @@ function LoginForm() {
           </div>
           <div>
             <p className="text-sm font-bold tracking-tight leading-none">LIMSL CMS</p>
-            <p className="text-[10px] text-brand-100 font-mono uppercase tracking-widest mt-1">Maintenance Portal</p>
+            <p className="text-[11px] text-brand-100 font-mono uppercase tracking-widest mt-1">Maintenance Portal</p>
           </div>
         </div>
 
-        <div className="relative space-y-6 max-w-md">
+        <div className="relative space-y-8 max-w-md">
           <h2 className="text-3xl font-bold leading-tight tracking-tight">
             Every machine, procedure and sign-off, auditable in one place.
           </h2>
@@ -80,7 +80,7 @@ function LoginForm() {
           </ul>
         </div>
 
-        <p className="relative text-[11px] text-brand-100/70">
+        <p className="relative text-xs text-brand-100/70">
           © {new Date().getFullYear()} LEE International Machinery and Services Limited
         </p>
       </div>
@@ -94,7 +94,7 @@ function LoginForm() {
               <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-ink-900">LIMSL CMS</h1>
-            <p className="text-[11px] text-ink-500 font-mono uppercase tracking-widest">Maintenance Portal</p>
+            <p className="text-xs text-ink-500 font-mono uppercase tracking-widest">Maintenance Portal</p>
           </div>
 
           <div className="mb-6 hidden lg:block">
@@ -104,7 +104,7 @@ function LoginForm() {
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -118,8 +118,8 @@ function LoginForm() {
             </div>
             <div>
               <div className="flex items-baseline justify-between mb-1.5">
-                <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Password</label>
-                <Link href="/forgot-password" className="text-[11px] font-semibold text-brand-700 hover:underline">
+                <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider">Password</label>
+                <Link href="/forgot-password" className="text-xs font-semibold text-brand-700 hover:underline">
                   Forgot password?
                 </Link>
               </div>

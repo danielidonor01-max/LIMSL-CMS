@@ -161,7 +161,7 @@ export default function DataImportPage() {
   const active = TABS.find((t) => t.key === tab)!;
 
   return (
-    <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
           <Database className="w-5 h-5" />
@@ -257,7 +257,7 @@ export default function DataImportPage() {
                       <td className="py-2 px-3 font-mono text-ink-400">{p.row}</td>
                       <td className="py-2 px-3 text-ink-800">{p.label}</td>
                       <td className="py-2 px-3">
-                        <span className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase ${ACTION_BADGE[p.action]}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-semibold uppercase ${ACTION_BADGE[p.action]}`}>
                           {p.action}
                         </span>
                       </td>
@@ -351,7 +351,7 @@ export default function DataImportPage() {
                   <FileSpreadsheet className="w-4 h-4 text-brand-600 shrink-0" />
                   <span className="text-sm font-medium text-ink-900 truncate">{f.name}</span>
                 </div>
-                <p className="text-[11px] text-ink-400 mt-0.5 ml-6">
+                <p className="text-xs text-ink-400 mt-0.5 ml-6">
                   {f.folder && f.folder !== "/" ? `${f.folder} · ` : ""}
                   {f.lastModified ? `updated ${f.lastModified.slice(0, 10)}` : ""}
                   {f.lastModifiedBy ? ` by ${f.lastModifiedBy}` : ""}

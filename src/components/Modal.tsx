@@ -112,8 +112,8 @@ export default function Modal({
       >
         <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
           <div>
-            <h3 id={titleId} className="text-sm font-bold text-ink-900">{title}</h3>
-            {subtitle && <p className="text-[11px] text-ink-500 mt-0.5">{subtitle}</p>}
+            <h3 id={titleId} className="text-base font-semibold text-ink-900">{title}</h3>
+            {subtitle && <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}

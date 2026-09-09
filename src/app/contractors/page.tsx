@@ -201,22 +201,22 @@ export default function ContractorsPage() {
         {!loading && summary && summary.total > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className={`p-4 rounded-xl border ${summary.blocked > 0 ? "bg-danger-50 border-danger-200" : "bg-brand-50 border-brand-200"}`}>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Cleared to work</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Cleared to work</p>
               <p className="text-3xl font-bold text-ink-900 mt-2">
                 {summary.eligible}
                 <span className="text-lg text-ink-500 font-semibold"> / {summary.total}</span>
               </p>
-              <p className="text-[11px] text-ink-600 mt-1">
+              <p className="text-xs text-ink-600 mt-1">
                 {summary.blocked > 0 ? `${summary.blocked} cannot be given a permit today` : "Every contractor is current"}
               </p>
             </div>
             <div className={`p-4 rounded-xl border ${summary.expiringSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Expiring within 30 days</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Expiring within 30 days</p>
               <p className="text-3xl font-bold text-ink-900 mt-2">{summary.expiringSoon}</p>
-              <p className="text-[11px] text-ink-600 mt-1">Chase these before they block a job</p>
+              <p className="text-xs text-ink-600 mt-1">Chase these before they block a job</p>
             </div>
             <div className="p-4 rounded-xl border bg-white border-ink-200">
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Enforcement</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Enforcement</p>
               <p className="text-sm text-ink-700 mt-2 leading-relaxed">
                 A permit naming a blocked contractor is refused at issue, this register is a gate, not a list.
               </p>
@@ -303,7 +303,7 @@ export default function ContractorsPage() {
                         <Badge className="bg-ink-800 text-white border-ink-800">Suspended</Badge>
                       )}
                     </div>
-                    <p className="text-[11px] text-ink-500 mt-0.5">
+                    <p className="text-xs text-ink-500 mt-0.5">
                       {c.tradeSpecialty ?? "Trade not recorded"}
                       {c.contactPerson ? ` · ${c.contactPerson}` : ""}
                       {c.phone ? ` · ${c.phone}` : ""}
@@ -313,21 +313,21 @@ export default function ContractorsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setAddPerson({ c, name: "", jobTitle: "", inductionValidUntil: "" })}
-                        className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-ink-200 text-ink-600 text-[11px] font-semibold hover:bg-ink-50"
+                        className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-ink-200 text-ink-600 text-xs font-semibold hover:bg-ink-50"
                       >
                         <UserPlus className="w-3.5 h-3.5" /> Add person
                       </button>
                       {c.status === "SUSPENDED" ? (
                         <button
                           onClick={() => reinstate(c)}
-                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-brand-200 text-brand-700 text-[11px] font-semibold hover:bg-brand-50"
+                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-50"
                         >
                           <ShieldCheck className="w-3.5 h-3.5" /> Reinstate
                         </button>
                       ) : (
                         <button
                           onClick={() => setSuspend({ c, reason: "" })}
-                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-200 text-danger-700 text-[11px] font-semibold hover:bg-danger-50"
+                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-200 text-danger-700 text-xs font-semibold hover:bg-danger-50"
                         >
                           <ShieldOff className="w-3.5 h-3.5" /> Suspend
                         </button>
@@ -338,17 +338,17 @@ export default function ContractorsPage() {
 
                 {!c.eligibility.eligible && (
                   <div className="rounded-lg bg-danger-50 border border-danger-200 p-2.5">
-                    <p className="text-[11px] text-danger-900 leading-relaxed">
+                    <p className="text-xs text-danger-900 leading-relaxed">
                       {c.eligibility.messages.join(" ")}
                       {c.suspensionReason ? ` (${c.suspensionReason})` : ""}
                     </p>
                   </div>
                 )}
                 {c.eligibility.expiringSoon.length > 0 && (
-                  <p className="text-[11px] text-warn-700">{c.eligibility.expiringSoon.join(" ")}</p>
+                  <p className="text-xs text-warn-700">{c.eligibility.expiringSoon.join(" ")}</p>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 text-[11px] pt-1 border-t border-ink-100">
+                <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-ink-100">
                   <div>
                     <p className="font-semibold text-ink-500 uppercase tracking-wider">Insurance to</p>
                     <p className="text-ink-800 mt-0.5">
@@ -364,7 +364,7 @@ export default function ContractorsPage() {
                 </div>
 
                 {c.personnel.length > 0 && (
-                  <details className="text-[11px]">
+                  <details className="text-xs">
                     <summary className="cursor-pointer text-ink-500 hover:text-ink-900 select-none">
                       {c.personnel.length} person{c.personnel.length === 1 ? "" : "s"} inducted
                     </summary>
@@ -445,7 +445,7 @@ export default function ContractorsPage() {
                 <input id="c-indexp" type="date" value={form.inductionValidUntil} onChange={(e) => setForm((f) => ({ ...f, inductionValidUntil: e.target.value }))} className={FIELD_CLASS} />
               </Field>
             </div>
-            <p className="text-[11px] text-ink-500 -mt-1">
+            <p className="text-xs text-ink-500 -mt-1">
               Leaving either date blank blocks the contractor rather than clearing them, &ldquo;never checked&rdquo;
               and &ldquo;checked and valid&rdquo; must not look the same to whoever issues the permit.
             </p>

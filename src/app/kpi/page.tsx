@@ -185,7 +185,7 @@ export default function KpiPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={TrendingUp}
           title="KPI Dashboard"
@@ -210,15 +210,15 @@ export default function KpiPage() {
                     {cat.items.map((k) => (
                       <div key={k.label} className={`p-4 rounded-xl border ${toneCls[k.tone]}`}>
                         <div className="flex items-start justify-between gap-1">
-                          <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
+                          <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
                             {k.label}
                           </span>
                           {trendIcon(k)}
                         </div>
                         <div className={`text-xl font-bold mt-2 ${toneText[k.tone]}`}>{k.value}</div>
-                        <p className="text-[10px] text-ink-500 mt-1">Target {k.target}</p>
+                        <p className="text-[11px] text-ink-500 mt-1">Target {k.target}</p>
                         {k.note && (
-                          <p className="text-[10px] text-ink-500 mt-1 leading-snug">{k.note}</p>
+                          <p className="text-[11px] text-ink-500 mt-1 leading-snug">{k.note}</p>
                         )}
                       </div>
                     ))}
@@ -312,7 +312,7 @@ export default function KpiPage() {
             {/* Per-equipment drill-down */}
             {data.perEquipment.length > 0 && (
               <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
-                <div className="px-5 py-3 border-b border-ink-200">
+                <div className="px-6 py-4 border-b border-ink-200">
                   <h3 className="text-sm font-semibold text-ink-900">Per-Equipment Drill-Down (latest)</h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -320,24 +320,24 @@ export default function KpiPage() {
                     <thead>
                       <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Equipment</th>
-                        <th className="py-2.5 px-4 font-medium">Breakdowns</th>
-                        <th className="py-2.5 px-4 font-medium">Availability</th>
-                        <th className="py-2.5 px-4 font-medium">MTBF</th>
-                        <th className="py-2.5 px-4 font-medium">MTTR</th>
-                        <th className="py-2.5 px-4 font-medium">Downtime</th>
-                        <th className="py-2.5 px-4 font-medium">Remark</th>
+                        <th className="py-3 px-5 font-medium">Breakdowns</th>
+                        <th className="py-3 px-5 font-medium">Availability</th>
+                        <th className="py-3 px-5 font-medium">MTBF</th>
+                        <th className="py-3 px-5 font-medium">MTTR</th>
+                        <th className="py-3 px-5 font-medium">Downtime</th>
+                        <th className="py-3 px-5 font-medium">Remark</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-200">
                       {data.perEquipment.map((r) => (
                         <tr key={r.id} className="hover:bg-ink-50">
                           <td className="py-2.5 px-5 font-medium text-ink-900">{r.equipmentName}</td>
-                          <td className="py-2.5 px-4 text-ink-700">{r.breakdowns}</td>
-                          <td className="py-2.5 px-4">{pct(r.availability)}</td>
-                          <td className="py-2.5 px-4 text-ink-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
-                          <td className="py-2.5 px-4 text-ink-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
-                          <td className="py-2.5 px-4 text-ink-700">{r.downtimeHours} hrs</td>
-                          <td className="py-2.5 px-4 text-ink-500">{r.remark}</td>
+                          <td className="py-3 px-5 text-ink-700">{r.breakdowns}</td>
+                          <td className="py-3 px-5">{pct(r.availability)}</td>
+                          <td className="py-3 px-5 text-ink-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
+                          <td className="py-3 px-5 text-ink-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
+                          <td className="py-3 px-5 text-ink-700">{r.downtimeHours} hrs</td>
+                          <td className="py-3 px-5 text-ink-500">{r.remark}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -384,11 +384,11 @@ function ChartCard({
 
       {series && data && data.length > 0 && (
         <details className="mt-3 group">
-          <summary className="cursor-pointer text-[11px] text-ink-500 hover:text-ink-900 select-none">
+          <summary className="cursor-pointer text-xs text-ink-500 hover:text-ink-900 select-none">
             Show these figures as a table
           </summary>
           <div className="overflow-x-auto mt-2">
-            <table className="w-full text-left text-[11px]">
+            <table className="w-full text-left text-xs">
               <caption className="sr-only">{title}</caption>
               <thead>
                 <tr className="text-ink-500 border-b border-ink-200">

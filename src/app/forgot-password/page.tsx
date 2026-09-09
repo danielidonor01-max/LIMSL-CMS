@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
               Enter the email address you sign in with and we&apos;ll send you a link to choose a new password.
             </p>
             <div>
-              <label htmlFor="fp-email" className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="fp-email" className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Email
               </label>
               <input

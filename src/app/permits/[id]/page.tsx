@@ -185,7 +185,7 @@ export default function PermitDetail() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
-      <main className="flex-1 p-6 max-w-4xl w-full mx-auto">
+      <main className="flex-1 p-6 lg:p-8 max-w-4xl w-full mx-auto">
         {/* The filed document. A printed screenshot of this page would not be
             the same paper the pad produces, and the two have to be readable
             side by side. */}
@@ -195,7 +195,7 @@ export default function PermitDetail() {
           closeout={permit.closeoutSteps ?? []}
         />
 
-        <div className="screen-only space-y-6">
+        <div className="screen-only space-y-8">
         <div className="no-print">
           <Link href="/permits" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
             <ArrowLeft className="w-3.5 h-3.5" /> All permits
@@ -241,10 +241,10 @@ export default function PermitDetail() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="font-mono text-sm font-bold text-ink-900">{permit.permitNumber}</span>
+                <span className="font-mono text-base font-semibold text-ink-900">{permit.permitNumber}</span>
                 <Badge className={PERMIT_STATUS_BADGE[permit.status] ?? PERMIT_STATUS_BADGE.DRAFT}>{PERMIT_STATUS_LABELS[permit.status] ?? permit.status}</Badge>
                 {permit.lotoApplied && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
                     <Lock className="w-3 h-3" /> LOTO
                   </span>
                 )}
@@ -300,10 +300,10 @@ export default function PermitDetail() {
 
           {ppe.length > 0 && (
             <div>
-              <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">Required PPE</h3>
+              <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">Required PPE</h3>
               <div className="flex flex-wrap gap-2">
                 {ppe.map((p) => (
-                  <span key={p} className="px-2 py-1 rounded-md bg-ink-100 border border-ink-200 text-[11px] text-ink-700 capitalize">
+                  <span key={p} className="px-2 py-1 rounded-md bg-ink-100 border border-ink-200 text-xs text-ink-700 capitalize">
                     {p.replace(/([A-Z])/g, " $1")}
                   </span>
                 ))}
@@ -314,7 +314,7 @@ export default function PermitDetail() {
           {/* The chain behind this permit. Every signer should be able to walk
               back to the work order that authorised the job. */}
           <div className="pt-4 border-t border-ink-200">
-            <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">
               Authorising documents
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -353,7 +353,7 @@ export default function PermitDetail() {
           {/* Permits either side of this one, when a job ran over several weeks. */}
           {(permit.supersedes || permit.supersededBy) && (
             <div className="pt-4 border-t border-ink-200">
-              <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">
                 Continuation
               </h3>
               <div className="flex flex-wrap gap-2 text-xs">
@@ -425,7 +425,7 @@ export default function PermitDetail() {
 function Meta({ icon, label, value, strong }: { icon: React.ReactNode; label: string; value: string; strong?: boolean }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 text-[11px] text-ink-500 uppercase tracking-wider">
+      <div className="flex items-center gap-1.5 text-xs text-ink-500 uppercase tracking-wider">
         {icon} {label}
       </div>
       <p className={`mt-1 text-sm ${strong ? "font-bold text-ink-900" : "text-ink-700"}`}>{value}</p>
@@ -436,7 +436,7 @@ function Meta({ icon, label, value, strong }: { icon: React.ReactNode; label: st
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">{title}</h3>
+      <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">{title}</h3>
       <p className="text-sm text-ink-700 whitespace-pre-wrap">{children}</p>
     </div>
   );

@@ -88,7 +88,7 @@ export default function NonConformityRegister() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
             icon={ShieldAlert}
@@ -117,7 +117,7 @@ export default function NonConformityRegister() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-ink-500 uppercase">Filter Status:</span>
+              <span className="text-xs font-mono text-ink-500 uppercase">Filter Status:</span>
               <Select
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v)}
@@ -149,7 +149,7 @@ export default function NonConformityRegister() {
                           <div className="flex items-center gap-3">
                             <span className="font-mono text-xs text-brand-600 font-semibold">{nc.ncNumber}</span>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                                 !isOpen
                                   ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
                                   : "bg-danger-500/10 text-danger-600 border-danger-500/20"
@@ -157,12 +157,12 @@ export default function NonConformityRegister() {
                             >
                               {nc.status}
                             </span>
-                            <span className="text-[10px] text-ink-500">
+                            <span className="text-[11px] text-ink-500">
                               Detected: <span className="font-mono">{nc.detectedDate}</span>
                             </span>
                           </div>
                           <p className="text-ink-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
-                          <p className="text-[10px] text-ink-500">Source: {nc.detectedBy}</p>
+                          <p className="text-[11px] text-ink-500">Source: {nc.detectedBy}</p>
                         </div>
                       </div>
                     );
@@ -193,9 +193,9 @@ export default function NonConformityRegister() {
         </div>
 
         {/* Right Side: NC Action Log & Resolution */}
-        <div className="space-y-6">
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-6">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
+        <div className="space-y-8">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Non-Conformity Action Center
             </h2>
 
@@ -214,10 +214,10 @@ export default function NonConformityRegister() {
                       <FileCheck className="w-5 h-5 flex-shrink-0" />
                       <span>Non-Conformity Resolved</span>
                     </div>
-                    <p className="text-[11px] text-ink-500">
+                    <p className="text-xs text-ink-500">
                       <span className="font-semibold text-ink-600">Root cause identified:</span> {activeNc.rootCause}
                     </p>
-                    <p className="text-[11px] text-ink-500">
+                    <p className="text-xs text-ink-500">
                       <span className="font-semibold text-ink-600">Corrective action implemented:</span> {activeNc.correctiveAction}
                     </p>
                   </div>

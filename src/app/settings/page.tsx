@@ -525,7 +525,7 @@ export default function AppSettingsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-5xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-5xl w-full mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
@@ -575,15 +575,15 @@ export default function AppSettingsPage() {
                   />
                 )}
               </span>
-              <span className="block text-[11px] text-ink-400 mt-0.5 ml-6 leading-snug">{desc}</span>
+              <span className="block text-xs text-ink-400 mt-0.5 ml-6 leading-snug">{desc}</span>
             </button>
           ))}
         </nav>
 
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-8">
 
       {tab === "calendar" && (
-      <div className="space-y-6">
+      <div className="space-y-8">
       {/* Why it matters */}
       <div className="flex items-start gap-2.5 p-3 rounded-lg bg-info-50 border border-info-100 text-info-800 text-xs">
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
@@ -596,7 +596,7 @@ export default function AppSettingsPage() {
 
       {/* Working hours */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
-        <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-600" /> Daily Working Window
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -629,7 +629,7 @@ export default function AppSettingsPage() {
 
       {/* Working days */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-brand-600" /> Production Days
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -663,7 +663,7 @@ export default function AppSettingsPage() {
 
       {/* Live downtime preview */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Downtime Preview</h3>
+        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Downtime Preview</h3>
         <p className="text-xs text-ink-500">Test the current (unsaved) settings against any outage window.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -690,17 +690,17 @@ export default function AppSettingsPage() {
       )}
 
       {tab === "ai" && (
-      <div className="space-y-6">
+      <div className="space-y-8">
       {/* AI provider API keys */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-brand-600" /> AI Provider API Keys
         </h3>
         <p className="text-xs text-ink-500">
           Keys power the AI layers of the troubleshooting module. Stored encrypted; only a masked hint is ever shown.
           A platform environment variable overrides the key saved here.
         </p>
-        <div className="flex items-start gap-2 text-[11px] text-info-800 bg-info-50 border border-info-100 rounded-lg px-3 py-2">
+        <div className="flex items-start gap-2 text-xs text-info-800 bg-info-50 border border-info-100 rounded-lg px-3 py-2">
           <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>
             Configured providers form a <strong>failover chain</strong> in the order below: every AI diagnosis tries
@@ -729,18 +729,18 @@ export default function AppSettingsPage() {
                   className={`cursor-pointer transition-colors ${(aiTab ?? creds[0]?.provider) === c.provider ? "bg-brand-50/50" : "hover:bg-ink-50"}`}
                 >
                   <td className="py-2.5 px-3">
-                    <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${c.configured ? "bg-brand-100 text-brand-700" : "bg-ink-100 text-ink-400"}`} title={`Failover priority ${ci + 1}`}>
+                    <span className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${c.configured ? "bg-brand-100 text-brand-700" : "bg-ink-100 text-ink-400"}`} title={`Failover priority ${ci + 1}`}>
                       {ci + 1}
                     </span>
                   </td>
                   <td className="py-2.5 px-3 font-semibold text-ink-900">{c.label}</td>
                   <td className="py-2.5 px-3">
                     {c.configured ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
                         <CheckCircle2 className="w-3 h-3" /> Active · {c.source === "ENV" ? "env" : "saved"}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">Not configured</span>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">Not configured</span>
                     )}
                   </td>
                   <td className="py-2.5 px-3 font-mono text-ink-500">{c.keyHint ?? "-"}</td>
@@ -803,10 +803,10 @@ export default function AppSettingsPage() {
                 )}
               </div>
               {c.source === "ENV" && (
-                <p className="text-[10px] text-ink-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
+                <p className="text-[11px] text-ink-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
               )}
               {c.updatedByName && c.source === "DB" && (
-                <p className="text-[10px] text-ink-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
+                <p className="text-[11px] text-ink-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
               )}
             </div>
           ))}
@@ -815,19 +815,19 @@ export default function AppSettingsPage() {
       )}
 
       {tab === "sharepoint" && (
-      <div className="space-y-6">
+      <div className="space-y-8">
       {/* SharePoint (Microsoft 365) connection */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <Cloud className="w-4 h-4 text-brand-600" /> SharePoint Connection
           </h3>
           {spStatus?.configured ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
               <CheckCircle2 className="w-3.5 h-3.5" /> Connected
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">
               Not connected
             </span>
           )}
@@ -843,7 +843,7 @@ export default function AppSettingsPage() {
               <p><span className="text-ink-400">Site:</span> <span className="font-mono">{spStatus.siteUrl}</span></p>
               <p><span className="text-ink-400">App (client) ID:</span> <span className="font-mono">{spStatus.clientIdHint}</span></p>
               {spStatus.updatedByName && (
-                <p className="text-[10px] text-ink-400">Saved by {spStatus.updatedByName}{spStatus.updatedAt ? ` · ${new Date(spStatus.updatedAt).toLocaleString()}` : ""}</p>
+                <p className="text-[11px] text-ink-400">Saved by {spStatus.updatedByName}{spStatus.updatedAt ? ` · ${new Date(spStatus.updatedAt).toLocaleString()}` : ""}</p>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -854,7 +854,7 @@ export default function AppSettingsPage() {
                 Remove
               </Button>
             </div>
-            <p className="text-[11px] text-ink-400">
+            <p className="text-xs text-ink-400">
               Import files from the connected site in <span className="font-semibold">Settings → Data Import → From SharePoint</span>.
               To change the site or credentials, remove and reconnect.
             </p>
@@ -862,8 +862,8 @@ export default function AppSettingsPage() {
         ) : (
           <div className="space-y-3">
             <div className="rounded-lg border border-ink-200 bg-ink-50 p-3">
-              <p className="text-[11px] font-semibold text-ink-600 uppercase tracking-wide mb-1">One-time Azure setup (IT admin)</p>
-              <ol className="text-[11px] text-ink-600 list-decimal list-inside space-y-0.5">
+              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-1">One-time Azure setup (IT admin)</p>
+              <ol className="text-xs text-ink-600 list-decimal list-inside space-y-0.5">
                 <li>Azure Portal → Microsoft Entra ID → App registrations → New registration.</li>
                 <li>API permissions → Microsoft Graph → <span className="font-mono">Application</span> → add <span className="font-mono">Sites.Read.All</span> → Grant admin consent.</li>
                 <li>Certificates &amp; secrets → New client secret, copy its <em>Value</em> immediately.</li>
@@ -878,7 +878,7 @@ export default function AppSettingsPage() {
                 { k: "siteUrl", label: "Site URL", ph: "https://yourcompany.sharepoint.com/sites/Maintenance" },
               ] as { k: keyof typeof spForm; label: string; ph: string; secret?: boolean }[]).map((f) => (
                 <div key={f.k} className="space-y-1">
-                  <label className="text-[11px] font-semibold text-ink-500 uppercase">{f.label}</label>
+                  <label className="text-xs font-semibold text-ink-500 uppercase">{f.label}</label>
                   <input
                     type={f.secret ? "password" : "text"}
                     value={spForm[f.k]}
@@ -907,7 +907,7 @@ export default function AppSettingsPage() {
       {tab === "data" && (
       <div className="space-y-5">
         <div>
-          <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Go-live and accounts</h3>
+          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Go-live and accounts</h3>
           <p className="text-xs text-ink-500 mt-1">
             These open their own pages. Nothing here is a setting on this screen.
           </p>
@@ -980,7 +980,7 @@ export default function AppSettingsPage() {
                   : `Database is up to date, ${dbMaintResult.applied.length} statements verified.`}
               </p>
               {dbMaintResult.failed?.length > 0 && (
-                <ul className="mt-1.5 space-y-1.5 text-[11px]">
+                <ul className="mt-1.5 space-y-1.5 text-xs">
                   {dbMaintResult.failed.map((f: any) => (
                     <li key={f.name}>
                       <span className="font-mono font-semibold">{f.name}</span>
@@ -996,21 +996,21 @@ export default function AppSettingsPage() {
       )}
 
       {tab === "notifications" && (
-      <div className="space-y-6">
+      <div className="space-y-8">
       {/* Email delivery */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-600" /> Email Delivery
           </h3>
           <div className="flex items-center gap-2">
             {emailStatus && (
               emailStatus.ready ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Configured
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
                   <XCircle className="w-3.5 h-3.5" /> Not configured
                 </span>
               )
@@ -1035,17 +1035,17 @@ export default function AppSettingsPage() {
             {/* Auto-detected likely causes (wrong value / misnamed variable). */}
             {emailStatus.hints && emailStatus.hints.length > 0 && (
               <div className="rounded-lg border border-warn-200 bg-warn-50 p-2.5 space-y-1">
-                <p className="text-[11px] font-semibold text-warn-800 uppercase tracking-wide flex items-center gap-1">
+                <p className="text-xs font-semibold text-warn-800 uppercase tracking-wide flex items-center gap-1">
                   <Info className="w-3.5 h-3.5" /> Likely cause detected
                 </p>
                 {emailStatus.hints.map((h, i) => (
-                  <p key={i} className="text-[11px] text-warn-800">• {h}</p>
+                  <p key={i} className="text-xs text-warn-800">• {h}</p>
                 ))}
               </div>
             )}
             {/* Per-variable diagnosis, shows exactly what this deployment sees. */}
             <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold text-ink-600 uppercase tracking-wide">What this deployment sees</p>
+              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide">What this deployment sees</p>
               {([
                 { k: "EMAIL_ENABLED", ok: emailStatus.enabled, note: "must be exactly true (no quotes)" },
                 { k: "SMTP_HOST", ok: !!emailStatus.host, note: "e.g. smtp.gmail.com" },
@@ -1054,7 +1054,7 @@ export default function AppSettingsPage() {
                 { k: "EMAIL_FROM", ok: !!emailStatus.from, note: "sender name/address" },
                 { k: "APP_URL", ok: emailStatus.appUrlSet, note: "optional, absolute email links", optional: true },
               ] as { k: string; ok: boolean; note: string; optional?: boolean }[]).map((v) => (
-                <div key={v.k} className="flex items-center gap-2 text-[11px]">
+                <div key={v.k} className="flex items-center gap-2 text-xs">
                   {v.ok ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 shrink-0" />
                   ) : (
@@ -1067,8 +1067,8 @@ export default function AppSettingsPage() {
             </div>
 
             <div className="space-y-1.5 pt-1 border-t border-ink-200">
-              <p className="text-[11px] font-semibold text-ink-600 uppercase tracking-wide">Set these in Vercel → Settings → Environment Variables (Production), then redeploy</p>
-              <pre className="text-[11px] font-mono text-ink-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
+              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide">Set these in Vercel → Settings → Environment Variables (Production), then redeploy</p>
+              <pre className="text-xs font-mono text-ink-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
@@ -1076,7 +1076,7 @@ SMTP_USER=you@gmail.com
 SMTP_PASS=<16-char Google App Password>
 EMAIL_FROM=LIMSL CMS <you@gmail.com>
 APP_URL=https://<your-app>.vercel.app`}</pre>
-              <p className="text-[11px] text-warn-700">
+              <p className="text-xs text-warn-700">
                 Common cause: env vars only apply to <strong>new</strong> deployments and to the <strong>environment they&apos;re scoped to</strong>.
                 Add them to <strong>Production</strong>, don&apos;t wrap values in quotes, then trigger a fresh redeploy. Full walkthrough:
                 <span className="font-mono"> docs/NOTIFICATIONS.md</span>.
@@ -1086,7 +1086,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         )}
 
         {emailStatus && emailStatus.ready && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div className="rounded-lg border border-ink-200 p-2">
               <p className="text-ink-400 uppercase tracking-wide">Host</p>
               <p className="font-mono text-ink-700 truncate">{emailStatus.host}:{emailStatus.port}</p>
@@ -1130,7 +1130,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-xs font-semibold text-ink-900">Who actually receives these</p>
-              <p className="text-[11px] text-ink-500 mt-0.5">
+              <p className="text-xs text-ink-500 mt-0.5">
                 Checks every active user&apos;s email domain against the mailbox the CMS sends from.
               </p>
             </div>
@@ -1141,7 +1141,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
 
           {recipientAudit && (
             <div className="space-y-2">
-              <p className="text-[11px] text-ink-600">
+              <p className="text-xs text-ink-600">
                 Sending as <span className="font-mono">{recipientAudit.sender}</span> ·{" "}
                 {recipientAudit.atRiskUsers > 0 ? (
                   <span className="text-warn-700 font-semibold">
@@ -1168,12 +1168,12 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                 >
                   <div className="flex items-baseline justify-between gap-2 flex-wrap">
                     <p className="text-xs font-semibold text-ink-900 font-mono">@{d.domain}</p>
-                    <p className="text-[11px] text-ink-600">
+                    <p className="text-xs text-ink-600">
                       {d.userCount} user{d.userCount === 1 ? "" : "s"} · {d.hostLabel}
                     </p>
                   </div>
-                  <p className="text-[11px] text-ink-700 mt-1.5 leading-relaxed">{d.headline}</p>
-                  <p className="text-[10px] text-ink-500 mt-1.5">{d.people.join(", ")}</p>
+                  <p className="text-xs text-ink-700 mt-1.5 leading-relaxed">{d.headline}</p>
+                  <p className="text-[11px] text-ink-500 mt-1.5">{d.people.join(", ")}</p>
                 </div>
               ))}
             </div>
@@ -1218,7 +1218,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
               </ol>
             )}
 
-            <div className="pt-2 border-t border-black/5 grid gap-1 text-[11px] text-ink-500 font-mono">
+            <div className="pt-2 border-t border-black/5 grid gap-1 text-xs text-ink-500 font-mono">
               {diagnosis.mxHosts?.length > 0 && <p className="truncate">MX · {diagnosis.mxHosts.join(", ")}</p>}
               {diagnosis.smtpResponse && <p className="truncate">SMTP · {diagnosis.smtpResponse}</p>}
             </div>
@@ -1228,7 +1228,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
 
       {/* Overdue escalations */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <BellRing className="w-4 h-4 text-brand-600" /> Maintenance Reminders &amp; Escalations
         </h3>
         <p className="text-xs text-ink-500">
@@ -1241,7 +1241,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
           <div className="space-y-4 rounded-lg border border-ink-200 p-4">
             <div>
               <p className="text-xs font-semibold text-ink-900">Who gets told, and when</p>
-              <p className="text-[11px] text-ink-500 mt-0.5 leading-relaxed">
+              <p className="text-xs text-ink-500 mt-0.5 leading-relaxed">
                 The audience widens as an item ages, it is not handed over, people are added. Set the day each level
                 joins.
               </p>
@@ -1250,7 +1250,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
             <div className="space-y-2">
               {escalationPolicy.tiers.map((t: any, i: number) => (
                 <div key={i} className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] text-ink-500">After</span>
+                  <span className="text-xs text-ink-500">After</span>
                   <input
                     inputMode="numeric"
                     value={String(t.afterDays)}
@@ -1262,7 +1262,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                     aria-label={`Days before notifying ${t.roles.join(", ")}`}
                     className="w-16 px-2 min-h-9 bg-ink-50 border border-ink-200 rounded-lg text-sm text-center"
                   />
-                  <span className="text-[11px] text-ink-500">day(s), also notify</span>
+                  <span className="text-xs text-ink-500">day(s), also notify</span>
                   <div className="flex flex-wrap gap-1.5">
                     {ROLES.map((rk) => {
                       const on = t.roles.includes(rk);
@@ -1276,7 +1276,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                             tiers[i] = { ...tiers[i], roles };
                             setEscalationPolicy({ ...escalationPolicy, tiers });
                           }}
-                          className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                          className={`px-2 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
                             on
                               ? "bg-brand-600 border-brand-600 text-white"
                               : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
@@ -1305,7 +1305,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                   />
                   <span className="text-xs text-ink-500">day(s)</span>
                 </div>
-                <p className="text-[10px] text-ink-500 mt-1">
+                <p className="text-[11px] text-ink-500 mt-1">
                   A <strong>new</strong> breakdown always sends immediately, whatever this says.
                 </p>
               </div>
@@ -1343,7 +1343,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                 Send even when nothing has changed
               </label>
               {escalationPolicy.repeatUnchanged && (
-                <p className="text-[11px] text-warn-700 leading-relaxed">
+                <p className="text-xs text-warn-700 leading-relaxed">
                   This restores the old behaviour: the same list every day whether or not anything moved. It is what
                   made the digests unreadable.
                 </p>
@@ -1366,7 +1366,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       {/* Notification routing, who gets what */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
             <BellRing className="w-4 h-4 text-brand-600" /> Notification Routing
           </h3>
           <Button icon={Save} loading={routingSaving} onClick={saveRoutingCfg}>Save routing</Button>
@@ -1385,7 +1385,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-ink-900">{ev.label}</p>
-                    <p className="text-[11px] text-ink-500">{ev.desc}</p>
+                    <p className="text-xs text-ink-500">{ev.desc}</p>
                   </div>
                   <Toggle checked={r.enabled !== false} onChange={(v) => setRoute(ev.event, { enabled: v })} ariaLabel={`${ev.label} enabled`} />
                 </div>
@@ -1397,7 +1397,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                         <button
                           key={rk}
                           onClick={() => toggleRouteRole(ev, rk)}
-                          className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                          className={`px-2 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
                             on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
                           }`}
                         >
@@ -1408,7 +1408,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                   </div>
                 )}
                 {r.enabled !== false && !ev.personal && !ev.defaultRoles && (
-                  <p className="text-[10px] text-ink-400">Sent to whoever must sign the pending step (chain-driven).</p>
+                  <p className="text-[11px] text-ink-400">Sent to whoever must sign the pending step (chain-driven).</p>
                 )}
               </div>
             );
@@ -1419,7 +1419,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       )}
 
       {tab === "calendar" && meta.updatedByName && (
-        <p className="text-[11px] text-ink-400 text-right">
+        <p className="text-xs text-ink-400 text-right">
           Last updated by {meta.updatedByName}
           {meta.updatedAt ? ` · ${new Date(meta.updatedAt).toLocaleString()}` : ""}
         </p>

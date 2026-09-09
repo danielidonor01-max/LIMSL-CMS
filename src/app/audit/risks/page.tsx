@@ -58,7 +58,7 @@ export default function RiskRegister() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
             icon={ShieldCheck}
@@ -121,7 +121,7 @@ export default function RiskRegister() {
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-xs text-brand-600 font-semibold">{risk.riskNumber}</span>
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                               isHigh
                                 ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
                                 : "bg-brand-500/10 text-brand-600 border-brand-500/20"
@@ -131,7 +131,7 @@ export default function RiskRegister() {
                           </span>
                         </div>
                         <p className="text-ink-900 text-xs font-semibold leading-relaxed">{risk.identifiedRisk}</p>
-                        <p className="text-[10px] text-ink-500">Affects: {risk.affectedProcess}</p>
+                        <p className="text-[11px] text-ink-500">Affects: {risk.affectedProcess}</p>
                       </div>
                     </div>
                   );
@@ -142,9 +142,9 @@ export default function RiskRegister() {
         </div>
 
         {/* Right Side: Risk Assessment Details */}
-        <div className="space-y-6">
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-6">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
+        <div className="space-y-8">
+          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Risk Mitigation & Controls
             </h2>
 

@@ -69,7 +69,7 @@ export default function AssignPeople({
               </option>
             ))}
           </Select>
-          <p className="text-[10px] text-ink-500 mt-1">
+          <p className="text-[11px] text-ink-500 mt-1">
             Reminders go to this person, and this is the name against the work if it is missed.
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function AssignPeople({
                     type="button"
                     onClick={() => toggleHelper(p.id)}
                     aria-pressed={on}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                       on
                         ? "bg-brand-600 border-brand-600 text-white"
                         : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
@@ -99,13 +99,13 @@ export default function AssignPeople({
                 );
               })}
           </div>
-          <p className="text-[10px] text-ink-500 mt-1.5">
+          <p className="text-[11px] text-ink-500 mt-1.5">
             They are notified and can do the work. Accountability stays with the person above.
           </p>
         </div>
 
         {!lead && helpers.length > 0 && (
-          <p className="text-[11px] text-warn-700">
+          <p className="text-xs text-warn-700">
             Helpers with nobody accountable means no reminders are sent. Name an accountable person.
           </p>
         )}

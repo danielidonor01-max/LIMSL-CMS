@@ -117,7 +117,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
-      <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
         <PageHeader
           icon={Bell}
           title="Notifications"
@@ -163,7 +163,7 @@ export default function NotificationsPage() {
                         <p className={`text-sm ${n.readAt ? "font-medium text-ink-700" : "font-bold text-ink-900"}`}>{n.title}</p>
                       </div>
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-ink-500 flex-wrap">
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-500 flex-wrap">
                         <span className="font-mono">{formatDate(n.createdAt)}</span>
                         <span className="inline-flex items-center gap-1">
                           {n.channel === "EMAIL" ? <Mail className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
@@ -177,7 +177,7 @@ export default function NotificationsPage() {
                       </div>
                       {/* The reason was recorded and shown to nobody. */}
                       {n.deliveryStatus === "FAILED" && n.deliveryError && (
-                        <p className="mt-1.5 text-[10px] text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
+                        <p className="mt-1.5 text-[11px] text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
                           {n.deliveryError}
                         </p>
                       )}
@@ -189,7 +189,7 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        <p className="text-[11px] text-ink-400 text-center">
+        <p className="text-xs text-ink-400 text-center">
           WhatsApp delivery is best-effort, an alert always lands here in-app even if the message can&apos;t be delivered.
         </p>
       </main>

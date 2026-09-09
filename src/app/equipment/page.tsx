@@ -245,7 +245,7 @@ export default function EquipmentList() {
             <AlertTriangle className="w-4 h-4" />
             Needs attention
             <span
-              className={`px-1.5 py-0.5 rounded text-[10px] ${
+              className={`px-1.5 py-0.5 rounded text-[11px] ${
                 counts.attention ? "bg-danger-600 text-white" : "bg-ink-100 text-ink-500"
               }`}
             >
@@ -306,7 +306,7 @@ export default function EquipmentList() {
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/equipment/${urlParam}`} className="min-w-0">
                         <p className="font-semibold text-ink-900 text-sm leading-snug">{eq.name}</p>
-                        <p className="font-mono text-[11px] text-ink-500 mt-0.5">{eq.assetId}</p>
+                        <p className="font-mono text-xs text-ink-500 mt-0.5">{eq.assetId}</p>
                       </Link>
                       <KebabMenu ariaLabel={`Actions for ${eq.name}`} items={rowActions(eq)} />
                     </div>
@@ -318,7 +318,7 @@ export default function EquipmentList() {
                         {CRITICALITY_SHORT[eq.criticality] ?? "Medium"}
                       </Badge>
                     </div>
-                    <p className="text-[11px] text-ink-500 mt-2.5">
+                    <p className="text-xs text-ink-500 mt-2.5">
                       {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category} · {eq.location || "-"}
                       {eq.oem ? ` · ${eq.oem}` : ""}
                     </p>

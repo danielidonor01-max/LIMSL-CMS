@@ -153,7 +153,7 @@ export default function MeterCard({
               <div className="h-2 bg-ink-100 rounded-full overflow-hidden">
                 <div className={`h-full ${barTone} transition-all`} style={{ width: `${st.percent}%` }} />
               </div>
-              <div className="flex justify-between text-[11px] text-ink-500">
+              <div className="flex justify-between text-xs text-ink-500">
                 <span>
                   {st.used} of {data.meterServiceInterval} {unit} since last service
                 </span>
@@ -168,7 +168,7 @@ export default function MeterCard({
 
           <div className="grid grid-cols-2 gap-3 pt-1 border-t border-ink-100">
             <div>
-              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Actual usage</p>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Actual usage</p>
               <p className="text-sm text-ink-900 mt-0.5">
                 {data.usagePerDay !== null ? (
                   <span className="inline-flex items-center gap-1">
@@ -181,7 +181,7 @@ export default function MeterCard({
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Projected due</p>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Projected due</p>
               <p className="text-sm text-ink-900 mt-0.5">
                 {data.projectedDueDate ? (
                   formatDate(data.projectedDueDate)
@@ -199,7 +199,7 @@ export default function MeterCard({
               </summary>
               <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                 {data.readings.map((r) => (
-                  <li key={r.id} className="flex justify-between gap-3 text-[11px] text-ink-600 py-1 border-b border-ink-50">
+                  <li key={r.id} className="flex justify-between gap-3 text-xs text-ink-600 py-1 border-b border-ink-50">
                     <span className="font-mono">{formatDate(r.readingDate)}</span>
                     <span className="tabular-nums">
                       {r.reading} {unit}
@@ -246,7 +246,7 @@ export default function MeterCard({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">Meter measures</label>
+              <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">Meter measures</label>
               <Select
                 value={form.meterUnit}
                 onChange={(v) => setForm((f) => ({ ...f, meterUnit: v as MeterUnit }))}
@@ -280,7 +280,7 @@ export default function MeterCard({
             />
             <span>
               The service was carried out at this reading
-              <span className="block text-ink-500 text-[11px]">Restarts the interval from here.</span>
+              <span className="block text-ink-500 text-xs">Restarts the interval from here.</span>
             </span>
           </label>
 
@@ -293,7 +293,7 @@ export default function MeterCard({
             />
             <span>
               The meter was replaced or reset
-              <span className="block text-ink-500 text-[11px]">
+              <span className="block text-ink-500 text-xs">
                 Allows a reading lower than the last one, and starts the usage rate again from here.
               </span>
             </span>

@@ -51,7 +51,7 @@ export default function PermitsList() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={ShieldCheck}
           title="Permits to Work"
@@ -100,21 +100,21 @@ export default function PermitsList() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-mono text-xs text-ink-500 font-semibold">{rec.permitNumber}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}`}>
                           {PERMIT_STATUS_LABELS[rec.status] ?? rec.status}
                         </span>
                         {rec.lotoApplied && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
                             <Lock className="w-3 h-3" /> LOTO
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-bold text-ink-900">
+                      <h3 className="text-base font-semibold text-ink-900">
                         {rec.assetId ? `${rec.assetId}, ` : ""}
                         {rec.equipmentName || "Equipment"}
                       </h3>
                       <p className="text-xs text-ink-600 max-w-xl line-clamp-1">{rec.workDescription}</p>
-                      <div className="flex flex-wrap gap-4 text-[11px] text-ink-500">
+                      <div className="flex flex-wrap gap-4 text-xs text-ink-500">
                         <div className="flex items-center gap-1">
                           <User className="w-3.5 h-3.5" /> Holder: {rec.permitHolderName || "-"}
                         </div>
@@ -126,13 +126,13 @@ export default function PermitsList() {
                         )}
                       </div>
                       {pending && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-warn-700 font-semibold">
+                        <div className="flex items-center gap-1.5 text-xs text-warn-700 font-semibold">
                           <ShieldAlert className="w-3.5 h-3.5" />
                           Work may not begin, {signed}/{total} signatures
                         </div>
                       )}
                       {rec.status === "EXPIRED" && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-danger-600 font-semibold">
+                        <div className="flex items-center gap-1.5 text-xs text-danger-600 font-semibold">
                           <AlertTriangle className="w-3.5 h-3.5" /> Permit window lapsed.
                         </div>
                       )}

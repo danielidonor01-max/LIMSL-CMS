@@ -82,15 +82,30 @@ Fixed steps — don't use sizes outside this set:
 
 | Class | Use |
 |---|---|
-| `text-xl` (20) | Page title (`h2`) |
-| `text-lg` (18) | Section / header title (`h1` in per-page headers) |
-| `text-sm` (14) | Card headings, table/body emphasis |
-| `text-xs` (12) | Body, table cells, form inputs, buttons |
-| `text-[11px]` / `text-[10px]` | Labels, captions, meta, badges |
+| `text-3xl`/`text-4xl` | The dashboard hero only. One per screen. |
+| `text-2xl` (24) | Page title (`PageHeader`) |
+| `text-base` (16) | Card and section headings |
+| `text-sm` (14) | Body, row titles, prose |
+| `text-xs` (12) | Table cells, meta, badges, form inputs, buttons |
+| `text-[11px]` | Small caps labels, the floor |
 
-Weights: headings `font-bold` (700), labels/emphasis `font-semibold` (600), body
-`font-medium`/normal. Uppercase mono (`font-mono uppercase tracking-wider`) for
-small section labels.
+**`text-[11px]` is the floor.** Nothing smaller. The app used to run on 10px and
+11px text inside 8px padding: 494 uses at 11px or under against 442 at 12px,
+with `gap-2` the most common spacing anywhere. That, not the palette, is what
+made it feel crowded. The steps were raised together so the hierarchy is
+unchanged and only the floor moved.
+
+Weights: page titles `font-bold`, card headings `font-semibold` at 16px (bold at
+14px reads as shouting inside a small block), body normal or `font-medium`.
+
+## Density
+
+`main` is `p-6 lg:p-8` with `space-y-8` between sections. Cards are `p-5`/`p-6`,
+list rows and card headers `px-6 py-4`, table cells `py-3.5 px-5`.
+
+Prefer more air than feels necessary. The **compact** list-density preference in
+account settings exists for anyone who wants the dense view back, so the default
+does not have to serve both.
 
 ## Icon sizes (locked)
 

@@ -59,12 +59,12 @@ export default function AccountMenu() {
           open ? "bg-ink-100" : "hover:bg-ink-100"
         }`}
       >
-        <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-[11px] font-bold shrink-0">
+        <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-xs font-bold shrink-0">
           {initialsOf(name)}
         </span>
         <span className="hidden xl:block text-left leading-tight max-w-[10rem]">
           <span className="block text-xs font-semibold text-ink-900 truncate">{name}</span>
-          <span className="block text-[10px] text-ink-500 truncate">
+          <span className="block text-[11px] text-ink-500 truncate">
             {ROLE_LABELS[user.role ?? ""] ?? user.role}
           </span>
         </span>
@@ -79,7 +79,7 @@ export default function AccountMenu() {
         >
           <div className="px-3 py-2.5 border-b border-ink-100">
             <p className="text-xs font-semibold text-ink-900 truncate">{name}</p>
-            <p className="text-[11px] text-ink-500 truncate">{ROLE_LABELS[user.role ?? ""] ?? user.role}</p>
+            <p className="text-xs text-ink-500 truncate">{ROLE_LABELS[user.role ?? ""] ?? user.role}</p>
           </div>
           <Link
             href="/account"

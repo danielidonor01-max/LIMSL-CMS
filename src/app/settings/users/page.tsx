@@ -381,7 +381,7 @@ export default function UsersAdminPage() {
 
   const field =
     "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
-  const fieldLabel = "block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
+  const fieldLabel = "block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
 
   const statusBadge = (u: User) => (
     <Badge
@@ -409,7 +409,7 @@ export default function UsersAdminPage() {
   );
 
   return (
-    <div className="p-6 max-w-6xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-6xl w-full mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -490,20 +490,20 @@ export default function UsersAdminPage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
-                    <th className="py-3 px-4 font-medium">Name</th>
-                    <th className="py-3 px-4 font-medium">Role</th>
-                    <th className="py-3 px-4 font-medium">Department</th>
-                    <th className="py-3 px-4 font-medium">Contact</th>
-                    <th className="py-3 px-4 font-medium">Status</th>
-                    <th className="py-3 px-4 font-medium">Created</th>
-                    <th className="py-3 px-4 font-medium text-right">Actions</th>
+                    <th className="py-3.5 px-5 font-medium">Name</th>
+                    <th className="py-3.5 px-5 font-medium">Role</th>
+                    <th className="py-3.5 px-5 font-medium">Department</th>
+                    <th className="py-3.5 px-5 font-medium">Contact</th>
+                    <th className="py-3.5 px-5 font-medium">Status</th>
+                    <th className="py-3.5 px-5 font-medium">Created</th>
+                    <th className="py-3.5 px-5 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="animate-pulse">
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-ink-100" />
                             <div className="space-y-1.5">
@@ -513,9 +513,9 @@ export default function UsersAdminPage() {
                           </div>
                         </td>
                         {Array.from({ length: 5 }).map((_, j) => (
-                          <td key={j} className="py-3 px-4"><div className="h-3 w-20 bg-ink-100 rounded" /></td>
+                          <td key={j} className="py-3.5 px-5"><div className="h-3 w-20 bg-ink-100 rounded" /></td>
                         ))}
-                        <td className="py-3 px-4"><div className="h-7 w-7 bg-ink-100 rounded-lg ml-auto" /></td>
+                        <td className="py-3.5 px-5"><div className="h-7 w-7 bg-ink-100 rounded-lg ml-auto" /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
@@ -529,25 +529,25 @@ export default function UsersAdminPage() {
                   ) : (
                     filtered.map((u) => (
                       <tr key={u.id} className="hover:bg-ink-50 transition-colors">
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
                             <Avatar name={u.name} />
                             <div className="min-w-0">
                               <div className="font-semibold text-ink-900 truncate">{u.name}</div>
-                              <div className="text-[11px] text-ink-400 font-mono truncate">{u.email}</div>
-                              {u.jobTitle && <div className="text-[10px] text-ink-400 truncate">{u.jobTitle}</div>}
+                              <div className="text-xs text-ink-400 font-mono truncate">{u.email}</div>
+                              {u.jobTitle && <div className="text-[11px] text-ink-400 truncate">{u.jobTitle}</div>}
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           <Badge className={ROLE_BADGE[u.role] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                             {ROLE_LABELS[u.role] ?? u.role}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-ink-600">
+                        <td className="py-3.5 px-5 text-ink-600">
                           {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">, </span>}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           {u.phone || u.whatsapp ? (
                             <div className="space-y-0.5">
                               {u.phone && (
@@ -565,16 +565,16 @@ export default function UsersAdminPage() {
                             <span className="text-ink-300">, </span>
                           )}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           {statusBadge(u)}
                           {u.mustChangePassword && (
-                            <div className="text-[10px] text-warn-600 mt-1">Temp password pending</div>
+                            <div className="text-[11px] text-warn-600 mt-1">Temp password pending</div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-ink-500 whitespace-nowrap">
+                        <td className="py-3.5 px-5 text-ink-500 whitespace-nowrap">
                           {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3.5 px-5 text-right">
                           <div className="flex justify-end">{kebabFor(u)}</div>
                         </td>
                       </tr>
@@ -610,7 +610,7 @@ export default function UsersAdminPage() {
                     <Avatar name={u.name} />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-ink-900 truncate">{u.name}</p>
-                      <p className="text-[11px] text-ink-400 font-mono truncate">{u.email}</p>
+                      <p className="text-xs text-ink-400 font-mono truncate">{u.email}</p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
                         <Badge className={ROLE_BADGE[u.role] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                           {ROLE_LABELS[u.role] ?? u.role}
@@ -649,10 +649,10 @@ export default function UsersAdminPage() {
                 <p className="text-xs font-semibold text-ink-900">
                   {clearPlan.toDelete.length} account(s) will be deleted
                 </p>
-                <p className="text-[11px] text-ink-500 mt-0.5">They have no activity recorded against them.</p>
+                <p className="text-xs text-ink-500 mt-0.5">They have no activity recorded against them.</p>
                 <ul className="mt-2 max-h-40 overflow-y-auto space-y-1">
                   {clearPlan.toDelete.map((u: any) => (
-                    <li key={u.id} className="text-[11px] text-ink-600 flex justify-between gap-3">
+                    <li key={u.id} className="text-xs text-ink-600 flex justify-between gap-3">
                       <span>{u.name}</span>
                       <span className="font-mono text-ink-400 truncate">{u.email}</span>
                     </li>
@@ -667,14 +667,14 @@ export default function UsersAdminPage() {
                   <AlertTriangle className="w-3.5 h-3.5" />
                   {clearPlan.toDeactivate.length} account(s) will be deactivated, not deleted
                 </p>
-                <p className="text-[11px] text-warn-800 mt-1 leading-relaxed">
+                <p className="text-xs text-warn-800 mt-1 leading-relaxed">
                   These have signed something, raised something or been assigned work. Deleting them would orphan a
                   signature and destroy the evidence trail. They can no longer sign in, and their records stay
                   attributable.
                 </p>
                 <ul className="mt-2 max-h-32 overflow-y-auto space-y-1">
                   {clearPlan.toDeactivate.map((u: any) => (
-                    <li key={u.id} className="text-[11px] text-warn-900 flex justify-between gap-3">
+                    <li key={u.id} className="text-xs text-warn-900 flex justify-between gap-3">
                       <span>{u.name}</span>
                       <span className="font-mono text-warn-700/70 truncate">{u.email}</span>
                     </li>
@@ -756,7 +756,7 @@ export default function UsersAdminPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
-                      <th className="py-3 px-4 font-semibold sticky left-0 bg-ink-50 z-10">Role</th>
+                      <th className="py-3.5 px-5 font-semibold sticky left-0 bg-ink-50 z-10">Role</th>
                       <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">Members</th>
                       <th className="py-3 px-3 font-semibold text-center whitespace-nowrap" title="Higher rank may sign any junior step">
                         Sign-off rank
@@ -774,11 +774,11 @@ export default function UsersAdminPage() {
                       const activeMembers = members.filter((m) => m.isActive !== false).length;
                       return (
                         <tr key={r} className="hover:bg-ink-50">
-                          <td className="py-3 px-4 sticky left-0 bg-white z-10">
+                          <td className="py-3.5 px-5 sticky left-0 bg-white z-10">
                             <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                               {ROLE_LABELS[r]}
                             </Badge>
-                            <p className="text-[10px] text-ink-500 mt-1">
+                            <p className="text-[11px] text-ink-500 mt-1">
                               {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"}
                             </p>
                           </td>
@@ -809,7 +809,7 @@ export default function UsersAdminPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-[11px] text-ink-500 px-4 py-3 border-t border-ink-200">
+              <p className="text-xs text-ink-500 px-4 py-3 border-t border-ink-200">
                 A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off,                 QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
                 <span className="text-warn-600 font-semibold">0 members</span> blocks every chain step that requires it.
               </p>
@@ -828,17 +828,17 @@ export default function UsersAdminPage() {
                       <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                         {ROLE_LABELS[r]}
                       </Badge>
-                      <p className="text-[11px] text-ink-400 mt-1.5">
+                      <p className="text-xs text-ink-400 mt-1.5">
                         {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"} · sign-off rank {ROLE_RANK[r] ?? 0}
                       </p>
                     </div>
-                    <span className="text-[11px] font-semibold text-ink-500 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5 whitespace-nowrap">
+                    <span className="text-xs font-semibold text-ink-500 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5 whitespace-nowrap">
                       {members.length} member{members.length === 1 ? "" : "s"}
                     </span>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Members</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Members</p>
                     {members.length === 0 ? (
                       <p className="text-xs text-ink-400">No users hold this role.</p>
                     ) : (
@@ -853,7 +853,7 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Write permissions</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Write permissions</p>
                     {perms.length === 0 ? (
                       <p className="text-xs text-ink-400">
                         {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only, no direct writes."}
@@ -870,11 +870,11 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Module access</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Module access</p>
                     {paths ? (
                       <div className="flex flex-wrap gap-1.5">
                         {paths.map((p) => (
-                          <span key={p} className="text-[10px] font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
+                          <span key={p} className="text-[11px] font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
                             {moduleLabel(p)}
                           </span>
                         ))}
@@ -1059,13 +1059,13 @@ export default function UsersAdminPage() {
                   u.role === membersRole ? "border-brand-200 bg-brand-50/50" : "border-ink-200"
                 }`}
               >
-                <Avatar name={u.name} size="w-8 h-8 text-[10px]" />
+                <Avatar name={u.name} size="w-8 h-8 text-[11px]" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-ink-900 truncate">
                     {u.name}
                     {u.isActive === false && <span className="text-ink-400 font-normal"> · disabled</span>}
                   </p>
-                  <p className="text-[10px] text-ink-400 font-mono truncate">{u.email}</p>
+                  <p className="text-[11px] text-ink-400 font-mono truncate">{u.email}</p>
                 </div>
                 {roleSaving === u.id ? (
                   <Loader2 className="w-4 h-4 animate-spin text-brand-600 shrink-0 mx-3" />

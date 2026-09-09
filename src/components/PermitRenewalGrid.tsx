@@ -93,7 +93,7 @@ export default function PermitRenewalGrid({
           <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-brand-600" /> Validity and renewal
           </h3>
-          <p className="text-[11px] text-ink-500 mt-0.5">
+          <p className="text-xs text-ink-500 mt-0.5">
             {summary.expired
               ? `Expired after ${summary.expiresOn}.`
               : `${summary.daysRemaining} day${summary.daysRemaining === 1 ? "" : "s"} left, expires after ${summary.expiresOn}.`}
@@ -121,7 +121,7 @@ export default function PermitRenewalGrid({
                     <span className={struck ? "line-through text-ink-400" : "text-ink-900 font-medium"}>
                       {d.slice(8)}/{d.slice(5, 7)}
                     </span>
-                    <span className="block text-[9px] text-ink-400">{dayName(d)}</span>
+                    <span className="block text-[10px] text-ink-400">{dayName(d)}</span>
                   </td>
                 );
               })}
@@ -178,7 +178,7 @@ export default function PermitRenewalGrid({
 
       {summary.unaccounted.length > 0 && (
         <div className="px-6 py-3 bg-warn-50 border-t border-warn-200">
-          <p className="text-[11px] text-warn-800">
+          <p className="text-xs text-warn-800">
             {summary.unaccounted.length} day
             {summary.unaccounted.length === 1 ? " has" : "s have"} passed with nothing recorded:{" "}
             {summary.unaccounted.join(", ")}. Mark each one worked or not worked, a blank column is a
@@ -196,7 +196,7 @@ export default function PermitRenewalGrid({
                 key={d}
                 type="button"
                 onClick={() => openDay(d)}
-                className="text-[10px] font-semibold text-ink-500 hover:text-ink-900 underline"
+                className="text-[11px] font-semibold text-ink-500 hover:text-ink-900 underline"
               >
                 Amend {d}
               </button>
@@ -248,7 +248,7 @@ export default function PermitRenewalGrid({
                 placeholder="Why the recorded day is being changed"
                 className={FIELD_CLASS}
               />
-              <p className="text-[10px] text-ink-500 mt-1">
+              <p className="text-[11px] text-ink-500 mt-1">
                 The previous entry is kept on the record, as a struck-through correction would be on
                 paper.
               </p>

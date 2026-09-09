@@ -128,7 +128,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
 
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         {/* The opening statement. It replaced "Welcome, Daniel", which used the
             most valuable line on the screen to say nothing. */}
         {mounted && session?.user && (
@@ -155,9 +155,9 @@ export default function Home() {
             aria-labelledby="attention-heading"
             className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+            <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-warn-600" />
-              <h3 id="attention-heading" className="text-sm font-bold text-ink-900">
+              <h3 id="attention-heading" className="text-base font-semibold text-ink-900">
                 Needs attention
               </h3>
               <span className="text-xs text-ink-500">{attention.length}</span>
@@ -167,7 +167,7 @@ export default function Home() {
                 <li key={a.key}>
                   <Link
                     href={a.href}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50 transition-colors"
+                    className="flex items-center gap-3 px-6 py-4 hover:bg-ink-50 transition-colors"
                   >
                     <span
                       className={`w-1.5 h-8 rounded-full shrink-0 ${
@@ -194,9 +194,9 @@ export default function Home() {
             board with an empty approver's card. This is their actual work. */}
         {myJobs.length > 0 && (
           <div className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
-            <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2 flex-wrap">
+            <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2 flex-wrap">
               <ClipboardList className="w-4 h-4 text-brand-600" />
-              <h3 className="text-sm font-bold text-ink-900">Your jobs</h3>
+              <h3 className="text-base font-semibold text-ink-900">Your jobs</h3>
               <span className="text-xs text-ink-500">
                 {myWork.openCount} open
                 {myWork.overdueCount > 0 && (
@@ -212,13 +212,13 @@ export default function Home() {
                 <Link
                   key={j.id}
                   href={j.type === "PREVENTIVE" || j.type === "INSPECTION" ? `/work-orders/${j.id}/pm-checklist` : `/work-orders/${j.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-3 min-h-[60px] hover:bg-ink-50 transition-colors group"
+                  className="flex items-center justify-between gap-3 px-6 py-4 min-h-[60px] hover:bg-ink-50 transition-colors group"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-ink-900 truncate">
                       {j.title}
                       {j.overdue && (
-                        <span className="ml-2 text-[11px] font-semibold text-danger-700">overdue</span>
+                        <span className="ml-2 text-xs font-semibold text-danger-700">overdue</span>
                       )}
                     </p>
                     <p className="text-xs text-ink-500 truncate">
@@ -237,10 +237,10 @@ export default function Home() {
         {/* My sign-offs, what's awaiting THIS user's signature, across every module */}
         {signoffs.length > 0 && (
           <div className="rounded-xl border border-brand-200 bg-brand-50/60 overflow-hidden">
-            <div className="px-5 py-3 border-b border-brand-200 flex items-center gap-2">
+            <div className="px-6 py-4 border-b border-brand-200 flex items-center gap-2">
               <PenLine className="w-4 h-4 text-brand-700" />
               <h3 className="text-sm font-bold text-brand-900">Awaiting your sign-off</h3>
-              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-[10px] font-bold flex items-center justify-center">
+              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-[11px] font-bold flex items-center justify-center">
                 {signoffs.length}
               </span>
             </div>
@@ -249,7 +249,7 @@ export default function Home() {
                 <Link
                   key={s.stepId}
                   href={s.link}
-                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-brand-100/40 transition-colors group"
+                  className="flex items-center justify-between gap-3 px-6 py-4 hover:bg-brand-100/40 transition-colors group"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-ink-900">
@@ -378,11 +378,11 @@ export default function Home() {
                 <div key={act.id} className="flex gap-3 text-xs leading-relaxed border-l-2 border-ink-200 pl-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold tracking-wider text-[10px] text-brand-600">{act.action}</span>
-                      <span className="text-[10px] text-ink-500 font-mono">{formatDate(act.timestamp)}</span>
+                      <span className="font-semibold tracking-wider text-[11px] text-brand-600">{act.action}</span>
+                      <span className="text-[11px] text-ink-500 font-mono">{formatDate(act.timestamp)}</span>
                     </div>
                     <p className="font-medium text-ink-900 capitalize">{act.entityType.replace(/_/g, " ")}</p>
-                    <p className="text-ink-500 text-[11px]">{act.entityDescription ?? `by ${act.userName ?? "system"}`}</p>
+                    <p className="text-ink-500 text-xs">{act.entityDescription ?? `by ${act.userName ?? "system"}`}</p>
                   </div>
                 </div>
               ))}
@@ -391,7 +391,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="border-t border-ink-200 bg-white/90 py-4 px-6 text-center text-[10px] text-ink-500 font-mono">
+      <footer className="border-t border-ink-200 bg-white/90 py-4 px-6 text-center text-[11px] text-ink-500 font-mono">
         &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited · Compliance: ISO 9001:2015, ISO 45001.
       </footer>
     </div>

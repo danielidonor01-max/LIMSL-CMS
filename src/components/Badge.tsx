@@ -20,7 +20,7 @@ export function Badge({
       // ≥4.5:1 on the /10 tint) rather than -600, which measured 2.95-4.26:1
       // and failed AA at this size.
       className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap",
+        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap",
         className,
       )}
     >

@@ -100,7 +100,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
           <button onClick={() => shift(-1)} className="p-1.5 rounded-lg hover:bg-ink-100 text-ink-500">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-bold text-ink-900 min-w-[180px] text-center">{periodLabel}</span>
+          <span className="text-base font-semibold text-ink-900 min-w-[180px] text-center">{periodLabel}</span>
           <button onClick={() => shift(1)} className="p-1.5 rounded-lg hover:bg-ink-100 text-ink-500">
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -147,7 +147,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 px-4 py-3 border-t border-ink-200 text-[10px] text-ink-500">
+      <div className="flex flex-wrap items-center gap-4 px-4 py-3 border-t border-ink-200 text-[11px] text-ink-500">
         <span className="font-semibold uppercase tracking-wider">Status:</span>
         {[["SCHEDULED", "Scheduled"], ["COMPLETED", "Completed"], ["OVERDUE", "Overdue/Missed"], ["RESCHEDULED", "Rescheduled"]].map(([k, l]) => (
           <span key={k} className="flex items-center gap-1.5">
@@ -173,8 +173,8 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
                     <span className="text-sm font-semibold text-ink-900">{r.equipmentName ?? "-"}</span>
                     <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[r.status] ?? "bg-ink-400"}`} title={r.status} />
                   </div>
-                  <p className="text-[11px] font-mono text-ink-500">{r.assetId}</p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-600">
+                  <p className="text-xs font-mono text-ink-500">{r.assetId}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-600">
                     <span className="px-1.5 py-0.5 rounded bg-ink-100 font-bold">{r.activityType}</span>
                     <span>{r.status}</span>
                     {r.responsiblePersonName && <span>· {r.responsiblePersonName}</span>}
@@ -250,7 +250,7 @@ function DayCell({
       } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
     >
       <span
-        className={`inline-flex items-center justify-center text-[10px] ${compact ? "" : "font-semibold"} ${
+        className={`inline-flex items-center justify-center text-[11px] ${compact ? "" : "font-semibold"} ${
           isToday ? "bg-brand-600 text-white w-4 h-4 rounded-full" : inMonth ? "text-ink-600" : "text-ink-300"
         }`}
       >
@@ -268,7 +268,7 @@ function DayCell({
             {acts.slice(0, 3).map((a, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1 text-[9px] text-ink-600 truncate"
+                className="flex items-center gap-1 text-[10px] text-ink-600 truncate"
                 title={`${a.activityType} · ${a.equipmentName} · ${a.status}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-ink-400"}`} />
@@ -276,7 +276,7 @@ function DayCell({
                 <span className="truncate text-ink-400">{a.assetId}</span>
               </div>
             ))}
-            {acts.length > 3 && <div className="text-[9px] text-ink-400">+{acts.length - 3} more</div>}
+            {acts.length > 3 && <div className="text-[10px] text-ink-400">+{acts.length - 3} more</div>}
           </div>
         ))}
     </button>
@@ -289,7 +289,7 @@ function WeekGrid({ cursor, byDay, todayStr, onPick }: { cursor: Date; byDay: Ma
   return (
     <div className="grid grid-cols-7 gap-1">
       {DOW.map((d) => (
-        <div key={d} className="text-center text-[10px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
+        <div key={d} className="text-center text-[11px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
       ))}
       {days.map((d) => (
         <div key={ymd(d)} className="min-h-[140px]">
@@ -307,7 +307,7 @@ function MonthGrid({ year, month, byDay, todayStr, onPick }: { year: number; mon
   return (
     <div className="grid grid-cols-7 gap-1">
       {DOW.map((d) => (
-        <div key={d} className="text-center text-[10px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
+        <div key={d} className="text-center text-[11px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
       ))}
       {cells.map((d) => (
         <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} />
@@ -325,7 +325,7 @@ function MiniMonth({ year, month, byDay, todayStr, onPick }: { year: number; mon
       <p className="text-xs font-bold text-ink-700 mb-1">{MONTH_NAMES[month]}</p>
       <div className="grid grid-cols-7 gap-0.5">
         {DOW.map((d) => (
-          <div key={d} className="text-center text-[8px] text-ink-300">{d[0]}</div>
+          <div key={d} className="text-center text-[10px] text-ink-300">{d[0]}</div>
         ))}
         {cells.map((d) => (
           <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} compact />

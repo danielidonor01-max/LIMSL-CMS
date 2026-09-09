@@ -189,7 +189,7 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={GraduationCap}
           title="Training & Competency"
@@ -239,11 +239,11 @@ export default function TrainingPage() {
 
             {/* Competency Matrix */}
             <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-ink-200 flex items-center justify-between gap-2">
+              <div className="px-6 py-4 border-b border-ink-200 flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-ink-900">Competency Matrix</h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   {LEVELS.map((l, i) => (
-                    <span key={l} className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${LEVEL_CLS[i]}`}>
+                    <span key={l} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${LEVEL_CLS[i]}`}>
                       {i} · {l}
                     </span>
                   ))}
@@ -271,7 +271,7 @@ export default function TrainingPage() {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-ink-200 text-ink-500">
-                        <th className="py-3 px-4 font-medium sticky left-0 bg-white">Personnel</th>
+                        <th className="py-3.5 px-5 font-medium sticky left-0 bg-white">Personnel</th>
                         {skills.map((s) => (
                           <th key={s} className="py-3 px-3 font-medium text-center min-w-[110px] align-bottom">
                             {s}
@@ -284,10 +284,10 @@ export default function TrainingPage() {
                         const anyRow = competencies.find((c) => c.employeeName === p);
                         return (
                           <tr key={p} className="hover:bg-ink-50">
-                            <td className="py-3 px-4 sticky left-0 bg-white">
+                            <td className="py-3.5 px-5 sticky left-0 bg-white">
                               <div className="font-medium text-ink-900">{p}</div>
                               {anyRow?.role && (
-                                <div className="text-[10px] text-ink-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
+                                <div className="text-[11px] text-ink-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
                               )}
                             </td>
                             {skills.map((s) => {
@@ -299,11 +299,11 @@ export default function TrainingPage() {
                                 <td key={s} className="py-3 px-3 text-center">
                                   <span
                                     title={`${LEVELS[c.level]} (required ${c.requiredLevel ?? 0})${recert ? " · recert due" : ""}`}
-                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold border ${LEVEL_CLS[c.level]} ${gap ? "ring-2 ring-danger-400" : ""}`}
+                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold border ${LEVEL_CLS[c.level]} ${gap ? "ring-2 ring-danger-400" : ""}`}
                                   >
                                     {c.level}
                                   </span>
-                                  {recert && <div className="text-[8px] text-warn-600 font-semibold mt-0.5">RECERT</div>}
+                                  {recert && <div className="text-[10px] text-warn-600 font-semibold mt-0.5">RECERT</div>}
                                 </td>
                               );
                             })}
@@ -315,7 +315,7 @@ export default function TrainingPage() {
                 </div>
               )}
               {summary.gaps > 0 && (
-                <div className="px-5 py-3 border-t border-ink-200 flex items-center gap-2 text-[11px] text-danger-600">
+                <div className="px-6 py-4 border-t border-ink-200 flex items-center gap-2 text-xs text-danger-600">
                   <AlertTriangle className="w-3.5 h-3.5" /> {summary.gaps} competency gap{summary.gaps > 1 ? "s" : ""} below required level (ringed), schedule training to close.
                 </div>
               )}
@@ -323,7 +323,7 @@ export default function TrainingPage() {
 
             {/* Training Register */}
             <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <CalendarClock className="w-4 h-4 text-brand-600" />
                 <h3 className="text-sm font-semibold text-ink-900">Training Register</h3>
               </div>
@@ -349,12 +349,12 @@ export default function TrainingPage() {
                     <thead>
                       <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Training</th>
-                        <th className="py-2.5 px-4 font-medium">Attendee</th>
-                        <th className="py-2.5 px-4 font-medium">Type</th>
-                        <th className="py-2.5 px-4 font-medium">Planned</th>
-                        <th className="py-2.5 px-4 font-medium">Status</th>
-                        <th className="py-2.5 px-4 font-medium">Cert</th>
-                        {canWrite && <th className="py-2.5 px-4 font-medium"></th>}
+                        <th className="py-3 px-5 font-medium">Attendee</th>
+                        <th className="py-3 px-5 font-medium">Type</th>
+                        <th className="py-3 px-5 font-medium">Planned</th>
+                        <th className="py-3 px-5 font-medium">Status</th>
+                        <th className="py-3 px-5 font-medium">Cert</th>
+                        {canWrite && <th className="py-3 px-5 font-medium"></th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-200">
@@ -362,12 +362,12 @@ export default function TrainingPage() {
                         <tr key={t.id} className="hover:bg-ink-50">
                           <td className="py-2.5 px-5">
                             <div className="font-medium text-ink-900">{t.trainingTitle}</div>
-                            {t.trainer && <div className="text-[10px] text-ink-500">by {t.trainer}</div>}
+                            {t.trainer && <div className="text-[11px] text-ink-500">by {t.trainer}</div>}
                           </td>
-                          <td className="py-2.5 px-4 text-ink-700">{t.employeeName ?? "-"}</td>
-                          <td className="py-2.5 px-4 text-ink-500">{t.type ?? "-"}</td>
-                          <td className="py-2.5 px-4 font-mono text-ink-500">{formatDate(t.plannedDate)}</td>
-                          <td className="py-2.5 px-4">
+                          <td className="py-3 px-5 text-ink-700">{t.employeeName ?? "-"}</td>
+                          <td className="py-3 px-5 text-ink-500">{t.type ?? "-"}</td>
+                          <td className="py-3 px-5 font-mono text-ink-500">{formatDate(t.plannedDate)}</td>
+                          <td className="py-3 px-5">
                             <Badge
                               className={
                                 t.status === "COMPLETED"
@@ -380,21 +380,21 @@ export default function TrainingPage() {
                               {t.status}
                             </Badge>
                           </td>
-                          <td className="py-2.5 px-4">
+                          <td className="py-3 px-5">
                             {t.certificateIssued ? (
-                              <span className="inline-flex items-center gap-1 text-brand-600 text-[11px] font-semibold">
+                              <span className="inline-flex items-center gap-1 text-brand-600 text-xs font-semibold">
                                 <Award className="w-3.5 h-3.5" /> Issued
                               </span>
                             ) : (
-                              <span className="text-ink-400 text-[11px]">, </span>
+                              <span className="text-ink-400 text-xs">, </span>
                             )}
                           </td>
                           {canWrite && (
-                            <td className="py-2.5 px-4">
+                            <td className="py-3 px-5">
                               {t.status !== "COMPLETED" && t.status !== "CANCELLED" && (
                                 <button
                                   onClick={() => completeTraining(t.id)}
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
+                                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Complete
                                 </button>
@@ -521,7 +521,7 @@ function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () 
 function Stat({ label, value, tone, text }: { label: string; value: number; tone: string; text: string }) {
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );

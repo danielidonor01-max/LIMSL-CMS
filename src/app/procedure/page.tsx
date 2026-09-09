@@ -102,7 +102,7 @@ export default function ProcedurePage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
       {/* Header (hidden on print) */}
       <div className="no-print">
         <PageHeader
@@ -179,7 +179,7 @@ export default function ProcedurePage() {
             rows={18}
             className={`${FIELD_CLASS} text-xs font-mono`}
           />
-          <p className="text-[10px] text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
+          <p className="text-[11px] text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
             <Button icon={FilePlus2} onClick={propose} disabled={saving} loading={saving}>
@@ -193,12 +193,12 @@ export default function ProcedurePage() {
       <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:p-0" id="procedure-doc">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
-            <p className="text-[10px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document</p>
+            <p className="text-[11px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document</p>
             <p className="text-xs font-semibold text-ink-900">{current?.code}</p>
           </div>
           <div className="text-right">
             <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{DOC_STATUS_LABELS[current?.status ?? "APPROVED"] ?? current?.status}</Badge>
-            <p className="text-[10px] text-ink-400 mt-1 font-mono">
+            <p className="text-[11px] text-ink-400 mt-1 font-mono">
               Rev {current?.revision} · effective {formatDate(current?.effectiveDate)}
             </p>
           </div>

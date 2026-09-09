@@ -117,7 +117,7 @@ export default function NewCorrectiveRequest() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-2xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-2xl w-full mx-auto space-y-8">
         <PageHeader
           icon={AlertTriangle}
           tone="rose"
@@ -127,8 +127,8 @@ export default function NewCorrectiveRequest() {
           backHref="/corrective"
           backLabel="Corrective Maintenance"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-6">
-          <h2 className="text-sm font-bold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
+        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+          <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
             Corrective Maintenance Request Form
           </h2>
 

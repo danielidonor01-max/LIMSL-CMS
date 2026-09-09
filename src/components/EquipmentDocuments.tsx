@@ -135,15 +135,15 @@ export default function EquipmentDocuments({
   return (
     <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-600" /> Documents
         </h2>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-ink-400 font-mono">{docs.length} records</span>
+          <span className="text-[11px] text-ink-400 font-mono">{docs.length} records</span>
           {canUpload && (
             <button
               onClick={() => { setDocType("OPERATIONAL_MANUAL"); setShowForm((s) => !s); }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[11px] font-semibold"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
             >
               <Plus className="w-3.5 h-3.5" /> Upload
             </button>
@@ -155,7 +155,7 @@ export default function EquipmentDocuments({
         <form onSubmit={handleUpload} className="p-3 bg-ink-50 border border-ink-200 rounded-lg space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-ink-500 uppercase">Document Type</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">Document Type</label>
               <Select value={docType} onChange={setDocType} className="w-full">
                 {DOC_TYPES.map((t) => (
                   <option key={t} value={t}>{DOC_TYPE_LABELS[t]}</option>
@@ -163,27 +163,27 @@ export default function EquipmentDocuments({
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-ink-500 uppercase">Revision (optional)</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">Revision (optional)</label>
               <input name="revision" className={inputCls} placeholder="e.g. Rev B" />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-ink-500 uppercase">Title (optional)</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">Title (optional)</label>
               <input name="title" className={inputCls} placeholder="defaults to filename" />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-ink-500 uppercase">Expiry (optional)</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">Expiry (optional)</label>
               <input name="expiryDate" type="date" className={inputCls} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-ink-500 uppercase">File</label>
+            <label className="text-[11px] font-semibold text-ink-500 uppercase">File</label>
             <input
               ref={fileRef}
               type="file"
               accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
               className="w-full text-xs text-ink-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-ink-200 file:text-ink-700 file:text-xs file:font-semibold"
             />
-            <p className="text-[10px] text-ink-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
+            <p className="text-[11px] text-ink-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-ink-200 hover:bg-ink-100 text-ink-600 rounded-lg text-xs font-semibold">
@@ -212,7 +212,7 @@ export default function EquipmentDocuments({
                 )}
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-ink-900 truncate">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</p>
-                  <p className="text-[10px] text-ink-400 truncate">
+                  <p className="text-[11px] text-ink-400 truncate">
                     {d.revision ? `${d.revision} · ` : ""}
                     {d.fileName ? `${d.fileName}` : d.expiryDate ? `expires ${formatDate(d.expiryDate)}` : d.title}
                   </p>

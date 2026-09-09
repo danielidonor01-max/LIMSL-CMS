@@ -59,7 +59,7 @@ export default function LocationField({
               setFreeform(false);
               onChange("");
             }}
-            className="text-[11px] text-brand-600 hover:underline"
+            className="text-xs text-brand-600 hover:underline"
           >
             Choose an existing location instead
           </button>

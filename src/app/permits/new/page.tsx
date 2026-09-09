@@ -169,7 +169,7 @@ function NewPermitForm() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
         <PageHeader
           icon={ShieldCheck}
           title="Raise a Permit to Work"
@@ -178,7 +178,7 @@ function NewPermitForm() {
           backLabel="Permits"
         />
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-8">
           {/* The chain behind the permit */}
           <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
@@ -193,14 +193,14 @@ function NewPermitForm() {
               ))}
             </Select>
             {jhaList.length === 0 ? (
-              <p className="text-[11px] text-warn-700">
+              <p className="text-xs text-warn-700">
                 No approved hazard analysis yet. The chain runs work order, then method statement,
                 then hazard analysis, then this permit, and each one has to be approved before the
                 next can be raised.
               </p>
             ) : (
               selectedJha && (
-                <div className="text-[11px] text-ink-500 flex flex-wrap gap-x-3 gap-y-1">
+                <div className="text-xs text-ink-500 flex flex-wrap gap-x-3 gap-y-1">
                   {selectedJha.wmsNumber && (
                     <span className="inline-flex items-center gap-1">
                       <FileText className="w-3 h-3" /> {selectedJha.wmsNumber}
@@ -216,7 +216,7 @@ function NewPermitForm() {
           <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             <div>
               <h3 className="text-sm font-semibold text-ink-900">Type of work</h3>
-              <p className="text-[11px] text-ink-500 mt-0.5">
+              <p className="text-xs text-ink-500 mt-0.5">
                 Determines which controls are mandatory below.
               </p>
               <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -356,7 +356,7 @@ function NewPermitForm() {
                   className={FIELD_CLASS}
                 />
                 {expiresOn && (
-                  <p className="text-[10px] text-ink-500 mt-1">Expires after {expiresOn}.</p>
+                  <p className="text-[11px] text-ink-500 mt-1">Expires after {expiresOn}.</p>
                 )}
               </div>
               <div>
@@ -380,14 +380,14 @@ function NewPermitForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-ink-500 mt-1">
+              <p className="text-[11px] text-ink-500 mt-1">
                 He signs the permit himself, and nobody signs that line for him.
               </p>
             </div>
           </div>
 
           {/* The checklists */}
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-6">
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-8">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-brand-600" /> The permit checklists
             </h3>
@@ -417,10 +417,10 @@ function NewPermitForm() {
 
             {missing.length > 0 && (
               <div className="rounded-lg bg-warn-50 border border-warn-200 px-3 py-2.5">
-                <p className="text-[11px] font-semibold text-warn-900">
+                <p className="text-xs font-semibold text-warn-900">
                   The type of work selected requires these controls
                 </p>
-                <p className="text-[11px] text-warn-800 mt-0.5">{missing.join(", ")}</p>
+                <p className="text-xs text-warn-800 mt-0.5">{missing.join(", ")}</p>
               </div>
             )}
 

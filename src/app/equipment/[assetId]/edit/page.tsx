@@ -71,10 +71,10 @@ export default function EquipmentEditPage() {
   }
 
   const field = "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
-  const label = "block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
+  const label = "block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
       <Link href={`/equipment/${assetId}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to digital twin
       </Link>
@@ -102,7 +102,7 @@ export default function EquipmentEditPage() {
             className={`${field} font-mono`}
             placeholder="LEE/PE/0000"
           />
-          <p className="text-[10px] text-ink-400 mt-1">Changing the code re-keys this asset across the registry.</p>
+          <p className="text-[11px] text-ink-400 mt-1">Changing the code re-keys this asset across the registry.</p>
         </div>
 
         <div>

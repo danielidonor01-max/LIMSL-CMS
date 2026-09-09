@@ -274,28 +274,28 @@ export default function EmergencyPage() {
                     : "bg-danger-50 border-danger-200"
               }`}
             >
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Ready for use</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Ready for use</p>
               <p className="text-3xl font-bold text-ink-900 mt-2">
                 {summary.ready}
                 <span className="text-lg text-ink-500 font-semibold"> / {summary.inService}</span>
               </p>
-              <p className="text-[11px] text-ink-600 mt-1">
+              <p className="text-xs text-ink-600 mt-1">
                 {summary.notReady > 0
                   ? `${summary.notReady} cannot be relied on right now`
                   : "Every item is serviceable, in date and inspected"}
               </p>
             </div>
             <div className={`p-4 rounded-xl border ${summary.dueSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Inspection due soon</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Inspection due soon</p>
               <p className="text-3xl font-bold text-ink-900 mt-2">{summary.dueSoon}</p>
-              <p className="text-[11px] text-ink-600 mt-1">Still usable, but approaching their interval</p>
+              <p className="text-xs text-ink-600 mt-1">Still usable, but approaching their interval</p>
             </div>
             <div className={`p-4 rounded-xl border ${prog && prog.status !== "OK" ? "bg-danger-50 border-danger-200" : "bg-white border-ink-200"}`}>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Evacuation drill</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Evacuation drill</p>
               <p className="text-lg font-bold text-ink-900 mt-2">
                 {prog?.lastDrillDate ? formatDate(prog.lastDrillDate) : "Never held"}
               </p>
-              <p className="text-[11px] text-ink-600 mt-1">
+              <p className="text-xs text-ink-600 mt-1">
                 {prog?.status === "OK" && prog.nextDueDate
                   ? `Next due ${formatDate(prog.nextDueDate)}`
                   : DRILL_LABEL[prog?.status ?? "NEVER"]}
@@ -392,32 +392,32 @@ export default function EmergencyPage() {
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
-                      <th className="py-3 px-4 font-semibold">Tag</th>
-                      <th className="py-3 px-4 font-semibold">Type</th>
-                      <th className="py-3 px-4 font-semibold">Location</th>
-                      <th className="py-3 px-4 font-semibold">Last checked</th>
-                      <th className="py-3 px-4 font-semibold">Ready?</th>
-                      {canWrite && <th className="py-3 px-4 font-semibold text-right">Action</th>}
+                      <th className="py-3.5 px-5 font-semibold">Tag</th>
+                      <th className="py-3.5 px-5 font-semibold">Type</th>
+                      <th className="py-3.5 px-5 font-semibold">Location</th>
+                      <th className="py-3.5 px-5 font-semibold">Last checked</th>
+                      <th className="py-3.5 px-5 font-semibold">Ready?</th>
+                      {canWrite && <th className="py-3.5 px-5 font-semibold text-right">Action</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
                     {filtered.map((i) => (
                       <tr key={i.id} className="hover:bg-ink-50">
-                        <td className="py-3 px-4 font-mono font-semibold text-ink-900">{i.tagNumber}</td>
-                        <td className="py-3 px-4 text-ink-700">
+                        <td className="py-3.5 px-5 font-mono font-semibold text-ink-900">{i.tagNumber}</td>
+                        <td className="py-3.5 px-5 text-ink-700">
                           {EMERGENCY_TYPE_LABELS[i.type as EmergencyEquipmentType] ?? i.type}
                           {i.capacity ? <span className="text-ink-400"> · {i.capacity}</span> : null}
                         </td>
-                        <td className="py-3 px-4 text-ink-600">
+                        <td className="py-3.5 px-5 text-ink-600">
                           <span className="inline-flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-ink-400" />
                             {i.location}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-ink-600">
+                        <td className="py-3.5 px-5 text-ink-600">
                           {i.lastInspectionDate ? formatDate(i.lastInspectionDate) : <span className="text-danger-600">Never</span>}
                         </td>
-                        <td className="py-3 px-4 max-w-[280px]">
+                        <td className="py-3.5 px-5 max-w-[280px]">
                           {i.status === "REMOVED" ? (
                             <Badge className="bg-ink-500/10 text-ink-500 border-ink-500/20">Withdrawn</Badge>
                           ) : i.readiness.ready ? (
@@ -433,14 +433,14 @@ export default function EmergencyPage() {
                           ) : (
                             <>
                               <Badge className="bg-danger-500/10 text-danger-700 border-danger-500/20">Not ready</Badge>
-                              <p className="text-[10px] text-danger-700 mt-1 leading-snug">
+                              <p className="text-[11px] text-danger-700 mt-1 leading-snug">
                                 {i.readiness.reasons.join(" ")}
                               </p>
                             </>
                           )}
                         </td>
                         {canWrite && (
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-3.5 px-5 text-right">
                             <button
                               onClick={() => setInspect({ item: i, verdict: "PASS", findings: "", actionTaken: "" })}
                               className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-brand-700 hover:bg-brand-50 text-xs font-semibold"
@@ -480,14 +480,14 @@ export default function EmergencyPage() {
                         <p className="text-sm font-semibold text-ink-900">
                           {DRILL_TYPE_LABELS[d.drillType as DrillType] ?? d.drillType}
                         </p>
-                        <p className="text-[11px] text-ink-500 mt-0.5">
+                        <p className="text-xs text-ink-500 mt-0.5">
                           {formatDate(d.drillDate)}
                           {d.location ? ` · ${d.location}` : ""}
                           {d.participantCount ? ` · ${d.participantCount} took part` : ""}
                           {d.evacuationMinutes ? ` · cleared in ${d.evacuationMinutes} min` : ""}
                         </p>
                       </div>
-                      <span className="text-[11px] text-ink-400">{d.conductedByName ?? "-"}</span>
+                      <span className="text-xs text-ink-400">{d.conductedByName ?? "-"}</span>
                     </div>
                     {d.scenario && <p className="text-xs text-ink-600">{d.scenario}</p>}
                     {d.observations && <p className="text-xs text-ink-600">{d.observations}</p>}
@@ -554,7 +554,7 @@ export default function EmergencyPage() {
                 <input id="em-exp" type="date" value={itemForm.expiryDate} onChange={(e) => setItemForm((f) => ({ ...f, expiryDate: e.target.value }))} className={FIELD_CLASS} />
               </Field>
             </div>
-            <p className="text-[11px] text-ink-500 -mt-1">
+            <p className="text-xs text-ink-500 -mt-1">
               Leaving &ldquo;last checked&rdquo; blank is fine and honest, the item will show as never inspected until
               someone checks it, which is the truth.
             </p>
@@ -655,7 +655,7 @@ export default function EmergencyPage() {
               </Field>
 
               {inspect.verdict === "FAIL" && (
-                <p className="text-[11px] text-danger-700 -mt-2">
+                <p className="text-xs text-danger-700 -mt-2">
                   Recording a failure takes this item out of service immediately, so it stops counting towards readiness
                   until it has been repaired and re-checked.
                 </p>

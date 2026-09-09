@@ -53,7 +53,7 @@ function Checklist({
 }) {
   return (
     <div>
-      <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</h4>
+      <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</h4>
       <ul className="border border-ink-200 rounded-lg divide-y divide-ink-100 overflow-hidden">
         {items.map((i) => (
           <li key={i.key} className="flex items-center justify-between gap-3 px-3 py-1.5">
@@ -110,12 +110,12 @@ export default function PermitFace({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">The permit face</h3>
-          <p className="text-[11px] text-ink-500 mt-0.5">
+          <p className="text-xs text-ink-500 mt-0.5">
             As marked when the permit was raised. These are what the signatures attest to.
           </p>
         </div>
         {permit.taskNo && (
-          <span className="text-[10px] font-mono text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
+          <span className="text-[11px] font-mono text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
             Task {permit.taskNo}
           </span>
         )}
@@ -126,7 +126,7 @@ export default function PermitFace({
           {PERMIT_WORK_TYPES.filter((t) => types.includes(t.value)).map((t) => (
             <span
               key={t.value}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-ink-900 text-white"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-ink-900 text-white"
             >
               {t.value === "HOT_WORK" && <Flame className="w-3 h-3" />}
               {t.label}
@@ -161,7 +161,7 @@ export default function PermitFace({
 
       {permit.additionalRequirements && (
         <div className="pt-2">
-          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">
+          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
             Additional requirements
           </h4>
           <p className="text-xs text-ink-700 whitespace-pre-line">{permit.additionalRequirements}</p>
@@ -174,7 +174,7 @@ export default function PermitFace({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">{label}</p>
+      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</p>
       <p className="text-ink-800 mt-0.5">{value || "-"}</p>
     </div>
   );

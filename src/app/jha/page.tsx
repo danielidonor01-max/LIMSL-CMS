@@ -80,7 +80,7 @@ export default function JhaListPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={ShieldAlert}
           title="Job Hazard Analysis"
@@ -163,14 +163,14 @@ export default function JhaListPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs font-semibold text-ink-500">{r.jhaNumber}</span>
                       {(r.revision ?? 0) > 0 && (
-                        <span className="text-[10px] text-ink-400">rev {r.revision}</span>
+                        <span className="text-[11px] text-ink-400">rev {r.revision}</span>
                       )}
                       <Badge className={STATUS_BADGE[r.status] ?? STATUS_BADGE.DRAFT}>
                         {STATUS_LABELS[r.status] ?? r.status}
                       </Badge>
                     </div>
                     <p className="text-sm font-semibold text-ink-900 truncate">{r.title}</p>
-                    <p className="text-[11px] text-ink-500 flex items-center gap-1.5 flex-wrap">
+                    <p className="text-xs text-ink-500 flex items-center gap-1.5 flex-wrap">
                       {r.wmsNumber && (
                         <span className="inline-flex items-center gap-1">
                           <FileText className="w-3 h-3" /> {r.wmsNumber}

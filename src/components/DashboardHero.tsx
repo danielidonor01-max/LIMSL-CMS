@@ -120,7 +120,7 @@ export default function DashboardHero(props: { state: HeroState }) {
         {/* The dark panel is the reference's move and it earns its place: it is
             the one figure worth reading from across a workshop. */}
         <div className="lg:w-72 rounded-xl bg-nav text-white p-5 flex flex-col justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nav-label">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-nav-label">
             Fleet availability
           </p>
 
@@ -156,7 +156,7 @@ function HeroStat({ label, value, tone }: { label: string; value: number; tone: 
   return (
     <div>
       <dd className={`text-xl font-semibold leading-none tabular-nums ${colour}`}>{value}</dd>
-      <dt className="text-[11px] text-nav-text mt-1.5">{label}</dt>
+      <dt className="text-xs text-nav-text mt-1.5">{label}</dt>
     </div>
   );
 }

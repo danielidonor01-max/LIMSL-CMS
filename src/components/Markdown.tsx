@@ -73,7 +73,7 @@ export default function Markdown({ content }: { content: string }) {
     }
     flushList();
     if (line.startsWith("### ")) {
-      blocks.push(<h4 key={`h-${key++}`} className="text-sm font-bold text-ink-900 mt-5 mb-1.5">{renderInline(line.slice(4), `h${key}`)}</h4>);
+      blocks.push(<h4 key={`h-${key++}`} className="text-base font-semibold text-ink-900 mt-5 mb-1.5">{renderInline(line.slice(4), `h${key}`)}</h4>);
     } else if (line.startsWith("## ")) {
       blocks.push(<h3 key={`h-${key++}`} className="text-base font-bold text-ink-900 mt-6 mb-2 pb-1 border-b border-ink-200">{renderInline(line.slice(3), `h${key}`)}</h3>);
     } else if (line.startsWith("# ")) {

@@ -287,10 +287,10 @@ export default function SchematicViewer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-ink-200 shrink-0">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-ink-200 shrink-0">
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-ink-900 truncate">{title}</h3>
-            <p className="text-[11px] text-ink-500 font-mono">
+            <h3 className="text-base font-semibold text-ink-900 truncate">{title}</h3>
+            <p className="text-xs text-ink-500 font-mono">
               {schematicReference ? (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-brand-600" /> {schematicReference}
@@ -388,7 +388,7 @@ export default function SchematicViewer({
                 {tagDraft && (
                   <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-brand-200 bg-brand-50">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-semibold text-ink-500 uppercase">Tag</label>
+                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Tag</label>
                       <input
                         autoFocus
                         value={tagDraft.tag}
@@ -407,7 +407,7 @@ export default function SchematicViewer({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-semibold text-ink-500 uppercase">Name</label>
+                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Name</label>
                       <input
                         value={tagDraft.name}
                         onChange={(e) => setTagDraft((d) => d && { ...d, name: e.target.value })}
@@ -416,7 +416,7 @@ export default function SchematicViewer({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-semibold text-ink-500 uppercase">Type</label>
+                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Type</label>
                       <Select
                         value={tagDraft.type}
                         onChange={(v) => setTagDraft((d) => d && { ...d, type: v })}
@@ -428,7 +428,7 @@ export default function SchematicViewer({
                     <Button size="sm" variant="ghost" onClick={() => setTagDraft(null)}>Cancel</Button>
                   </div>
                 )}
-                <p className="text-[11px] text-ink-400 font-mono">{zoomTile.tileKey} · native resolution, scroll to pan</p>
+                <p className="text-xs text-ink-400 font-mono">{zoomTile.tileKey} · native resolution, scroll to pan</p>
               </div>
             ) : current?.preview ? (
               <div className="space-y-2">
@@ -461,7 +461,7 @@ export default function SchematicViewer({
                       />
                     ))}
                 </div>
-                <p className="text-[11px] text-ink-500 flex items-center gap-1.5">
+                <p className="text-xs text-ink-500 flex items-center gap-1.5">
                   <ZoomIn className="w-3.5 h-3.5" /> Click anywhere to zoom into the high-resolution tile
                   <span className="text-ink-400 font-mono">· {current.tiles.length} tiles @ {current.dpi} DPI</span>
                 </p>
@@ -475,11 +475,11 @@ export default function SchematicViewer({
               <div className="px-4 py-3 border-b border-ink-200 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-ink-900">Extracted components</p>
-                  <p className="text-[10px] text-ink-500">
+                  <p className="text-[11px] text-ink-500">
                     {candidates.filter((c) => c.include).length}/{candidates.length} selected · from PDF text layer
                   </p>
                 </div>
-                <button onClick={() => setReviewing(false)} className="text-[11px] text-ink-400 hover:text-ink-700">
+                <button onClick={() => setReviewing(false)} className="text-xs text-ink-400 hover:text-ink-700">
                   Hide
                 </button>
               </div>
@@ -494,7 +494,7 @@ export default function SchematicViewer({
                         className="accent-brand-600 w-3.5 h-3.5"
                       />
                       <span className="text-xs font-mono font-bold text-ink-900">{c.tag}</span>
-                      <span className="text-[10px] text-ink-400 ml-auto font-mono">
+                      <span className="text-[11px] text-ink-400 ml-auto font-mono">
                         Sheet {c.page}{c.occurrences > 1 ? ` ·×${c.occurrences}` : ""}
                       </span>
                     </div>
@@ -502,7 +502,7 @@ export default function SchematicViewer({
                       <input
                         value={c.name}
                         onChange={(e) => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                        className="flex-1 min-w-0 bg-ink-50 border border-ink-200 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-brand-500/40"
+                        className="flex-1 min-w-0 bg-ink-50 border border-ink-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500/40"
                       />
                       <Select
                         value={c.type}

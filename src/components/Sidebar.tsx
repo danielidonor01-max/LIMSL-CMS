@@ -156,7 +156,7 @@ export default function Sidebar({
         />
         <div>
           <h1 className="text-sm font-bold tracking-tight text-white leading-none">LIMSL CMS</h1>
-          <p className="text-[10px] text-nav-text font-medium tracking-wide uppercase mt-0.5">
+          <p className="text-[11px] text-nav-text font-medium tracking-wide uppercase mt-0.5">
             Maintenance Portal
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function Sidebar({
                 across four departments, and dropping the grouping to match a
                 chat app would cost a technician the map. */}
             {s.section && (
-              <p className="px-3 pt-2 pb-1.5 text-[10px] font-semibold text-nav-label uppercase tracking-[0.12em]">
+              <p className="px-3 pt-2 pb-1.5 text-[11px] font-semibold text-nav-label uppercase tracking-[0.12em]">
                 {s.section}
               </p>
             )}

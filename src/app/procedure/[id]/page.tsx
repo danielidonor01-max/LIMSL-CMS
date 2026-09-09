@@ -52,12 +52,12 @@ export default function ProcedureRevisionPage() {
       <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:p-0">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
-            <p className="text-[10px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document · Historical</p>
+            <p className="text-[11px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document · Historical</p>
             <p className="text-xs font-semibold text-ink-900">{rev.code}</p>
           </div>
           <div className="text-right">
             <Badge className="bg-ink-500/10 text-ink-500 border-ink-500/20">{DOC_STATUS_LABELS[String(rev.status)] ?? String(rev.status)}</Badge>
-            <p className="text-[10px] text-ink-400 mt-1 font-mono">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
+            <p className="text-[11px] text-ink-400 mt-1 font-mono">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
           </div>
         </div>
         <Markdown content={rev.contentMarkdown} />

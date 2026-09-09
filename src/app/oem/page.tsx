@@ -191,7 +191,7 @@ export default function OemPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={Building2}
           title="OEM & Warranty Management"
@@ -265,7 +265,7 @@ export default function OemPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-sm font-semibold text-ink-900">{v.vendorName}</h3>
-                        <p className="text-[11px] text-ink-500 mt-0.5">
+                        <p className="text-xs text-ink-500 mt-0.5">
                           {v.equipmentName} · <span className="font-mono">{v.assetId}</span>
                         </p>
                       </div>
@@ -280,14 +280,14 @@ export default function OemPage() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-ink-500">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-ink-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {v.phone ?? "-"}</span>
                       <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {v.email ?? "-"}</span>
                       <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {v.avgResponseTimeHrs ?? "-"} hr response</span>
                       <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {v.avgSpareLeadTimeDays ?? "-"} d lead</span>
                     </div>
 
-                    <div className="pt-2 border-t border-ink-200 flex items-center justify-between text-[11px]">
+                    <div className="pt-2 border-t border-ink-200 flex items-center justify-between text-xs">
                       <span className="text-ink-500">{v.warrantyScope}</span>
                       <span className={active ? "text-brand-600" : "text-danger-600"}>
                         {active && days !== null
@@ -302,7 +302,7 @@ export default function OemPage() {
 
             {/* Interventions */}
             <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-warn-600" />
                 <h3 className="text-sm font-semibold text-ink-900">OEM Intervention Log</h3>
               </div>
@@ -329,32 +329,32 @@ export default function OemPage() {
                     <thead>
                       <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Date</th>
-                        <th className="py-2.5 px-4 font-medium">Problem</th>
-                        <th className="py-2.5 px-4 font-medium">Warranty</th>
-                        <th className="py-2.5 px-4 font-medium">Response</th>
-                        <th className="py-2.5 px-4 font-medium">Resolution</th>
-                        <th className="py-2.5 px-4 font-medium">Status</th>
+                        <th className="py-3 px-5 font-medium">Problem</th>
+                        <th className="py-3 px-5 font-medium">Warranty</th>
+                        <th className="py-3 px-5 font-medium">Response</th>
+                        <th className="py-3 px-5 font-medium">Resolution</th>
+                        <th className="py-3 px-5 font-medium">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-200">
                       {interventions.map((it) => (
                         <tr key={it.id} className="hover:bg-ink-50">
                           <td className="py-2.5 px-5 font-mono text-ink-500">{formatDate(it.interventionDate)}</td>
-                          <td className="py-2.5 px-4 text-ink-700 max-w-xs">{it.problemDescription}</td>
-                          <td className="py-2.5 px-4">
+                          <td className="py-3 px-5 text-ink-700 max-w-xs">{it.problemDescription}</td>
+                          <td className="py-3 px-5">
                             <Badge className={it.warrantyStatus === "IN" ? "bg-brand-500/10 text-brand-600 border-brand-500/20" : "bg-ink-500/10 text-ink-500 border-ink-500/20"}>
                               {it.warrantyStatus ?? "-"}
                             </Badge>
                           </td>
-                          <td className="py-2.5 px-4 text-ink-700">{it.responseTimeHrs ?? "-"} hrs</td>
-                          <td className="py-2.5 px-4 text-ink-500 max-w-xs">{it.resolutionSummary}</td>
-                          <td className="py-2.5 px-4">
+                          <td className="py-3 px-5 text-ink-700">{it.responseTimeHrs ?? "-"} hrs</td>
+                          <td className="py-3 px-5 text-ink-500 max-w-xs">{it.resolutionSummary}</td>
+                          <td className="py-3 px-5">
                             {it.closed ? (
                               <Badge className="bg-brand-500/10 text-brand-600 border-brand-500/20">Closed</Badge>
                             ) : canWrite ? (
                               <button
                                 onClick={() => closeIntervention(it.id)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Close
                               </button>
@@ -499,7 +499,7 @@ function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () 
 function Stat({ label, value, tone, text }: { label: string; value: string; tone: string; text: string }) {
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );

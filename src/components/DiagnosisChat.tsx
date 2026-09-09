@@ -209,7 +209,7 @@ export default function DiagnosisChat({
           Continue with a guided, back-and-forth AI diagnosis. Every reply is grounded in this machine&apos;s
           guides, history, manuals and component registry. You can attach photos of the panel or component.
         </p>
-        <div className="flex items-start gap-2 text-[11px] text-warn-800 bg-warn-50 border border-warn-200 rounded-lg px-3 py-2">
+        <div className="flex items-start gap-2 text-xs text-warn-800 bg-warn-50 border border-warn-200 rounded-lg px-3 py-2">
           <ShieldAlert className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>Starting logs this fault to the machine&apos;s history log. AI output is advisory, verify before acting and follow PTW/LOTO.</span>
         </div>
@@ -222,7 +222,7 @@ export default function DiagnosisChat({
             Attach photo
           </Button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          {symptom.trim().length < 3 && <span className="text-[11px] text-ink-400">Enter a symptom above first.</span>}
+          {symptom.trim().length < 3 && <span className="text-xs text-ink-400">Enter a symptom above first.</span>}
         </div>
       </div>
     );
@@ -259,7 +259,7 @@ export default function DiagnosisChat({
           {lastSteps.length > 0 && (
             <button
               onClick={reportSteps}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-700 hover:text-brand-900"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:text-brand-900"
             >
               <ClipboardCheck className="w-3.5 h-3.5" /> Report ticked steps
             </button>
@@ -300,7 +300,7 @@ export default function DiagnosisChat({
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
-          <p className="text-[10px] text-ink-400 text-right">
+          <p className="text-[11px] text-ink-400 text-right">
             {prefs.chatEnterToSend ? "Enter sends · Shift+Enter for a new line" : "Ctrl+Enter sends · Enter for a new line"}
             <span className="text-ink-300"> · change in Account → Preferences</span>
           </p>
@@ -325,7 +325,7 @@ export default function DiagnosisChat({
           ) : (
             <button
               onClick={() => setResolving(true)}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-700 hover:text-brand-900"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:text-brand-900"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> This resolved the fault
             </button>
@@ -385,7 +385,7 @@ function MessageBubble({
               ))}
             </div>
           ) : m.imageCount ? (
-            <p className="text-[10px] text-brand-100 mt-1 flex items-center gap-1">
+            <p className="text-[11px] text-brand-100 mt-1 flex items-center gap-1">
               <ImageIcon className="w-3 h-3" /> {m.imageCount} photo{m.imageCount > 1 ? "s" : ""} attached
             </p>
           ) : null}
@@ -399,9 +399,9 @@ function MessageBubble({
       <div className="max-w-[92%] bg-white border border-ink-200 rounded-2xl rounded-bl-sm px-3.5 py-2.5 space-y-2 w-full">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-violet-500" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-600">AI assistant</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-violet-600">AI assistant</span>
           {m.confidence != null && m.confidence > 0 && (
-            <span className="text-[10px] text-ink-400 ml-auto">{m.confidence}% confident</span>
+            <span className="text-[11px] text-ink-400 ml-auto">{m.confidence}% confident</span>
           )}
         </div>
 
@@ -422,7 +422,7 @@ function MessageBubble({
         {m.safety && m.safety.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {m.safety.map((s, j) => (
-              <span key={j} className="text-[10px] px-2 py-0.5 rounded-full bg-warn-500/10 border border-warn-500/20 text-warn-800 font-semibold">
+              <span key={j} className="text-[11px] px-2 py-0.5 rounded-full bg-warn-500/10 border border-warn-500/20 text-warn-800 font-semibold">
                 ⚠ {s}
               </span>
             ))}
@@ -431,7 +431,7 @@ function MessageBubble({
 
         {m.steps && m.steps.length > 0 && (
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Suggested checks</p>
+            <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Suggested checks</p>
             {m.steps.map((s, j) => (
               <label
                 key={j}
@@ -459,7 +459,7 @@ function MessageBubble({
             {m.components.map((c) => (
               <span
                 key={c.tag}
-                className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
                   c.verified ? "bg-ink-50 border-ink-200 text-ink-700" : "bg-danger-50 border-danger-200 text-danger-700"
                 }`}
                 title={c.verified ? "In the component registry" : "NOT in the component registry, unverified"}
@@ -474,7 +474,7 @@ function MessageBubble({
         {m.evidence && m.evidence.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {m.evidence.map((ev) => (
-              <span key={ev.id} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700" title={ev.id}>
+              <span key={ev.id} className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700" title={ev.id}>
                 {ev.label}
               </span>
             ))}
@@ -482,7 +482,7 @@ function MessageBubble({
         )}
 
         {m.resolved && (
-          <p className="text-[11px] text-brand-700 font-medium flex items-center gap-1">
+          <p className="text-xs text-brand-700 font-medium flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" /> The assistant believes this fault is resolved.
           </p>
         )}

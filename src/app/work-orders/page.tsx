@@ -78,7 +78,7 @@ export default function WorkOrdersPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={ClipboardList}
           title="Work Orders"
@@ -150,24 +150,24 @@ export default function WorkOrdersPage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-ink-200 text-ink-500">
-                    <th className="py-3 px-4 font-medium">WO #</th>
-                    <th className="py-3 px-4 font-medium">Equipment</th>
-                    <th className="py-3 px-4 font-medium">Type</th>
-                    <th className="py-3 px-4 font-medium">Priority</th>
-                    <th className="py-3 px-4 font-medium">Planned</th>
-                    <th className="py-3 px-4 font-medium">Technician</th>
-                    <th className="py-3 px-4 font-medium">Status</th>
+                    <th className="py-3.5 px-5 font-medium">WO #</th>
+                    <th className="py-3.5 px-5 font-medium">Equipment</th>
+                    <th className="py-3.5 px-5 font-medium">Type</th>
+                    <th className="py-3.5 px-5 font-medium">Priority</th>
+                    <th className="py-3.5 px-5 font-medium">Planned</th>
+                    <th className="py-3.5 px-5 font-medium">Technician</th>
+                    <th className="py-3.5 px-5 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-ink-50 cursor-pointer">
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Link href={`/work-orders/${r.id}`} className="font-mono text-brand-600 hover:underline">
                           {r.workOrderNumber}
                         </Link>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Link href={`/work-orders/${r.id}`} className="block">
                           <div className="font-medium text-ink-900 max-w-[220px] truncate">
                             {r.equipmentName}
@@ -176,23 +176,23 @@ export default function WorkOrdersPage() {
                         {r.assetId && (
                           <Link
                             href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
-                            className="text-[10px] font-mono text-ink-500 hover:text-brand-600 hover:underline"
+                            className="text-[11px] font-mono text-ink-500 hover:text-brand-600 hover:underline"
                           >
                             {r.assetId}
                           </Link>
                         )}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Badge className={WO_TYPE_BADGE[r.type]}>{WO_TYPE_LABELS[r.type] ?? r.type}</Badge>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Badge className={PRIORITY_BADGE[r.priority]}>
                           {PRIORITY_LABELS[r.priority] ?? r.priority}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 font-mono text-ink-500">{formatDate(r.plannedDate)}</td>
-                      <td className="py-3 px-4 text-ink-700">{r.technicianName ?? "-"}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5 font-mono text-ink-500">{formatDate(r.plannedDate)}</td>
+                      <td className="py-3.5 px-5 text-ink-700">{r.technicianName ?? "-"}</td>
+                      <td className="py-3.5 px-5">
                         {r.approvalRetrospective && !r.approvedAt && (
                           <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20">
                             Unsigned emergency
@@ -209,7 +209,7 @@ export default function WorkOrdersPage() {
             </div>
           )}
         </div>
-        <p className="text-[11px] text-ink-500">
+        <p className="text-xs text-ink-500">
           Showing {filtered.length} of {rows.length} work orders.
         </p>
       </main>

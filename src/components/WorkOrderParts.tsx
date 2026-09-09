@@ -135,11 +135,11 @@ export default function WorkOrderParts({
               <span className="min-w-0">
                 <span className="font-medium text-ink-900">{m.partName ?? "Part"}</span>
                 {m.partNumber && <span className="font-mono text-ink-500"> · {m.partNumber}</span>}
-                {m.reason && <span className="block text-[11px] text-ink-500">{m.reason}</span>}
+                {m.reason && <span className="block text-xs text-ink-500">{m.reason}</span>}
               </span>
               <span className="shrink-0 text-right">
                 <span className="font-semibold text-ink-900">{Math.abs(m.quantity)}</span>
-                <span className="block text-[10px] text-ink-400">{m.performedByName ?? ""}</span>
+                <span className="block text-[11px] text-ink-400">{m.performedByName ?? ""}</span>
               </span>
             </li>
           ))}
@@ -165,7 +165,7 @@ export default function WorkOrderParts({
               ))}
             </Select>
             {!spares.length && (
-              <p className="text-[11px] text-warn-700 mt-1">
+              <p className="text-xs text-warn-700 mt-1">
                 Nothing on the spares register yet. Add parts there first.
               </p>
             )}

@@ -109,7 +109,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
       ) : (
         <>
           {!data.health.keptUp && (
-            <p className="text-[11px] text-warn-700 bg-warn-50 border border-warn-200 rounded-lg p-2.5 leading-relaxed">
+            <p className="text-xs text-warn-700 bg-warn-50 border border-warn-200 rounded-lg p-2.5 leading-relaxed">
               {data.health.overdue > 0 && `${data.health.overdue} point(s) overdue a reading. `}
               {data.health.neverRead > 0 && `${data.health.neverRead} never read. `}
               Readings taken irregularly cannot show a trend, which is the only thing this catches early.
@@ -122,7 +122,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-ink-900">{p.name}</p>
-                    <p className="text-[10px] text-ink-500 mt-0.5">
+                    <p className="text-[11px] text-ink-500 mt-0.5">
                       {CONDITION_LABELS[p.kind] ?? p.kind}
                       {p.alertLimit !== null ? ` · alert ${p.alertLimit}${p.unit ?? ""}` : ""}
                       {p.alarmLimit !== null ? ` · alarm ${p.alarmLimit}${p.unit ?? ""}` : ""}
@@ -136,11 +136,11 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                     {p.latest ? p.latest.value : "-"}
                     <span className="text-xs text-ink-500 font-normal"> {p.unit}</span>
                   </span>
-                  <span className="text-[11px] text-ink-500">
+                  <span className="text-xs text-ink-500">
                     {p.latest ? `read ${formatDate(p.latest.takenOn)}` : "no reading yet"}
                   </span>
                   {p.trend.direction !== "UNKNOWN" && (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-ink-600">
+                    <span className="inline-flex items-center gap-1 text-xs text-ink-600">
                       <TrendIcon dir={p.trend.direction} />
                       {p.trend.direction === "STABLE"
                         ? "stable"
@@ -151,7 +151,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
 
                 {/* The number worth the whole feature. */}
                 {p.trend.projectedAlarmDate && (
-                  <p className="text-[11px] text-danger-700 bg-danger-50 border border-danger-200 rounded p-2">
+                  <p className="text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded p-2">
                     At this rate it reaches the alarm level around{" "}
                     <strong>{formatDate(p.trend.projectedAlarmDate)}</strong>, every reading so far is still within
                     limits.
@@ -163,7 +163,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                     onClick={() =>
                       setReading({ point: p, value: "", takenOn: new Date().toISOString().slice(0, 10), notes: "" })
                     }
-                    className="text-[11px] font-semibold text-indigo-700 hover:underline"
+                    className="text-xs font-semibold text-indigo-700 hover:underline"
                   >
                     Record a reading
                   </button>

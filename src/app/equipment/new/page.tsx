@@ -107,7 +107,7 @@ export default function NewEquipmentPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
       <PageHeader
         icon={Layers}
         title="Add to the Asset Register"
@@ -137,7 +137,7 @@ export default function NewEquipmentPage() {
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded ${
+                      className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded ${
                         active ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-500"
                       }`}
                     >
@@ -147,7 +147,7 @@ export default function NewEquipmentPage() {
                       {ASSET_PREFIX_META[p].label}
                     </span>
                   </div>
-                  <p className="text-[11px] text-ink-500 mt-1.5 leading-snug">
+                  <p className="text-xs text-ink-500 mt-1.5 leading-snug">
                     {ASSET_PREFIX_META[p].help}
                   </p>
                 </button>
@@ -178,7 +178,7 @@ export default function NewEquipmentPage() {
               Regenerate
             </button>
           </div>
-          <p className="text-[10px] text-ink-500 mt-1">
+          <p className="text-[11px] text-ink-500 mt-1">
             Next free code in the LEE/{assetType}/ series. Editable, a duplicate is refused on save.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function NewEquipmentPage() {
             <Select value={form.criticality} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{CRITICALITY_LABELS[c]}</option>)}
             </Select>
-            <p className="text-[10px] text-ink-500 mt-1">
+            <p className="text-[11px] text-ink-500 mt-1">
               Sets the default service interval, work-order priority and how early overdue work escalates.
             </p>
           </div>
@@ -256,7 +256,7 @@ export default function NewEquipmentPage() {
               {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{FREQUENCY_LABELS[fq] ?? fq}</option>)}
             </Select>
             {form.maintenanceFrequency !== suggestedPmFrequency(form.criticality) && (
-              <p className="text-[10px] text-warn-700 mt-1">
+              <p className="text-[11px] text-warn-700 mt-1">
                 {CRITICALITY_SHORT[form.criticality]} criticality normally means{" "}
                 {(FREQUENCY_LABELS[suggestedPmFrequency(form.criticality)] ?? "").toLowerCase()}.
               </p>

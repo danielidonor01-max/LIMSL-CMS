@@ -125,7 +125,7 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all border ${
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
                 filter === f ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
               }`}
             >
@@ -163,21 +163,21 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.ring} ${meta.color}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.ring} ${meta.color}`}>
                           {meta.label}
                         </span>
-                        {ev.source === "MANUAL" && <span className="text-[9px] text-ink-400 uppercase">manual</span>}
-                        {ev.source === "AUTO" && <span className="text-[9px] text-ink-400 uppercase">auto</span>}
+                        {ev.source === "MANUAL" && <span className="text-[10px] text-ink-400 uppercase">manual</span>}
+                        {ev.source === "AUTO" && <span className="text-[10px] text-ink-400 uppercase">auto</span>}
                       </div>
                       <p className="text-sm font-medium text-ink-900 mt-1 break-words">{ev.title}</p>
                       {ev.detail && <p className="text-xs text-ink-500 mt-0.5 break-words">{ev.detail}</p>}
                     </div>
-                    <span className="text-[10px] font-mono text-ink-400 shrink-0">{fmtDate(ev.occurredAt)}</span>
+                    <span className="text-[11px] font-mono text-ink-400 shrink-0">{fmtDate(ev.occurredAt)}</span>
                   </div>
                   <div className="flex items-center gap-3 mt-1.5">
-                    {ev.performedByName && <span className="text-[10px] text-ink-400">by {ev.performedByName}</span>}
+                    {ev.performedByName && <span className="text-[11px] text-ink-400">by {ev.performedByName}</span>}
                     {ev.href && (
-                      <Link href={ev.href} className="text-[10px] text-brand-600 hover:underline inline-flex items-center gap-0.5">
+                      <Link href={ev.href} className="text-[11px] text-brand-600 hover:underline inline-flex items-center gap-0.5">
                         Open <ExternalLink className="w-2.5 h-2.5" />
                       </Link>
                     )}
@@ -194,28 +194,28 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">Category</label>
+              <label className="text-xs font-semibold text-ink-500 uppercase">Category</label>
               <Select value={form.category} onChange={(v) => setForm((f) => ({ ...f, category: v }))} className="w-full">
                 {MANUAL_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">When</label>
+              <label className="text-xs font-semibold text-ink-500 uppercase">When</label>
               <input type="datetime-local" value={form.occurredAt} onChange={(e) => setForm((f) => ({ ...f, occurredAt: e.target.value }))} className={field} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-ink-500 uppercase">Title</label>
+            <label className="text-xs font-semibold text-ink-500 uppercase">Title</label>
             <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Operator reported unusual vibration" className={field} required />
           </div>
           {form.category === "TRANSFER" && (
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">New location (updates the asset)</label>
+              <label className="text-xs font-semibold text-ink-500 uppercase">New location (updates the asset)</label>
               <LocationField value={form.newLocation} onChange={(v) => setForm((f) => ({ ...f, newLocation: v }))} />
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-ink-500 uppercase">Detail (optional)</label>
+            <label className="text-xs font-semibold text-ink-500 uppercase">Detail (optional)</label>
             <textarea value={form.detail} onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))} rows={3} className={`${field} resize-none`} />
           </div>
           <div className="flex justify-end gap-2 pt-1">

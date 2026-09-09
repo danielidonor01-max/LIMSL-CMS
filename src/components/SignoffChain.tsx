@@ -143,13 +143,13 @@ export default function SignoffChain({
                           {ROLE_LABELS[step.role] ?? step.role}
                         </Badge>
                         {step.signerUserName && (
-                          <span className="text-[10px] font-medium text-ink-600">
+                          <span className="text-[11px] font-medium text-ink-600">
                             {step.signerUserName} only
                           </span>
                         )}
-                        {!step.required && <span className="text-[9px] text-ink-400">optional</span>}
+                        {!step.required && <span className="text-[10px] text-ink-400">optional</span>}
                         {step.status === "SIGNED" && step.signedByName && (
-                          <span className="text-[10px] text-ink-500">
+                          <span className="text-[11px] text-ink-500">
                             · {step.signedByName} · {formatDate(step.signedAt)}
                           </span>
                         )}
@@ -160,12 +160,12 @@ export default function SignoffChain({
                           notice that somebody else signed this step. */}
                       {step.isOverride && (
                         <div className="mt-1.5 rounded-md bg-warn-50 border border-warn-200 px-2 py-1.5">
-                          <p className="text-[10px] font-semibold text-warn-900">
+                          <p className="text-[11px] font-semibold text-warn-900">
                             Signed in place of {ROLE_LABELS[step.role] ?? step.role} by{" "}
                             {ROLE_LABELS[step.signedByRole ?? ""] ?? step.signedByRole}
                           </p>
                           {step.overrideReason && (
-                            <p className="text-[10px] text-warn-800 mt-0.5 leading-relaxed">
+                            <p className="text-[11px] text-warn-800 mt-0.5 leading-relaxed">
                               {step.overrideReason}
                             </p>
                           )}
@@ -199,10 +199,10 @@ export default function SignoffChain({
                       </button>
                     )}
                     {step.status === "PENDING" && !unlocked && (
-                      <span className="text-[10px] text-ink-400">awaiting earlier steps</span>
+                      <span className="text-[11px] text-ink-400">awaiting earlier steps</span>
                     )}
                     {step.status === "PENDING" && unlocked && !mine && (
-                      <span className="text-[10px] text-ink-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
+                      <span className="text-[11px] text-ink-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
                     )}
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function SignoffChain({
                         the audit trail six months later. */}
                     {role && role !== step.role && (
                       <div className="rounded-lg border border-warn-200 bg-warn-50 p-2.5 space-y-1.5">
-                        <p className="text-[11px] text-warn-900 leading-relaxed">
+                        <p className="text-xs text-warn-900 leading-relaxed">
                           This step names <strong>{ROLE_LABELS[step.role] ?? step.role}</strong>. You may sign it, but
                           it will be recorded as an override against your name.
                         </p>
@@ -237,7 +237,7 @@ export default function SignoffChain({
                       placeholder="Comments (optional)"
                       className="w-full px-3 py-1.5 bg-white border border-ink-200 rounded-lg text-xs text-ink-900 focus:outline-none focus:border-brand-500/40"
                     />
-                    {error && <p className="text-[11px] text-danger-600">{error}</p>}
+                    {error && <p className="text-xs text-danger-600">{error}</p>}
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setOpenStep(null)}
@@ -261,7 +261,7 @@ export default function SignoffChain({
           })}
         </ol>
       )}
-      {error && !openStep && <p className="text-[11px] text-danger-600">{error}</p>}
+      {error && !openStep && <p className="text-xs text-danger-600">{error}</p>}
     </div>
   );
 }

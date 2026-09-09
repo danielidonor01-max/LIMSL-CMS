@@ -150,7 +150,7 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-8">
         <PageHeader
           icon={FileBarChart}
           title="Reports & Data Export"
@@ -207,7 +207,7 @@ export default function ReportsPage() {
               <h3 className="text-sm font-semibold text-ink-900 mb-1 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-brand-600" /> ISO Evidence Reports
               </h3>
-              <p className="text-[11px] text-ink-500 mb-4">
+              <p className="text-xs text-ink-500 mb-4">
                 Branded, printable compliance registers for the audit file, print to paper or save as PDF; each also exports to CSV.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -222,7 +222,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-ink-900 group-hover:text-brand-700">{r.label}</p>
-                      <p className="text-[10px] text-ink-500">{r.desc}</p>
+                      <p className="text-[11px] text-ink-500">{r.desc}</p>
                     </div>
                   </Link>
                 ))}
@@ -234,13 +234,13 @@ export default function ReportsPage() {
               <h3 className="text-sm font-semibold text-ink-900 mb-1 flex items-center gap-2">
                 <History className="w-4 h-4 text-brand-600" /> Per-Asset Maintenance Dossier
               </h3>
-              <p className="text-[11px] text-ink-500 mb-4">
+              <p className="text-xs text-ink-500 mb-4">
                 One machine, one date range, one document: identity, every work order, PM checklist, breakdown,
                 non-conformity, calibration and document, with downtime and availability for the period.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div className="flex flex-col gap-1 lg:col-span-2">
-                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Asset</span>
+                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Asset</span>
                   <Select
                     value={dossierAsset}
                     onChange={setDossierAsset}
@@ -250,7 +250,7 @@ export default function ReportsPage() {
                   />
                 </div>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
+                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
                   <input
                     type="date"
                     value={dossierFrom}
@@ -259,7 +259,7 @@ export default function ReportsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
+                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
                   <input
                     type="date"
                     value={dossierTo}
@@ -278,7 +278,7 @@ export default function ReportsPage() {
             {/* Export */}
             <div className={reportCard}>
               <h3 className="text-sm font-semibold text-ink-900 mb-1">Data Export (CSV)</h3>
-              <p className="text-[11px] text-ink-500 mb-4">
+              <p className="text-xs text-ink-500 mb-4">
                 Export registers for archival or interoperability with legacy XLSB/XLSM workbooks.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -298,11 +298,11 @@ function Head({ icon, label, value, sub }: { icon: React.ReactNode; label: strin
   return (
     <div className="bg-surface border border-line rounded-2xl shadow-card p-4">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
       <div className="text-2xl font-bold mt-2 text-ink-900">{value}</div>
-      <p className="text-[10px] text-ink-500 mt-1">{sub}</p>
+      <p className="text-[11px] text-ink-500 mt-1">{sub}</p>
     </div>
   );
 }

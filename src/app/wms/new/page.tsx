@@ -131,7 +131,7 @@ export default function NewWms() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
         <PageHeader
           icon={FileText}
           title="Draft a Work Method Statement"
@@ -139,8 +139,8 @@ export default function NewWms() {
           backHref="/wms"
           backLabel="Work Method Statements"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-6">
-          <h2 className="text-sm font-bold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
+        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+          <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
             Create Work Method Statement (WMS)
           </h2>
 
@@ -160,7 +160,7 @@ export default function NewWms() {
                 </option>
               ))}
             </select>
-            <p className="text-[10px] text-ink-500">
+            <p className="text-[11px] text-ink-500">
               Only work orders approved to commence appear here. The permit raised at the end of
               this chain references back to it.
             </p>
@@ -269,7 +269,7 @@ export default function NewWms() {
               <button
                 type="button"
                 onClick={addStepField}
-                className="text-[11px] text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-all"
+                className="text-xs text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-all"
               >
                 + Add Step
               </button>

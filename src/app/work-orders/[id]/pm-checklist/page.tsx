@@ -236,13 +236,13 @@ export default function PMChecklistPage() {
   const sectionCls = "bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4";
   const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
-    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>;
+    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[11px] font-bold flex items-center justify-center">{n}</span>;
   const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       
-      <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-5">
+      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-5">
         <Link href={`/work-orders/${id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to {wo.workOrderNumber}
         </Link>
@@ -315,7 +315,7 @@ export default function PMChecklistPage() {
         <div className={sectionCls}>
           <h3 className={heading}>{num(2)} Safety Pre-Checks</h3>
           {!allSafetyOk && (
-            <div className="flex items-center gap-2 text-[11px] text-warn-600">
+            <div className="flex items-center gap-2 text-xs text-warn-600">
               <ShieldAlert className="w-3.5 h-3.5" /> All four must be confirmed before sign-off.
             </div>
           )}
@@ -393,7 +393,7 @@ export default function PMChecklistPage() {
           <h3 className={heading}>{num(8)} Completion & Sign-Off</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
               <input type="date" value={nextPMDate} onChange={(e) => setNextPMDate(e.target.value)} className={field} />
             </div>
           </div>
@@ -458,7 +458,7 @@ export default function PMChecklistPage() {
         subtitle="Attestation before PM completion"
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-warn-200 bg-warn-50 text-[11px] text-warn-800">
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-warn-200 bg-warn-50 text-xs text-warn-800">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               You are completing PM for <strong>{wo?.workOrderNumber}</strong>. If a Permit-to-Work is attached to
@@ -515,7 +515,7 @@ export default function PMChecklistPage() {
 function Info({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">{label}</p>
+      <p className="text-[11px] text-ink-500 uppercase tracking-wider font-semibold">{label}</p>
       <p className={`text-ink-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "-"}</p>
     </div>
   );
@@ -535,7 +535,7 @@ function ChecklistEditor({
   return (
     <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-3">
       <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>
+        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[11px] font-bold flex items-center justify-center">{n}</span>
         {title}
       </h3>
       <div className="space-y-2">
@@ -549,7 +549,7 @@ function ChecklistEditor({
               <span className="text-sm sm:text-xs text-ink-700">{it.item}</span>
               {/* What "OK" actually means, a tick against an unstated standard
                   is not evidence. */}
-              {it.criteria && <p className="text-[11px] text-ink-400 mt-0.5">{it.criteria}</p>}
+              {it.criteria && <p className="text-xs text-ink-400 mt-0.5">{it.criteria}</p>}
             </div>
             {it.unit && (
               <input

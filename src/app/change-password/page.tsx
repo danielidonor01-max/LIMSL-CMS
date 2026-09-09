@@ -117,7 +117,7 @@ export default function ChangePasswordPage() {
           <p className="text-xs text-ink-500 font-mono uppercase tracking-wider mt-0.5">LIMSL CMS Security</p>
         </div>
 
-        <div className="bg-white border border-ink-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-ink-200 rounded-2xl p-6 shadow-sm space-y-8">
           {mustChange && (
             <div className="p-3.5 rounded-xl bg-warn-50 border border-warn-200 flex gap-3 text-warn-800">
               <ShieldAlert className="w-5 h-5 shrink-0 text-warn-600 mt-0.5" />
@@ -132,7 +132,7 @@ export default function ChangePasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Current Password
               </label>
               <div className="relative">
@@ -150,7 +150,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 New Password
               </label>
               <div className="relative">
@@ -168,7 +168,7 @@ export default function ChangePasswordPage() {
               {newPassword.length > 0 && (
                 <ul className="grid grid-cols-2 gap-1.5 mt-2.5">
                   {ruleState.map((r) => (
-                    <li key={r.label} className={`flex items-center gap-1.5 text-[11px] ${r.ok ? "text-brand-600" : "text-ink-400"}`}>
+                    <li key={r.label} className={`flex items-center gap-1.5 text-xs ${r.ok ? "text-brand-600" : "text-ink-400"}`}>
                       {r.ok ? <Check className="w-3 h-3 shrink-0" /> : <X className="w-3 h-3 shrink-0" />}
                       {r.label}
                     </li>
@@ -178,7 +178,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -194,7 +194,7 @@ export default function ChangePasswordPage() {
                 <Reveal show={show} onToggle={() => setShow((v) => !v)} />
               </div>
               {confirmPassword.length > 0 && (
-                <p className={`flex items-center gap-1.5 text-[11px] mt-2 ${matches ? "text-brand-600" : "text-danger-500"}`}>
+                <p className={`flex items-center gap-1.5 text-xs mt-2 ${matches ? "text-brand-600" : "text-danger-500"}`}>
                   {matches ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                   {matches ? "Passwords match" : "Passwords do not match"}
                 </p>
@@ -225,7 +225,7 @@ export default function ChangePasswordPage() {
                 Back to Dashboard
               </button>
             ) : (
-              <div className="text-[11px] text-ink-400">
+              <div className="text-xs text-ink-400">
                 Logged in as <span className="font-semibold text-ink-600">{session?.user?.name}</span>
               </div>
             )}

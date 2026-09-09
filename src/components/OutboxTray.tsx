@@ -67,7 +67,7 @@ export default function OutboxTray() {
         {waiting.length > 0 && (
           <ul className="space-y-1">
             {waiting.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 text-[11px] text-ink-500">
+              <li key={e.id} className="flex items-center justify-between gap-3 text-xs text-ink-500">
                 <span className="truncate">{e.label}</span>
                 <span className="shrink-0">{describeAge(e.createdAt)}</span>
               </li>
@@ -82,10 +82,10 @@ export default function OutboxTray() {
               <AlertTriangle className="w-4 h-4 text-danger-600 shrink-0 mt-0.5" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-danger-900">Not sent, {e.label}</p>
-                <p className="text-[11px] text-danger-800 mt-0.5 leading-relaxed">
+                <p className="text-xs text-danger-800 mt-0.5 leading-relaxed">
                   {e.lastError ?? "The server refused this submission."}
                 </p>
-                <p className="text-[10px] text-danger-700/80 mt-1">
+                <p className="text-[11px] text-danger-700/80 mt-1">
                   Queued {describeAge(e.createdAt)} · {e.attempts} attempt{e.attempts === 1 ? "" : "s"}. Nothing has
                   been recorded for this, you will need to redo it or discard it.
                 </p>
@@ -98,7 +98,7 @@ export default function OutboxTray() {
                   refresh();
                   toast.info("Queued again, it will retry on the next send.");
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-300 text-danger-700 text-[11px] font-semibold hover:bg-danger-100"
+                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-300 text-danger-700 text-xs font-semibold hover:bg-danger-100"
               >
                 <RotateCw className="w-3.5 h-3.5" /> Try again
               </button>
@@ -108,7 +108,7 @@ export default function OutboxTray() {
                   refresh();
                   toast.success("Discarded.");
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-danger-700 text-[11px] font-semibold hover:bg-danger-100"
+                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-danger-700 text-xs font-semibold hover:bg-danger-100"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Discard
               </button>

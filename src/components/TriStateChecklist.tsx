@@ -47,13 +47,13 @@ export default function TriStateChecklist({
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
-          {hint && <p className="text-[11px] text-ink-500 mt-0.5">{hint}</p>}
+          {hint && <p className="text-xs text-ink-500 mt-0.5">{hint}</p>}
         </div>
         {!disabled && (
           <button
             type="button"
             onClick={() => setAll("NA")}
-            className="text-[10px] font-semibold text-ink-500 hover:text-ink-900 shrink-0"
+            className="text-[11px] font-semibold text-ink-500 hover:text-ink-900 shrink-0"
           >
             Mark rest N/A
           </button>
@@ -74,7 +74,7 @@ export default function TriStateChecklist({
               <span className="text-xs text-ink-700 min-w-0">
                 {item.label}
                 {required && (
-                  <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-warn-700">
+                  <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-warn-700">
                     required
                   </span>
                 )}
@@ -107,7 +107,7 @@ export default function TriStateChecklist({
       </div>
 
       {unmarked > 0 && (
-        <p className="text-[10px] text-warn-700 mt-1.5">
+        <p className="text-[11px] text-warn-700 mt-1.5">
           {unmarked} line{unmarked === 1 ? "" : "s"} not yet marked. Every line is ticked or crossed
           before the permit is signed.
         </p>

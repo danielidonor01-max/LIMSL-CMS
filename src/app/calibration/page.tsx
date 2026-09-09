@@ -63,7 +63,7 @@ type CalEvent = {
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
-const sectionCls = "text-[11px] font-mono uppercase tracking-wider text-ink-500";
+const sectionCls = "text-xs font-mono uppercase tracking-wider text-ink-500";
 
 const STATUS_BADGE: Record<string, string> = {
   CURRENT: "bg-brand-500/10 text-brand-600 border-brand-500/20",
@@ -190,7 +190,7 @@ export default function CalibrationPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-8">
         <PageHeader
           icon={Gauge}
           title="Calibration Management"
@@ -229,13 +229,13 @@ export default function CalibrationPage() {
                   <thead>
                     <tr className="border-b border-ink-200 text-ink-500">
                       <th className="py-3 px-5 font-medium">Instrument</th>
-                      <th className="py-3 px-4 font-medium">Make / Model</th>
-                      <th className="py-3 px-4 font-medium">Last Cal.</th>
-                      <th className="py-3 px-4 font-medium">Next Cal.</th>
-                      <th className="py-3 px-4 font-medium">Interval</th>
-                      <th className="py-3 px-4 font-medium">Certificate / Traceability</th>
-                      <th className="py-3 px-4 font-medium">Status</th>
-                      <th className="py-3 px-4 font-medium"></th>
+                      <th className="py-3.5 px-5 font-medium">Make / Model</th>
+                      <th className="py-3.5 px-5 font-medium">Last Cal.</th>
+                      <th className="py-3.5 px-5 font-medium">Next Cal.</th>
+                      <th className="py-3.5 px-5 font-medium">Interval</th>
+                      <th className="py-3.5 px-5 font-medium">Certificate / Traceability</th>
+                      <th className="py-3.5 px-5 font-medium">Status</th>
+                      <th className="py-3.5 px-5 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
@@ -260,14 +260,14 @@ export default function CalibrationPage() {
                           <td className="py-3 px-5">
                             <div className="font-medium text-ink-900">{r.instrumentName}</div>
                             {r.serialNumber && (
-                              <div className="text-[10px] font-mono text-ink-500">S/N {r.serialNumber}</div>
+                              <div className="text-[11px] font-mono text-ink-500">S/N {r.serialNumber}</div>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-ink-700">
+                          <td className="py-3.5 px-5 text-ink-700">
                             {r.make} {r.model}
                           </td>
-                          <td className="py-3 px-4 font-mono text-ink-500">{formatDate(r.lastCalibrationDate)}</td>
-                          <td className="py-3 px-4 font-mono text-ink-700">
+                          <td className="py-3.5 px-5 font-mono text-ink-500">{formatDate(r.lastCalibrationDate)}</td>
+                          <td className="py-3.5 px-5 font-mono text-ink-700">
                             {formatDate(r.nextCalibrationDate)}
                             {d !== null && (
                               <span className={`ml-1 ${d < 0 ? "text-danger-600" : d < 30 ? "text-warn-600" : "text-ink-500"}`}>
@@ -275,26 +275,26 @@ export default function CalibrationPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-ink-500">{r.calibrationInterval ?? "-"} d</td>
-                          <td className="py-3 px-4">
+                          <td className="py-3.5 px-5 text-ink-500">{r.calibrationInterval ?? "-"} d</td>
+                          <td className="py-3.5 px-5">
                             <div className="font-mono text-ink-500">{r.certificateNumber ?? "-"}</div>
                             {traceability ? (
-                              <div className="text-[10px] text-ink-500 flex items-center gap-1 mt-0.5">
+                              <div className="text-[11px] text-ink-500 flex items-center gap-1 mt-0.5">
                                 <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
                                 <span className="truncate max-w-[14rem]">{traceability}</span>
                               </div>
                             ) : (
-                              <div className="text-[10px] text-warn-600 flex items-center gap-1 mt-0.5">
+                              <div className="text-[11px] text-warn-600 flex items-center gap-1 mt-0.5">
                                 <AlertTriangle className="w-3.5 h-3.5" /> No traceability on record
                               </div>
                             )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3.5 px-5">
                             <Badge className={STATUS_BADGE[r.status ?? "CURRENT"]}>
                               {STATUS_LABEL[r.status ?? "CURRENT"] ?? r.status}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3.5 px-5">
                             <div className="flex items-center gap-1 justify-end">
                               <Button
                                 variant="ghost"
@@ -393,7 +393,7 @@ export default function CalibrationPage() {
               </div>
             </div>
             {(verdict === "FAIL" || asFound === "OUT_OF_TOLERANCE" || asLeft === "REJECTED") && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-danger-200 bg-danger-50 text-danger-700 text-[11px]">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-danger-200 bg-danger-50 text-danger-700 text-xs">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
                 <span>
                   Saving this will mark the instrument out of service and raise a non-conformity covering every
@@ -405,7 +405,7 @@ export default function CalibrationPage() {
 
           <div className="pt-1 space-y-3">
             <p className={sectionCls}>Traceability · ISO 9001 7.1.5.2</p>
-            <p className="text-[11px] text-ink-500">
+            <p className="text-xs text-ink-500">
               Record the standard this calibration was traced to, or the laboratory that performed it. One of the two
               is required.
             </p>
@@ -529,7 +529,7 @@ export default function CalibrationPage() {
                       </Badge>
                     )}
                   </div>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
                     <Meta label="Certificate" value={ev.certificateNumber} mono />
                     <Meta label="Next due" value={ev.nextCalibrationDate ? formatDate(ev.nextCalibrationDate) : null} mono />
                     <Meta label="Traceable to" value={ev.traceableTo} />
@@ -540,7 +540,7 @@ export default function CalibrationPage() {
                     <Meta label="Calibrated by" value={ev.calibratedBy} />
                     <Meta label="Recorded" value={ev.createdAt ? formatDate(ev.createdAt) : null} mono />
                   </dl>
-                  {ev.notes && <p className="text-[11px] text-ink-600 border-t border-ink-200 pt-2">{ev.notes}</p>}
+                  {ev.notes && <p className="text-xs text-ink-600 border-t border-ink-200 pt-2">{ev.notes}</p>}
                 </div>
               );
             })}
@@ -554,7 +554,7 @@ export default function CalibrationPage() {
 function Meta({ label, value, mono = false }: { label: string; value: string | null; mono?: boolean }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider">{label}</dt>
+      <dt className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider">{label}</dt>
       <dd className={`text-ink-700 ${mono ? "font-mono" : ""}`}>{value || "-"}</dd>
     </div>
   );
@@ -564,7 +564,7 @@ function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
       <div className="text-2xl font-bold mt-2 text-ink-900">{value}</div>

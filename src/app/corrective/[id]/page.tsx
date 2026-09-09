@@ -296,7 +296,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
             icon={AlertTriangle}
@@ -309,13 +309,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           />
         </div>
         {/* Left Side: Fault Spec & RCA */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Fault Specifications Card */}
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Breakdown Specifications</h2>
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Breakdown Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <span className="text-[10px] text-ink-500 uppercase block mb-1">Equipment Name</span>
+                <span className="text-[11px] text-ink-500 uppercase block mb-1">Equipment Name</span>
                 {equipment?.assetId ? (
                   <Link
                     href={`/equipment/${equipment.assetId.replace(/\//g, "-")}`}
@@ -328,17 +328,17 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 )}
               </div>
               <div>
-                <span className="text-[10px] text-ink-500 uppercase block mb-1">Tag ID</span>
+                <span className="text-[11px] text-ink-500 uppercase block mb-1">Tag ID</span>
                 <span className="font-semibold text-ink-900 font-mono">{equipment?.assetId}</span>
               </div>
               <div>
-                <span className="text-[10px] text-ink-500 uppercase block mb-1">Status at failure</span>
+                <span className="text-[11px] text-ink-500 uppercase block mb-1">Status at failure</span>
                 <span className="font-semibold text-ink-900 font-mono">{record.operatingStatusAtFailure}</span>
               </div>
             </div>
 
             <div className="text-xs space-y-1">
-              <span className="text-[10px] text-ink-500 uppercase block">Reported Fault Description</span>
+              <span className="text-[11px] text-ink-500 uppercase block">Reported Fault Description</span>
               <p className="bg-ink-100 p-3 rounded border border-ink-200 text-ink-700 leading-relaxed">
                 {record.faultDescription}
               </p>
@@ -366,8 +366,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           {/* Root Cause Analysis (RCA) Card */}
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-5">
             <div className="flex justify-between items-center">
-              <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
-              <span className="px-2 py-0.5 rounded bg-ink-100 border border-ink-200 text-[10px] font-mono font-semibold text-ink-500">
+              <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
+              <span className="px-2 py-0.5 rounded bg-ink-100 border border-ink-200 text-[11px] font-mono font-semibold text-ink-500">
                 {rcaTool === "FIVE_WHYS" ? "5 Whys" : rcaTool.replace(/_/g, " ")}
               </span>
             </div>
@@ -387,7 +387,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     {/* Rail: the numbered node and the line that connects it on */}
                     <div className="flex flex-col items-center shrink-0">
                       <span
-                        className={`w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold border-2 transition-colors ${
+                        className={`w-7 h-7 rounded-full grid place-items-center text-xs font-bold border-2 transition-colors ${
                           isRoot && answered
                             ? "bg-danger-600 border-danger-600 text-white"
                             : answered
@@ -413,7 +413,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                             ? `Why did that happen, "${previous.length > 60 ? `${previous.slice(0, 60)}…` : previous}"?`
                             : "Why did that happen?"}
                         {isRoot && (
-                          <span className="ml-2 text-[10px] font-bold text-danger-700 uppercase tracking-wide">
+                          <span className="ml-2 text-[11px] font-bold text-danger-700 uppercase tracking-wide">
                             Root cause
                           </span>
                         )}
@@ -438,7 +438,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 );
               })}
             </ol>
-            <p className="text-[11px] text-ink-500 -mt-1">
+            <p className="text-xs text-ink-500 -mt-1">
               Stop early if you reach a cause you can actually act on, five levels is a guide, not a quota.
               A root cause you cannot change is a sign the chain went one step too far.
             </p>
@@ -454,7 +454,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <option key={m.code} value={m.code}>{m.label}</option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-ink-400">Required at close-out, this is what makes recurring failures visible.</p>
+                <p className="text-xs text-ink-400">Required at close-out, this is what makes recurring failures visible.</p>
               </div>
               <div className="space-y-2">
                 <span className="text-xs font-semibold text-ink-500 uppercase">How was it detected?</span>
@@ -464,7 +464,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <option key={d.code} value={d.code}>{d.label}</option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-ink-400">Shows whether the PM programme is catching faults before they stop the machine.</p>
+                <p className="text-xs text-ink-400">Shows whether the PM programme is catching faults before they stop the machine.</p>
               </div>
             </div>
 
@@ -508,10 +508,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Right Side: Corrective Actions & Signoff */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Corrective Actions Tracking Log (CATL) */}
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Corrective Action Log</h2>
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Corrective Action Log</h2>
 
             {/* Existing actions list */}
             <div className="space-y-2.5 max-h-56 overflow-y-auto">
@@ -523,7 +523,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] text-ink-500">
+                  <div className="flex justify-between items-center text-[11px] text-ink-500">
                     <span>By: {act.responsible}</span>
                     <span>Due: {act.date}</span>
                   </div>
@@ -531,7 +531,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <button
                       type="button"
                       onClick={() => toggleActionStatus(i)}
-                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                         act.status === "COMPLETED"
                           ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
                           : "bg-ink-200 text-ink-500 border-ink-200"
@@ -580,16 +580,16 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
           {/* Closeout & Approvals */}
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Completion Sign-off</h2>
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Completion Sign-off</h2>
 
             {record.status === "CLOSED" ? (
               <div className="p-3 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 flex-shrink-0" />
                 <div>
                   <p className="font-bold">Record Closed Out Successfully</p>
-                  <p className="text-[10px] text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  <p className="text-[11px] text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
                   {record.totalDowntimeHours != null && (
-                    <p className="text-[10px] text-ink-500">
+                    <p className="text-[11px] text-ink-500">
                       Production downtime: <span className="font-mono font-semibold text-ink-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
                     </p>
                   )}
@@ -598,7 +598,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             ) : (
               <div className="space-y-4">
                 {currentUserName && (
-                  <p className="text-[11px] text-ink-500">
+                  <p className="text-xs text-ink-500">
                     Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
                   </p>
                 )}
@@ -630,7 +630,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Machine went down</label>
+                      <label className="text-xs font-semibold text-ink-500 uppercase">Machine went down</label>
                       <input
                         type="datetime-local"
                         value={downStartAt}
@@ -639,7 +639,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Restored to service</label>
+                      <label className="text-xs font-semibold text-ink-500 uppercase">Restored to service</label>
                       <input
                         type="datetime-local"
                         value={downEndAt}
@@ -652,7 +652,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <p className="text-xs text-ink-600">
                       Production downtime:{" "}
                       <span className="font-bold text-ink-900 font-mono">{previewDowntime.toFixed(2)} h</span>{" "}
-                      <span className="text-[11px] text-ink-400">(excludes off-shift &amp; non-working days)</span>
+                      <span className="text-xs text-ink-400">(excludes off-shift &amp; non-working days)</span>
                     </p>
                   )}
                 </div>

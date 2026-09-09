@@ -124,7 +124,7 @@ function ResetForm() {
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label htmlFor="rp-pass" className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="rp-pass" className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 New password
               </label>
               <div className="relative">
@@ -148,13 +148,13 @@ function ResetForm() {
                   {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-[11px] text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 At least {MIN_PASSWORD_LENGTH} characters. Avoid your email address or anything guessable.
               </p>
             </div>
 
             <div>
-              <label htmlFor="rp-confirm" className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="rp-confirm" className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Confirm new password
               </label>
               <input

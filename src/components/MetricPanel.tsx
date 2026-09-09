@@ -59,7 +59,7 @@ export default function MetricPanel({
         return (
           <div key={m.key} className="bg-surface p-5 flex flex-col">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-500 leading-tight">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-500 leading-tight">
                 {m.label}
               </p>
               {Icon && (

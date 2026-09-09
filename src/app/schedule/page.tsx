@@ -333,19 +333,19 @@ export default function SchedulePage() {
   ) => (
     <div className={`p-4 rounded-xl border ${tone} backdrop-blur-sm`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
           {label}
         </span>
         <div className="p-1.5 rounded-lg bg-ink-100">{icon}</div>
       </div>
       <div className="mt-3 text-2xl font-bold text-ink-900">{value}</div>
-      <p className="text-[11px] text-ink-500 mt-1">{sub}</p>
+      <p className="text-xs text-ink-500 mt-1">{sub}</p>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
           icon={Calendar}
           title="Annual Maintenance Schedule"
@@ -526,29 +526,29 @@ export default function SchedulePage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-ink-200 text-ink-500">
-                    <th className="py-3 px-4 font-medium">Planned</th>
-                    <th className="py-3 px-4 font-medium">Equipment</th>
-                    <th className="py-3 px-4 font-medium">Activity</th>
-                    <th className="py-3 px-4 font-medium">Freq.</th>
-                    <th className="py-3 px-4 font-medium">Responsible</th>
-                    <th className="py-3 px-4 font-medium">Status</th>
-                    <th className="py-3 px-4 font-medium text-right">Action</th>
+                    <th className="py-3.5 px-5 font-medium">Planned</th>
+                    <th className="py-3.5 px-5 font-medium">Equipment</th>
+                    <th className="py-3.5 px-5 font-medium">Activity</th>
+                    <th className="py-3.5 px-5 font-medium">Freq.</th>
+                    <th className="py-3.5 px-5 font-medium">Responsible</th>
+                    <th className="py-3.5 px-5 font-medium">Status</th>
+                    <th className="py-3.5 px-5 font-medium text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-ink-50">
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-5 whitespace-nowrap">
                         <div className="font-mono text-ink-900">{formatDate(r.plannedDate)}</div>
-                        <div className="text-[10px] text-ink-500">
+                        <div className="text-[11px] text-ink-500">
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <div className="font-medium text-ink-900 max-w-[220px] truncate">
                           {r.equipmentName}
                         </div>
-                        <div className="text-[10px] font-mono text-ink-500">
+                        <div className="text-[11px] font-mono text-ink-500">
                           {r.assetId ? (
                             <Link
                               href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
@@ -561,26 +561,26 @@ export default function SchedulePage() {
                           {r.category ? EQUIPMENT_CATEGORY_LABELS[r.category] : ""}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Badge className={ACTIVITY_TYPE_BADGE[r.activityType]}>
                           {r.activityType}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-ink-500">
+                      <td className="py-3.5 px-5 text-ink-500">
                         {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "-"}
                       </td>
-                      <td className="py-3 px-4 text-ink-700">
+                      <td className="py-3.5 px-5 text-ink-700">
                         {r.responsiblePersonName ?? "-"}
                         {safeIds(r.assistantIds).length > 0 && (
                           <span className="text-ink-400"> +{safeIds(r.assistantIds).length}</span>
                         )}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <Badge className={SCHEDULE_STATUS_BADGE[r.status]}>
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
                         {r.status === "DEFERRED" && (
-                          <div className="mt-1.5 max-w-[280px] text-[10px] leading-relaxed text-ink-500">
+                          <div className="mt-1.5 max-w-[280px] text-[11px] leading-relaxed text-ink-500">
                             <span className="text-violet-700 font-medium">
                               {r.deferredByName ?? "-"}
                             </span>
@@ -589,7 +589,7 @@ export default function SchedulePage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
                           {r.status !== "COMPLETED" && (
                             <button
@@ -661,7 +661,7 @@ export default function SchedulePage() {
             </div>
           )}
         </div>
-        <p className="text-[11px] text-ink-500">
+        <p className="text-xs text-ink-500">
           Showing {filtered.length} of {rows.length} scheduled activities.
         </p>
         </>
@@ -755,7 +755,7 @@ export default function SchedulePage() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-ink-500 mt-1">
+              <p className="text-[11px] text-ink-500 mt-1">
                 Overdue and due-soon reminders go to this person directly. Leaving it unassigned means only the
                 managers hear about it.
               </p>

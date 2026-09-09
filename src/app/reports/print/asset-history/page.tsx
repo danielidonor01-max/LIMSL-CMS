@@ -160,7 +160,7 @@ function AssetHistoryDossier() {
       </div>
 
       <main className="max-w-5xl w-full mx-auto p-6 print:p-0 print:max-w-none">
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-6">
+        <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-8">
           {/* Letterhead */}
           <div className="flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
             <div className="flex items-center gap-3">
@@ -171,12 +171,12 @@ function AssetHistoryDossier() {
                 <h1 className="text-base font-black tracking-tight text-ink-900 leading-none">
                   LEE INTERNATIONAL
                 </h1>
-                <p className="text-[9px] text-ink-500 font-mono uppercase tracking-widest mt-1">
+                <p className="text-[10px] text-ink-500 font-mono uppercase tracking-widest mt-1">
                   Machinery &amp; Services Limited
                 </p>
               </div>
             </div>
-            <div className="text-right text-[10px] text-ink-500 font-mono">
+            <div className="text-right text-[11px] text-ink-500 font-mono">
               <p className="font-bold text-ink-900">LIMSL-RPT-ASSET</p>
               <p>ISO 9001:2015 · ISO 45001</p>
             </div>
@@ -187,7 +187,7 @@ function AssetHistoryDossier() {
             <h2 className="text-xl font-bold tracking-tight text-ink-900">
               Maintenance Dossier, {String(eq.assetId ?? "")} {eq.name ? `· ${eq.name}` : ""}
             </h2>
-            <p className="text-[11px] text-ink-500 font-mono mt-1">
+            <p className="text-xs text-ink-500 font-mono mt-1">
               {formatDate(data.range.from)}, {formatDate(data.range.to)} · generated{" "}
               {new Date(data.generatedAt).toLocaleString()} · by {session?.user?.name ?? "-"} ·{" "}
               {data.events.length} record{data.events.length === 1 ? "" : "s"}
@@ -196,14 +196,14 @@ function AssetHistoryDossier() {
 
           {/* Equipment identity */}
           <div>
-            <h3 className="text-[11px] font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
               Equipment identity
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 print:grid-cols-4 gap-x-6 gap-y-2 border border-ink-200 rounded-lg p-4 print:rounded-none">
               {identity.map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[9px] text-ink-500 uppercase tracking-wider">{label}</p>
-                  <p className="text-[11px] text-ink-900 font-medium break-words">{value || "-"}</p>
+                  <p className="text-[10px] text-ink-500 uppercase tracking-wider">{label}</p>
+                  <p className="text-xs text-ink-900 font-medium break-words">{value || "-"}</p>
                 </div>
               ))}
             </div>
@@ -211,24 +211,24 @@ function AssetHistoryDossier() {
 
           {/* Period summary */}
           <div>
-            <h3 className="text-[11px] font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
               Period summary
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 bg-ink-50 border border-ink-200 rounded-lg p-4 print:rounded-none">
               {summary.map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[9px] text-ink-500 uppercase tracking-wider">{label}</p>
-                  <p className="text-[11px] text-ink-900 font-semibold">{value}</p>
+                  <p className="text-[10px] text-ink-500 uppercase tracking-wider">{label}</p>
+                  <p className="text-xs text-ink-900 font-semibold">{value}</p>
                 </div>
               ))}
             </div>
             {!!t.downtimeUnrecorded && (
-              <p className="text-[10px] text-warn-700 mt-2">
+              <p className="text-[11px] text-warn-700 mt-2">
                 {t.downtimeUnrecorded} breakdown{t.downtimeUnrecorded === 1 ? "" : "s"} in this period have no recorded
                 downtime window, availability above is an upper bound.
               </p>
             )}
-            <p className="text-[10px] text-ink-400 mt-1">
+            <p className="text-[11px] text-ink-400 mt-1">
               Availability = (planned production hours − recorded downtime) ÷ planned production hours, using the
               organisation&apos;s working-hours calendar.
             </p>
@@ -236,11 +236,11 @@ function AssetHistoryDossier() {
 
           {/* Chronological record set */}
           <div>
-            <h3 className="text-[11px] font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
               Chronological maintenance record
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px] border-collapse">
+              <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-ink-300 text-ink-600">
                     <th className="py-2 pr-3 font-semibold uppercase tracking-wide whitespace-nowrap">Date</th>
@@ -263,7 +263,7 @@ function AssetHistoryDossier() {
                       <tr key={`${e.date}-${e.reference}-${i}`} className="text-ink-800 break-inside-avoid align-top">
                         <td className="py-1.5 pr-3 whitespace-nowrap">{formatDate(e.date)}</td>
                         <td className="py-1.5 pr-3 whitespace-nowrap">{e.category}</td>
-                        <td className="py-1.5 pr-3 font-mono text-[10px]">{e.reference || "-"}</td>
+                        <td className="py-1.5 pr-3 font-mono text-[11px]">{e.reference || "-"}</td>
                         <td className="py-1.5 pr-3">
                           <span className="font-semibold">{e.title}</span>
                           {e.detail && <span className="block text-ink-500">{e.detail}</span>}
@@ -279,7 +279,7 @@ function AssetHistoryDossier() {
           </div>
 
           {/* Auditor sign-off block */}
-          <div className="grid grid-cols-3 gap-6 pt-10 text-[11px]">
+          <div className="grid grid-cols-3 gap-6 pt-10 text-xs">
             {["Prepared by", "Reviewed by (QA/QC)", "Approved by"].map((label) => (
               <div key={label}>
                 <div className="border-b border-ink-400 h-8" />

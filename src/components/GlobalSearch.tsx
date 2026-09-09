@@ -137,7 +137,7 @@ export default function GlobalSearch() {
         <Loader2 className="w-3.5 h-3.5 text-ink-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
       ) : (
         // Discoverability: the shortcut is worthless if nobody knows it exists.
-        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border border-ink-300 bg-white px-1.5 py-0.5 text-[10px] font-medium text-ink-500 pointer-events-none">
+        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border border-ink-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-ink-500 pointer-events-none">
           {isMac ? "⌘" : "Ctrl"} K
         </kbd>
       )}
@@ -166,7 +166,7 @@ export default function GlobalSearch() {
                   }`}
                 >
                   <span
-                    className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
+                    className={`text-[11px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
                       TYPE_COLOR[r.type] ?? "text-ink-600 bg-ink-100"
                     }`}
                   >
@@ -174,11 +174,11 @@ export default function GlobalSearch() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-ink-900 truncate">{r.label}</p>
-                    <p className="text-[11px] text-ink-500 truncate">{r.sub}</p>
+                    <p className="text-xs text-ink-500 truncate">{r.sub}</p>
                   </div>
                 </button>
               ))}
-              <div className="px-4 py-1.5 text-[10px] text-ink-400 bg-ink-50 border-t border-ink-100">
+              <div className="px-4 py-1.5 text-[11px] text-ink-400 bg-ink-50 border-t border-ink-100">
                 ↑↓ to move · Enter to open · Esc to close
               </div>
             </>

@@ -46,7 +46,7 @@ export default function EquipmentHistoryPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
       <Link href="/equipment" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to registry
       </Link>

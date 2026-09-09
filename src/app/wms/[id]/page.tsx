@@ -77,7 +77,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
             icon={FileText}
@@ -89,9 +89,9 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
           />
         </div>
         {/* Left Side: Document Sections */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Main Document Details */}
-          <div className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-6">
+          <div className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
             <div className="border-b border-ink-200 pb-4">
               <h2 className="text-xl font-bold text-ink-900">{wms.title}</h2>
               <p className="text-xs text-ink-500 mt-1">Revision: {wms.revision} | Prepared by: {wms.preparedByName}</p>
@@ -162,16 +162,16 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         </div>
 
         {/* Right Side: authorisation status + sign-off chain */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
-            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
+            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               WMS Document Status
             </h2>
 
             <div className="flex justify-between items-center bg-ink-100 border border-ink-200 p-3 rounded-lg text-xs">
               <span className="text-ink-500 font-mono">Document Status</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
                   wms.status === "APPROVED"
                     ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
                     : wms.status === "UNDER_REVIEW"
@@ -185,7 +185,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               </span>
             </div>
 
-            <div className="flex items-start gap-2 text-[11px] text-ink-500">
+            <div className="flex items-start gap-2 text-xs text-ink-500">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-600" />
               <span>
                 Status is set by the sign-off chain below, it becomes <strong>APPROVED</strong> only when all four

@@ -78,7 +78,7 @@ export default function QuickActions() {
           aria-label="Create"
           className="absolute right-0 mt-2 w-60 bg-surface border border-line rounded-2xl shadow-card shadow-lg overflow-hidden z-50"
         >
-          <div className="px-3 py-2 text-[10px] font-semibold text-ink-500 uppercase tracking-wider border-b border-ink-100">
+          <div className="px-3 py-2 text-[11px] font-semibold text-ink-500 uppercase tracking-wider border-b border-ink-100">
             Create
           </div>
           {actions.map((a) => {

@@ -104,7 +104,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-7xl w-full mx-auto space-y-8">
       <PageHeader
         icon={FolderOpen}
         title="Document Register"
@@ -181,7 +181,7 @@ export default function DocumentsPage() {
                       <ChevronRight className={`w-4 h-4 text-ink-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-ink-900 truncate">{g.name}</p>
-                        <p className="text-[10px] font-mono text-ink-400">
+                        <p className="text-[11px] font-mono text-ink-400">
                           {g.assetId ? (
                             <Link
                               href={`/equipment/${g.assetId.replace(/\//g, "-")}`}
@@ -197,16 +197,16 @@ export default function DocumentsPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {missing > 0 && (
-                          <span className="text-[10px] font-semibold text-danger-600 bg-danger-500/10 border border-danger-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-[11px] font-semibold text-danger-600 bg-danger-500/10 border border-danger-500/20 rounded-full px-2 py-0.5">
                             {missing} missing
                           </span>
                         )}
                         {expiredN > 0 && (
-                          <span className="text-[10px] font-semibold text-warn-600 bg-warn-500/10 border border-warn-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-[11px] font-semibold text-warn-600 bg-warn-500/10 border border-warn-500/20 rounded-full px-2 py-0.5">
                             {expiredN} expired
                           </span>
                         )}
-                        <span className="text-[11px] text-ink-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
+                        <span className="text-xs text-ink-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
                       </div>
                     </button>
 
@@ -258,7 +258,7 @@ export default function DocumentsPage() {
               })
             )}
           </div>
-          <p className="text-[11px] text-ink-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
+          <p className="text-xs text-ink-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
         </>
       )}
     </div>
@@ -269,7 +269,7 @@ function Stat({ label, value, tone, text, icon }: { label: string; value: string
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>

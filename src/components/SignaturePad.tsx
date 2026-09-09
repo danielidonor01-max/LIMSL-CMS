@@ -101,12 +101,12 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-[11px] font-bold text-ink-500 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-bold text-ink-500 uppercase tracking-wide">{label}</span>
         {hasDrawing && (
           <button
             type="button"
             onClick={clear}
-            className="text-[10px] text-danger-600 hover:text-danger-700 flex items-center gap-1 transition-all"
+            className="text-[11px] text-danger-600 hover:text-danger-700 flex items-center gap-1 transition-all"
           >
             <Trash2 className="w-3.5 h-3.5" /> Clear Signature
           </button>
@@ -126,7 +126,7 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
           className="cursor-crosshair w-full block h-[120px] touch-none"
         />
         {!hasDrawing && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-ink-500 text-[10px] uppercase font-mono tracking-widest">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-ink-500 text-[11px] uppercase font-mono tracking-widest">
             Sign here
           </div>
         )}

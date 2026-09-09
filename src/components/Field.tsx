@@ -13,7 +13,7 @@ export const FIELD_CLASS =
   "placeholder:text-ink-400 transition-colors focus:outline-none focus:border-brand-500 " +
   "focus:ring-2 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed";
 
-export const LABEL_CLASS = "block text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-1.5";
+export const LABEL_CLASS = "block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5";
 
 import { Children, cloneElement, isValidElement } from "react";
 
@@ -70,11 +70,11 @@ export default function Field({
       )}
       {control}
       {error ? (
-        <p id={errorId} className="text-[11px] text-danger-600" role="alert">
+        <p id={errorId} className="text-xs text-danger-600" role="alert">
           {error}
         </p>
       ) : help ? (
-        <p id={helpId} className="text-[11px] text-ink-500">
+        <p id={helpId} className="text-xs text-ink-500">
           {help}
         </p>
       ) : null}

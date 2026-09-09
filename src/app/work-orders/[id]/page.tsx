@@ -182,7 +182,7 @@ export default function WorkOrderDetailPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       
-      <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
         </Link>
@@ -321,7 +321,7 @@ export default function WorkOrderDetailPage() {
                 <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="font-medium text-ink-900 hover:text-brand-600">
                   {eq.name}
                 </Link>
-                <p className="text-[11px] font-mono text-ink-500 mt-0.5">
+                <p className="text-xs font-mono text-ink-500 mt-0.5">
                   {eq.assetId} · {eq.location} · {eq.oem ?? "-"}
                 </p>
               </div>
@@ -355,7 +355,7 @@ export default function WorkOrderDetailPage() {
 
             {checklist.observations && (
               <div>
-                <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
                   Findings
                 </p>
                 <p className="text-sm text-ink-700">{checklist.observations}</p>
@@ -366,7 +366,7 @@ export default function WorkOrderDetailPage() {
               <SignatureView label="Technician" name={checklist.technicianName} sig={checklist.technicianSignature} />
               <SignatureView label="Supervisor" name={checklist.supervisorName} sig={checklist.supervisorSignature} />
             </div>
-            <p className="text-[10px] text-ink-500 font-mono">
+            <p className="text-[11px] text-ink-500 font-mono">
               Signed {formatDate(checklist.signedAt)} · Next PM {formatDate(checklist.nextPMDate)}
             </p>
           </div>
@@ -450,7 +450,7 @@ export default function WorkOrderDetailPage() {
       >
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
+            <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
               Work performed / outcome
             </label>
             <textarea
@@ -462,7 +462,7 @@ export default function WorkOrderDetailPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
+            <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
               Labour hours spent <span className="text-ink-400 normal-case font-normal">(optional)</span>
             </label>
             <input
@@ -472,7 +472,7 @@ export default function WorkOrderDetailPage() {
               placeholder="e.g. 2.5"
               className="w-full sm:w-40 min-h-11 px-3 bg-ink-50 border border-ink-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
-            <p className="text-[11px] text-ink-400">
+            <p className="text-xs text-ink-400">
               Feeds the maintenance backlog figure, without it, backlog is an assumption rather than a measurement.
             </p>
           </div>
@@ -491,7 +491,7 @@ export default function WorkOrderDetailPage() {
 function Meta({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 text-ink-500 text-[10px] uppercase tracking-wider font-semibold">
+      <div className="flex items-center gap-1.5 text-ink-500 text-[11px] uppercase tracking-wider font-semibold">
         {icon} {label}
       </div>
       <p className="text-sm text-ink-900 mt-1">{value}</p>
@@ -502,7 +502,7 @@ function Meta({ icon, label, value }: { icon: React.ReactNode; label: string; va
 function SafetyChip({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold border ${
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border ${
         ok
           ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
           : "bg-ink-500/10 text-ink-500 border-ink-500/20"
@@ -517,7 +517,7 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</p>
+      <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</p>
       <ul className="space-y-1">
         {items.map((it, i) => (
           <li key={i} className="flex items-center justify-between text-xs">
@@ -543,7 +543,7 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
 function SignatureView({ label, name, sig }: { label: string; name: string | null; sig: string | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">{label}</p>
       {sig ? (
         <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-ink-100 rounded border border-ink-200" unoptimized />
       ) : (

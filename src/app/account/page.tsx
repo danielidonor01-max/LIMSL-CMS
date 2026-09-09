@@ -128,12 +128,12 @@ export default function AccountPage() {
     );
   }
 
-  const label = "text-[11px] font-semibold text-ink-500 uppercase tracking-wide";
+  const label = "text-xs font-semibold text-ink-500 uppercase tracking-wide";
   const field =
     "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15";
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
+    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 border border-brand-200 flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function AccountPage() {
       {/* Profile */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <UserCircle className="w-4 h-4 text-brand-600" /> Profile
           </h3>
           <Button size="sm" icon={Save} loading={savingProfile} onClick={saveProfile}>Save profile</Button>
@@ -173,7 +173,7 @@ export default function AccountPage() {
             <input value={profile.whatsapp} onChange={(e) => setProfile((p) => ({ ...p, whatsapp: e.target.value }))} placeholder="e.g. +234…" className={field} />
           </div>
         </div>
-        <p className="text-[11px] text-ink-500">
+        <p className="text-xs text-ink-500">
           Your role and department are set by a Super Admin.
         </p>
 
@@ -190,7 +190,7 @@ export default function AccountPage() {
 
           {pendingEmail ? (
             <div className="rounded-lg bg-warn-50 border border-warn-200 p-3">
-              <p className="text-[11px] text-warn-900 leading-relaxed">
+              <p className="text-xs text-warn-900 leading-relaxed">
                 Waiting for <span className="font-mono font-semibold">{pendingEmail}</span> to confirm. Until then this
                 address stays your sign-in. The link expires in an hour.
               </p>
@@ -217,7 +217,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          <p className="text-[11px] text-ink-500">
+          <p className="text-xs text-ink-500">
             We send a link to the new address, and tell the current one that a change was asked for. Nothing changes
             until the link is opened.
           </p>
@@ -226,18 +226,18 @@ export default function AccountPage() {
 
       {/* Preferences */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
-        <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-brand-600" /> Preferences
           {savingPrefs ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-ink-400">
+            <span className="inline-flex items-center gap-1 text-xs font-normal text-ink-400">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving
             </span>
           ) : prefsSavedAt ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-brand-600">
+            <span className="inline-flex items-center gap-1 text-xs font-normal text-brand-600">
               <Check className="w-3.5 h-3.5" /> Saved
             </span>
           ) : (
-            <span className="text-[11px] font-normal text-ink-400">Saves as you change them</span>
+            <span className="text-xs font-normal text-ink-400">Saves as you change them</span>
           )}
         </h3>
 
@@ -275,13 +275,13 @@ export default function AccountPage() {
               );
             })}
           </div>
-          <p className="text-[11px] text-ink-500">Compact fits more on screen by tightening tables, lists and page spacing.</p>
+          <p className="text-xs text-ink-500">Compact fits more on screen by tightening tables, lists and page spacing.</p>
         </div>
 
         {/* Notifications */}
         <div className="space-y-2.5">
           <label className={label}><Bell className="w-3 h-3 inline mr-1" />Notifications</label>
-          <p className="text-[11px] text-ink-500 -mt-1">
+          <p className="text-xs text-ink-500 -mt-1">
             These control how you are reached. A Super Admin can switch an event off for everyone, in which case
             nobody receives it whatever is set here.
           </p>
@@ -334,7 +334,7 @@ export default function AccountPage() {
 
       {/* Security */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5">
-        <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2 mb-3">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2 mb-3">
           <KeyRound className="w-4 h-4 text-brand-600" /> Security
         </h3>
         <Link
@@ -362,7 +362,7 @@ function ToggleRow({
     <div className="flex items-start justify-between gap-4 p-3 rounded-lg border border-ink-200">
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink-900">{title}</p>
-        <p className="text-[11px] text-ink-500 mt-0.5">{desc}</p>
+        <p className="text-xs text-ink-500 mt-0.5">{desc}</p>
       </div>
       <Toggle checked={checked} onChange={onChange} ariaLabel={title} />
     </div>

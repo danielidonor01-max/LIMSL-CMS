@@ -62,7 +62,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-ink-900">Asset QR Label</h1>
-            <p className="text-[10px] text-brand-600 font-mono tracking-wider uppercase">
+            <p className="text-[11px] text-brand-600 font-mono tracking-wider uppercase">
               Printable Equipment Tag
             </p>
           </div>
@@ -77,9 +77,9 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       </header>
 
       {/* Label Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-8">
         {/* Printable Card */}
-        <div className="bg-white text-ink-900 p-8 rounded-2xl border-4 border-ink-300 shadow-2xl flex flex-col items-center text-center space-y-6 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
+        <div className="bg-white text-ink-900 p-8 rounded-2xl border-4 border-ink-300 shadow-2xl flex flex-col items-center text-center space-y-8 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
           {/* Logo Header */}
           <div className="flex items-center gap-2 border-b-2 border-ink-300 pb-3 w-full justify-center">
             <div className="w-8 h-8 rounded bg-ink-100 flex items-center justify-center">
@@ -87,7 +87,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             </div>
             <div>
               <h2 className="text-sm font-black tracking-tight text-ink-900 leading-none">LEE INTERNATIONAL</h2>
-              <p className="text-[7px] text-ink-500 font-mono uppercase tracking-widest leading-none mt-1">
+              <p className="text-[10px] text-ink-500 font-mono uppercase tracking-widest leading-none mt-1">
                 Machinery & Services Ltd
               </p>
             </div>
@@ -104,13 +104,13 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
 
           {/* Asset Info */}
           <div className="space-y-1">
-            <p className="text-[10px] text-ink-500 uppercase tracking-widest font-mono leading-none">Asset ID Code</p>
+            <p className="text-[11px] text-ink-500 uppercase tracking-widest font-mono leading-none">Asset ID Code</p>
             <p className="text-xl font-black text-ink-900 tracking-wide font-mono leading-none">{assetIdOriginal}</p>
             <h3 className="text-sm font-bold text-ink-800 pt-1 leading-tight">{machineName}</h3>
           </div>
 
           {/* Scanning Instructions */}
-          <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[10px] text-ink-600 leading-relaxed">
+          <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[11px] text-ink-600 leading-relaxed">
             <p className="font-bold text-ink-900">📷 Scan with Mobile Camera</p>
             <p>Access Maintenance Log, WMS, OEM specs, and raise work orders instantly.</p>
           </div>
