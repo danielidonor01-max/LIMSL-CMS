@@ -140,12 +140,12 @@ export default function Sidebar({
         aria-label="Main navigation"
         role={mobileOpen ? "dialog" : undefined}
         aria-modal={mobileOpen ? true : undefined}
-        className={`w-60 shrink-0 h-screen bg-white border-r border-ink-200 flex flex-col z-50
+        className={`w-60 shrink-0 h-screen bg-nav flex flex-col z-50
           fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
           lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
           ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
       >
-      <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 border-b border-ink-200 shrink-0">
+      <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 shrink-0">
         <Image
           src="/brand/logo-80.png"
           alt=""
@@ -155,8 +155,8 @@ export default function Sidebar({
           className="w-8 h-8 rounded-lg shrink-0"
         />
         <div>
-          <h1 className="text-sm font-bold tracking-tight text-ink-900 leading-none">LIMSL CMS</h1>
-          <p className="text-[10px] text-ink-500 font-medium tracking-wide uppercase mt-0.5">
+          <h1 className="text-sm font-bold tracking-tight text-white leading-none">LIMSL CMS</h1>
+          <p className="text-[10px] text-nav-text font-medium tracking-wide uppercase mt-0.5">
             Maintenance Portal
           </p>
         </div>
@@ -165,8 +165,12 @@ export default function Sidebar({
       <nav aria-label="Modules" className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
         {sections.map((s, si) => (
           <div key={s.section ?? `s-${si}`} className="space-y-0.5">
+            {/* The section labels stay. The reference product has six
+                destinations and can afford a flat list; this one has twenty-odd
+                across four departments, and dropping the grouping to match a
+                chat app would cost a technician the map. */}
             {s.section && (
-              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
+              <p className="px-3 pt-2 pb-1.5 text-[10px] font-semibold text-nav-label uppercase tracking-[0.12em]">
                 {s.section}
               </p>
             )}
@@ -179,13 +183,13 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onClose}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 px-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-3 px-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-colors ${
                     active
-                      ? "bg-brand-50 text-brand-700 border border-brand-200"
-                      : "text-ink-600 hover:text-ink-900 hover:bg-ink-100 border border-transparent"
+                      ? "bg-nav-active text-nav-text-active font-semibold"
+                      : "text-nav-text font-medium hover:text-white hover:bg-nav-raised"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-600" : "text-ink-400"}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-400" : "text-nav-text"}`} />
                   {item.label}
                 </Link>
               );

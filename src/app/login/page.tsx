@@ -175,7 +175,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-ink-50 flex items-center justify-center">
+        <div className="min-h-screen bg-canvas flex items-center justify-center">
           <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         </div>
       }

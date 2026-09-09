@@ -97,7 +97,7 @@ export default function ChangePasswordPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
@@ -107,7 +107,7 @@ export default function ChangePasswordPage() {
     "w-full px-3.5 py-2.5 pr-11 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition-all";
 
   return (
-    <div className="min-h-screen bg-ink-50 flex items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3">

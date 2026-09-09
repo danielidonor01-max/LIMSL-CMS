@@ -106,7 +106,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   if (!eq) {
     return (
-      <div className="min-h-screen bg-ink-50 flex flex-col items-center justify-center text-ink-500 font-mono text-xs gap-4">
+      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center text-ink-500 font-mono text-xs gap-4">
         <AlertTriangle className="w-8 h-8 text-danger-500" /> Asset Digital Twin not found.
         <Link href="/equipment" className="text-brand-600 underline">Return to Registry</Link>
       </div>
@@ -187,7 +187,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Wrench}

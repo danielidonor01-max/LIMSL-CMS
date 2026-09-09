@@ -38,7 +38,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500 font-mono text-xs gap-2">
+      <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500 font-mono text-xs gap-2">
         <Loader2 className="w-6 h-6 animate-spin text-brand-600" /> Loading WMS document...
       </div>
     );
@@ -46,7 +46,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   if (!wms) {
     return (
-      <div className="min-h-screen bg-ink-50 flex flex-col items-center justify-center gap-3 text-ink-500 text-sm">
+      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center gap-3 text-ink-500 text-sm">
         <p>Work Method Statement not found.</p>
         <Link href="/wms" className="text-brand-600 hover:underline">Back to WMS library</Link>
       </div>
@@ -76,7 +76,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const materials = safeParse(wms.materials);
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader

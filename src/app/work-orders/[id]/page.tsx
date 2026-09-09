@@ -123,7 +123,7 @@ export default function WorkOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500">
+      <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500">
         <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
@@ -131,7 +131,7 @@ export default function WorkOrderDetailPage() {
 
   if (!wo || wo.error) {
     return (
-      <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+      <div className="min-h-screen bg-canvas text-ink-900 font-sans">
         <div className="p-16 text-center text-ink-500">
           Work order not found.{" "}
           <Link href="/work-orders" className="text-brand-600 hover:underline">
@@ -180,7 +180,7 @@ export default function WorkOrderDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">

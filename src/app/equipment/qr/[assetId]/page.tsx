@@ -47,7 +47,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
   };
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans print:bg-white print:text-black">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans print:bg-white print:text-black">
       {/* Header - Hidden on Print */}
       <header className="border-b border-ink-200 bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between print:hidden">
         <div className="flex items-center gap-3">

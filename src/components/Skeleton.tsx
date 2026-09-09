@@ -66,7 +66,7 @@ export default function PageSkeleton({
 }) {
   return (
     <div
-      className="min-h-screen bg-ink-50 p-4 sm:p-6"
+      className="min-h-screen bg-canvas p-4 sm:p-6"
       role="status"
       aria-busy="true"
       aria-label={label}

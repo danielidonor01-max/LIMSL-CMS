@@ -216,14 +216,14 @@ export default function PMChecklistPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500">
+      <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500">
         <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
   if (!wo || wo.error) {
     return (
-      <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+      <div className="min-h-screen bg-canvas text-ink-900 font-sans">
         <div className="p-16 text-center text-ink-500">
           Work order not found.{" "}
           <Link href="/work-orders" className="text-brand-600 hover:underline">Back</Link>
@@ -240,7 +240,7 @@ export default function PMChecklistPage() {
   const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-5">
         <Link href={`/work-orders/${id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">

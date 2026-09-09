@@ -51,12 +51,17 @@ export default function PageHeader({
             </div>
           )}
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight text-ink-900 truncate">{title}</h1>
+            {/* Page titles carry more weight than the rest of the app, which is
+                what makes a screen feel like a place rather than a panel. */}
+            <h1 className="text-2xl font-bold tracking-[-0.02em] text-ink-900 truncate">{title}</h1>
             {(subtitle || code) && (
-              <p className="text-xs text-ink-500 mt-0.5">
+              // ink-600 rather than ink-500: this line sits directly on the
+              // canvas, where ink-500 measures 4.32:1 and misses the 4.5:1
+              // floor. On a white card ink-500 is still correct.
+              <p className="text-xs text-ink-600 mt-1">
                 {subtitle}
                 {subtitle && code ? " · " : ""}
-                {code && <span className="font-mono text-ink-400">{code}</span>}
+                {code && <span className="font-mono text-ink-500">{code}</span>}
               </p>
             )}
           </div>

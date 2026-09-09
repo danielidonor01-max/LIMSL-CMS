@@ -89,10 +89,45 @@
   --color-info-950: var(--color-sky-950);
 
   /* The three surfaces every page is built from, named so a page never has to
-     remember which grey is the page and which is the card. */
-  --color-canvas: var(--color-slate-50);
+     remember which grey is the page and which is the card.
+
+     The canvas carries a trace of blue rather than being neutral grey. It is a
+     small change that does most of the work of making white cards read as
+     deliberate objects on a ground rather than as the page showing through.
+
+     It is also deliberately not as dark as it wants to be. Secondary text is
+     ink-500, which measures 4.55:1 on the old near-white and 4.32:1 on the
+     darker ground the reference uses, i.e. the reskin would have quietly pushed
+     the app's most common muted text under the 4.5:1 floor. Text sitting
+     directly on the canvas uses ink-600, and the canvas stops here. */
+  --color-canvas: #f4f6fb;
   --color-surface: #ffffff;
   --color-line: var(--color-slate-200);
+
+  /* The navigation is the one dark surface in a light application. It gives the
+     app a spine: the eye learns that the dark column is where you move between
+     places and the light field is where you work. Its greys are cooler and
+     deeper than the ink ramp, which is tuned for text on white and turns muddy
+     when inverted. */
+  --color-nav: #10131c;
+  --color-nav-raised: #171b26;
+  --color-nav-active: #1e2433;
+  --color-nav-line: #232937;
+  --color-nav-text: #8b93a7;
+  --color-nav-text-active: #ffffff;
+  /* Section labels are subordinate to the nav items but still have to be read.
+     Dimming the nav grey to 70% opacity looked right and measured 3.58:1
+     against the nav, under the 4.5:1 floor, so the step down is a chosen colour
+     rather than a transparency. This one measures 4.82:1. */
+  --color-nav-label: #7a8296;
+}
+
+/* Cards sit on the canvas with a hairline and the faintest lift, never a
+   drop shadow. On a dense compliance screen a real shadow under every card
+   turns the page into gravel. */
+@theme {
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-raised: 0 4px 16px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
 }
 
 /* Light theme is the default. A dark theme will be added later as a toggle. */

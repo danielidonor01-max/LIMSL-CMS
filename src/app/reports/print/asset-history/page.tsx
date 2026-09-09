@@ -137,7 +137,7 @@ function AssetHistoryDossier() {
   ];
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 font-sans print:bg-white">
+    <div className="min-h-screen bg-canvas text-ink-900 font-sans print:bg-white">
       {/* Toolbar (hidden on print) */}
       <div className="no-print sticky top-0 z-10 bg-white border-b border-ink-200 px-6 py-3 flex items-center justify-between">
         <Link href="/reports" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">

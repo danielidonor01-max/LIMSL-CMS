@@ -238,7 +238,7 @@ export default function EmergencyPage() {
   const prog = data?.drillProgramme;
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
         <PageHeader
           icon={ShieldAlert}

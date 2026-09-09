@@ -116,7 +116,7 @@ export default function NotificationsPage() {
   const unread = rows.filter((r) => !r.readAt).length;
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Bell}

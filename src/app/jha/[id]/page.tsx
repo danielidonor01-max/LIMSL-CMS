@@ -68,7 +68,7 @@ export default function JhaDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
@@ -76,7 +76,7 @@ export default function JhaDetailPage() {
 
   if (!jha || jha.error) {
     return (
-      <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+      <div className="min-h-screen bg-canvas text-ink-900 font-sans">
         <div className="p-16 text-center text-ink-500">
           Job hazard analysis not found.{" "}
           <Link href="/jha" className="text-brand-600 hover:underline">
@@ -108,7 +108,7 @@ export default function JhaDetailPage() {
   const approved = jha.status === "APPROVED";
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <Link
           href="/jha"

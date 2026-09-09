@@ -168,7 +168,7 @@ function NewPermitForm() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ShieldCheck}

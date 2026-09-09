@@ -130,7 +130,7 @@ function NewWorkOrderForm() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ClipboardList}
@@ -267,7 +267,7 @@ export default function NewWorkOrderPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500">
+        <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500">
           <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         </div>
       }

@@ -51,7 +51,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             clustered into the first third and the rest of the bar was void,             which is what read as disorganised. The right cluster is grouped and
             separated from the passive indicator by a rule, so a primary action,
             a notification and an account control are not three equal things. */}
-        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur-md flex items-center gap-3 px-4 lg:px-6">
+        {/* Search takes the centre of the bar rather than hugging the left.
+            The bar spans a wide screen, and a left-anchored run of controls
+            left two thirds of it empty, which is what read as unfinished. */}
+        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-line bg-surface flex items-center gap-3 px-4 lg:px-6">
           <button
             onClick={() => setNavOpen(true)}
             className="lg:hidden p-2 -ml-1 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100"
@@ -60,11 +63,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
 
-          <GlobalSearch />
+          <div className="flex-1 flex justify-center min-w-0">
+            <div className="w-full max-w-xl">
+              <GlobalSearch />
+            </div>
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <QuickActions />
-            <span className="hidden sm:block w-px h-6 bg-ink-200" aria-hidden="true" />
+            <span className="hidden sm:block w-px h-6 bg-line" aria-hidden="true" />
             <NotificationBell />
             <AccountMenu />
           </div>

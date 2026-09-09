@@ -184,7 +184,7 @@ export default function PermitDetail() {
   const isDead = permit.status === "CLOSED" || permit.status === "CANCELLED" || permit.status === "EXPIRED";
 
   return (
-    <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+    <div className="min-h-screen bg-canvas text-ink-900 font-sans">
       <main className="flex-1 p-6 max-w-4xl w-full mx-auto">
         {/* The filed document. A printed screenshot of this page would not be
             the same paper the pad produces, and the two have to be readable
