@@ -1,6 +1,7 @@
 // src/app/equipment/page.tsx
 "use client";
 
+import Criticality from "@/components/Criticality";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -30,7 +31,6 @@ import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_STATUS_BADGE,
-  CRITICALITY_BADGE,
   CRITICALITY_SHORT,
 } from "@/lib/constants";
 import { parseAssetId, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
@@ -314,9 +314,7 @@ export default function EquipmentList() {
                       <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                         {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
                       </Badge>
-                      <Badge className={CRITICALITY_BADGE[eq.criticality] ?? CRITICALITY_BADGE.MEDIUM}>
-                        {CRITICALITY_SHORT[eq.criticality] ?? "Medium"}
-                      </Badge>
+                      <Criticality value={eq.criticality} />
                     </div>
                     <p className="text-xs text-ink-500 mt-2.5">
                       {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category} · {eq.location || "-"}
@@ -373,9 +371,7 @@ export default function EquipmentList() {
                             </Badge>
                           </td>
                           <td className="py-3.5 px-4">
-                            <Badge className={CRITICALITY_BADGE[eq.criticality] ?? CRITICALITY_BADGE.MEDIUM}>
-                              {CRITICALITY_SHORT[eq.criticality] ?? "Medium"}
-                            </Badge>
+                            <Criticality value={eq.criticality} />
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex justify-end">

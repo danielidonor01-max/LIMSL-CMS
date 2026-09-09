@@ -187,16 +187,29 @@ export default function NewCorrectiveRequest() {
           </div>
 
           {/* Fault Description */}
-          <Field label="Fault Description / Observed Symptom" htmlFor="fault-description" required>
+          <Field
+            label="Fault Description / Observed Symptom"
+            htmlFor="fault-description"
+            required
+            help="Name the part and what it is doing. Someone will plan a repair from this without seeing the machine."
+          >
             <textarea
               id="fault-description"
-              placeholder="Describe the noise, vibration, failed startup sequence, burnt smell, or error codes observed..."
+              placeholder="e.g. Spindle bearing screeching under load above 1200rpm, gets worse when warm"
               value={faultDescription}
               onChange={(e) => setFaultDescription(e.target.value)}
               className={`${FIELD_CLASS} h-24 resize-none`}
               required
             />
           </Field>
+          {/* A nudge, not a gate. The technician at the machine knows more than
+              the form does, and refusing their words only teaches them to write
+              whatever gets past the check. */}
+          {faultDescription.trim().length > 0 && faultDescription.trim().length < 20 && (
+            <p className="text-xs text-warn-700 -mt-4">
+              That is very short. What part, and what is it doing?
+            </p>
+          )}
 
           {/* Additional details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

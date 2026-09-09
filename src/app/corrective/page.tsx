@@ -1,6 +1,8 @@
 // src/app/corrective/page.tsx
 "use client";
 
+import { formatDate } from "@/lib/utils";
+import { Badge } from "@/components/Badge";
 import { useApi } from "@/lib/api-cache";
 import LoadError from "@/components/LoadError";
 import Button from "@/components/Button";
@@ -8,14 +10,7 @@ import MetricPanel from "@/components/MetricPanel";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  AlertTriangle,
-  Calendar,
-  User,
-  PlusCircle,
-  Clock,
-  ChevronRight,
-} from "lucide-react";
+import { AlertTriangle, PlusCircle, ChevronRight } from "lucide-react";
 
 export default function CorrectiveMaintenanceList() {
   const { data: records, loading, error, refresh } = useApi<any[]>("/api/corrective", []);
@@ -91,40 +86,34 @@ export default function CorrectiveMaintenanceList() {
                   const isRcaPending = rec.status === "PENDING_RCA" || (isOpen && !rec.rcaTool);
                   return (
                     <div key={rec.id} className="p-5 hover:bg-ink-50 flex items-center justify-between transition-colors">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-danger-600 font-semibold">{rec.cmrfNumber}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                      <div className="min-w-0 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-semibold text-ink-900">
+                            {rec.faultDescription || "Unnamed fault"}
+                          </h3>
+                          <Badge
+                            className={
                               isClosed
-                                ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+                                ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
                                 : isRcaPending
-                                ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
-                                : "bg-danger-500/10 text-danger-600 border-danger-500/20"
-                            }`}
+                                  ? "bg-warn-500/10 text-warn-700 border-warn-500/20"
+                                  : "bg-danger-500/10 text-danger-700 border-danger-500/20"
+                            }
+                            dot={!isClosed}
                           >
-                            {isClosed ? "Resolved" : isRcaPending ? "RCA Investigation" : "Open Breakdown"}
-                          </span>
+                            {isClosed ? "Resolved" : isRcaPending ? "RCA investigation" : "Open breakdown"}
+                          </Badge>
                           {rec.urgency === "CRITICAL" && (
-                            <span className="px-2 py-0.5 rounded-full bg-danger-500/10 text-danger-700 border border-danger-500/20 text-[11px] font-semibold uppercase">
-                              Production Stop
-                            </span>
+                            <Badge className="bg-danger-600 text-white border-danger-600">Production stop</Badge>
                           )}
                         </div>
-                        <h3 className="text-base font-semibold text-ink-900">{rec.faultDescription || "Unnamed Fault"}</h3>
-                        <div className="flex flex-wrap gap-4 text-xs text-ink-500">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-ink-500" /> Reported:{" "}
-                            <span className="font-mono">{rec.reportedDate}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <User className="w-3.5 h-3.5 text-ink-500" /> By: {rec.reportedByName}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-ink-500" /> Breakdown ID:{" "}
-                            <span className="font-mono">{rec.breakdownId || "N/A"}</span>
-                          </div>
-                        </div>
+                        <p className="text-xs text-ink-500">
+                          <span className="font-mono">{rec.cmrfNumber}</span>
+                          {" · "}
+                          {formatDate(rec.reportedDate)}
+                          {rec.reportedByName ? ` · ${rec.reportedByName}` : ""}
+                          {rec.breakdownId ? ` · ${rec.breakdownId}` : ""}
+                        </p>
                       </div>
 
                       <Button variant="subtle" size="sm" href={`/corrective/${rec.id}`} iconRight={ChevronRight}>

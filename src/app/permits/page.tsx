@@ -1,6 +1,8 @@
 // src/app/permits/page.tsx
 "use client";
 
+import { formatDate } from "@/lib/utils";
+import { Badge } from "@/components/Badge";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -9,9 +11,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   PlusCircle,
-  Clock,
-  User,
-  Lock,
   AlertTriangle,
   ChevronRight,
 } from "lucide-react";
@@ -97,34 +96,25 @@ export default function PermitsList() {
                     href={`/permits/${rec.id}`}
                     className="p-5 hover:bg-ink-50 flex items-start justify-between gap-4 transition-colors group"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-mono text-xs text-ink-500 font-semibold">{rec.permitNumber}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}`}>
+                    <div className="min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-semibold text-ink-900">
+                          {rec.equipmentName || "Equipment"}
+                        </h3>
+                        <Badge className={PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}>
                           {PERMIT_STATUS_LABELS[rec.status] ?? rec.status}
-                        </span>
+                        </Badge>
                         {rec.lotoApplied && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
-                            <Lock className="w-3 h-3" /> LOTO
-                          </span>
+                          <Badge className="bg-info-500/10 text-info-700 border-info-500/20">LOTO</Badge>
                         )}
                       </div>
-                      <h3 className="text-base font-semibold text-ink-900">
-                        {rec.assetId ? `${rec.assetId}, ` : ""}
-                        {rec.equipmentName || "Equipment"}
-                      </h3>
                       <p className="text-xs text-ink-600 max-w-xl line-clamp-1">{rec.workDescription}</p>
-                      <div className="flex flex-wrap gap-4 text-xs text-ink-500">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3.5 h-3.5" /> Holder: {rec.permitHolderName || "-"}
-                        </div>
-                        {rec.expiryDate && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" /> Expires{" "}
-                            <span className="font-mono">{new Date(rec.expiryDate).toLocaleString()}</span>
-                          </div>
-                        )}
-                      </div>
+                      <p className="text-xs text-ink-500">
+                        <span className="font-mono">{rec.permitNumber}</span>
+                        {rec.assetId ? ` · ${rec.assetId}` : ""}
+                        {rec.permitHolderName ? ` · ${rec.permitHolderName}` : ""}
+                        {rec.expiryDate ? ` · expires ${formatDate(rec.expiryDate)}` : ""}
+                      </p>
                       {pending && (
                         <div className="flex items-center gap-1.5 text-xs text-warn-700 font-semibold">
                           <ShieldAlert className="w-3.5 h-3.5" />
