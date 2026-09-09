@@ -15,11 +15,15 @@
 "use client";
 
 import type { ElementType } from "react";
+import { EMPTY_TONE } from "@/lib/status-tone";
 
 export type Metric = {
   key: string;
   label: string;
   value: string;
+  // Pass the raw number when the value is a plain count. It is what lets the
+  // zero rule apply: a count of nothing is never given a status colour.
+  count?: number;
   target?: string;
   description?: string;
   icon?: ElementType;
@@ -35,6 +39,16 @@ const VALUE_TONE: Record<string, string> = {
   success: "text-ink-900",
   plain: "text-ink-900",
 };
+
+// Status colour says "there is something here to deal with". Nothing to deal
+// with is never coloured, whatever the field is called. "Awaiting approval: 0"
+// in amber reads as a problem from across the room; the reader walks over and
+// finds nothing, and after a few of those they stop trusting the colour on the
+// screens where it means a machine is down.
+function toneFor(m: Metric): string {
+  if (m.count !== undefined && (!Number.isFinite(m.count) || m.count === 0)) return EMPTY_TONE;
+  return VALUE_TONE[m.status ?? "plain"];
+}
 
 export default function MetricPanel({
   metrics,
@@ -71,9 +85,7 @@ export default function MetricPanel({
 
             <div className="flex items-baseline gap-1.5 mt-4">
               <span
-                className={`text-4xl font-semibold tracking-[-0.02em] tabular-nums leading-none ${
-                  VALUE_TONE[m.status ?? "plain"]
-                }`}
+                className={`text-4xl font-semibold tracking-[-0.02em] tabular-nums leading-none ${toneFor(m)}`}
               >
                 {m.value}
               </span>

@@ -9,6 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import LoadError from "@/components/LoadError";
+import MetricPanel from "@/components/MetricPanel";
 import { Badge } from "@/components/Badge";
 import { ShieldAlert, PlusCircle, Search, ChevronRight, FileText } from "lucide-react";
 import { formatDate } from "@/lib/utils";
@@ -94,20 +95,35 @@ export default function JhaListPage() {
           }
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Awaiting approval</p>
-            <h2 className="text-2xl font-bold text-warn-600 mt-2">{awaiting}</h2>
-          </div>
-          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Approved</p>
-            <h2 className="text-2xl font-bold text-brand-600 mt-2">{approved}</h2>
-          </div>
-          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Total</p>
-            <h2 className="text-2xl font-bold text-ink-900 mt-2">{rows.length}</h2>
-          </div>
-        </div>
+        <MetricPanel
+          columns={3}
+          label="Analysis status"
+          metrics={[
+            {
+              key: "awaiting",
+              label: "Awaiting approval",
+              count: awaiting,
+              value: String(awaiting),
+              status: "warning",
+              description: "Written and waiting on a signature",
+            },
+            {
+              key: "approved",
+              label: "Approved",
+              count: approved,
+              value: String(approved),
+              status: "plain",
+              description: "A permit may be raised against these",
+            },
+            {
+              key: "total",
+              label: "Total",
+              count: rows.length,
+              value: String(rows.length),
+              status: "plain",
+            },
+          ]}
+        />
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="flex gap-1 bg-ink-100 p-1 rounded-lg">

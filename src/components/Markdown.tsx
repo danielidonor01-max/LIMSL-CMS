@@ -1,8 +1,15 @@
 // src/components/Markdown.tsx
 // Minimal, dependency-free Markdown renderer for the controlled procedure text.
 // Supports #/##/### headings, - bullet lists (with indentation), **bold**,
-// *italic*, --- rules, and paragraphs. Safe: no raw HTML injection.
+// *italic*, --- rules, pipe tables, and paragraphs. Safe: no raw HTML injection.
+//
+// Tables were the gap. The procedure is a controlled document with revision
+// tables in it, so auditors opening the page saw raw pipes and dashes running
+// down it, and the first thing they would conclude is that nobody had read the
+// page. The grammar lives in lib/markdown-table.ts under test; this file only
+// draws it.
 import React from "react";
+import { parseTableAt, type MarkdownTable } from "@/lib/markdown-table";
 
 function renderInline(text: string, keyBase: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
@@ -54,10 +61,21 @@ export default function Markdown({ content }: { content: string }) {
     );
   };
 
-  for (const raw of lines) {
+  for (let idx = 0; idx < lines.length; idx++) {
+    const raw = lines[idx];
     const line = raw.replace(/\s+$/, "");
     if (!line.trim()) {
       flushList();
+      continue;
+    }
+    // Checked before the horizontal-rule branch, because a delimiter row of
+    // dashes would otherwise be swallowed as a rule and the table below it
+    // rendered as loose paragraphs of pipes.
+    const table = parseTableAt(lines, idx);
+    if (table) {
+      flushList();
+      blocks.push(<TableBlock key={`tb-${key++}`} table={table.table} />);
+      idx = table.next - 1;
       continue;
     }
     if (line.trim() === "---") {
@@ -85,4 +103,42 @@ export default function Markdown({ content }: { content: string }) {
   flushList();
 
   return <div className="procedure-body">{blocks}</div>;
+}
+
+function TableBlock({ table }: { table: MarkdownTable }) {
+  return (
+    // A controlled document is read on a phone in the workshop as often as on a
+    // desk, and a revision table is wider than a phone. It scrolls inside its
+    // own box rather than pushing the page sideways.
+    <div className="my-4 overflow-x-auto rounded-xl border border-line">
+      <table className="w-full text-left text-xs border-collapse">
+        {table.hasHeader && (
+          <thead className="bg-ink-50">
+            <tr>
+              {table.header.map((cell, i) => (
+                <th
+                  key={i}
+                  scope="col"
+                  className="px-3 py-2.5 font-semibold text-ink-700 border-b border-line align-top"
+                >
+                  {renderInline(cell, `th-${i}`)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {table.rows.map((row, r) => (
+            <tr key={r} className="even:bg-ink-50/60">
+              {row.map((cell, c) => (
+                <td key={c} className="px-3 py-2.5 text-ink-700 border-b border-line align-top">
+                  {renderInline(cell, `td-${r}-${c}`)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }

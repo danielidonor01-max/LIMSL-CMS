@@ -4,6 +4,7 @@
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
+import MetricPanel from "@/components/MetricPanel";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import {
@@ -16,6 +17,9 @@ import {
 
 export default function WmsList() {
   const { data: records, loading } = useApi<any[]>("/api/wms", []);
+
+  const draftCount = records.filter((r) => r.status === "DRAFT" || r.status === "UNDER_REVIEW").length;
+  const approvedCount = records.filter((r) => r.status === "APPROVED").length;
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -32,25 +36,35 @@ export default function WmsList() {
             </Button>
           }
         />
-        {/* Status Tracker */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-ink-100 border border-ink-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Draft / Under Review</p>
-            <h2 className="text-2xl font-bold text-warn-600 mt-2">
-              {records.filter((r) => r.status === "DRAFT" || r.status === "UNDER_REVIEW").length}
-            </h2>
-          </div>
-          <div className="p-4 bg-ink-100 border border-ink-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Approved & Active WMS</p>
-            <h2 className="text-2xl font-bold text-brand-600 mt-2">
-              {records.filter((r) => r.status === "APPROVED").length}
-            </h2>
-          </div>
-          <div className="p-4 bg-ink-100 border border-ink-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Total Documents</p>
-            <h2 className="text-2xl font-bold text-ink-900 mt-2">{records.length}</h2>
-          </div>
-        </div>
+        <MetricPanel
+          columns={3}
+          label="Document status"
+          metrics={[
+            {
+              key: "draft",
+              label: "Draft or under review",
+              count: draftCount,
+              value: String(draftCount),
+              status: "warning",
+              description: "Not yet authorised to back a permit",
+            },
+            {
+              key: "approved",
+              label: "Approved and active",
+              count: approvedCount,
+              value: String(approvedCount),
+              status: "plain",
+              description: "A hazard analysis may be written against these",
+            },
+            {
+              key: "total",
+              label: "Total documents",
+              count: records.length,
+              value: String(records.length),
+              status: "plain",
+            },
+          ]}
+        />
 
         {/* WMS Documents List */}
         <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">

@@ -4,6 +4,7 @@
 import { useApi } from "@/lib/api-cache";
 import LoadError from "@/components/LoadError";
 import Button from "@/components/Button";
+import MetricPanel from "@/components/MetricPanel";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -18,6 +19,12 @@ import {
 
 export default function CorrectiveMaintenanceList() {
   const { data: records, loading, error, refresh } = useApi<any[]>("/api/corrective", []);
+
+  const activeCount = records.filter(
+    (r) => r.status === "OPEN" || r.status === "IN_PROGRESS" || r.status === "PENDING_RCA",
+  ).length;
+  const reviewCount = records.filter((r) => r.status === "PENDING_APPROVAL").length;
+  const closedCount = records.filter((r) => r.status === "CLOSED").length;
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -35,27 +42,39 @@ export default function CorrectiveMaintenanceList() {
             </Button>
           }
         />
-        {/* Statistics or Status Panel */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Active Breakdowns</p>
-            <h2 className="text-2xl font-bold text-danger-600 mt-2">
-              {records.filter((r) => r.status === "OPEN" || r.status === "IN_PROGRESS" || r.status === "PENDING_RCA").length}
-            </h2>
-          </div>
-          <div className="p-4 bg-warn-50 border border-warn-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Pending Supervisor Review</p>
-            <h2 className="text-2xl font-bold text-warn-600 mt-2">
-              {records.filter((r) => r.status === "PENDING_APPROVAL").length}
-            </h2>
-          </div>
-          <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl">
-            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Closed Breakdowns (2026)</p>
-            <h2 className="text-2xl font-bold text-brand-600 mt-2">
-              {records.filter((r) => r.status === "CLOSED").length}
-            </h2>
-          </div>
-        </div>
+        {/* One panel rather than three tinted cards. The tints stayed coloured
+            at zero, so an empty "Pending review" card read as urgent from across
+            the room and the three of them blurred into one another. */}
+        <MetricPanel
+          columns={3}
+          label="Breakdown status"
+          metrics={[
+            {
+              key: "active",
+              label: "Active breakdowns",
+              count: activeCount,
+              value: String(activeCount),
+              status: "danger",
+              description: "Reported and not yet closed out",
+            },
+            {
+              key: "review",
+              label: "Pending supervisor review",
+              count: reviewCount,
+              value: String(reviewCount),
+              status: "warning",
+              description: "Repaired, waiting on a signature",
+            },
+            {
+              key: "closed",
+              label: "Closed this year",
+              count: closedCount,
+              value: String(closedCount),
+              status: "plain",
+              description: "Signed off with the root cause recorded",
+            },
+          ]}
+        />
 
         {/* Breakdown Records List */}
         <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
