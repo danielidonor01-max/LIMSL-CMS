@@ -11,7 +11,7 @@ export default function ConfirmEmailPage() {
     <Suspense
       fallback={
         <div className="min-h-screen grid place-items-center">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         </div>
       }
     >
@@ -57,27 +57,27 @@ function Confirm() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-sm text-center space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm mx-auto">
+        <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mx-auto">
           <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
         </div>
 
         {state === "working" && (
           <>
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600 mx-auto" />
-            <p className="text-sm text-slate-600">Confirming your new address...</p>
+            <Loader2 className="w-5 h-5 animate-spin text-brand-600 mx-auto" />
+            <p className="text-sm text-ink-600">Confirming your new address...</p>
           </>
         )}
 
         {state === "done" && (
           <>
-            <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-            <h1 className="text-lg font-bold text-slate-900">Address confirmed</h1>
-            <p className="text-sm text-slate-600">
+            <CheckCircle2 className="w-8 h-8 text-brand-600 mx-auto" />
+            <h1 className="text-lg font-bold text-ink-900">Address confirmed</h1>
+            <p className="text-sm text-ink-600">
               Sign in with <span className="font-mono">{message}</span> from now on.
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center px-4 min-h-11 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500"
+              className="inline-flex items-center justify-center px-4 min-h-11 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500"
             >
               Go to sign in
             </Link>
@@ -86,13 +86,13 @@ function Confirm() {
 
         {state === "error" && (
           <>
-            <AlertCircle className="w-8 h-8 text-rose-600 mx-auto" />
-            <h1 className="text-lg font-bold text-slate-900">Could not confirm</h1>
-            <p className="text-sm text-slate-600">{message}</p>
-            <p className="text-xs text-slate-500">
+            <AlertCircle className="w-8 h-8 text-danger-600 mx-auto" />
+            <h1 className="text-lg font-bold text-ink-900">Could not confirm</h1>
+            <p className="text-sm text-ink-600">{message}</p>
+            <p className="text-xs text-ink-500">
               Your sign-in address has not changed. Request the change again from your account page.
             </p>
-            <Link href="/account" className="text-sm text-emerald-700 font-semibold hover:underline">
+            <Link href="/account" className="text-sm text-brand-700 font-semibold hover:underline">
               Back to your account
             </Link>
           </>

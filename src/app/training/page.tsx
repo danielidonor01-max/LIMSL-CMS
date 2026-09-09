@@ -53,11 +53,11 @@ type Training = {
 
 const LEVELS = ["None", "Aware", "Competent", "Proficient", "Expert"];
 const LEVEL_CLS = [
-  "bg-slate-100 text-slate-400 border-slate-200",
-  "bg-sky-500/10 text-sky-700 border-sky-500/20",
+  "bg-ink-100 text-ink-400 border-ink-200",
+  "bg-info-500/10 text-info-700 border-info-500/20",
   "bg-teal-500/10 text-teal-700 border-teal-500/20",
-  "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  "bg-emerald-600 text-white border-emerald-700",
+  "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  "bg-brand-600 text-white border-brand-700",
 ];
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -188,7 +188,7 @@ export default function TrainingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={GraduationCap}
@@ -225,22 +225,22 @@ export default function TrainingPage() {
         />
 
         {loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={6} cols={6} />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat label="Competency Gaps" value={summary.gaps} tone="border-rose-200 bg-rose-50" text="text-rose-600" />
-              <Stat label="Recert Due ≤30d" value={summary.recerts} tone="border-amber-200 bg-amber-50" text="text-amber-600" />
-              <Stat label="Planned Training" value={summary.planned} tone="border-sky-200 bg-sky-50" text="text-sky-600" />
-              <Stat label="Completed" value={summary.completed} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" />
+              <Stat label="Competency Gaps" value={summary.gaps} tone="border-danger-200 bg-danger-50" text="text-danger-600" />
+              <Stat label="Recert Due ≤30d" value={summary.recerts} tone="border-warn-200 bg-warn-50" text="text-warn-600" />
+              <Stat label="Planned Training" value={summary.planned} tone="border-info-200 bg-info-50" text="text-info-600" />
+              <Stat label="Completed" value={summary.completed} tone="border-brand-200 bg-brand-50" text="text-brand-600" />
             </div>
 
             {/* Competency Matrix */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-slate-900">Competency Matrix</h3>
+            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-ink-200 flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-ink-900">Competency Matrix</h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   {LEVELS.map((l, i) => (
                     <span key={l} className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${LEVEL_CLS[i]}`}>
@@ -270,7 +270,7 @@ export default function TrainingPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
+                      <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-3 px-4 font-medium sticky left-0 bg-white">Personnel</th>
                         {skills.map((s) => (
                           <th key={s} className="py-3 px-3 font-medium text-center min-w-[110px] align-bottom">
@@ -279,31 +279,31 @@ export default function TrainingPage() {
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-ink-200">
                       {people.map((p) => {
                         const anyRow = competencies.find((c) => c.employeeName === p);
                         return (
-                          <tr key={p} className="hover:bg-slate-50">
+                          <tr key={p} className="hover:bg-ink-50">
                             <td className="py-3 px-4 sticky left-0 bg-white">
-                              <div className="font-medium text-slate-900">{p}</div>
+                              <div className="font-medium text-ink-900">{p}</div>
                               {anyRow?.role && (
-                                <div className="text-[10px] text-slate-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
+                                <div className="text-[10px] text-ink-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
                               )}
                             </td>
                             {skills.map((s) => {
                               const c = cell.get(`${p}|||${s}`);
-                              if (!c) return <td key={s} className="py-3 px-3 text-center text-slate-300">, </td>;
+                              if (!c) return <td key={s} className="py-3 px-3 text-center text-ink-300">, </td>;
                               const gap = c.level < (c.requiredLevel ?? 0);
                               const recert = isRecertDue(c);
                               return (
                                 <td key={s} className="py-3 px-3 text-center">
                                   <span
                                     title={`${LEVELS[c.level]} (required ${c.requiredLevel ?? 0})${recert ? " · recert due" : ""}`}
-                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold border ${LEVEL_CLS[c.level]} ${gap ? "ring-2 ring-rose-400" : ""}`}
+                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold border ${LEVEL_CLS[c.level]} ${gap ? "ring-2 ring-danger-400" : ""}`}
                                   >
                                     {c.level}
                                   </span>
-                                  {recert && <div className="text-[8px] text-amber-600 font-semibold mt-0.5">RECERT</div>}
+                                  {recert && <div className="text-[8px] text-warn-600 font-semibold mt-0.5">RECERT</div>}
                                 </td>
                               );
                             })}
@@ -315,17 +315,17 @@ export default function TrainingPage() {
                 </div>
               )}
               {summary.gaps > 0 && (
-                <div className="px-5 py-3 border-t border-slate-200 flex items-center gap-2 text-[11px] text-rose-600">
+                <div className="px-5 py-3 border-t border-ink-200 flex items-center gap-2 text-[11px] text-danger-600">
                   <AlertTriangle className="w-3.5 h-3.5" /> {summary.gaps} competency gap{summary.gaps > 1 ? "s" : ""} below required level (ringed), schedule training to close.
                 </div>
               )}
             </div>
 
             {/* Training Register */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-                <CalendarClock className="w-4 h-4 text-emerald-600" />
-                <h3 className="text-sm font-semibold text-slate-900">Training Register</h3>
+            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+                <CalendarClock className="w-4 h-4 text-brand-600" />
+                <h3 className="text-sm font-semibold text-ink-900">Training Register</h3>
               </div>
               {trainings.length === 0 ? (
                 <EmptyState
@@ -347,7 +347,7 @@ export default function TrainingPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
+                      <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Training</th>
                         <th className="py-2.5 px-4 font-medium">Attendee</th>
                         <th className="py-2.5 px-4 font-medium">Type</th>
@@ -357,24 +357,24 @@ export default function TrainingPage() {
                         {canWrite && <th className="py-2.5 px-4 font-medium"></th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-ink-200">
                       {trainings.map((t) => (
-                        <tr key={t.id} className="hover:bg-slate-50">
+                        <tr key={t.id} className="hover:bg-ink-50">
                           <td className="py-2.5 px-5">
-                            <div className="font-medium text-slate-900">{t.trainingTitle}</div>
-                            {t.trainer && <div className="text-[10px] text-slate-500">by {t.trainer}</div>}
+                            <div className="font-medium text-ink-900">{t.trainingTitle}</div>
+                            {t.trainer && <div className="text-[10px] text-ink-500">by {t.trainer}</div>}
                           </td>
-                          <td className="py-2.5 px-4 text-slate-700">{t.employeeName ?? "-"}</td>
-                          <td className="py-2.5 px-4 text-slate-500">{t.type ?? "-"}</td>
-                          <td className="py-2.5 px-4 font-mono text-slate-500">{formatDate(t.plannedDate)}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{t.employeeName ?? "-"}</td>
+                          <td className="py-2.5 px-4 text-ink-500">{t.type ?? "-"}</td>
+                          <td className="py-2.5 px-4 font-mono text-ink-500">{formatDate(t.plannedDate)}</td>
                           <td className="py-2.5 px-4">
                             <Badge
                               className={
                                 t.status === "COMPLETED"
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                  ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
                                   : t.status === "CANCELLED"
-                                  ? "bg-slate-500/10 text-slate-500 border-slate-500/20"
-                                  : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                  ? "bg-ink-500/10 text-ink-500 border-ink-500/20"
+                                  : "bg-warn-500/10 text-warn-600 border-warn-500/20"
                               }
                             >
                               {t.status}
@@ -382,11 +382,11 @@ export default function TrainingPage() {
                           </td>
                           <td className="py-2.5 px-4">
                             {t.certificateIssued ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-600 text-[11px] font-semibold">
+                              <span className="inline-flex items-center gap-1 text-brand-600 text-[11px] font-semibold">
                                 <Award className="w-3.5 h-3.5" /> Issued
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-[11px]">, </span>
+                              <span className="text-ink-400 text-[11px]">, </span>
                             )}
                           </td>
                           {canWrite && (
@@ -394,7 +394,7 @@ export default function TrainingPage() {
                               {t.status !== "COMPLETED" && t.status !== "CANCELLED" && (
                                 <button
                                   onClick={() => completeTraining(t.id)}
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Complete
                                 </button>
@@ -521,7 +521,7 @@ function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () 
 function Stat({ label, value, tone, text }: { label: string; value: number; tone: string; text: string }) {
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );

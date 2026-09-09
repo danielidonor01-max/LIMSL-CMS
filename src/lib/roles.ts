@@ -57,15 +57,15 @@ export const ROLE_RANK: Record<string, number> = {
 };
 
 export const ROLE_BADGE: Record<string, string> = {
-  SUPER_ADMIN: "bg-slate-800 text-white border-slate-800",
+  SUPER_ADMIN: "bg-ink-800 text-white border-ink-800",
   COO: "bg-violet-500/10 text-violet-700 border-violet-500/20",
-  FACTORY_MANAGER: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  MAINTENANCE_MANAGER: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  FACTORY_MANAGER: "bg-info-500/10 text-info-700 border-info-500/20",
+  MAINTENANCE_MANAGER: "bg-brand-500/10 text-brand-700 border-brand-500/20",
   FOREMAN: "bg-teal-500/10 text-teal-700 border-teal-500/20",
-  QA_QC: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  QA_QC: "bg-warn-500/10 text-warn-700 border-warn-500/20",
   HSE: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-  TECHNICIAN: "bg-slate-500/10 text-slate-600 border-slate-500/20",
-  VIEWER: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  TECHNICIAN: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  VIEWER: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 export const isSuperAdmin = (role?: string | null) => role === "SUPER_ADMIN";

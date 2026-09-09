@@ -47,11 +47,11 @@ type TypeTab = "ALL" | AssetPrefix;
 // new type on every render, so React unmounts and remounts its subtree, which is
 // how an input loses focus mid-typing.
 function SortIcon({ field, active, direction }: { field: string; active: string; direction: string }) {
-  if (active !== field) return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />;
+  if (active !== field) return <ArrowUpDown className="w-3.5 h-3.5 text-ink-400" />;
   return direction === "asc" ? (
-    <ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
+    <ArrowUp className="w-3.5 h-3.5 text-brand-600" />
   ) : (
-    <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
+    <ArrowDown className="w-3.5 h-3.5 text-brand-600" />
   );
 }
 
@@ -192,7 +192,7 @@ export default function EquipmentList() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
         <PageHeader
           icon={Layers}
@@ -218,14 +218,14 @@ export default function EquipmentList() {
 
         {/* Type segment + the question the register exists to answer */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
             {(["ALL", "PE", "SYS"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTypeTab(t)}
                 title={t === "ALL" ? undefined : ASSET_PREFIX_META[t].help}
                 className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
-                  typeTab === t ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  typeTab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                 }`}
               >
                 {t === "ALL" ? `All (${counts.total})` : t === "PE" ? `Machines (${counts.pe})` : `Systems (${counts.sys})`}
@@ -238,15 +238,15 @@ export default function EquipmentList() {
             aria-pressed={attentionOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-9 rounded-lg border text-xs font-semibold transition-colors w-fit ${
               attentionOnly
-                ? "bg-rose-50 border-rose-300 text-rose-700"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                ? "bg-danger-50 border-danger-300 text-danger-700"
+                : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
             }`}
           >
             <AlertTriangle className="w-4 h-4" />
             Needs attention
             <span
               className={`px-1.5 py-0.5 rounded text-[10px] ${
-                counts.attention ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-500"
+                counts.attention ? "bg-danger-600 text-white" : "bg-ink-100 text-ink-500"
               }`}
             >
               {counts.attention}
@@ -255,15 +255,15 @@ export default function EquipmentList() {
         </div>
 
         {/* Filters */}
-        <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-3 md:items-center justify-between">
+        <div className="p-4 bg-white border border-ink-200 rounded-xl flex flex-col md:flex-row gap-3 md:items-center justify-between">
           <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
             <input
               type="text"
               placeholder="Search name, asset ID, serial or OEM…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg min-h-11 pl-10 pr-4 text-sm placeholder-slate-500 focus:outline-none transition-all"
+              className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg min-h-11 pl-10 pr-4 text-sm placeholder-ink-500 focus:outline-none transition-all"
             />
           </div>
 
@@ -286,15 +286,15 @@ export default function EquipmentList() {
         </div>
 
         {error && !loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <LoadError what="the asset register" onRetry={refresh} />
           </div>
         ) : loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={8} cols={7} />
           </div>
         ) : !sortedEquipment.length ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">{emptyState}</div>
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">{emptyState}</div>
         ) : (
           <>
             {/* Mobile, the register was table-only, unusable on the floor */}
@@ -302,11 +302,11 @@ export default function EquipmentList() {
               {sortedEquipment.map((eq) => {
                 const urlParam = (eq.assetId || "").replace(/\//g, "-");
                 return (
-                  <div key={eq.id} data-list-card className="bg-white border border-slate-200 rounded-xl p-4">
+                  <div key={eq.id} data-list-card className="bg-white border border-ink-200 rounded-xl p-4">
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/equipment/${urlParam}`} className="min-w-0">
-                        <p className="font-semibold text-slate-900 text-sm leading-snug">{eq.name}</p>
-                        <p className="font-mono text-[11px] text-slate-500 mt-0.5">{eq.assetId}</p>
+                        <p className="font-semibold text-ink-900 text-sm leading-snug">{eq.name}</p>
+                        <p className="font-mono text-[11px] text-ink-500 mt-0.5">{eq.assetId}</p>
                       </Link>
                       <KebabMenu ariaLabel={`Actions for ${eq.name}`} items={rowActions(eq)} />
                     </div>
@@ -318,7 +318,7 @@ export default function EquipmentList() {
                         {CRITICALITY_SHORT[eq.criticality] ?? "Medium"}
                       </Badge>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-2.5">
+                    <p className="text-[11px] text-ink-500 mt-2.5">
                       {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category} · {eq.location || "-"}
                       {eq.oem ? ` · ${eq.oem}` : ""}
                     </p>
@@ -328,17 +328,17 @@ export default function EquipmentList() {
             </div>
 
             {/* Desktop */}
-            <div className="hidden md:block bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="hidden md:block bg-white border border-ink-200 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold select-none">
-                      <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("name")}>
+                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-500 font-semibold select-none">
+                      <th className="py-3.5 px-4 cursor-pointer hover:text-ink-900" onClick={() => handleSort("name")}>
                         <div className="flex items-center gap-1">
                           Name <SortIcon active={sortField} direction={sortDirection} field="name" />
                         </div>
                       </th>
-                      <th className="py-3.5 px-4 cursor-pointer hover:text-slate-900" onClick={() => handleSort("assetId")}>
+                      <th className="py-3.5 px-4 cursor-pointer hover:text-ink-900" onClick={() => handleSort("assetId")}>
                         <div className="flex items-center gap-1">
                           Asset ID <SortIcon active={sortField} direction={sortDirection} field="assetId" />
                         </div>
@@ -351,22 +351,22 @@ export default function EquipmentList() {
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-ink-200">
                     {sortedEquipment.map((eq) => {
                       const urlParam = (eq.assetId || "").replace(/\//g, "-");
                       return (
-                        <tr key={eq.id} className="hover:bg-slate-50 text-slate-600 transition-colors">
-                          <td className="py-3.5 px-4 font-semibold text-slate-900">
-                            <Link href={`/equipment/${urlParam}`} className="hover:text-emerald-600">
+                        <tr key={eq.id} className="hover:bg-ink-50 text-ink-600 transition-colors">
+                          <td className="py-3.5 px-4 font-semibold text-ink-900">
+                            <Link href={`/equipment/${urlParam}`} className="hover:text-brand-600">
                               {eq.name}
                             </Link>
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-slate-500">{eq.assetId}</td>
+                          <td className="py-3.5 px-4 font-mono text-ink-500">{eq.assetId}</td>
                           <td className="py-3.5 px-4">
                             {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}
                           </td>
                           <td className="py-3.5 px-4">{eq.oem || "-"}</td>
-                          <td className="py-3.5 px-4 text-slate-500">{eq.location || "-"}</td>
+                          <td className="py-3.5 px-4 text-ink-500">{eq.location || "-"}</td>
                           <td className="py-3.5 px-4">
                             <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                               {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}

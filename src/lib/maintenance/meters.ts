@@ -42,12 +42,12 @@ export const METER_STATUS_LABELS: Record<MeterStatus, string> = {
 };
 
 export const METER_STATUS_BADGE: Record<MeterStatus, string> = {
-  OVERDUE: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  OVERDUE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   DUE: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-  DUE_SOON: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  OK: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  NO_READING: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  NOT_CONFIGURED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  DUE_SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  OK: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  NO_READING: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  NOT_CONFIGURED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 // "Due soon" starts at this share of the interval consumed.

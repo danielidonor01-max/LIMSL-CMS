@@ -101,11 +101,11 @@ const deptLabel = (d?: string | null) => {
 };
 
 const AVATAR_TINTS = [
-  "bg-emerald-100 text-emerald-700",
-  "bg-sky-100 text-sky-700",
+  "bg-brand-100 text-brand-700",
+  "bg-info-100 text-info-700",
   "bg-violet-100 text-violet-700",
-  "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700",
+  "bg-warn-100 text-warn-700",
+  "bg-danger-100 text-danger-700",
   "bg-teal-100 text-teal-700",
 ];
 const avatarTint = (s: string) =>
@@ -360,8 +360,8 @@ export default function UsersAdminPage() {
 
   if (status === "loading" || !mounted) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -369,9 +369,9 @@ export default function UsersAdminPage() {
   if (!isAdmin) {
     return (
       <div className="p-10 max-w-md mx-auto text-center space-y-3">
-        <ShieldAlert className="w-10 h-10 text-rose-500 mx-auto" />
-        <h2 className="text-lg font-bold text-slate-900">Access restricted</h2>
-        <p className="text-sm text-slate-500">
+        <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
+        <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+        <p className="text-sm text-ink-500">
           User administration is available to Super Admins only. Your role is{" "}
           <span className="font-semibold">{ROLE_LABELS[role ?? "VIEWER"] ?? role}</span>.
         </p>
@@ -380,15 +380,15 @@ export default function UsersAdminPage() {
   }
 
   const field =
-    "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-emerald-500/40";
-  const fieldLabel = "block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
+    "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
+  const fieldLabel = "block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
 
   const statusBadge = (u: User) => (
     <Badge
       className={
         u.isActive !== false
-          ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
-          : "bg-slate-500/10 text-slate-500 border-slate-500/20"
+          ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
+          : "bg-ink-500/10 text-ink-500 border-ink-500/20"
       }
     >
       {u.isActive !== false ? "Active" : "Disabled"}
@@ -413,12 +413,12 @@ export default function UsersAdminPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
+          <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
             <UsersIcon className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">User Management</h2>
-            <p className="text-xs text-slate-500 font-mono">Super Admin · roles & access control</p>
+            <h2 className="text-xl font-bold tracking-tight text-ink-900">User Management</h2>
+            <p className="text-xs text-ink-500 font-mono">Super Admin · roles & access control</p>
           </div>
         </div>
         {pageTab === "users" && (
@@ -434,7 +434,7 @@ export default function UsersAdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200" role="tablist" aria-label="User management sections">
+      <div className="flex gap-1 border-b border-ink-200" role="tablist" aria-label="User management sections">
         {([
           { id: "users", label: "Users", icon: UsersIcon },
           { id: "roles", label: "Roles", icon: Shield },
@@ -446,8 +446,8 @@ export default function UsersAdminPage() {
             onClick={() => setPageTab(t.id)}
             className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors ${
               pageTab === t.id
-                ? "border-emerald-600 text-emerald-700"
-                : "border-transparent text-slate-500 hover:text-slate-900"
+                ? "border-brand-600 text-brand-700"
+                : "border-transparent text-ink-500 hover:text-ink-900"
             }`}
           >
             <t.icon className="w-4 h-4" /> {t.label}
@@ -458,15 +458,15 @@ export default function UsersAdminPage() {
       {pageTab === "users" && (
         <>
           {/* Toolbar */}
-          <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-3 md:items-center">
+          <div className="p-4 bg-white border border-ink-200 rounded-xl flex flex-col md:flex-row gap-3 md:items-center">
             <div className="relative flex-1 md:max-w-xs">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or email…"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-3 text-xs placeholder-slate-400 focus:outline-none focus:border-emerald-500/40"
+                className="w-full bg-ink-50 border border-ink-200 rounded-lg py-2 pl-10 pr-3 text-xs placeholder-ink-400 focus:outline-none focus:border-brand-500/40"
               />
             </div>
             <div className="flex flex-wrap gap-2 md:ml-auto">
@@ -485,11 +485,11 @@ export default function UsersAdminPage() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-white border border-slate-200 rounded-xl">
+          <div className="hidden md:block bg-white border border-ink-200 rounded-xl">
             <div className="overflow-x-auto rounded-xl">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                  <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
                     <th className="py-3 px-4 font-medium">Name</th>
                     <th className="py-3 px-4 font-medium">Role</th>
                     <th className="py-3 px-4 font-medium">Department</th>
@@ -499,79 +499,79 @@ export default function UsersAdminPage() {
                     <th className="py-3 px-4 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-ink-200">
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="animate-pulse">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-100" />
+                            <div className="w-9 h-9 rounded-full bg-ink-100" />
                             <div className="space-y-1.5">
-                              <div className="h-3 w-32 bg-slate-100 rounded" />
-                              <div className="h-2.5 w-44 bg-slate-100 rounded" />
+                              <div className="h-3 w-32 bg-ink-100 rounded" />
+                              <div className="h-2.5 w-44 bg-ink-100 rounded" />
                             </div>
                           </div>
                         </td>
                         {Array.from({ length: 5 }).map((_, j) => (
-                          <td key={j} className="py-3 px-4"><div className="h-3 w-20 bg-slate-100 rounded" /></td>
+                          <td key={j} className="py-3 px-4"><div className="h-3 w-20 bg-ink-100 rounded" /></td>
                         ))}
-                        <td className="py-3 px-4"><div className="h-7 w-7 bg-slate-100 rounded-lg ml-auto" /></td>
+                        <td className="py-3 px-4"><div className="h-7 w-7 bg-ink-100 rounded-lg ml-auto" /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-14 text-center text-slate-500">
-                        <UsersIcon className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                        <p className="text-sm font-semibold text-slate-600">No users match</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Adjust the search or filters, or add a new user.</p>
+                      <td colSpan={7} className="py-14 text-center text-ink-500">
+                        <UsersIcon className="w-8 h-8 mx-auto text-ink-300 mb-2" />
+                        <p className="text-sm font-semibold text-ink-600">No users match</p>
+                        <p className="text-xs text-ink-400 mt-0.5">Adjust the search or filters, or add a new user.</p>
                       </td>
                     </tr>
                   ) : (
                     filtered.map((u) => (
-                      <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={u.id} className="hover:bg-ink-50 transition-colors">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <Avatar name={u.name} />
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 truncate">{u.name}</div>
-                              <div className="text-[11px] text-slate-400 font-mono truncate">{u.email}</div>
-                              {u.jobTitle && <div className="text-[10px] text-slate-400 truncate">{u.jobTitle}</div>}
+                              <div className="font-semibold text-ink-900 truncate">{u.name}</div>
+                              <div className="text-[11px] text-ink-400 font-mono truncate">{u.email}</div>
+                              {u.jobTitle && <div className="text-[10px] text-ink-400 truncate">{u.jobTitle}</div>}
                             </div>
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <Badge className={ROLE_BADGE[u.role] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                          <Badge className={ROLE_BADGE[u.role] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                             {ROLE_LABELS[u.role] ?? u.role}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-slate-600">
-                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-slate-300">, </span>}
+                        <td className="py-3 px-4 text-ink-600">
+                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">, </span>}
                         </td>
                         <td className="py-3 px-4">
                           {u.phone || u.whatsapp ? (
                             <div className="space-y-0.5">
                               {u.phone && (
-                                <div className="flex items-center gap-1.5 text-slate-600">
-                                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {u.phone}
+                                <div className="flex items-center gap-1.5 text-ink-600">
+                                  <Phone className="w-3.5 h-3.5 text-ink-400 shrink-0" /> {u.phone}
                                 </div>
                               )}
                               {u.whatsapp && (
-                                <div className="flex items-center gap-1.5 text-slate-600">
-                                  <MessageCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> {u.whatsapp}
+                                <div className="flex items-center gap-1.5 text-ink-600">
+                                  <MessageCircle className="w-3.5 h-3.5 text-brand-500 shrink-0" /> {u.whatsapp}
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-300">, </span>
+                            <span className="text-ink-300">, </span>
                           )}
                         </td>
                         <td className="py-3 px-4">
                           {statusBadge(u)}
                           {u.mustChangePassword && (
-                            <div className="text-[10px] text-amber-600 mt-1">Temp password pending</div>
+                            <div className="text-[10px] text-warn-600 mt-1">Temp password pending</div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                        <td className="py-3 px-4 text-ink-500 whitespace-nowrap">
                           {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -589,30 +589,30 @@ export default function UsersAdminPage() {
           <div className="md:hidden space-y-3">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 animate-pulse flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
+                <div key={i} className="bg-white border border-ink-200 rounded-xl p-4 animate-pulse flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-ink-100 shrink-0" />
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-3 w-32 bg-slate-100 rounded" />
-                    <div className="h-2.5 w-44 bg-slate-100 rounded" />
+                    <div className="h-3 w-32 bg-ink-100 rounded" />
+                    <div className="h-2.5 w-44 bg-ink-100 rounded" />
                   </div>
                 </div>
               ))
             ) : filtered.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-xl py-12 text-center text-slate-500">
-                <UsersIcon className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                <p className="text-sm font-semibold text-slate-600">No users match</p>
-                <p className="text-xs text-slate-400 mt-0.5">Adjust the search or filters, or add a new user.</p>
+              <div className="bg-white border border-ink-200 rounded-xl py-12 text-center text-ink-500">
+                <UsersIcon className="w-8 h-8 mx-auto text-ink-300 mb-2" />
+                <p className="text-sm font-semibold text-ink-600">No users match</p>
+                <p className="text-xs text-ink-400 mt-0.5">Adjust the search or filters, or add a new user.</p>
               </div>
             ) : (
               filtered.map((u) => (
-                <div key={u.id} className="bg-white border border-slate-200 rounded-xl p-4">
+                <div key={u.id} className="bg-white border border-ink-200 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <Avatar name={u.name} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{u.name}</p>
-                      <p className="text-[11px] text-slate-400 font-mono truncate">{u.email}</p>
+                      <p className="text-sm font-semibold text-ink-900 truncate">{u.name}</p>
+                      <p className="text-[11px] text-ink-400 font-mono truncate">{u.email}</p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <Badge className={ROLE_BADGE[u.role] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                        <Badge className={ROLE_BADGE[u.role] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                           {ROLE_LABELS[u.role] ?? u.role}
                         </Badge>
                         {statusBadge(u)}
@@ -635,7 +635,7 @@ export default function UsersAdminPage() {
       >
         {clearPlan && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-brand-50 border border-brand-200 text-brand-900 text-xs">
               <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
               <p>
                 <strong>Your own account is kept.</strong>{" "}
@@ -646,15 +646,15 @@ export default function UsersAdminPage() {
 
             {clearPlan.toDelete.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-slate-900">
+                <p className="text-xs font-semibold text-ink-900">
                   {clearPlan.toDelete.length} account(s) will be deleted
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">They have no activity recorded against them.</p>
+                <p className="text-[11px] text-ink-500 mt-0.5">They have no activity recorded against them.</p>
                 <ul className="mt-2 max-h-40 overflow-y-auto space-y-1">
                   {clearPlan.toDelete.map((u: any) => (
-                    <li key={u.id} className="text-[11px] text-slate-600 flex justify-between gap-3">
+                    <li key={u.id} className="text-[11px] text-ink-600 flex justify-between gap-3">
                       <span>{u.name}</span>
-                      <span className="font-mono text-slate-400 truncate">{u.email}</span>
+                      <span className="font-mono text-ink-400 truncate">{u.email}</span>
                     </li>
                   ))}
                 </ul>
@@ -662,21 +662,21 @@ export default function UsersAdminPage() {
             )}
 
             {clearPlan.toDeactivate.length > 0 && (
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
-                <p className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+              <div className="rounded-lg bg-warn-50 border border-warn-200 p-3">
+                <p className="text-xs font-semibold text-warn-900 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   {clearPlan.toDeactivate.length} account(s) will be deactivated, not deleted
                 </p>
-                <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                <p className="text-[11px] text-warn-800 mt-1 leading-relaxed">
                   These have signed something, raised something or been assigned work. Deleting them would orphan a
                   signature and destroy the evidence trail. They can no longer sign in, and their records stay
                   attributable.
                 </p>
                 <ul className="mt-2 max-h-32 overflow-y-auto space-y-1">
                   {clearPlan.toDeactivate.map((u: any) => (
-                    <li key={u.id} className="text-[11px] text-amber-900 flex justify-between gap-3">
+                    <li key={u.id} className="text-[11px] text-warn-900 flex justify-between gap-3">
                       <span>{u.name}</span>
-                      <span className="font-mono text-amber-700/70 truncate">{u.email}</span>
+                      <span className="font-mono text-warn-700/70 truncate">{u.email}</span>
                     </li>
                   ))}
                 </ul>
@@ -684,7 +684,7 @@ export default function UsersAdminPage() {
             )}
 
             {clearPlan.toDelete.length === 0 && clearPlan.toDeactivate.length === 0 && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-ink-500">
                 There is nothing to clear, yours is the only account on the system.
               </p>
             )}
@@ -710,7 +710,7 @@ export default function UsersAdminPage() {
 
       {pageTab === "roles" && (
         <div className="space-y-4">
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-sky-50 border border-sky-100 text-sky-800 text-xs">
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-info-50 border border-info-100 text-info-800 text-xs">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
               Role <strong>definitions</strong>, write permissions, sign-off seniority and module scope, are
@@ -725,13 +725,13 @@ export default function UsersAdminPage() {
               this thing", the direction an auditor reads, and the artefact they
               ask for by name. */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+            <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
               {(["cards", "matrix"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setRoleView(v)}
                   className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
-                    roleView === v ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    roleView === v ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                   }`}
                 >
                   {v === "cards" ? "By role" : "Permission matrix"}
@@ -751,12 +751,12 @@ export default function UsersAdminPage() {
           </div>
 
           {roleView === "matrix" && (
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
-                      <th className="py-3 px-4 font-semibold sticky left-0 bg-slate-50 z-10">Role</th>
+                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
+                      <th className="py-3 px-4 font-semibold sticky left-0 bg-ink-50 z-10">Role</th>
                       <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">Members</th>
                       <th className="py-3 px-3 font-semibold text-center whitespace-nowrap" title="Higher rank may sign any junior step">
                         Sign-off rank
@@ -768,37 +768,37 @@ export default function UsersAdminPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-ink-200">
                     {ROLES.map((r) => {
                       const members = membersByRole[r] ?? [];
                       const activeMembers = members.filter((m) => m.isActive !== false).length;
                       return (
-                        <tr key={r} className="hover:bg-slate-50">
+                        <tr key={r} className="hover:bg-ink-50">
                           <td className="py-3 px-4 sticky left-0 bg-white z-10">
-                            <Badge className={ROLE_BADGE[r] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                            <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                               {ROLE_LABELS[r]}
                             </Badge>
-                            <p className="text-[10px] text-slate-500 mt-1">
+                            <p className="text-[10px] text-ink-500 mt-1">
                               {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"}
                             </p>
                           </td>
                           <td
                             className={`py-3 px-3 text-center font-semibold ${
-                              activeMembers === 0 ? "text-amber-600" : "text-slate-700"
+                              activeMembers === 0 ? "text-warn-600" : "text-ink-700"
                             }`}
                             title={activeMembers === 0 ? "Nobody holds this role, any step requiring it cannot be signed" : undefined}
                           >
                             {activeMembers}
                           </td>
-                          <td className="py-3 px-3 text-center text-slate-500 font-mono">{ROLE_RANK[r] ?? 0}</td>
+                          <td className="py-3 px-3 text-center text-ink-500 font-mono">{ROLE_RANK[r] ?? 0}</td>
                           {PERMISSION_SETS.map((p) => {
                             const has = p.roles.includes(r);
                             return (
                               <td key={p.label} className="py-3 px-3 text-center">
                                 {has ? (
-                                  <Check className="w-4 h-4 text-emerald-600 inline" aria-label="Yes" />
+                                  <Check className="w-4 h-4 text-brand-600 inline" aria-label="Yes" />
                                 ) : (
-                                  <span className="text-slate-300" aria-label="No">, </span>
+                                  <span className="text-ink-300" aria-label="No">, </span>
                                 )}
                               </td>
                             );
@@ -809,9 +809,9 @@ export default function UsersAdminPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-[11px] text-slate-500 px-4 py-3 border-t border-slate-200">
+              <p className="text-[11px] text-ink-500 px-4 py-3 border-t border-ink-200">
                 A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off,                 QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
-                <span className="text-amber-600 font-semibold">0 members</span> blocks every chain step that requires it.
+                <span className="text-warn-600 font-semibold">0 members</span> blocks every chain step that requires it.
               </p>
             </div>
           )}
@@ -822,29 +822,29 @@ export default function UsersAdminPage() {
               const perms = PERMISSION_SETS.filter((p) => p.roles.includes(r));
               const paths = ROLE_ALLOWED_PATHS[r];
               return (
-                <div key={r} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col gap-3">
+                <div key={r} className="bg-white border border-ink-200 rounded-xl p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <Badge className={ROLE_BADGE[r] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                      <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                         {ROLE_LABELS[r]}
                       </Badge>
-                      <p className="text-[11px] text-slate-400 mt-1.5">
+                      <p className="text-[11px] text-ink-400 mt-1.5">
                         {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"} · sign-off rank {ROLE_RANK[r] ?? 0}
                       </p>
                     </div>
-                    <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5 whitespace-nowrap">
+                    <span className="text-[11px] font-semibold text-ink-500 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5 whitespace-nowrap">
                       {members.length} member{members.length === 1 ? "" : "s"}
                     </span>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Members</p>
+                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Members</p>
                     {members.length === 0 ? (
-                      <p className="text-xs text-slate-400">No users hold this role.</p>
+                      <p className="text-xs text-ink-400">No users hold this role.</p>
                     ) : (
-                      <p className="text-xs text-slate-600 leading-relaxed">
+                      <p className="text-xs text-ink-600 leading-relaxed">
                         {members.map((m, i) => (
-                          <span key={m.id} className={m.isActive === false ? "text-slate-400 line-through" : undefined}>
+                          <span key={m.id} className={m.isActive === false ? "text-ink-400 line-through" : undefined}>
                             {m.name}{i < members.length - 1 ? ", " : ""}
                           </span>
                         ))}
@@ -853,15 +853,15 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Write permissions</p>
+                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Write permissions</p>
                     {perms.length === 0 ? (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-ink-400">
                         {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only, no direct writes."}
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {perms.map((p) => (
-                          <Badge key={p.label} className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+                          <Badge key={p.label} className="bg-brand-500/10 text-brand-700 border-brand-500/20">
                             {p.label}
                           </Badge>
                         ))}
@@ -870,17 +870,17 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Module access</p>
+                    <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Module access</p>
                     {paths ? (
                       <div className="flex flex-wrap gap-1.5">
                         {paths.map((p) => (
-                          <span key={p} className="text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                          <span key={p} className="text-[10px] font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
                             {moduleLabel(p)}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-600">
+                      <p className="text-xs text-ink-600">
                         All modules{SETTINGS_WRITE_ROLES.includes(r) ? ", including Administration" : " (except Administration)"}
                       </p>
                     )}
@@ -929,7 +929,7 @@ export default function UsersAdminPage() {
             <label className={fieldLabel}>WhatsApp (optional)</label>
             <input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} className={field} />
           </div>
-          {error && <p className="sm:col-span-2 text-xs text-rose-600">{error}</p>}
+          {error && <p className="sm:col-span-2 text-xs text-danger-600">{error}</p>}
           <div className="sm:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
             <Button type="submit" icon={UserPlus} loading={saving}>Create user</Button>
@@ -984,8 +984,8 @@ export default function UsersAdminPage() {
         subtitle={confirmDisable?.email}
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">{confirmDisable?.name}</span> will no longer be able to sign
+          <p className="text-sm text-ink-600">
+            <span className="font-semibold text-ink-900">{confirmDisable?.name}</span> will no longer be able to sign
             in. Their historical records and sign-offs remain untouched for the audit trail, and the account can be
             re-enabled at any time.
           </p>
@@ -1017,10 +1017,10 @@ export default function UsersAdminPage() {
         subtitle={tempPassword?.email}
       >
         <div className="space-y-4">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
-            <p className="text-emerald-700 font-mono text-lg font-semibold break-all">{tempPassword?.password}</p>
+          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 text-center">
+            <p className="text-brand-700 font-mono text-lg font-semibold break-all">{tempPassword?.password}</p>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-500">
             Shown once only, share it with the user now. They must change it at first login.
           </p>
           <div className="flex justify-end gap-2">
@@ -1050,25 +1050,25 @@ export default function UsersAdminPage() {
       >
         <div className="space-y-2">
           {list.length === 0 ? (
-            <p className="text-xs text-slate-400 py-6 text-center">No users found.</p>
+            <p className="text-xs text-ink-400 py-6 text-center">No users found.</p>
           ) : (
             list.map((u) => (
               <div
                 key={u.id}
                 className={`flex items-center gap-3 rounded-lg border p-2.5 ${
-                  u.role === membersRole ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200"
+                  u.role === membersRole ? "border-brand-200 bg-brand-50/50" : "border-ink-200"
                 }`}
               >
                 <Avatar name={u.name} size="w-8 h-8 text-[10px]" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-slate-900 truncate">
+                  <p className="text-xs font-semibold text-ink-900 truncate">
                     {u.name}
-                    {u.isActive === false && <span className="text-slate-400 font-normal"> · disabled</span>}
+                    {u.isActive === false && <span className="text-ink-400 font-normal"> · disabled</span>}
                   </p>
-                  <p className="text-[10px] text-slate-400 font-mono truncate">{u.email}</p>
+                  <p className="text-[10px] text-ink-400 font-mono truncate">{u.email}</p>
                 </div>
                 {roleSaving === u.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600 shrink-0 mx-3" />
+                  <Loader2 className="w-4 h-4 animate-spin text-brand-600 shrink-0 mx-3" />
                 ) : (
                   <Select
                     value={u.role}

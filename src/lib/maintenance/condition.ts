@@ -45,10 +45,10 @@ export const VERDICT_LABELS: Record<ConditionVerdict, string> = {
 };
 
 export const VERDICT_BADGE: Record<ConditionVerdict, string> = {
-  NORMAL: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  ALERT: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  ALARM: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  NO_LIMIT: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  NORMAL: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  ALERT: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  ALARM: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  NO_LIMIT: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 // Two thresholds, because one is not enough to act on: alert means "watch it and

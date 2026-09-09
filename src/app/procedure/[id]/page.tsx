@@ -24,16 +24,16 @@ export default function ProcedureRevisionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
   if (!rev || rev.error) {
     return (
-      <div className="p-10 text-center text-slate-500">
+      <div className="p-10 text-center text-ink-500">
         Revision not found.{" "}
-        <Link href="/procedure" className="text-emerald-600 hover:underline">Back to procedure</Link>
+        <Link href="/procedure" className="text-brand-600 hover:underline">Back to procedure</Link>
       </div>
     );
   }
@@ -41,23 +41,23 @@ export default function ProcedureRevisionPage() {
   return (
     <div className="p-6 max-w-4xl w-full mx-auto space-y-4">
       <div className="no-print flex items-center justify-between">
-        <Link href="/procedure" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
+        <Link href="/procedure" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to current procedure
         </Link>
-        <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold">
+        <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-200 text-ink-700 hover:bg-ink-100 rounded-lg text-xs font-semibold">
           <Printer className="w-4 h-4" /> Print
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-8 print:border-0 print:p-0">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+      <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:p-0">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Controlled Document · Historical</p>
-            <p className="text-xs font-semibold text-slate-900">{rev.code}</p>
+            <p className="text-[10px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document · Historical</p>
+            <p className="text-xs font-semibold text-ink-900">{rev.code}</p>
           </div>
           <div className="text-right">
-            <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">{DOC_STATUS_LABELS[String(rev.status)] ?? String(rev.status)}</Badge>
-            <p className="text-[10px] text-slate-400 mt-1 font-mono">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
+            <Badge className="bg-ink-500/10 text-ink-500 border-ink-500/20">{DOC_STATUS_LABELS[String(rev.status)] ?? String(rev.status)}</Badge>
+            <p className="text-[10px] text-ink-400 mt-1 font-mono">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
           </div>
         </div>
         <Markdown content={rev.contentMarkdown} />

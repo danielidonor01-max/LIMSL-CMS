@@ -38,11 +38,11 @@ type Rev = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  APPROVED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  SUPERSEDED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
-  DRAFT: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  REJECTED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  APPROVED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  PENDING_APPROVAL: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  SUPERSEDED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
+  DRAFT: "bg-info-500/10 text-info-700 border-info-500/20",
+  REJECTED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 export default function ProcedurePage() {
@@ -95,8 +95,8 @@ export default function ProcedurePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -130,19 +130,19 @@ export default function ProcedurePage() {
 
       {/* Revision history */}
       {showHistory && (
-        <div className="no-print bg-white border border-slate-200 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Revision history</h3>
+        <div className="no-print bg-white border border-ink-200 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-ink-900 mb-3">Revision history</h3>
           <div className="space-y-1.5">
             {revisions.map((r) => (
-              <div key={r.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-0">
+              <div key={r.id} className="flex items-center justify-between text-xs py-1.5 border-b border-ink-100 last:border-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-semibold text-slate-900">Rev {r.revision}</span>
-                  <Badge className={STATUS_BADGE[r.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>{DOC_STATUS_LABELS[r.status] ?? r.status}</Badge>
-                  <span className="text-slate-500">{r.changeSummary}</span>
+                  <span className="font-mono font-semibold text-ink-900">Rev {r.revision}</span>
+                  <Badge className={STATUS_BADGE[r.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>{DOC_STATUS_LABELS[r.status] ?? r.status}</Badge>
+                  <span className="text-ink-500">{r.changeSummary}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-slate-400 font-mono">{formatDate(r.effectiveDate ?? r.createdAt)}</span>
-                  <Link href={`/procedure/${r.id}`} className="text-emerald-600 hover:underline">View</Link>
+                  <span className="text-ink-400 font-mono">{formatDate(r.effectiveDate ?? r.createdAt)}</span>
+                  <Link href={`/procedure/${r.id}`} className="text-brand-600 hover:underline">View</Link>
                 </div>
               </div>
             ))}
@@ -153,7 +153,7 @@ export default function ProcedurePage() {
       {/* Pending revision approval */}
       {pending && (
         <div className="no-print space-y-4">
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-warn-200 bg-warn-50 text-warn-800 text-sm">
             <Clock className="w-4 h-4" />
             Revision {pending.revision} is pending sign-off. It becomes effective once QA/QC, Maintenance Manager, Factory Manager and COO have signed.
           </div>
@@ -163,9 +163,9 @@ export default function ProcedurePage() {
 
       {/* Propose editor */}
       {editing && (
-        <div className="no-print bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" /> Propose new revision (QA/QC document control)
+        <div className="no-print bg-white border border-ink-200 rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-brand-600" /> Propose new revision (QA/QC document control)
           </h3>
           <input
             value={summary}
@@ -179,7 +179,7 @@ export default function ProcedurePage() {
             rows={18}
             className={`${FIELD_CLASS} text-xs font-mono`}
           />
-          <p className="text-[10px] text-slate-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
+          <p className="text-[10px] text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
             <Button icon={FilePlus2} onClick={propose} disabled={saving} loading={saving}>
@@ -190,15 +190,15 @@ export default function ProcedurePage() {
       )}
 
       {/* The controlled document (printable) */}
-      <div className="bg-white border border-slate-200 rounded-xl p-8 print:border-0 print:p-0" id="procedure-doc">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+      <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:p-0" id="procedure-doc">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Controlled Document</p>
-            <p className="text-xs font-semibold text-slate-900">{current?.code}</p>
+            <p className="text-[10px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document</p>
+            <p className="text-xs font-semibold text-ink-900">{current?.code}</p>
           </div>
           <div className="text-right">
             <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{DOC_STATUS_LABELS[current?.status ?? "APPROVED"] ?? current?.status}</Badge>
-            <p className="text-[10px] text-slate-400 mt-1 font-mono">
+            <p className="text-[10px] text-ink-400 mt-1 font-mono">
               Rev {current?.revision} · effective {formatDate(current?.effectiveDate)}
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function ProcedurePage() {
         {current?.contentMarkdown ? (
           <Markdown content={current.contentMarkdown} />
         ) : (
-          <p className="text-sm text-slate-400">No approved procedure on record.</p>
+          <p className="text-sm text-ink-400">No approved procedure on record.</p>
         )}
       </div>
     </div>

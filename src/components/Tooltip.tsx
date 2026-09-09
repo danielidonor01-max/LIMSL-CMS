@@ -33,7 +33,7 @@ export default function Tooltip({
       {show && (
         <span
           role="tooltip"
-          className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white shadow-sm ${
+          className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1 text-[11px] font-medium text-white shadow-sm ${
             side === "bottom"
               ? "top-full left-1/2 -translate-x-1/2 mt-1.5"
               : "right-full top-1/2 -translate-y-1/2 mr-2"

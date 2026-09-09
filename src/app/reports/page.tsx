@@ -146,10 +146,10 @@ export default function ReportsPage() {
     router.push(`/reports/print/asset-history?${qs.toString()}`);
   };
 
-  const reportCard = "bg-white border border-slate-200 rounded-xl p-5";
+  const reportCard = "bg-white border border-ink-200 rounded-xl p-5";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
         <PageHeader
           icon={FileBarChart}
@@ -163,24 +163,24 @@ export default function ReportsPage() {
         />
 
         {loading || !kpi ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={6} cols={4} />
           </div>
         ) : (
           <>
             {/* Headline report cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Head icon={<ShieldCheck className="w-4 h-4 text-emerald-600" />} label="PM Compliance" value={`${pmCompliance}%`} sub={`${pmDone}/${pmDue.length} due PM done`} />
-              <Head icon={<Clock className="w-4 h-4 text-rose-600" />} label="Overdue Activities" value={String(overdue)} sub="Across all schedules" />
-              <Head icon={<Clock className="w-4 h-4 text-amber-600" />} label="Downtime (6 mo)" value={`${totalDowntime.toFixed(0)} hrs`} sub="Rolling last 6 months" />
-              <Head icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} label="Breakdowns (6 mo)" value={String(totalBreakdowns)} sub="Rolling last 6 months" />
+              <Head icon={<ShieldCheck className="w-4 h-4 text-brand-600" />} label="PM Compliance" value={`${pmCompliance}%`} sub={`${pmDone}/${pmDue.length} due PM done`} />
+              <Head icon={<Clock className="w-4 h-4 text-danger-600" />} label="Overdue Activities" value={String(overdue)} sub="Across all schedules" />
+              <Head icon={<Clock className="w-4 h-4 text-warn-600" />} label="Downtime (6 mo)" value={`${totalDowntime.toFixed(0)} hrs`} sub="Rolling last 6 months" />
+              <Head icon={<AlertTriangle className="w-4 h-4 text-danger-600" />} label="Breakdowns (6 mo)" value={String(totalBreakdowns)} sub="Rolling last 6 months" />
             </div>
 
             {/* Equipment status + category */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className={reportCard}>
-                <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-600" /> Equipment Status Breakdown
+                <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-brand-600" /> Equipment Status Breakdown
                 </h3>
                 <div className="space-y-2">
                   {Object.entries(statusCounts).map(([status, count]) => (
@@ -189,8 +189,8 @@ export default function ReportsPage() {
                 </div>
               </div>
               <div className={reportCard}>
-                <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-600" /> Assets by Category
+                <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-brand-600" /> Assets by Category
                 </h3>
                 <div className="space-y-2">
                   {Object.entries(categoryCounts)
@@ -204,10 +204,10 @@ export default function ReportsPage() {
 
             {/* ISO evidence reports (printable) */}
             <div className={reportCard}>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" /> ISO Evidence Reports
+              <h3 className="text-sm font-semibold text-ink-900 mb-1 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-brand-600" /> ISO Evidence Reports
               </h3>
-              <p className="text-[11px] text-slate-500 mb-4">
+              <p className="text-[11px] text-ink-500 mb-4">
                 Branded, printable compliance registers for the audit file, print to paper or save as PDF; each also exports to CSV.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -215,14 +215,14 @@ export default function ReportsPage() {
                   <Link
                     key={r.type}
                     href={`/reports/print/${r.type}`}
-                    className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all group"
+                    className="flex items-start gap-3 p-3 border border-ink-200 rounded-lg hover:bg-ink-50 hover:border-ink-300 transition-all group"
                   >
-                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
+                    <div className="p-2 rounded-lg bg-brand-500/10 text-brand-600 shrink-0">
                       <Printer className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-900 group-hover:text-emerald-700">{r.label}</p>
-                      <p className="text-[10px] text-slate-500">{r.desc}</p>
+                      <p className="text-xs font-semibold text-ink-900 group-hover:text-brand-700">{r.label}</p>
+                      <p className="text-[10px] text-ink-500">{r.desc}</p>
                     </div>
                   </Link>
                 ))}
@@ -231,16 +231,16 @@ export default function ReportsPage() {
 
             {/* Per-asset maintenance dossier */}
             <div className={reportCard}>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1 flex items-center gap-2">
-                <History className="w-4 h-4 text-emerald-600" /> Per-Asset Maintenance Dossier
+              <h3 className="text-sm font-semibold text-ink-900 mb-1 flex items-center gap-2">
+                <History className="w-4 h-4 text-brand-600" /> Per-Asset Maintenance Dossier
               </h3>
-              <p className="text-[11px] text-slate-500 mb-4">
+              <p className="text-[11px] text-ink-500 mb-4">
                 One machine, one date range, one document: identity, every work order, PM checklist, breakdown,
                 non-conformity, calibration and document, with downtime and availability for the period.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div className="flex flex-col gap-1 lg:col-span-2">
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Asset</span>
+                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Asset</span>
                   <Select
                     value={dossierAsset}
                     onChange={setDossierAsset}
@@ -250,7 +250,7 @@ export default function ReportsPage() {
                   />
                 </div>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">From</span>
+                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
                   <input
                     type="date"
                     value={dossierFrom}
@@ -259,7 +259,7 @@ export default function ReportsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">To</span>
+                  <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
                   <input
                     type="date"
                     value={dossierTo}
@@ -277,8 +277,8 @@ export default function ReportsPage() {
 
             {/* Export */}
             <div className={reportCard}>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1">Data Export (CSV)</h3>
-              <p className="text-[11px] text-slate-500 mb-4">
+              <h3 className="text-sm font-semibold text-ink-900 mb-1">Data Export (CSV)</h3>
+              <p className="text-[11px] text-ink-500 mb-4">
                 Export registers for archival or interoperability with legacy XLSB/XLSM workbooks.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -296,13 +296,13 @@ export default function ReportsPage() {
 
 function Head({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4">
+    <div className="bg-white border border-ink-200 rounded-xl p-4">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
-      <div className="text-2xl font-bold mt-2 text-slate-900">{value}</div>
-      <p className="text-[10px] text-slate-500 mt-1">{sub}</p>
+      <div className="text-2xl font-bold mt-2 text-ink-900">{value}</div>
+      <p className="text-[10px] text-ink-500 mt-1">{sub}</p>
     </div>
   );
 }
@@ -312,11 +312,11 @@ function Row({ label, count, total }: { label: string; count: number; total: num
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-slate-700">{label}</span>
-        <span className="text-slate-500 font-mono">{count} ({pct}%)</span>
+        <span className="text-ink-700">{label}</span>
+        <span className="text-ink-500 font-mono">{count} ({pct}%)</span>
       </div>
-      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-        <div className="h-full bg-emerald-500/70 rounded-full" style={{ width: `${pct}%` }} />
+      <div className="h-1.5 bg-ink-200 rounded-full overflow-hidden">
+        <div className="h-full bg-brand-500/70 rounded-full" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

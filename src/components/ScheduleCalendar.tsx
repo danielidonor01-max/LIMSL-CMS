@@ -25,11 +25,11 @@ type Row = {
 type View = "week" | "month" | "quarter" | "year";
 
 const STATUS_DOT: Record<string, string> = {
-  COMPLETED: "bg-emerald-500",
-  OVERDUE: "bg-rose-500",
-  MISSED: "bg-rose-500",
-  SCHEDULED: "bg-sky-500",
-  RESCHEDULED: "bg-amber-500",
+  COMPLETED: "bg-brand-500",
+  OVERDUE: "bg-danger-500",
+  MISSED: "bg-danger-500",
+  SCHEDULED: "bg-info-500",
+  RESCHEDULED: "bg-warn-500",
 };
 
 const ymd = (d: Date) =>
@@ -93,31 +93,31 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
   const selectedRows = selected ? byDay.get(selected) ?? [] : [];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-ink-200">
         <div className="flex items-center gap-2">
-          <button onClick={() => shift(-1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+          <button onClick={() => shift(-1)} className="p-1.5 rounded-lg hover:bg-ink-100 text-ink-500">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-bold text-slate-900 min-w-[180px] text-center">{periodLabel}</span>
-          <button onClick={() => shift(1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+          <span className="text-sm font-bold text-ink-900 min-w-[180px] text-center">{periodLabel}</span>
+          <button onClick={() => shift(1)} className="p-1.5 rounded-lg hover:bg-ink-100 text-ink-500">
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => setCursor(new Date())}
-            className="ml-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-600"
+            className="ml-1 px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-ink-100 text-xs font-semibold text-ink-600"
           >
             Today
           </button>
         </div>
-        <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
+        <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1">
           {(["week", "month", "quarter", "year"] as View[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all ${
-                view === v ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                view === v ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
               }`}
             >
               {v}
@@ -147,7 +147,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 px-4 py-3 border-t border-slate-200 text-[10px] text-slate-500">
+      <div className="flex flex-wrap items-center gap-4 px-4 py-3 border-t border-ink-200 text-[10px] text-ink-500">
         <span className="font-semibold uppercase tracking-wider">Status:</span>
         {[["SCHEDULED", "Scheduled"], ["COMPLETED", "Completed"], ["OVERDUE", "Overdue/Missed"], ["RESCHEDULED", "Rescheduled"]].map(([k, l]) => (
           <span key={k} className="flex items-center gap-1.5">
@@ -168,24 +168,24 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
           <div className="space-y-3">
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {selectedRows.map((r) => (
-                <div key={r.id} className="p-3 border border-slate-200 rounded-lg">
+                <div key={r.id} className="p-3 border border-ink-200 rounded-lg">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-slate-900">{r.equipmentName ?? "-"}</span>
-                    <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[r.status] ?? "bg-slate-400"}`} title={r.status} />
+                    <span className="text-sm font-semibold text-ink-900">{r.equipmentName ?? "-"}</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[r.status] ?? "bg-ink-400"}`} title={r.status} />
                   </div>
-                  <p className="text-[11px] font-mono text-slate-500">{r.assetId}</p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-600">
-                    <span className="px-1.5 py-0.5 rounded bg-slate-100 font-bold">{r.activityType}</span>
+                  <p className="text-[11px] font-mono text-ink-500">{r.assetId}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-600">
+                    <span className="px-1.5 py-0.5 rounded bg-ink-100 font-bold">{r.activityType}</span>
                     <span>{r.status}</span>
                     {r.responsiblePersonName && <span>· {r.responsiblePersonName}</span>}
                   </div>
                   <div className="mt-2">
                     {r.workOrderId ? (
-                      <Link href={`/work-orders/${r.workOrderId}`} className="text-xs text-emerald-600 hover:underline">
+                      <Link href={`/work-orders/${r.workOrderId}`} className="text-xs text-brand-600 hover:underline">
                         View work order →
                       </Link>
                     ) : (
-                      <Link href={`/work-orders/new?scheduleId=${r.id}`} className="text-xs text-sky-600 hover:underline">
+                      <Link href={`/work-orders/new?scheduleId=${r.id}`} className="text-xs text-info-600 hover:underline">
                         Raise work order →
                       </Link>
                     )}
@@ -193,10 +193,10 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
                 </div>
               ))}
             </div>
-            <div className="pt-2 border-t border-slate-200">
+            <div className="pt-2 border-t border-ink-200">
               <button
                 onClick={() => router.push("/corrective/new")}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-rose-200 text-rose-700 hover:bg-rose-50 rounded-lg text-xs font-semibold"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-danger-200 text-danger-700 hover:bg-danger-50 rounded-lg text-xs font-semibold"
               >
                 <Plus className="w-4 h-4" /> Also log a corrective maintenance
               </button>
@@ -204,16 +204,16 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-slate-500">No maintenance scheduled for this day. Schedule work:</p>
+            <p className="text-xs text-ink-500">No maintenance scheduled for this day. Schedule work:</p>
             <button
               onClick={() => router.push("/corrective/new")}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold"
             >
               <Plus className="w-4 h-4" /> Schedule Corrective Maintenance
             </button>
             <button
               onClick={() => router.push("/work-orders/new")}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-ink-200 hover:bg-ink-100 text-ink-700 rounded-lg text-xs font-semibold"
             >
               <CalendarDays className="w-4 h-4" /> Raise a Work Order
             </button>
@@ -245,13 +245,13 @@ function DayCell({
   return (
     <button
       onClick={() => onPick(key)}
-      className={`relative border border-slate-100 rounded-md text-left transition-colors hover:bg-emerald-50 ${
+      className={`relative border border-ink-100 rounded-md text-left transition-colors hover:bg-brand-50 ${
         compact ? "h-9 p-1" : "min-h-[76px] p-1.5"
-      } ${inMonth ? "bg-white" : "bg-slate-50/60"}`}
+      } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
     >
       <span
         className={`inline-flex items-center justify-center text-[10px] ${compact ? "" : "font-semibold"} ${
-          isToday ? "bg-emerald-600 text-white w-4 h-4 rounded-full" : inMonth ? "text-slate-600" : "text-slate-300"
+          isToday ? "bg-brand-600 text-white w-4 h-4 rounded-full" : inMonth ? "text-ink-600" : "text-ink-300"
         }`}
       >
         {date.getDate()}
@@ -260,7 +260,7 @@ function DayCell({
         (compact ? (
           <div className="flex gap-0.5 mt-0.5 flex-wrap">
             {acts.slice(0, 4).map((a, i) => (
-              <span key={i} className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[a.status] ?? "bg-slate-400"}`} />
+              <span key={i} className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[a.status] ?? "bg-ink-400"}`} />
             ))}
           </div>
         ) : (
@@ -268,15 +268,15 @@ function DayCell({
             {acts.slice(0, 3).map((a, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1 text-[9px] text-slate-600 truncate"
+                className="flex items-center gap-1 text-[9px] text-ink-600 truncate"
                 title={`${a.activityType} · ${a.equipmentName} · ${a.status}`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-slate-400"}`} />
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-ink-400"}`} />
                 <span className="font-bold">{a.activityType}</span>
-                <span className="truncate text-slate-400">{a.assetId}</span>
+                <span className="truncate text-ink-400">{a.assetId}</span>
               </div>
             ))}
-            {acts.length > 3 && <div className="text-[9px] text-slate-400">+{acts.length - 3} more</div>}
+            {acts.length > 3 && <div className="text-[9px] text-ink-400">+{acts.length - 3} more</div>}
           </div>
         ))}
     </button>
@@ -289,7 +289,7 @@ function WeekGrid({ cursor, byDay, todayStr, onPick }: { cursor: Date; byDay: Ma
   return (
     <div className="grid grid-cols-7 gap-1">
       {DOW.map((d) => (
-        <div key={d} className="text-center text-[10px] font-semibold text-slate-400 uppercase pb-1">{d}</div>
+        <div key={d} className="text-center text-[10px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
       ))}
       {days.map((d) => (
         <div key={ymd(d)} className="min-h-[140px]">
@@ -307,7 +307,7 @@ function MonthGrid({ year, month, byDay, todayStr, onPick }: { year: number; mon
   return (
     <div className="grid grid-cols-7 gap-1">
       {DOW.map((d) => (
-        <div key={d} className="text-center text-[10px] font-semibold text-slate-400 uppercase pb-1">{d}</div>
+        <div key={d} className="text-center text-[10px] font-semibold text-ink-400 uppercase pb-1">{d}</div>
       ))}
       {cells.map((d) => (
         <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} />
@@ -322,10 +322,10 @@ function MiniMonth({ year, month, byDay, todayStr, onPick }: { year: number; mon
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   return (
     <div>
-      <p className="text-xs font-bold text-slate-700 mb-1">{MONTH_NAMES[month]}</p>
+      <p className="text-xs font-bold text-ink-700 mb-1">{MONTH_NAMES[month]}</p>
       <div className="grid grid-cols-7 gap-0.5">
         {DOW.map((d) => (
-          <div key={d} className="text-center text-[8px] text-slate-300">{d[0]}</div>
+          <div key={d} className="text-center text-[8px] text-ink-300">{d[0]}</div>
         ))}
         {cells.map((d) => (
           <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} compact />

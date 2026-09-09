@@ -128,23 +128,23 @@ export default function AccountPage() {
     );
   }
 
-  const label = "text-[11px] font-semibold text-slate-500 uppercase tracking-wide";
+  const label = "text-[11px] font-semibold text-ink-500 uppercase tracking-wide";
   const field =
-    "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15";
+    "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15";
 
   return (
     <div className="p-6 max-w-3xl w-full mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center">
+        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 border border-brand-200 flex items-center justify-center">
           <UserCircle className="w-6 h-6" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">{me?.name}</h2>
+            <h2 className="text-xl font-bold tracking-tight text-ink-900">{me?.name}</h2>
             {me && <Badge className={ROLE_BADGE[me.role] ?? ""}>{me.roleLabel}</Badge>}
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-500">
             {me?.jobTitle ? `${me.jobTitle} · ` : ""}
             {me?.department ?? ""}
           </p>
@@ -152,10 +152,10 @@ export default function AccountPage() {
       </div>
 
       {/* Profile */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <UserCircle className="w-4 h-4 text-emerald-600" /> Profile
+          <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2">
+            <UserCircle className="w-4 h-4 text-brand-600" /> Profile
           </h3>
           <Button size="sm" icon={Save} loading={savingProfile} onClick={saveProfile}>Save profile</Button>
         </div>
@@ -173,7 +173,7 @@ export default function AccountPage() {
             <input value={profile.whatsapp} onChange={(e) => setProfile((p) => ({ ...p, whatsapp: e.target.value }))} placeholder="e.g. +234…" className={field} />
           </div>
         </div>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-ink-500">
           Your role and department are set by a Super Admin.
         </p>
 
@@ -181,16 +181,16 @@ export default function AccountPage() {
             only one that can lock you out: password recovery emails whatever is
             on file, so a typo saved instantly leaves no way back. Verified at
             the new address before anything changes. */}
-        <div className="pt-4 border-t border-slate-100 space-y-2">
+        <div className="pt-4 border-t border-ink-100 space-y-2">
           <label className={label}>
             <Mail className="w-3 h-3 inline mr-1" />
             Sign-in address
           </label>
-          <p className="text-sm text-slate-900 font-mono break-all">{me?.email}</p>
+          <p className="text-sm text-ink-900 font-mono break-all">{me?.email}</p>
 
           {pendingEmail ? (
-            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
-              <p className="text-[11px] text-amber-900 leading-relaxed">
+            <div className="rounded-lg bg-warn-50 border border-warn-200 p-3">
+              <p className="text-[11px] text-warn-900 leading-relaxed">
                 Waiting for <span className="font-mono font-semibold">{pendingEmail}</span> to confirm. Until then this
                 address stays your sign-in. The link expires in an hour.
               </p>
@@ -217,7 +217,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-ink-500">
             We send a link to the new address, and tell the current one that a change was asked for. Nothing changes
             until the link is opened.
           </p>
@@ -225,19 +225,19 @@ export default function AccountPage() {
       </section>
 
       {/* Preferences */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-emerald-600" /> Preferences
+      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-5">
+        <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4 text-brand-600" /> Preferences
           {savingPrefs ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400">
+            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-ink-400">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving
             </span>
           ) : prefsSavedAt ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600">
+            <span className="inline-flex items-center gap-1 text-[11px] font-normal text-brand-600">
               <Check className="w-3.5 h-3.5" /> Saved
             </span>
           ) : (
-            <span className="text-[11px] font-normal text-slate-400">Saves as you change them</span>
+            <span className="text-[11px] font-normal text-ink-400">Saves as you change them</span>
           )}
         </h3>
 
@@ -267,7 +267,7 @@ export default function AccountPage() {
                   key={v}
                   onClick={() => savePrefs({ ...prefs, density: v })}
                   className={`flex-1 sm:flex-none inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                    on ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                    on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
                   }`}
                 >
                   <Icon className="w-4 h-4" /> {l}
@@ -275,13 +275,13 @@ export default function AccountPage() {
               );
             })}
           </div>
-          <p className="text-[11px] text-slate-500">Compact fits more on screen by tightening tables, lists and page spacing.</p>
+          <p className="text-[11px] text-ink-500">Compact fits more on screen by tightening tables, lists and page spacing.</p>
         </div>
 
         {/* Notifications */}
         <div className="space-y-2.5">
           <label className={label}><Bell className="w-3 h-3 inline mr-1" />Notifications</label>
-          <p className="text-[11px] text-slate-500 -mt-1">
+          <p className="text-[11px] text-ink-500 -mt-1">
             These control how you are reached. A Super Admin can switch an event off for everyone, in which case
             nobody receives it whatever is set here.
           </p>
@@ -333,22 +333,22 @@ export default function AccountPage() {
       </section>
 
       {/* Security */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-3">
-          <KeyRound className="w-4 h-4 text-emerald-600" /> Security
+      <section className="bg-white border border-ink-200 rounded-xl p-5">
+        <h3 className="text-sm font-bold text-ink-900 flex items-center gap-2 mb-3">
+          <KeyRound className="w-4 h-4 text-brand-600" /> Security
         </h3>
         <Link
           href="/change-password"
-          className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors group"
+          className="flex items-center justify-between p-3 rounded-lg border border-ink-200 hover:bg-ink-50 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <KeyRound className="w-4 h-4 text-slate-400" />
+            <KeyRound className="w-4 h-4 text-ink-400" />
             <div>
-              <p className="text-sm font-medium text-slate-900">Change password</p>
-              <p className="text-xs text-slate-500">Update the password you use to sign in.</p>
+              <p className="text-sm font-medium text-ink-900">Change password</p>
+              <p className="text-xs text-ink-500">Update the password you use to sign in.</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-4 h-4 text-ink-400 group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </section>
     </div>
@@ -359,10 +359,10 @@ function ToggleRow({
   title, desc, checked, onChange,
 }: { title: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-start justify-between gap-4 p-3 rounded-lg border border-slate-200">
+    <div className="flex items-start justify-between gap-4 p-3 rounded-lg border border-ink-200">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-900">{title}</p>
-        <p className="text-[11px] text-slate-500 mt-0.5">{desc}</p>
+        <p className="text-sm font-medium text-ink-900">{title}</p>
+        <p className="text-[11px] text-ink-500 mt-0.5">{desc}</p>
       </div>
       <Toggle checked={checked} onChange={onChange} ariaLabel={title} />
     </div>

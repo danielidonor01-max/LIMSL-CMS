@@ -34,9 +34,9 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 const DOC_TYPES = Object.keys(DOC_TYPE_LABELS);
 const STATUS_BADGE: Record<string, string> = {
-  AVAILABLE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  REQUIRED: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  EXPIRED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  AVAILABLE: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  REQUIRED: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  EXPIRED: "bg-warn-500/10 text-warn-600 border-warn-500/20",
 };
 
 export default function EquipmentDocuments({
@@ -130,20 +130,20 @@ export default function EquipmentDocuments({
   }
 
   const inputCls =
-    "w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:outline-none";
+    "w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs text-ink-900 focus:outline-none";
 
   return (
-    <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+    <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-          <FileText className="w-4 h-4 text-emerald-600" /> Documents
+        <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <FileText className="w-4 h-4 text-brand-600" /> Documents
         </h2>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-400 font-mono">{docs.length} records</span>
+          <span className="text-[10px] text-ink-400 font-mono">{docs.length} records</span>
           {canUpload && (
             <button
               onClick={() => { setDocType("OPERATIONAL_MANUAL"); setShowForm((s) => !s); }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-semibold"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[11px] font-semibold"
             >
               <Plus className="w-3.5 h-3.5" /> Upload
             </button>
@@ -152,10 +152,10 @@ export default function EquipmentDocuments({
       </div>
 
       {showForm && canUpload && (
-        <form onSubmit={handleUpload} className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+        <form onSubmit={handleUpload} className="p-3 bg-ink-50 border border-ink-200 rounded-lg space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Document Type</label>
+              <label className="text-[10px] font-semibold text-ink-500 uppercase">Document Type</label>
               <Select value={docType} onChange={setDocType} className="w-full">
                 {DOC_TYPES.map((t) => (
                   <option key={t} value={t}>{DOC_TYPE_LABELS[t]}</option>
@@ -163,33 +163,33 @@ export default function EquipmentDocuments({
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Revision (optional)</label>
+              <label className="text-[10px] font-semibold text-ink-500 uppercase">Revision (optional)</label>
               <input name="revision" className={inputCls} placeholder="e.g. Rev B" />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Title (optional)</label>
+              <label className="text-[10px] font-semibold text-ink-500 uppercase">Title (optional)</label>
               <input name="title" className={inputCls} placeholder="defaults to filename" />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Expiry (optional)</label>
+              <label className="text-[10px] font-semibold text-ink-500 uppercase">Expiry (optional)</label>
               <input name="expiryDate" type="date" className={inputCls} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-slate-500 uppercase">File</label>
+            <label className="text-[10px] font-semibold text-ink-500 uppercase">File</label>
             <input
               ref={fileRef}
               type="file"
               accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
-              className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-200 file:text-slate-700 file:text-xs file:font-semibold"
+              className="w-full text-xs text-ink-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-ink-200 file:text-ink-700 file:text-xs file:font-semibold"
             />
-            <p className="text-[10px] text-slate-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
+            <p className="text-[10px] text-ink-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">
+            <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-ink-200 hover:bg-ink-100 text-ink-600 rounded-lg text-xs font-semibold">
               Cancel
             </button>
-            <button type="submit" disabled={uploading} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold disabled:opacity-60">
+            <button type="submit" disabled={uploading} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold disabled:opacity-60">
               {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
             </button>
           </div>
@@ -197,29 +197,29 @@ export default function EquipmentDocuments({
       )}
 
       {loading ? (
-        <p className="text-xs text-slate-400 py-4">Loading documents…</p>
+        <p className="text-xs text-ink-400 py-4">Loading documents…</p>
       ) : docs.length === 0 ? (
-        <p className="text-xs text-slate-400 py-4">No documents registered for this machine.</p>
+        <p className="text-xs text-ink-400 py-4">No documents registered for this machine.</p>
       ) : (
         <div className="space-y-2">
           {docs.map((d) => (
-            <div key={d.id} className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+            <div key={d.id} className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-ink-200 hover:bg-ink-50">
               <div className="flex items-center gap-2.5 min-w-0">
                 {d.status === "REQUIRED" ? (
-                  <FileWarning className="w-4 h-4 text-rose-500 shrink-0" />
+                  <FileWarning className="w-4 h-4 text-danger-500 shrink-0" />
                 ) : (
-                  <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                  <FileText className="w-4 h-4 text-ink-400 shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-900 truncate">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</p>
-                  <p className="text-[10px] text-slate-400 truncate">
+                  <p className="text-xs font-medium text-ink-900 truncate">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</p>
+                  <p className="text-[10px] text-ink-400 truncate">
                     {d.revision ? `${d.revision} · ` : ""}
                     {d.fileName ? `${d.fileName}` : d.expiryDate ? `expires ${formatDate(d.expiryDate)}` : d.title}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
+                <Badge className={STATUS_BADGE[d.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
                   {d.status === "REQUIRED" ? "MISSING" : d.status}
                 </Badge>
                 {d.fileUrl && !d.fileUrl.startsWith("#") && (
@@ -227,7 +227,7 @@ export default function EquipmentDocuments({
                     href={d.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-600 hover:text-emerald-700"
+                    className="text-brand-600 hover:text-brand-700"
                     title="Open document"
                   >
                     <Download className="w-3.5 h-3.5" />

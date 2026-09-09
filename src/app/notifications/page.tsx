@@ -62,10 +62,10 @@ const EVENT_ICON: Record<string, React.ElementType> = {
 };
 
 const DELIVERY_BADGE: Record<string, string> = {
-  SENT: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  QUEUED: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  SKIPPED: "bg-slate-200 text-slate-500 border-slate-300",
-  FAILED: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  SENT: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  QUEUED: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  SKIPPED: "bg-ink-200 text-ink-500 border-ink-300",
+  FAILED: "bg-danger-500/10 text-danger-600 border-danger-500/20",
 };
 
 export default function NotificationsPage() {
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
   const unread = rows.filter((r) => !r.readAt).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Bell}
@@ -131,7 +131,7 @@ export default function NotificationsPage() {
           }
         />
 
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
@@ -143,32 +143,32 @@ export default function NotificationsPage() {
               actionHref="/"
             />
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-ink-200">
               {rows.map((n) => {
                 const Icon = EVENT_ICON[n.event] ?? Bell;
                 return (
                   <button
                     key={n.id}
                     onClick={() => open(n)}
-                    className={`w-full text-left p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors ${
-                      n.readAt ? "" : "bg-emerald-50/40"
+                    className={`w-full text-left p-4 flex items-start gap-3 hover:bg-ink-50 transition-colors ${
+                      n.readAt ? "" : "bg-brand-50/40"
                     }`}
                   >
-                    <div className={`mt-0.5 p-1.5 rounded-lg ${n.readAt ? "text-slate-400 bg-slate-100" : "text-emerald-600 bg-emerald-500/10"}`}>
+                    <div className={`mt-0.5 p-1.5 rounded-lg ${n.readAt ? "text-ink-400 bg-ink-100" : "text-brand-600 bg-brand-500/10"}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {!n.readAt && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
-                        <p className={`text-sm ${n.readAt ? "font-medium text-slate-700" : "font-bold text-slate-900"}`}>{n.title}</p>
+                        {!n.readAt && <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />}
+                        <p className={`text-sm ${n.readAt ? "font-medium text-ink-700" : "font-bold text-ink-900"}`}>{n.title}</p>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{n.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 flex-wrap">
+                      <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-ink-500 flex-wrap">
                         <span className="font-mono">{formatDate(n.createdAt)}</span>
                         <span className="inline-flex items-center gap-1">
                           {n.channel === "EMAIL" ? <Mail className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
                           <span
-                            className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? "bg-slate-100 text-slate-500 border-slate-200"}`}
+                            className={`px-1.5 py-0.5 rounded-full border ${DELIVERY_BADGE[n.deliveryStatus] ?? "bg-ink-100 text-ink-500 border-ink-200"}`}
                           >
                             {CHANNEL_LABELS[n.channel] ?? n.channel} ·{" "}
                             {DELIVERY_LABELS[n.deliveryStatus] ?? n.deliveryStatus.toLowerCase()}
@@ -177,7 +177,7 @@ export default function NotificationsPage() {
                       </div>
                       {/* The reason was recorded and shown to nobody. */}
                       {n.deliveryStatus === "FAILED" && n.deliveryError && (
-                        <p className="mt-1.5 text-[10px] text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1 leading-relaxed">
+                        <p className="mt-1.5 text-[10px] text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
                           {n.deliveryError}
                         </p>
                       )}
@@ -189,7 +189,7 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        <p className="text-[11px] text-slate-400 text-center">
+        <p className="text-[11px] text-ink-400 text-center">
           WhatsApp delivery is best-effort, an alert always lands here in-app even if the message can&apos;t be delivered.
         </p>
       </main>

@@ -287,15 +287,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   if (!record) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3 text-slate-500 text-sm">
+      <div className="min-h-screen bg-ink-50 flex flex-col items-center justify-center gap-3 text-ink-500 text-sm">
         <p>Corrective record not found.</p>
-        <Link href="/corrective" className="text-rose-600 hover:underline">Back to corrective register</Link>
+        <Link href="/corrective" className="text-danger-600 hover:underline">Back to corrective register</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
@@ -311,35 +311,35 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-6">
           {/* Fault Specifications Card */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Breakdown Specifications</h2>
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Breakdown Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase block mb-1">Equipment Name</span>
+                <span className="text-[10px] text-ink-500 uppercase block mb-1">Equipment Name</span>
                 {equipment?.assetId ? (
                   <Link
                     href={`/equipment/${equipment.assetId.replace(/\//g, "-")}`}
-                    className="font-semibold text-emerald-700 hover:underline"
+                    className="font-semibold text-brand-700 hover:underline"
                   >
                     {equipment.name}
                   </Link>
                 ) : (
-                  <span className="font-semibold text-slate-900">{equipment?.name || "Loading..."}</span>
+                  <span className="font-semibold text-ink-900">{equipment?.name || "Loading..."}</span>
                 )}
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase block mb-1">Tag ID</span>
-                <span className="font-semibold text-slate-900 font-mono">{equipment?.assetId}</span>
+                <span className="text-[10px] text-ink-500 uppercase block mb-1">Tag ID</span>
+                <span className="font-semibold text-ink-900 font-mono">{equipment?.assetId}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase block mb-1">Status at failure</span>
-                <span className="font-semibold text-slate-900 font-mono">{record.operatingStatusAtFailure}</span>
+                <span className="text-[10px] text-ink-500 uppercase block mb-1">Status at failure</span>
+                <span className="font-semibold text-ink-900 font-mono">{record.operatingStatusAtFailure}</span>
               </div>
             </div>
 
             <div className="text-xs space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase block">Reported Fault Description</span>
-              <p className="bg-slate-100 p-3 rounded border border-slate-200 text-slate-700 leading-relaxed">
+              <span className="text-[10px] text-ink-500 uppercase block">Reported Fault Description</span>
+              <p className="bg-ink-100 p-3 rounded border border-ink-200 text-ink-700 leading-relaxed">
                 {record.faultDescription}
               </p>
             </div>
@@ -347,27 +347,27 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
           {/* Offer back an unfinished investigation rather than losing it. */}
           {draft && (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <p className="text-xs text-amber-900 flex-1 min-w-[12rem]">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warn-200 bg-warn-50 px-4 py-3">
+              <p className="text-xs text-warn-900 flex-1 min-w-[12rem]">
                 You have an unsaved root-cause analysis for this breakdown on this device.
               </p>
               <button
                 onClick={restoreDraft}
-                className="min-h-11 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold"
+                className="min-h-11 px-4 rounded-lg bg-warn-600 hover:bg-warn-500 text-white text-xs font-semibold"
               >
                 Restore it
               </button>
-              <button onClick={dismissDraft} className="min-h-11 px-3 text-xs font-semibold text-amber-800 hover:text-amber-950">
+              <button onClick={dismissDraft} className="min-h-11 px-3 text-xs font-semibold text-warn-800 hover:text-warn-950">
                 Discard
               </button>
             </div>
           )}
 
           {/* Root Cause Analysis (RCA) Card */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-5">
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-5">
             <div className="flex justify-between items-center">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
-              <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-500">
+              <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Root Cause Analysis (RCA)</h2>
+              <span className="px-2 py-0.5 rounded bg-ink-100 border border-ink-200 text-[10px] font-mono font-semibold text-ink-500">
                 {rcaTool === "FIVE_WHYS" ? "5 Whys" : rcaTool.replace(/_/g, " ")}
               </span>
             </div>
@@ -389,31 +389,31 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       <span
                         className={`w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold border-2 transition-colors ${
                           isRoot && answered
-                            ? "bg-rose-600 border-rose-600 text-white"
+                            ? "bg-danger-600 border-danger-600 text-white"
                             : answered
-                              ? "bg-emerald-600 border-emerald-600 text-white"
-                              : "bg-white border-slate-300 text-slate-400"
+                              ? "bg-brand-600 border-brand-600 text-white"
+                              : "bg-white border-ink-300 text-ink-400"
                         }`}
                       >
                         {i + 1}
                       </span>
                       {!isRoot && (
                         <span
-                          className={`w-0.5 flex-1 min-h-8 ${answered ? "bg-emerald-300" : "bg-slate-200"}`}
+                          className={`w-0.5 flex-1 min-h-8 ${answered ? "bg-brand-300" : "bg-ink-200"}`}
                           aria-hidden
                         />
                       )}
                     </div>
 
                     <div className={`flex-1 ${isRoot ? "pb-1" : "pb-5"}`}>
-                      <label htmlFor={step.key} className="block text-xs font-semibold text-slate-700">
+                      <label htmlFor={step.key} className="block text-xs font-semibold text-ink-700">
                         {i === 0
                           ? "Why did it fail?"
                           : previous
                             ? `Why did that happen, "${previous.length > 60 ? `${previous.slice(0, 60)}…` : previous}"?`
                             : "Why did that happen?"}
                         {isRoot && (
-                          <span className="ml-2 text-[10px] font-bold text-rose-700 uppercase tracking-wide">
+                          <span className="ml-2 text-[10px] font-bold text-danger-700 uppercase tracking-wide">
                             Root cause
                           </span>
                         )}
@@ -431,14 +431,14 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                               ? "The cause that, if fixed, stops this recurring"
                               : "Because…"
                         }
-                        className="mt-1.5 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 min-h-11 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                        className="mt-1.5 w-full bg-ink-50 border border-ink-200 rounded-lg px-3 min-h-11 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 disabled:bg-ink-100 disabled:text-ink-400 disabled:cursor-not-allowed"
                       />
                     </div>
                   </li>
                 );
               })}
             </ol>
-            <p className="text-[11px] text-slate-500 -mt-1">
+            <p className="text-[11px] text-ink-500 -mt-1">
               Stop early if you reach a cause you can actually act on, five levels is a guide, not a quota.
               A root cause you cannot change is a sign the chain went one step too far.
             </p>
@@ -447,30 +447,30 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 event; codes let the same failure be counted across the fleet. */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase">Failure Mode</span>
+                <span className="text-xs font-semibold text-ink-500 uppercase">Failure Mode</span>
                 <Select value={failureMode} onChange={(v) => setFailureMode(v)} className="w-full" ariaLabel="Failure mode">
                   <option value="">Select the failure mode…</option>
                   {failureModesFor(record?.faultType).map((m) => (
                     <option key={m.code} value={m.code}>{m.label}</option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-slate-400">Required at close-out, this is what makes recurring failures visible.</p>
+                <p className="text-[11px] text-ink-400">Required at close-out, this is what makes recurring failures visible.</p>
               </div>
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase">How was it detected?</span>
+                <span className="text-xs font-semibold text-ink-500 uppercase">How was it detected?</span>
                 <Select value={detectionMethod} onChange={(v) => setDetectionMethod(v)} className="w-full" ariaLabel="Detection method">
                   <option value="">Select…</option>
                   {DETECTION_METHODS.map((d) => (
                     <option key={d.code} value={d.code}>{d.label}</option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-slate-400">Shows whether the PM programme is catching faults before they stop the machine.</p>
+                <p className="text-[11px] text-ink-400">Shows whether the PM programme is catching faults before they stop the machine.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase">Root Cause Category</span>
+                <span className="text-xs font-semibold text-ink-500 uppercase">Root Cause Category</span>
                 <Select
                   value={rootCauseCategory}
                   onChange={(v) => setRootCauseCategory(v)}
@@ -486,13 +486,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase">Verified Root Cause Statement</span>
+                <span className="text-xs font-semibold text-ink-500 uppercase">Verified Root Cause Statement</span>
                 <input
                   type="text"
                   value={verifiedRootCause}
                   onChange={(e) => setVerifiedRootCause(e.target.value)}
                   placeholder="Detailed summary statement of root cause..."
-                  className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2.5 text-xs focus:outline-none"
+                  className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2.5 text-xs focus:outline-none"
                 />
               </div>
             </div>
@@ -500,7 +500,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <button
               onClick={handleSaveRca}
               disabled={saving}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-950/20"
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-brand-950/20"
             >
               Save RCA Analysis
             </button>
@@ -510,20 +510,20 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-6">
           {/* Corrective Actions Tracking Log (CATL) */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Corrective Action Log</h2>
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Corrective Action Log</h2>
 
             {/* Existing actions list */}
             <div className="space-y-2.5 max-h-56 overflow-y-auto">
               {actions.map((act, i) => (
-                <div key={i} className="p-3 bg-slate-100 rounded-lg border border-slate-200 text-xs space-y-1.5">
+                <div key={i} className="p-3 bg-ink-100 rounded-lg border border-ink-200 text-xs space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-slate-900">{act.action}</span>
-                    <button type="button" onClick={() => removeAction(i)} className="text-rose-600 hover:text-rose-700">
+                    <span className="font-semibold text-ink-900">{act.action}</span>
+                    <button type="button" onClick={() => removeAction(i)} className="text-danger-600 hover:text-danger-700">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] text-slate-500">
+                  <div className="flex justify-between items-center text-[10px] text-ink-500">
                     <span>By: {act.responsible}</span>
                     <span>Due: {act.date}</span>
                   </div>
@@ -533,8 +533,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       onClick={() => toggleActionStatus(i)}
                       className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${
                         act.status === "COMPLETED"
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          : "bg-slate-200 text-slate-500 border-slate-200"
+                          ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+                          : "bg-ink-200 text-ink-500 border-ink-200"
                       }`}
                     >
                       {act.status}
@@ -545,13 +545,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Add action row */}
-            <div className="space-y-2 pt-2 border-t border-slate-200">
+            <div className="space-y-2 pt-2 border-t border-ink-200">
               <input
                 type="text"
                 placeholder="Corrective Action Description..."
                 value={newAction}
                 onChange={(e) => setNewAction(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -559,19 +559,19 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   placeholder="Responsible Person..."
                   value={newResp}
                   onChange={(e) => setNewResp(e.target.value)}
-                  className="bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                  className="bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
                 <input
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none text-slate-500"
+                  className="bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none text-ink-500"
                 />
               </div>
               <button
                 type="button"
                 onClick={addAction}
-                className="w-full flex items-center justify-center gap-1 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 transition-all"
+                className="w-full flex items-center justify-center gap-1 py-2 bg-ink-100 hover:bg-ink-200 border border-ink-200 rounded-lg text-xs font-semibold text-ink-900 transition-all"
               >
                 <Plus className="w-4 h-4" /> Add Action Item
               </button>
@@ -579,18 +579,18 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Closeout & Approvals */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Completion Sign-off</h2>
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide">Completion Sign-off</h2>
 
             {record.status === "CLOSED" ? (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs rounded-lg flex items-center gap-2">
+              <div className="p-3 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 flex-shrink-0" />
                 <div>
                   <p className="font-bold">Record Closed Out Successfully</p>
-                  <p className="text-[10px] text-slate-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  <p className="text-[10px] text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
                   {record.totalDowntimeHours != null && (
-                    <p className="text-[10px] text-slate-500">
-                      Production downtime: <span className="font-mono font-semibold text-slate-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
+                    <p className="text-[10px] text-ink-500">
+                      Production downtime: <span className="font-mono font-semibold text-ink-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
                     </p>
                   )}
                 </div>
@@ -598,61 +598,61 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             ) : (
               <div className="space-y-4">
                 {currentUserName && (
-                  <p className="text-[11px] text-slate-500">
-                    Closing out as <span className="font-semibold text-slate-700">{currentUserName}</span> (recorded as the technician).
+                  <p className="text-[11px] text-ink-500">
+                    Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
                   </p>
                 )}
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-500 uppercase">Approving Supervisor</span>
+                  <span className="text-xs font-semibold text-ink-500 uppercase">Approving Supervisor</span>
                   <input
                     type="text"
                     placeholder="Name of the supervisor approving this close-out"
                     value={supervisorName}
                     onChange={(e) => setSupervisorName(e.target.value)}
-                    className="w-full bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                    className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-500 uppercase">Supervisor Comments</span>
+                  <span className="text-xs font-semibold text-ink-500 uppercase">Supervisor Comments</span>
                   <textarea
                     placeholder="Provide supervisor closeout recommendations or audit check notes..."
                     value={supervisorComments}
                     onChange={(e) => setSupervisorComments(e.target.value)}
-                    className="w-full h-16 bg-slate-100 border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
+                    className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
                   />
                 </div>
 
                 {/* Downtime window, feeds MTTR. Production hours only. */}
-                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-3">
+                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-rose-600" />
-                    <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Downtime Window</span>
+                    <Clock className="w-4 h-4 text-danger-600" />
+                    <span className="text-xs font-semibold text-ink-700 uppercase tracking-wide">Downtime Window</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-slate-500 uppercase">Machine went down</label>
+                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Machine went down</label>
                       <input
                         type="datetime-local"
                         value={downStartAt}
                         onChange={(e) => setDownStartAt(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                        className="w-full bg-white border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-slate-500 uppercase">Restored to service</label>
+                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Restored to service</label>
                       <input
                         type="datetime-local"
                         value={downEndAt}
                         onChange={(e) => setDownEndAt(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-slate-300 rounded-lg p-2 text-xs focus:outline-none"
+                        className="w-full bg-white border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
                       />
                     </div>
                   </div>
                   {previewDowntime !== null && (
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-ink-600">
                       Production downtime:{" "}
-                      <span className="font-bold text-slate-900 font-mono">{previewDowntime.toFixed(2)} h</span>{" "}
-                      <span className="text-[11px] text-slate-400">(excludes off-shift &amp; non-working days)</span>
+                      <span className="font-bold text-ink-900 font-mono">{previewDowntime.toFixed(2)} h</span>{" "}
+                      <span className="text-[11px] text-ink-400">(excludes off-shift &amp; non-working days)</span>
                     </p>
                   )}
                 </div>
@@ -665,7 +665,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   type="button"
                   onClick={handleCloseOut}
                   disabled={saving}
-                  className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-rose-950/20"
+                  className="w-full py-2.5 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-danger-950/20"
                 >
                   Verify and Close Breakdown Work Order
                 </button>

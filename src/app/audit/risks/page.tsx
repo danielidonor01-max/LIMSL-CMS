@@ -57,7 +57,7 @@ export default function RiskRegister() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
@@ -70,9 +70,9 @@ export default function RiskRegister() {
         </div>
         {/* Risk Register List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-white border border-slate-200 rounded-xl">
+          <div className="p-4 bg-white border border-ink-200 rounded-xl">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
                 type="text"
                 placeholder="Search by risk number or description..."
@@ -83,7 +83,7 @@ export default function RiskRegister() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : filteredRisks.length === 0 ? (
@@ -103,7 +103,7 @@ export default function RiskRegister() {
                 />
               )
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-ink-200">
                 {filteredRisks.map((risk) => {
                   const isHigh = risk.riskLevel === "HIGH";
                   return (
@@ -113,25 +113,25 @@ export default function RiskRegister() {
                         setActiveRisk(risk);
                         setMitigationAction(risk.actionToAddressRisk || "");
                       }}
-                      className={`p-5 cursor-pointer hover:bg-slate-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                        activeRisk?.id === risk.id ? "bg-slate-50 border-l-2 border-emerald-500" : ""
+                      className={`p-5 cursor-pointer hover:bg-ink-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        activeRisk?.id === risk.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
                       }`}
                     >
                       <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-emerald-600 font-semibold">{risk.riskNumber}</span>
+                          <span className="font-mono text-xs text-brand-600 font-semibold">{risk.riskNumber}</span>
                           <span
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
                               isHigh
-                                ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
+                                : "bg-brand-500/10 text-brand-600 border-brand-500/20"
                             }`}
                           >
                             Risk Level: {risk.riskLevel} (Score: {risk.impactRating})
                           </span>
                         </div>
-                        <p className="text-slate-900 text-xs font-semibold leading-relaxed">{risk.identifiedRisk}</p>
-                        <p className="text-[10px] text-slate-500">Affects: {risk.affectedProcess}</p>
+                        <p className="text-ink-900 text-xs font-semibold leading-relaxed">{risk.identifiedRisk}</p>
+                        <p className="text-[10px] text-ink-500">Affects: {risk.affectedProcess}</p>
                       </div>
                     </div>
                   );
@@ -143,25 +143,25 @@ export default function RiskRegister() {
 
         {/* Right Side: Risk Assessment Details */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-200 pb-3">
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-6">
+            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Risk Mitigation & Controls
             </h2>
 
             {activeRisk ? (
               <form onSubmit={handleUpdateMitigation} className="space-y-4">
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Likelihood Score</span>
-                    <span className="font-semibold text-slate-900">{activeRisk.likelihood} / 5</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Likelihood Score</span>
+                    <span className="font-semibold text-ink-900">{activeRisk.likelihood} / 5</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Consequence Impact</span>
-                    <span className="font-semibold text-slate-900">{activeRisk.consequence} / 5</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Consequence Impact</span>
+                    <span className="font-semibold text-ink-900">{activeRisk.consequence} / 5</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Status</span>
-                    <span className="font-semibold text-slate-900 uppercase">{activeRisk.status}</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Status</span>
+                    <span className="font-semibold text-ink-900 uppercase">{activeRisk.status}</span>
                   </div>
                 </div>
 

@@ -164,27 +164,27 @@ export default function KpiPage() {
   }, [data]);
 
   const toneCls: Record<Tone, string> = {
-    good: "border-emerald-200 bg-emerald-50",
-    warning: "border-amber-200 bg-amber-50",
-    danger: "border-rose-200 bg-rose-50",
-    neutral: "border-slate-200 bg-slate-50",
+    good: "border-brand-200 bg-brand-50",
+    warning: "border-warn-200 bg-warn-50",
+    danger: "border-danger-200 bg-danger-50",
+    neutral: "border-ink-200 bg-ink-50",
   };
   const toneText: Record<Tone, string> = {
-    good: "text-emerald-600",
-    warning: "text-amber-600",
-    danger: "text-rose-600",
-    neutral: "text-slate-700",
+    good: "text-brand-600",
+    warning: "text-warn-600",
+    danger: "text-danger-600",
+    neutral: "text-ink-700",
   };
 
   const trendIcon = (k: Kpi) => {
-    if (!k.trend || k.trend === "flat") return <Minus className="w-3 h-3 text-slate-500" />;
+    if (!k.trend || k.trend === "flat") return <Minus className="w-3 h-3 text-ink-500" />;
     const isGood = k.trendGood ? k.trend === k.trendGood : k.trend === "up";
     const Icon = k.trend === "up" ? TrendingUp : TrendingDown;
-    return <Icon className={`w-3 h-3 ${isGood ? "text-emerald-600" : "text-rose-600"}`} />;
+    return <Icon className={`w-3 h-3 ${isGood ? "text-brand-600" : "text-danger-600"}`} />;
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={TrendingUp}
@@ -193,7 +193,7 @@ export default function KpiPage() {
         />
 
         {loading || !data ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
@@ -203,22 +203,22 @@ export default function KpiPage() {
               const Icon = cat.icon;
               return (
                 <section key={cat.name} className="space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-emerald-600" /> {cat.name}
+                  <h3 className="text-sm font-semibold text-ink-700 flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-brand-600" /> {cat.name}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                     {cat.items.map((k) => (
                       <div key={k.label} className={`p-4 rounded-xl border ${toneCls[k.tone]}`}>
                         <div className="flex items-start justify-between gap-1">
-                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider leading-tight">
+                          <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
                             {k.label}
                           </span>
                           {trendIcon(k)}
                         </div>
                         <div className={`text-xl font-bold mt-2 ${toneText[k.tone]}`}>{k.value}</div>
-                        <p className="text-[10px] text-slate-500 mt-1">Target {k.target}</p>
+                        <p className="text-[10px] text-ink-500 mt-1">Target {k.target}</p>
                         {k.note && (
-                          <p className="text-[10px] text-slate-500 mt-1 leading-snug">{k.note}</p>
+                          <p className="text-[10px] text-ink-500 mt-1 leading-snug">{k.note}</p>
                         )}
                       </div>
                     ))}
@@ -311,14 +311,14 @@ export default function KpiPage() {
 
             {/* Per-equipment drill-down */}
             {data.perEquipment.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-slate-200">
-                  <h3 className="text-sm font-semibold text-slate-900">Per-Equipment Drill-Down (latest)</h3>
+              <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-ink-200">
+                  <h3 className="text-sm font-semibold text-ink-900">Per-Equipment Drill-Down (latest)</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
+                      <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Equipment</th>
                         <th className="py-2.5 px-4 font-medium">Breakdowns</th>
                         <th className="py-2.5 px-4 font-medium">Availability</th>
@@ -328,16 +328,16 @@ export default function KpiPage() {
                         <th className="py-2.5 px-4 font-medium">Remark</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-ink-200">
                       {data.perEquipment.map((r) => (
-                        <tr key={r.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-5 font-medium text-slate-900">{r.equipmentName}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.breakdowns}</td>
+                        <tr key={r.id} className="hover:bg-ink-50">
+                          <td className="py-2.5 px-5 font-medium text-ink-900">{r.equipmentName}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{r.breakdowns}</td>
                           <td className="py-2.5 px-4">{pct(r.availability)}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
-                          <td className="py-2.5 px-4 text-slate-700">{r.downtimeHours} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-500">{r.remark}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{r.downtimeHours} hrs</td>
+                          <td className="py-2.5 px-4 text-ink-500">{r.remark}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -376,22 +376,22 @@ function ChartCard({
   data?: Record<string, string | number>[];
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-slate-900 mb-4">{title}</h3>
+    <div className="bg-white border border-ink-200 rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-ink-900 mb-4">{title}</h3>
       <div role="img" aria-label={`${title}. The same figures are given in the table below.`}>
         {children}
       </div>
 
       {series && data && data.length > 0 && (
         <details className="mt-3 group">
-          <summary className="cursor-pointer text-[11px] text-slate-500 hover:text-slate-900 select-none">
+          <summary className="cursor-pointer text-[11px] text-ink-500 hover:text-ink-900 select-none">
             Show these figures as a table
           </summary>
           <div className="overflow-x-auto mt-2">
             <table className="w-full text-left text-[11px]">
               <caption className="sr-only">{title}</caption>
               <thead>
-                <tr className="text-slate-500 border-b border-slate-200">
+                <tr className="text-ink-500 border-b border-ink-200">
                   <th scope="col" className="py-1.5 pr-3 font-semibold">Month</th>
                   {series.map((s) => (
                     <th key={s.key} scope="col" className="py-1.5 px-3 font-semibold text-right">
@@ -400,14 +400,14 @@ function ChartCard({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-ink-100">
                 {data.map((row, i) => (
                   <tr key={i}>
-                    <th scope="row" className="py-1.5 pr-3 font-medium text-slate-700">
+                    <th scope="row" className="py-1.5 pr-3 font-medium text-ink-700">
                       {row.name}
                     </th>
                     {series.map((s) => (
-                      <td key={s.key} className="py-1.5 px-3 text-right tabular-nums text-slate-600">
+                      <td key={s.key} className="py-1.5 px-3 text-right tabular-nums text-ink-600">
                         {row[s.key] ?? "-"}
                       </td>
                     ))}

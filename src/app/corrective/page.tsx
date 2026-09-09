@@ -20,7 +20,7 @@ export default function CorrectiveMaintenanceList() {
   const { data: records, loading, error, refresh } = useApi<any[]>("/api/corrective", []);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={AlertTriangle}
@@ -37,72 +37,72 @@ export default function CorrectiveMaintenanceList() {
         />
         {/* Statistics or Status Panel */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Breakdowns</p>
-            <h2 className="text-2xl font-bold text-rose-600 mt-2">
+          <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl">
+            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Active Breakdowns</p>
+            <h2 className="text-2xl font-bold text-danger-600 mt-2">
               {records.filter((r) => r.status === "OPEN" || r.status === "IN_PROGRESS" || r.status === "PENDING_RCA").length}
             </h2>
           </div>
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Supervisor Review</p>
-            <h2 className="text-2xl font-bold text-amber-600 mt-2">
+          <div className="p-4 bg-warn-50 border border-warn-200 rounded-xl">
+            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Pending Supervisor Review</p>
+            <h2 className="text-2xl font-bold text-warn-600 mt-2">
               {records.filter((r) => r.status === "PENDING_APPROVAL").length}
             </h2>
           </div>
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Closed Breakdowns (2026)</p>
-            <h2 className="text-2xl font-bold text-emerald-600 mt-2">
+          <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl">
+            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Closed Breakdowns (2026)</p>
+            <h2 className="text-2xl font-bold text-brand-600 mt-2">
               {records.filter((r) => r.status === "CLOSED").length}
             </h2>
           </div>
         </div>
 
         {/* Breakdown Records List */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           {error && !loading ? (
             <LoadError what="breakdown records" onRetry={refresh} />
           ) : loading ? (
             <TableSkeleton rows={5} cols={4} />
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-ink-200">
               {records.length > 0 ? (
                 records.map((rec) => {
                   const isOpen = rec.status === "OPEN";
                   const isClosed = rec.status === "CLOSED";
                   const isRcaPending = rec.status === "PENDING_RCA" || (isOpen && !rec.rcaTool);
                   return (
-                    <div key={rec.id} className="p-5 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                    <div key={rec.id} className="p-5 hover:bg-ink-50 flex items-center justify-between transition-colors">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-rose-600 font-semibold">{rec.cmrfNumber}</span>
+                          <span className="font-mono text-xs text-danger-600 font-semibold">{rec.cmrfNumber}</span>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
                               isClosed
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
                                 : isRcaPending
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                                ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
+                                : "bg-danger-500/10 text-danger-600 border-danger-500/20"
                             }`}
                           >
                             {isClosed ? "Resolved" : isRcaPending ? "RCA Investigation" : "Open Breakdown"}
                           </span>
                           {rec.urgency === "CRITICAL" && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 border border-rose-500/20 text-[10px] font-semibold uppercase">
+                            <span className="px-2 py-0.5 rounded-full bg-danger-500/10 text-danger-700 border border-danger-500/20 text-[10px] font-semibold uppercase">
                               Production Stop
                             </span>
                           )}
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">{rec.faultDescription || "Unnamed Fault"}</h3>
-                        <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
+                        <h3 className="text-sm font-bold text-ink-900">{rec.faultDescription || "Unnamed Fault"}</h3>
+                        <div className="flex flex-wrap gap-4 text-[11px] text-ink-500">
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-500" /> Reported:{" "}
+                            <Clock className="w-3.5 h-3.5 text-ink-500" /> Reported:{" "}
                             <span className="font-mono">{rec.reportedDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <User className="w-3.5 h-3.5 text-slate-500" /> By: {rec.reportedByName}
+                            <User className="w-3.5 h-3.5 text-ink-500" /> By: {rec.reportedByName}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500" /> Breakdown ID:{" "}
+                            <Calendar className="w-3.5 h-3.5 text-ink-500" /> Breakdown ID:{" "}
                             <span className="font-mono">{rec.breakdownId || "N/A"}</span>
                           </div>
                         </div>

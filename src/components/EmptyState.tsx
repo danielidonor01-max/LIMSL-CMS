@@ -28,12 +28,12 @@ export default function EmptyState({
 }) {
   return (
     <div className="py-14 px-6 flex flex-col items-center justify-center text-center gap-3">
-      <div className="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+      <div className="p-3 rounded-xl bg-ink-50 text-ink-400 border border-ink-200">
         <Icon className="w-6 h-6" />
       </div>
       <div className="max-w-sm">
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        {message && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{message}</p>}
+        <p className="text-sm font-semibold text-ink-900">{title}</p>
+        {message && <p className="text-xs text-ink-500 mt-1 leading-relaxed">{message}</p>}
       </div>
       {(actionLabel || secondaryLabel) && (
         <div className="flex items-center gap-2 flex-wrap justify-center pt-1">

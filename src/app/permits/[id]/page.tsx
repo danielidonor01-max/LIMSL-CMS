@@ -157,16 +157,16 @@ export default function PermitDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      <div className="min-h-screen flex items-center justify-center text-ink-500">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
   }
 
   if (!permit) {
     return (
-      <div className="p-10 text-center text-slate-500">
-        Permit not found. <Link href="/permits" className="text-emerald-600 hover:underline">Back to permits</Link>
+      <div className="p-10 text-center text-ink-500">
+        Permit not found. <Link href="/permits" className="text-brand-600 hover:underline">Back to permits</Link>
       </div>
     );
   }
@@ -184,7 +184,7 @@ export default function PermitDetail() {
   const isDead = permit.status === "CLOSED" || permit.status === "CANCELLED" || permit.status === "EXPIRED";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
       <main className="flex-1 p-6 max-w-4xl w-full mx-auto">
         {/* The filed document. A printed screenshot of this page would not be
             the same paper the pad produces, and the two have to be readable
@@ -197,14 +197,14 @@ export default function PermitDetail() {
 
         <div className="screen-only space-y-6">
         <div className="no-print">
-          <Link href="/permits" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
+          <Link href="/permits" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
             <ArrowLeft className="w-3.5 h-3.5" /> All permits
           </Link>
         </div>
 
         {/* The headline: may work begin or not? */}
         {isPending && (
-          <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900">
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-warn-300 bg-warn-50 text-warn-900">
             <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-bold">Work may NOT begin</p>
@@ -215,7 +215,7 @@ export default function PermitDetail() {
           </div>
         )}
         {isActive && (
-          <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900">
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-brand-300 bg-brand-50 text-brand-900">
             <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-bold">Approved, work is authorised</p>
@@ -227,7 +227,7 @@ export default function PermitDetail() {
           </div>
         )}
         {permit.status === "EXPIRED" && (
-          <div className="flex items-start gap-3 p-4 rounded-xl border border-rose-300 bg-rose-50 text-rose-900">
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-danger-300 bg-danger-50 text-danger-900">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-bold">Permit expired</p>
@@ -237,14 +237,14 @@ export default function PermitDetail() {
         )}
 
         {/* Permit header */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+        <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="font-mono text-sm font-bold text-slate-900">{permit.permitNumber}</span>
+                <span className="font-mono text-sm font-bold text-ink-900">{permit.permitNumber}</span>
                 <Badge className={PERMIT_STATUS_BADGE[permit.status] ?? PERMIT_STATUS_BADGE.DRAFT}>{PERMIT_STATUS_LABELS[permit.status] ?? permit.status}</Badge>
                 {permit.lotoApplied && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-700 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-info-700 bg-info-500/10 border border-info-500/20 rounded-full px-2 py-0.5">
                     <Lock className="w-3 h-3" /> LOTO
                   </span>
                 )}
@@ -253,7 +253,7 @@ export default function PermitDetail() {
                 {permit.equipment?.assetId ? (
                   <Link
                     href={`/equipment/${permit.equipment.assetId.replace(/\//g, "-")}`}
-                    className="font-mono hover:text-emerald-600 hover:underline"
+                    className="font-mono hover:text-brand-600 hover:underline"
                   >
                     {permit.equipment.assetId}
                   </Link>
@@ -265,14 +265,14 @@ export default function PermitDetail() {
             <div className="flex flex-col gap-2 shrink-0 no-print">
               <button
                 onClick={() => window.print()}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-lg text-xs font-semibold"
               >
                 <Printer className="w-4 h-4" /> Print
               </button>
               {canWrite && !isDead && (
                 <button
                   onClick={cancelPermit}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-rose-200 text-rose-700 hover:bg-rose-50 rounded-lg text-xs font-semibold"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-danger-200 text-danger-700 hover:bg-danger-50 rounded-lg text-xs font-semibold"
                 >
                   <XCircle className="w-4 h-4" /> Cancel Permit
                 </button>
@@ -280,7 +280,7 @@ export default function PermitDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-ink-200">
             <Meta icon={<User className="w-3.5 h-3.5" />} label="Permit Holder" value={permit.permitHolderName ?? "-"} strong />
             <Meta
               icon={<Clock className="w-3.5 h-3.5" />}
@@ -300,10 +300,10 @@ export default function PermitDetail() {
 
           {ppe.length > 0 && (
             <div>
-              <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Required PPE</h3>
+              <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">Required PPE</h3>
               <div className="flex flex-wrap gap-2">
                 {ppe.map((p) => (
-                  <span key={p} className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-[11px] text-slate-700 capitalize">
+                  <span key={p} className="px-2 py-1 rounded-md bg-ink-100 border border-ink-200 text-[11px] text-ink-700 capitalize">
                     {p.replace(/([A-Z])/g, " $1")}
                   </span>
                 ))}
@@ -313,15 +313,15 @@ export default function PermitDetail() {
 
           {/* The chain behind this permit. Every signer should be able to walk
               back to the work order that authorised the job. */}
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          <div className="pt-4 border-t border-ink-200">
+            <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">
               Authorising documents
             </h3>
             <div className="flex flex-wrap gap-2">
               {permit.workOrder && (
                 <Link
                   href={`/work-orders/${permit.workOrder.id}`}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-ink-200 bg-white text-ink-700 text-xs font-semibold hover:border-ink-300"
                 >
                   <ClipboardList className="w-3.5 h-3.5" /> {permit.workOrder.workOrderNumber}
                 </Link>
@@ -329,7 +329,7 @@ export default function PermitDetail() {
               {permit.wms && (
                 <Link
                   href={`/wms/${permit.wms.id}`}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-ink-200 bg-white text-ink-700 text-xs font-semibold hover:border-ink-300"
                 >
                   <FileText className="w-3.5 h-3.5" /> {permit.wms.wmsNumber}
                 </Link>
@@ -337,13 +337,13 @@ export default function PermitDetail() {
               {permit.jhaDocument && (
                 <Link
                   href={`/jha/${permit.jhaDocument.id}`}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-brand-200 bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" /> {permit.jhaDocument.jhaNumber}
                 </Link>
               )}
               {!permit.workOrder && !permit.wms && !permit.jhaDocument && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-ink-400">
                   Raised before the document chain was enforced, so it carries no linked documents.
                 </p>
               )}
@@ -352,15 +352,15 @@ export default function PermitDetail() {
 
           {/* Permits either side of this one, when a job ran over several weeks. */}
           {(permit.supersedes || permit.supersededBy) && (
-            <div className="pt-4 border-t border-slate-200">
-              <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <div className="pt-4 border-t border-ink-200">
+              <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">
                 Continuation
               </h3>
               <div className="flex flex-wrap gap-2 text-xs">
                 {permit.supersedes && (
                   <Link
                     href={`/permits/${permit.supersedes.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:border-slate-300"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-ink-200 bg-white text-ink-700 font-semibold hover:border-ink-300"
                   >
                     Continues {permit.supersedes.permitNumber}
                   </Link>
@@ -368,7 +368,7 @@ export default function PermitDetail() {
                 {permit.supersededBy && (
                   <Link
                     href={`/permits/${permit.supersededBy.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:border-slate-300"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-ink-200 bg-white text-ink-700 font-semibold hover:border-ink-300"
                   >
                     Continued under {permit.supersededBy.permitNumber}
                   </Link>
@@ -425,10 +425,10 @@ export default function PermitDetail() {
 function Meta({ icon, label, value, strong }: { icon: React.ReactNode; label: string; value: string; strong?: boolean }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 uppercase tracking-wider">
+      <div className="flex items-center gap-1.5 text-[11px] text-ink-500 uppercase tracking-wider">
         {icon} {label}
       </div>
-      <p className={`mt-1 text-sm ${strong ? "font-bold text-slate-900" : "text-slate-700"}`}>{value}</p>
+      <p className={`mt-1 text-sm ${strong ? "font-bold text-ink-900" : "text-ink-700"}`}>{value}</p>
     </div>
   );
 }
@@ -436,8 +436,8 @@ function Meta({ icon, label, value, strong }: { icon: React.ReactNode; label: st
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{title}</h3>
-      <p className="text-sm text-slate-700 whitespace-pre-wrap">{children}</p>
+      <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">{title}</h3>
+      <p className="text-sm text-ink-700 whitespace-pre-wrap">{children}</p>
     </div>
   );
 }

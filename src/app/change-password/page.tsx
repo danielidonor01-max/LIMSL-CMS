@@ -23,7 +23,7 @@ function Reveal({ show, onToggle }: { show: boolean; onToggle: () => void }) {
     <button
       type="button"
       onClick={onToggle}
-      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-ink-400 hover:text-ink-700 hover:bg-ink-100"
       aria-label={show ? "Hide passwords" : "Show passwords"}
       tabIndex={-1}
     >
@@ -97,33 +97,33 @@ export default function ChangePasswordPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
   }
 
   const inputClass =
-    "w-full px-3.5 py-2.5 pr-11 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all";
+    "w-full px-3.5 py-2.5 pr-11 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-ink-50 flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3">
             <KeyRound className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Change Password</h1>
-          <p className="text-xs text-slate-500 font-mono uppercase tracking-wider mt-0.5">LIMSL CMS Security</p>
+          <h1 className="text-xl font-bold tracking-tight text-ink-900">Change Password</h1>
+          <p className="text-xs text-ink-500 font-mono uppercase tracking-wider mt-0.5">LIMSL CMS Security</p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-ink-200 rounded-2xl p-6 shadow-sm space-y-6">
           {mustChange && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex gap-3 text-amber-800">
-              <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-warn-50 border border-warn-200 flex gap-3 text-warn-800">
+              <ShieldAlert className="w-5 h-5 shrink-0 text-warn-600 mt-0.5" />
               <div className="text-xs">
                 <span className="font-bold">Password update required</span>
-                <p className="text-amber-700 mt-0.5 leading-relaxed">
+                <p className="text-warn-700 mt-0.5 leading-relaxed">
                   You are using a temporary or default password. Please set a new one to continue.
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function ChangePasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Current Password
               </label>
               <div className="relative">
@@ -150,7 +150,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 New Password
               </label>
               <div className="relative">
@@ -168,7 +168,7 @@ export default function ChangePasswordPage() {
               {newPassword.length > 0 && (
                 <ul className="grid grid-cols-2 gap-1.5 mt-2.5">
                   {ruleState.map((r) => (
-                    <li key={r.label} className={`flex items-center gap-1.5 text-[11px] ${r.ok ? "text-emerald-600" : "text-slate-400"}`}>
+                    <li key={r.label} className={`flex items-center gap-1.5 text-[11px] ${r.ok ? "text-brand-600" : "text-ink-400"}`}>
                       {r.ok ? <Check className="w-3 h-3 shrink-0" /> : <X className="w-3 h-3 shrink-0" />}
                       {r.label}
                     </li>
@@ -178,7 +178,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -194,7 +194,7 @@ export default function ChangePasswordPage() {
                 <Reveal show={show} onToggle={() => setShow((v) => !v)} />
               </div>
               {confirmPassword.length > 0 && (
-                <p className={`flex items-center gap-1.5 text-[11px] mt-2 ${matches ? "text-emerald-600" : "text-rose-500"}`}>
+                <p className={`flex items-center gap-1.5 text-[11px] mt-2 ${matches ? "text-brand-600" : "text-danger-500"}`}>
                   {matches ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                   {matches ? "Passwords match" : "Passwords do not match"}
                 </p>
@@ -202,37 +202,37 @@ export default function ChangePasswordPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs">{error}</div>
+              <div className="p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-600 text-xs">{error}</div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {loading ? "Updating password…" : "Update password"}
             </button>
           </form>
 
-          <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
+          <div className="border-t border-ink-100 pt-4 flex items-center justify-between">
             {!mustChange ? (
               <button
                 type="button"
                 onClick={() => router.push("/")}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                className="text-xs font-semibold text-ink-500 hover:text-ink-800 transition-colors"
               >
                 Back to Dashboard
               </button>
             ) : (
-              <div className="text-[11px] text-slate-400">
-                Logged in as <span className="font-semibold text-slate-600">{session?.user?.name}</span>
+              <div className="text-[11px] text-ink-400">
+                Logged in as <span className="font-semibold text-ink-600">{session?.user?.name}</span>
               </div>
             )}
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-danger-600 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               Sign Out

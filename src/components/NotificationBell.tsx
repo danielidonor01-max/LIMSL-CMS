@@ -114,11 +114,11 @@ export default function NotificationBell() {
             ? `Notifications, ${unread} unread`
             : "Notifications, none unread"
         }
-        className="relative grid place-items-center w-10 h-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+        className="relative grid place-items-center w-10 h-10 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100 transition-colors"
       >
         <Bell className="w-5 h-5" />
         {prefs.notifyInApp && unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger-500 text-white text-[10px] font-bold flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

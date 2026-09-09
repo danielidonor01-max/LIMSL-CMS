@@ -29,9 +29,9 @@ const TABS: { key: TabKey; label: string; blurb: string }[] = [
 ];
 
 const ACTION_BADGE: Record<ImportAction, string> = {
-  create: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  update: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  error: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  create: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  update: "bg-info-500/10 text-info-700 border-info-500/20",
+  error: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 export default function DataImportPage() {
@@ -140,17 +140,17 @@ export default function DataImportPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
   if (!canWrite) {
     return (
       <div className="p-10 max-w-md mx-auto text-center space-y-3">
-        <ShieldAlert className="w-10 h-10 text-rose-500 mx-auto" />
-        <h2 className="text-lg font-bold text-slate-900">Access restricted</h2>
-        <p className="text-sm text-slate-500">
+        <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
+        <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+        <p className="text-sm text-ink-500">
           Data import is available to Super Admins only. Your role is{" "}
           <span className="font-semibold">{ROLE_LABELS[role ?? "VIEWER"] ?? role}</span>.
         </p>
@@ -163,23 +163,23 @@ export default function DataImportPage() {
   return (
     <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
+        <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
           <Database className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">Data Import</h2>
-          <p className="text-xs text-slate-500 font-mono">Super Admin · go-live register import (CSV / Excel)</p>
+          <h2 className="text-xl font-bold tracking-tight text-ink-900">Data Import</h2>
+          <p className="text-xs text-ink-500 font-mono">Super Admin · go-live register import (CSV / Excel)</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+      <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => switchTab(t.key)}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-              tab === t.key ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+              tab === t.key ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
             }`}
           >
             {t.label}
@@ -188,14 +188,14 @@ export default function DataImportPage() {
       </div>
 
       {/* Uploader */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-        <p className="text-xs text-slate-500">{active.blurb}</p>
+      <section className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
+        <p className="text-xs text-ink-500">{active.blurb}</p>
 
         <div className="flex flex-wrap items-center gap-3">
           {!isLegacy && (
             <a
               href={`/api/import/${tab}`}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-ink-200 text-ink-700 hover:bg-ink-100"
             >
               <Download className="w-4 h-4" /> Download template
             </a>
@@ -210,7 +210,7 @@ export default function DataImportPage() {
               setPreview(null);
               setCommitted(null);
             }}
-            className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-slate-200 file:bg-slate-50 file:text-slate-700 file:text-xs file:font-semibold hover:file:bg-slate-100"
+            className="text-xs text-ink-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-ink-200 file:bg-ink-50 file:text-ink-700 file:text-xs file:font-semibold hover:file:bg-ink-100"
           />
           <Button variant="secondary" icon={Cloud} onClick={openSharepoint}>
             From SharePoint
@@ -221,11 +221,11 @@ export default function DataImportPage() {
         </div>
 
         {spFile && (
-          <div className="flex items-center gap-2 text-xs bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 w-fit">
-            <FileSpreadsheet className="w-4 h-4 text-sky-600 shrink-0" />
-            <span className="text-slate-800 font-medium">{spFile.name}</span>
-            <span className="text-slate-400">from SharePoint{spFile.lastModified ? ` · updated ${spFile.lastModified.slice(0, 10)}` : ""}</span>
-            <button onClick={() => setSpFile(null)} className="p-1 rounded text-slate-400 hover:text-slate-700" aria-label="Clear SharePoint file">
+          <div className="flex items-center gap-2 text-xs bg-info-50 border border-info-200 rounded-lg px-3 py-2 w-fit">
+            <FileSpreadsheet className="w-4 h-4 text-info-600 shrink-0" />
+            <span className="text-ink-800 font-medium">{spFile.name}</span>
+            <span className="text-ink-400">from SharePoint{spFile.lastModified ? ` · updated ${spFile.lastModified.slice(0, 10)}` : ""}</span>
+            <button onClick={() => setSpFile(null)} className="p-1 rounded text-ink-400 hover:text-ink-700" aria-label="Clear SharePoint file">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -238,30 +238,30 @@ export default function DataImportPage() {
               <SummaryChip tone="emerald" label={`${preview.summary.create} to create`} />
               <SummaryChip tone="sky" label={`${preview.summary.update} to update`} />
               <SummaryChip tone="rose" label={`${preview.summary.error} with errors`} />
-              <span className="text-slate-400">· {preview.summary.total} rows</span>
+              <span className="text-ink-400">· {preview.summary.total} rows</span>
             </div>
 
-            <div className="max-h-80 overflow-auto border border-slate-200 rounded-lg">
+            <div className="max-h-80 overflow-auto border border-ink-200 rounded-lg">
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-slate-50">
-                  <tr className="text-slate-500 border-b border-slate-200">
+                <thead className="sticky top-0 bg-ink-50">
+                  <tr className="text-ink-500 border-b border-ink-200">
                     <th className="py-2 px-3 font-medium">Row</th>
                     <th className="py-2 px-3 font-medium">Record</th>
                     <th className="py-2 px-3 font-medium">Action</th>
                     <th className="py-2 px-3 font-medium">Issues</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-ink-100">
                   {preview.preview.map((p) => (
-                    <tr key={p.row} className={p.action === "error" ? "bg-rose-500/5" : ""}>
-                      <td className="py-2 px-3 font-mono text-slate-400">{p.row}</td>
-                      <td className="py-2 px-3 text-slate-800">{p.label}</td>
+                    <tr key={p.row} className={p.action === "error" ? "bg-danger-500/5" : ""}>
+                      <td className="py-2 px-3 font-mono text-ink-400">{p.row}</td>
+                      <td className="py-2 px-3 text-ink-800">{p.label}</td>
                       <td className="py-2 px-3">
                         <span className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase ${ACTION_BADGE[p.action]}`}>
                           {p.action}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-rose-600">{p.errors.join("; ")}</td>
+                      <td className="py-2 px-3 text-danger-600">{p.errors.join("; ")}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -269,7 +269,7 @@ export default function DataImportPage() {
             </div>
 
             {preview.summary.error > 0 && (
-              <p className="flex items-center gap-1.5 text-xs text-amber-700">
+              <p className="flex items-center gap-1.5 text-xs text-warn-700">
                 <AlertTriangle className="w-4 h-4" /> Rows with errors are skipped. Fix them in your file and re-preview to include them.
               </p>
             )}
@@ -283,7 +283,7 @@ export default function DataImportPage() {
         {/* Commit result */}
         {committed && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-700 text-sm">
               <CheckCircle2 className="w-5 h-5" />
               <span>
                 Imported <strong>{committed.summary.created}</strong> new and updated <strong>{committed.summary.updated}</strong>
@@ -292,23 +292,23 @@ export default function DataImportPage() {
             </div>
 
             {committed.credentials && committed.credentials.length > 0 && (
-              <div className="border border-amber-500/20 bg-amber-500/5 rounded-lg p-4 space-y-2">
-                <p className="text-xs font-semibold text-amber-800">
+              <div className="border border-warn-500/20 bg-warn-500/5 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-warn-800">
                   Temporary passwords for {committed.credentials.length} new user(s), shown once. Share securely; each user must change it on first login.
                 </p>
                 <div className="space-y-1">
                   {committed.credentials.map((c) => (
-                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs font-mono bg-white border border-slate-200 rounded px-2.5 py-1.5">
-                      <span className="text-slate-700">{c.email}</span>
+                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs font-mono bg-white border border-ink-200 rounded px-2.5 py-1.5">
+                      <span className="text-ink-700">{c.email}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-900 font-semibold">{c.tempPassword}</span>
+                        <span className="text-ink-900 font-semibold">{c.tempPassword}</span>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(`${c.email}, ${c.tempPassword}`);
                             setCopied(c.email);
                             setTimeout(() => setCopied(null), 1500);
                           }}
-                          className="text-slate-400 hover:text-emerald-600"
+                          className="text-ink-400 hover:text-brand-600"
                         >
                           {copied === c.email ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
@@ -327,11 +327,11 @@ export default function DataImportPage() {
       {/* SharePoint file picker */}
       <Modal open={spOpen} onClose={() => setSpOpen(false)} title="Import from SharePoint" subtitle="Excel files on the connected site, newest first">
         {spLoading ? (
-          <div className="py-10 flex justify-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          <div className="py-10 flex justify-center text-ink-400">
+            <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
           </div>
         ) : !spFiles || spFiles.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">No Excel files found on the connected site.</p>
+          <p className="py-8 text-center text-sm text-ink-400">No Excel files found on the connected site.</p>
         ) : (
           <div className="max-h-96 overflow-y-auto -mx-1 px-1 space-y-1.5">
             {spFiles.map((f) => (
@@ -345,13 +345,13 @@ export default function DataImportPage() {
                   setCommitted(null);
                   setSpOpen(false);
                 }}
-                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
+                className="w-full text-left p-3 rounded-lg border border-ink-200 hover:border-brand-300 hover:bg-brand-50/40 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-sm font-medium text-slate-900 truncate">{f.name}</span>
+                  <FileSpreadsheet className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span className="text-sm font-medium text-ink-900 truncate">{f.name}</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 ml-6">
+                <p className="text-[11px] text-ink-400 mt-0.5 ml-6">
                   {f.folder && f.folder !== "/" ? `${f.folder} · ` : ""}
                   {f.lastModified ? `updated ${f.lastModified.slice(0, 10)}` : ""}
                   {f.lastModifiedBy ? ` by ${f.lastModifiedBy}` : ""}
@@ -368,9 +368,9 @@ export default function DataImportPage() {
 function SummaryChip({ tone, label }: { tone: "emerald" | "sky" | "rose"; label: string }) {
   const cls =
     tone === "emerald"
-      ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+      ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
       : tone === "sky"
-        ? "bg-sky-500/10 text-sky-700 border-sky-500/20"
-        : "bg-rose-500/10 text-rose-700 border-rose-500/20";
+        ? "bg-info-500/10 text-info-700 border-info-500/20"
+        : "bg-danger-500/10 text-danger-700 border-danger-500/20";
   return <span className={`inline-block px-2.5 py-1 rounded-full border font-semibold ${cls}`}>{label}</span>;
 }

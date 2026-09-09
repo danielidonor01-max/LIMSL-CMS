@@ -106,9 +106,9 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   if (!eq) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-500 font-mono text-xs gap-4">
-        <AlertTriangle className="w-8 h-8 text-rose-500" /> Asset Digital Twin not found.
-        <Link href="/equipment" className="text-emerald-600 underline">Return to Registry</Link>
+      <div className="min-h-screen bg-ink-50 flex flex-col items-center justify-center text-ink-500 font-mono text-xs gap-4">
+        <AlertTriangle className="w-8 h-8 text-danger-500" /> Asset Digital Twin not found.
+        <Link href="/equipment" className="text-brand-600 underline">Return to Registry</Link>
       </div>
     );
   }
@@ -128,22 +128,22 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
     }
   > = {
     OPERATIONAL: {
-      panel: "bg-emerald-50 border-emerald-200",
-      icon: "bg-emerald-500/10 text-emerald-600",
+      panel: "bg-brand-50 border-brand-200",
+      icon: "bg-brand-500/10 text-brand-600",
       Icon: CheckCircle2,
       meaning: "Available for production.",
       action: { label: "Raise Work Order", href: `/work-orders/new?equipmentId=${eq.id}`, icon: ClipboardList },
     },
     UNDER_MAINTENANCE: {
-      panel: "bg-amber-50 border-amber-200",
-      icon: "bg-amber-500/10 text-amber-600",
+      panel: "bg-warn-50 border-warn-200",
+      icon: "bg-warn-500/10 text-warn-600",
       Icon: Wrench,
       meaning: "Work is in progress, not available for production.",
       action: { label: "See open work", href: `/work-orders?equipmentId=${eq.id}`, icon: ClipboardList },
     },
     BROKEN_DOWN: {
-      panel: "bg-rose-50 border-rose-200",
-      icon: "bg-rose-500/10 text-rose-600",
+      panel: "bg-danger-50 border-danger-200",
+      icon: "bg-danger-500/10 text-danger-600",
       Icon: AlertTriangle,
       meaning: "Down and losing production time.",
       action: {
@@ -163,8 +163,8 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
       action: { label: "Check spares", href: `/spares?q=${encodeURIComponent(eq.name ?? "")}`, icon: PackageSearch },
     },
     DECOMMISSIONED: {
-      panel: "bg-slate-100 border-slate-200",
-      icon: "bg-slate-200 text-slate-500",
+      panel: "bg-ink-100 border-ink-200",
+      icon: "bg-ink-200 text-ink-500",
       Icon: Archive,
       meaning: "Retired from service, kept on the register for its history.",
       action: { label: "View history", href: `/equipment/${assetIdKey}/history`, icon: History, variant: "secondary" },
@@ -187,7 +187,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Wrench}
@@ -227,11 +227,11 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <statusView.Icon className={`w-6 h-6 ${isBroken ? "animate-pulse" : ""}`} />
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Current status</p>
-              <h2 className="text-lg font-bold text-slate-900">
+              <p className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold">Current status</p>
+              <h2 className="text-lg font-bold text-ink-900">
                 {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
               </h2>
-              <p className="text-xs text-slate-600 mt-0.5">{statusView.meaning}</p>
+              <p className="text-xs text-ink-600 mt-0.5">{statusView.meaning}</p>
             </div>
           </div>
 
@@ -242,11 +242,11 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         </div>
 
         {/* Tab Headers */}
-        <div className="flex border-b border-slate-200 gap-6 text-xs font-bold uppercase tracking-wider">
+        <div className="flex border-b border-ink-200 gap-6 text-xs font-bold uppercase tracking-wider">
           <button
             onClick={() => setActiveTab("specs")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "specs" ? "text-emerald-600 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+              activeTab === "specs" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
             }`}
           >
             Specifications
@@ -254,7 +254,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <button
             onClick={() => setActiveTab("troubleshooting")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "troubleshooting" ? "text-emerald-600 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+              activeTab === "troubleshooting" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
             }`}
           >
             Diagnostics & BOM
@@ -262,7 +262,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <button
             onClick={() => setActiveTab("safety")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "safety" ? "text-emerald-600 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+              activeTab === "safety" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
             }`}
           >
             Safety & OEM
@@ -270,7 +270,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <button
             onClick={() => setActiveTab("history")}
             className={`pb-2.5 transition-all border-b-2 flex items-center gap-1.5 ${
-              activeTab === "history" ? "text-emerald-600 border-emerald-500" : "text-slate-500 border-transparent hover:text-slate-900"
+              activeTab === "history" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
             }`}
           >
             <History className="w-3.5 h-3.5" /> History Log
@@ -285,48 +285,48 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <ConditionCard equipmentId={eq.id} canWrite={canWrite} />
 
               {/* General Specs */}
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-                <h3 className="text-sm font-bold tracking-wide text-slate-900">Equipment Specifications</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+                <h3 className="text-sm font-bold tracking-wide text-ink-900">Equipment Specifications</h3>
+                <p className="text-xs text-ink-500 leading-relaxed">
                   {eq.notes || "No description recorded for this asset."}
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                  <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
-                    <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Manufacturer</span>
-                    <span className="font-semibold text-slate-900">{eq.oem || "-"}</span>
+                  <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
+                    <span className="text-[10px] text-ink-500 uppercase font-mono block mb-1">Manufacturer</span>
+                    <span className="font-semibold text-ink-900">{eq.oem || "-"}</span>
                   </div>
-                  <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
-                    <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Model</span>
-                    <span className="font-semibold text-slate-900">{eq.model || "-"}</span>
+                  <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
+                    <span className="text-[10px] text-ink-500 uppercase font-mono block mb-1">Model</span>
+                    <span className="font-semibold text-ink-900">{eq.model || "-"}</span>
                   </div>
-                  <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 text-xs">
-                    <span className="text-[10px] text-slate-500 uppercase font-mono block mb-1">Serial Number</span>
-                    <span className="font-semibold text-slate-900 font-mono">{eq.serialNumber || "-"}</span>
+                  <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
+                    <span className="text-[10px] text-ink-500 uppercase font-mono block mb-1">Serial Number</span>
+                    <span className="font-semibold text-ink-900 font-mono">{eq.serialNumber || "-"}</span>
                   </div>
                 </div>
               </div>
 
               {/* Basic History */}
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-                <h3 className="text-sm font-bold tracking-wide text-slate-900">Maintenance Diagnostics</h3>
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+                <h3 className="text-sm font-bold tracking-wide text-ink-900">Maintenance Diagnostics</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
+                    <div className="p-2 bg-ink-100 rounded-lg text-ink-500">
                       <Clock className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
-                      <p className="text-slate-500 font-mono text-[9px] uppercase">Last Completed PM</p>
-                      <p className="font-bold text-slate-900">{eq.lastMaintenanceDate || "-"}</p>
+                      <p className="text-ink-500 font-mono text-[9px] uppercase">Last Completed PM</p>
+                      <p className="font-bold text-ink-900">{eq.lastMaintenanceDate || "-"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
+                    <div className="p-2 bg-ink-100 rounded-lg text-ink-500">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
-                      <p className="text-slate-500 font-mono text-[9px] uppercase">Next Scheduled PM</p>
-                      <p className={`font-bold ${isBroken ? "text-rose-600" : "text-slate-900"}`}>{eq.nextMaintenanceDate || "-"}</p>
+                      <p className="text-ink-500 font-mono text-[9px] uppercase">Next Scheduled PM</p>
+                      <p className={`font-bold ${isBroken ? "text-danger-600" : "text-ink-900"}`}>{eq.nextMaintenanceDate || "-"}</p>
                     </div>
                   </div>
                 </div>
@@ -335,20 +335,20 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
             {/* Sidebar quick facts */}
             <div className="space-y-6">
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
-                <h3 className="text-sm font-bold tracking-wide text-slate-900">Asset Facts</h3>
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
+                <h3 className="text-sm font-bold tracking-wide text-ink-900">Asset Facts</h3>
                 <div className="space-y-3 text-xs">
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Bay Location</span>
-                    <span className="font-semibold text-slate-900">{eq.location || "-"}</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Bay Location</span>
+                    <span className="font-semibold text-ink-900">{eq.location || "-"}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Criticality</span>
-                    <span className="font-semibold text-slate-900">{eq.criticality || "-"}</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Criticality</span>
+                    <span className="font-semibold text-ink-900">{eq.criticality || "-"}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
-                    <span className="text-slate-500">Frequency</span>
-                    <span className="font-semibold text-slate-900">{eq.maintenanceFrequency || "-"}</span>
+                  <div className="flex justify-between border-b border-ink-200 pb-2">
+                    <span className="text-ink-500">Frequency</span>
+                    <span className="font-semibold text-ink-900">{eq.maintenanceFrequency || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -361,29 +361,29 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: BOM components list */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-bold tracking-wide text-slate-900">Component Bill of Materials (BOM)</h3>
-                  <span className="text-[10px] text-slate-500 font-mono">{components.length} components registered</span>
+                  <h3 className="text-sm font-bold tracking-wide text-ink-900">Component Bill of Materials (BOM)</h3>
+                  <span className="text-[10px] text-ink-500 font-mono">{components.length} components registered</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {components.map((comp) => {
                     return (
-                      <div key={comp.id} className="p-4 bg-slate-100 border border-slate-200 rounded-lg space-y-3">
+                      <div key={comp.id} className="p-4 bg-ink-100 border border-ink-200 rounded-lg space-y-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono text-[9px] font-bold text-emerald-600">
+                            <span className="px-2 py-0.5 rounded bg-white border border-ink-200 font-mono text-[9px] font-bold text-brand-600">
                               {comp.componentTag}
                             </span>
-                            <h4 className="text-xs font-bold text-slate-900 mt-1">{comp.name}</h4>
+                            <h4 className="text-xs font-bold text-ink-900 mt-1">{comp.name}</h4>
                           </div>
-                          <span className="text-[9px] uppercase font-mono text-slate-500">{comp.type}</span>
+                          <span className="text-[9px] uppercase font-mono text-ink-500">{comp.type}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 space-y-1 font-mono leading-tight">
-                          <p><span className="text-slate-600">Location:</span> {comp.location || "N/A"}</p>
-                          <p><span className="text-slate-600">Ref Drawing:</span> {comp.schematicReference || "N/A"}</p>
+                        <div className="text-[10px] text-ink-500 space-y-1 font-mono leading-tight">
+                          <p><span className="text-ink-600">Location:</span> {comp.location || "N/A"}</p>
+                          <p><span className="text-ink-600">Ref Drawing:</span> {comp.schematicReference || "N/A"}</p>
                           {comp.manufacturer && (
-                            <p><span className="text-slate-600">Part:</span> {comp.manufacturer} ({comp.modelNumber})</p>
+                            <p><span className="text-ink-600">Part:</span> {comp.manufacturer} ({comp.modelNumber})</p>
                           )}
                         </div>
                       </div>
@@ -396,8 +396,8 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             {/* Right Column: Step-by-step diagnostic hint card blocks */}
             <div className="space-y-6">
               {isBroken && guides.length > 0 ? (
-                <div className="p-5 bg-rose-50 border border-rose-200 rounded-xl space-y-4">
-                  <div className="flex items-center gap-2 text-rose-600">
+                <div className="p-5 bg-danger-50 border border-danger-200 rounded-xl space-y-4">
+                  <div className="flex items-center gap-2 text-danger-600">
                     <ShieldAlert className="w-5 h-5 animate-pulse" />
                     <h3 className="text-sm font-bold tracking-wide">Suggested Diagnostic Path</h3>
                   </div>
@@ -407,15 +407,15 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     return (
                       <div key={guide.id} className="space-y-4">
                         <div className="text-xs">
-                          <p className="font-semibold text-slate-900">Symptom: "{guide.symptom}"</p>
-                          <p className="text-slate-500 mt-1">**Probable Cause:** {guide.probableCause}</p>
+                          <p className="font-semibold text-ink-900">Symptom: "{guide.symptom}"</p>
+                          <p className="text-ink-500 mt-1">**Probable Cause:** {guide.probableCause}</p>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Verification Checklist</span>
+                          <span className="text-[10px] font-bold text-ink-500 uppercase tracking-wide block">Verification Checklist</span>
                           <div className="space-y-1.5">
                             {steps.map((step: string, i: number) => (
-                              <label key={i} className="flex gap-2 items-start text-xs text-slate-600 select-none">
-                                <input type="checkbox" className="rounded border-slate-200 bg-white text-rose-500 focus:ring-0 w-3.5 h-3.5 mt-0.5" />
+                              <label key={i} className="flex gap-2 items-start text-xs text-ink-600 select-none">
+                                <input type="checkbox" className="rounded border-ink-200 bg-white text-danger-500 focus:ring-0 w-3.5 h-3.5 mt-0.5" />
                                 <span>{step}</span>
                               </label>
                             ))}
@@ -424,7 +424,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
                         <Link
                           href={`/equipment/${assetIdKey}/troubleshoot`}
-                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md"
+                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold transition-all shadow-md"
                         >
                           <BookOpen className="w-4 h-4" /> Open Troubleshooting Wizard
                         </Link>
@@ -433,15 +433,15 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   })}
                 </div>
               ) : (
-                <div className="p-5 bg-slate-100 border border-slate-200 rounded-xl text-center space-y-2">
-                  <Info className="w-6 h-6 text-slate-500 mx-auto" />
-                  <h4 className="text-xs font-bold text-slate-700">No Active Faults</h4>
-                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                <div className="p-5 bg-ink-100 border border-ink-200 rounded-xl text-center space-y-2">
+                  <Info className="w-6 h-6 text-ink-500 mx-auto" />
+                  <h4 className="text-xs font-bold text-ink-700">No Active Faults</h4>
+                  <p className="text-[10px] text-ink-500 leading-relaxed">
                     Machinery is operational. You can view registered schematics and BOM list, or launch the manual wizard.
                   </p>
                   <Link
                     href={`/equipment/${assetIdKey}/troubleshoot`}
-                    className="mt-3 w-full flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-all"
+                    className="mt-3 w-full flex items-center justify-center gap-1 py-1.5 bg-ink-100 hover:bg-ink-200 border border-ink-200 text-ink-700 rounded text-[11px] font-semibold transition-all"
                   >
                     Launch Guide Wizard
                   </Link>
@@ -455,12 +455,12 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         {activeTab === "safety" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-3">
-                <div className="flex items-center gap-2 text-emerald-600">
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-3">
+                <div className="flex items-center gap-2 text-brand-600">
                   <ShieldCheck className="w-5 h-5" />
                   <h3 className="text-sm font-bold tracking-wide">Safety & Compliance</h3>
                 </div>
-                <ul className="list-disc pl-4 text-xs text-slate-600 space-y-2 leading-relaxed">
+                <ul className="list-disc pl-4 text-xs text-ink-600 space-y-2 leading-relaxed">
                   {safetyMeasures.map((measure, i) => (
                     <li key={i}>{measure}</li>
                   ))}
@@ -469,13 +469,13 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
             </div>
 
             <div className="space-y-6">
-              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-3">
-                <h3 className="text-sm font-bold tracking-wide text-slate-900">Warranty Coverage</h3>
+              <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-3">
+                <h3 className="text-sm font-bold tracking-wide text-ink-900">Warranty Coverage</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Status</span>
+                    <span className="text-ink-500">Status</span>
                     <span className={`font-semibold ${
-                      eq.warrantyExpiry && new Date(eq.warrantyExpiry) >= new Date() ? "text-emerald-600" : "text-slate-500"
+                      eq.warrantyExpiry && new Date(eq.warrantyExpiry) >= new Date() ? "text-brand-600" : "text-ink-500"
                     }`}>
                       {eq.warrantyExpiry
                         ? (new Date(eq.warrantyExpiry) >= new Date() ? "In warranty" : "Expired")
@@ -483,10 +483,10 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Expiry</span>
-                    <span className="font-semibold text-slate-900">{eq.warrantyExpiry || "-"}</span>
+                    <span className="text-ink-500">Expiry</span>
+                    <span className="font-semibold text-ink-900">{eq.warrantyExpiry || "-"}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
+                  <p className="text-[10px] text-ink-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
                 </div>
               </div>
             </div>
@@ -494,11 +494,11 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         )}
 
         {activeTab === "history" && (
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="bg-white border border-ink-200 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <History className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold tracking-wide text-slate-900">Machine History Log</h3>
-              <span className="text-[11px] text-slate-400">every action recorded on this asset</span>
+              <History className="w-4 h-4 text-brand-600" />
+              <h3 className="text-sm font-bold tracking-wide text-ink-900">Machine History Log</h3>
+              <span className="text-[11px] text-ink-400">every action recorded on this asset</span>
             </div>
             <EquipmentLog assetId={assetIdKey} canWrite={canWrite} />
           </div>

@@ -36,10 +36,10 @@ const parseList = (raw: string | null): string[] => {
 };
 
 function Mark({ state }: { state: TriState | undefined }) {
-  if (state === "YES") return <Check className="w-4 h-4 text-emerald-600" aria-label="Yes" />;
-  if (state === "NO") return <X className="w-4 h-4 text-rose-500" aria-label="No" />;
-  if (state === "NA") return <Minus className="w-4 h-4 text-slate-400" aria-label="Not applicable" />;
-  return <span className="text-slate-300 text-xs">not marked</span>;
+  if (state === "YES") return <Check className="w-4 h-4 text-brand-600" aria-label="Yes" />;
+  if (state === "NO") return <X className="w-4 h-4 text-danger-500" aria-label="No" />;
+  if (state === "NA") return <Minus className="w-4 h-4 text-ink-400" aria-label="Not applicable" />;
+  return <span className="text-ink-300 text-xs">not marked</span>;
 }
 
 function Checklist({
@@ -53,13 +53,13 @@ function Checklist({
 }) {
   return (
     <div>
-      <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{title}</h4>
-      <ul className="border border-slate-200 rounded-lg divide-y divide-slate-100 overflow-hidden">
+      <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</h4>
+      <ul className="border border-ink-200 rounded-lg divide-y divide-ink-100 overflow-hidden">
         {items.map((i) => (
           <li key={i.key} className="flex items-center justify-between gap-3 px-3 py-1.5">
             <span
               className={`text-xs ${
-                marks[i.key] === "YES" ? "text-slate-900" : "text-slate-500"
+                marks[i.key] === "YES" ? "text-ink-900" : "text-ink-500"
               }`}
             >
               {i.label}
@@ -106,16 +106,16 @@ export default function PermitFace({
   if (types.length === 0 && anyMarks === 0) return null;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">The permit face</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <h3 className="text-sm font-semibold text-ink-900">The permit face</h3>
+          <p className="text-[11px] text-ink-500 mt-0.5">
             As marked when the permit was raised. These are what the signatures attest to.
           </p>
         </div>
         {permit.taskNo && (
-          <span className="text-[10px] font-mono text-slate-500 border border-slate-200 rounded px-2 py-1 shrink-0">
+          <span className="text-[10px] font-mono text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
             Task {permit.taskNo}
           </span>
         )}
@@ -126,7 +126,7 @@ export default function PermitFace({
           {PERMIT_WORK_TYPES.filter((t) => types.includes(t.value)).map((t) => (
             <span
               key={t.value}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-900 text-white"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-ink-900 text-white"
             >
               {t.value === "HOT_WORK" && <Flame className="w-3 h-3" />}
               {t.label}
@@ -161,10 +161,10 @@ export default function PermitFace({
 
       {permit.additionalRequirements && (
         <div className="pt-2">
-          <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">
             Additional requirements
           </h4>
-          <p className="text-xs text-slate-700 whitespace-pre-line">{permit.additionalRequirements}</p>
+          <p className="text-xs text-ink-700 whitespace-pre-line">{permit.additionalRequirements}</p>
         </div>
       )}
     </div>
@@ -174,8 +174,8 @@ export default function PermitFace({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
-      <p className="text-slate-800 mt-0.5">{value || "-"}</p>
+      <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">{label}</p>
+      <p className="text-ink-800 mt-0.5">{value || "-"}</p>
     </div>
   );
 }

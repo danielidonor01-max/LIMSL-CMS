@@ -7,18 +7,32 @@ phase). Read alongside `AGENTS.md` (hard rules) — notably: no native `alert()`
 
 ## Palette
 
+Colour is named by **role**, never by pigment. Write `bg-brand-600`, never
+`bg-emerald-600`. The ramps are defined once in `src/app/globals.css` and a
+reskin is an edit to that one file.
+
 | Role | Token | Use |
 |---|---|---|
-| Accent / primary | `emerald-600` (hover `emerald-500`), text `emerald-700` | Primary buttons, active nav, links, focus |
-| Neutral surface | `white` on `slate-50` page bg | Cards, panels |
-| Text | `slate-900` (primary), `slate-500` (secondary), `slate-400` (muted) | — |
-| Borders | `slate-200` | Cards, inputs, dividers |
-| Danger | `rose-600` / `rose-500` | Destructive, breakdowns |
-| Warning | `amber-500/600` | Pending, due-soon |
-| Info | `sky-500/600` | Scheduled, neutral emphasis |
+| Accent / primary | `brand-600` (hover `brand-500`), text `brand-700` | Primary buttons, active nav, links, focus |
+| Neutral surface | `surface` on `canvas` page bg | Cards, panels |
+| Text | `ink-900` (primary), `ink-500` (secondary), `ink-400` (muted) | — |
+| Borders | `line`, or `ink-200` where a shade is needed | Cards, inputs, dividers |
+| Danger | `danger-600` / `danger-500` | Destructive, breakdowns |
+| Warning | `warn-500/600` | Pending, due-soon |
+| Info | `info-500/600` | Scheduled, neutral emphasis |
 
-Status tints follow the `bg-<c>-500/10 text-<c>-600 border-<c>-500/20` pill formula.
-**Green buttons always use `text-white`** (never dark text).
+Every role carries a full `50…950` ramp. Status tints follow the
+`bg-<role>-500/10 text-<role>-600 border-<role>-500/20` pill formula.
+**Brand buttons always use `text-white`** (never dark text).
+
+Four tests in `src/lib/__tests__/design-tokens.test.ts` enforce this: naming a
+retired palette fails the build, and so does referencing a token that was never
+declared. That second one matters because such a utility emits no CSS rule at
+all, so the element loses its colour while the build and the typecheck both
+pass.
+
+`violet`, `teal` and `orange` remain raw. They are categorical identity colours
+for roles rather than system states; see `docs/DESIGN-BRIEF.md`.
 
 ## Type scale
 

@@ -207,7 +207,7 @@ function SparesRegister() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
         <PageHeader
           icon={Package}
@@ -233,41 +233,41 @@ function SparesRegister() {
         {/* The point of the register, stated up front. */}
         {!loading && spares.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-xl border ${atRiskCount ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Parts below minimum</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{atRiskCount}</p>
-              <p className="text-[11px] text-slate-600 mt-1">of {spares.length} on the register</p>
+            <div className={`p-4 rounded-xl border ${atRiskCount ? "bg-danger-50 border-danger-200" : "bg-brand-50 border-brand-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Parts below minimum</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">{atRiskCount}</p>
+              <p className="text-[11px] text-ink-600 mt-1">of {spares.length} on the register</p>
             </div>
-            <div className={`p-4 rounded-xl border ${exposureDays > 0 ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Days already committed</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{exposureDays}</p>
-              <p className="text-[11px] text-slate-600 mt-1">
+            <div className={`p-4 rounded-xl border ${exposureDays > 0 ? "bg-warn-50 border-warn-200" : "bg-brand-50 border-brand-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Days already committed</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">{exposureDays}</p>
+              <p className="text-[11px] text-ink-600 mt-1">
                 Production days lost if each machine with an empty shelf failed today
               </p>
             </div>
-            <div className="p-4 rounded-xl border bg-white border-slate-200">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">On order</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{spares.filter((s) => s.onOrder).length}</p>
-              <p className="text-[11px] text-slate-600 mt-1">A purchase order is not a spare, the wait is unchanged</p>
+            <div className="p-4 rounded-xl border bg-white border-ink-200">
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">On order</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">{spares.filter((s) => s.onOrder).length}</p>
+              <p className="text-[11px] text-ink-600 mt-1">A purchase order is not a spare, the wait is unchanged</p>
             </div>
           </div>
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search part, machine or bin…"
-              className="w-full bg-white border border-slate-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+              className="w-full bg-white border border-ink-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
           </div>
           <button
             onClick={() => setRiskOnly((v) => !v)}
             aria-pressed={riskOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-              riskOnly ? "bg-rose-50 border-rose-300 text-rose-700" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+              riskOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
             }`}
           >
             <AlertTriangle className="w-4 h-4" />
@@ -275,7 +275,7 @@ function SparesRegister() {
           </button>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           {error && !loading ? (
             <LoadError what="the spares register" onRetry={refresh} />
           ) : loading ? (
@@ -309,7 +309,7 @@ function SparesRegister() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                  <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
                     <th className="py-3 px-4 font-semibold">Part</th>
                     <th className="py-3 px-4 font-semibold">Held for</th>
                     <th className="py-3 px-4 font-semibold text-center">On hand</th>
@@ -319,14 +319,14 @@ function SparesRegister() {
                     {canWrite && <th className="py-3 px-4 font-semibold text-right">Stock move</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-ink-200">
                   {filtered.map((s) => {
                     const reorder = reorderQuantity(s.quantityOnHand, s.minimumQuantity, s.maximumQuantity);
                     return (
-                      <tr key={s.id} className="hover:bg-slate-50">
+                      <tr key={s.id} className="hover:bg-ink-50">
                         <td className="py-3 px-4">
-                          <p className="font-semibold text-slate-900">{s.name}</p>
-                          <p className="font-mono text-[10px] text-slate-500 mt-0.5">
+                          <p className="font-semibold text-ink-900">{s.name}</p>
+                          <p className="font-mono text-[10px] text-ink-500 mt-0.5">
                             {s.partNumber}
                             {s.binLocation ? ` · bin ${s.binLocation}` : ""}
                           </p>
@@ -334,27 +334,27 @@ function SparesRegister() {
                         <td className="py-3 px-4">
                           {s.equipmentName ? (
                             <>
-                              <p className="text-slate-700">{s.equipmentName}</p>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
+                              <p className="text-ink-700">{s.equipmentName}</p>
+                              <p className="text-[10px] text-ink-500 mt-0.5">
                                 {s.assetId}
                                 {s.equipmentCriticality ? ` · ${CRITICALITY_SHORT[s.equipmentCriticality]}` : ""}
                               </p>
                             </>
                           ) : (
-                            <span className="text-slate-500">General stock</span>
+                            <span className="text-ink-500">General stock</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-center font-semibold text-slate-900">
+                        <td className="py-3 px-4 text-center font-semibold text-ink-900">
                           {s.quantityOnHand}
-                          <span className="text-slate-400 font-normal"> {s.unit}</span>
+                          <span className="text-ink-400 font-normal"> {s.unit}</span>
                         </td>
-                        <td className="py-3 px-4 text-center text-slate-500">{s.minimumQuantity}</td>
+                        <td className="py-3 px-4 text-center text-ink-500">{s.minimumQuantity}</td>
                         <td className="py-3 px-4">
                           <Badge className={STOCK_LEVEL_BADGE[s.risk?.level] ?? ""}>
                             {STOCK_LEVEL_LABELS[s.risk?.level] ?? "-"}
                           </Badge>
                           {reorder > 0 && (
-                            <p className="text-[10px] text-slate-500 mt-1">
+                            <p className="text-[10px] text-ink-500 mt-1">
                               Order {reorder} {s.unit}
                               {s.onOrder ? " · on order" : ""}
                             </p>
@@ -362,13 +362,13 @@ function SparesRegister() {
                         </td>
                         <td className="py-3 px-4 max-w-[260px]">
                           {s.risk?.exposureDays > 0 ? (
-                            <span className="text-rose-700 font-semibold">
+                            <span className="text-danger-700 font-semibold">
                               {s.risk.exposureDays} day{s.risk.exposureDays === 1 ? "" : "s"} down
                             </span>
                           ) : s.risk?.atRisk ? (
-                            <span className="text-amber-700">Cover on the shelf, but reorder</span>
+                            <span className="text-warn-700">Cover on the shelf, but reorder</span>
                           ) : (
-                            <span className="text-slate-400">Covered</span>
+                            <span className="text-ink-400">Covered</span>
                           )}
                         </td>
                         {canWrite && (
@@ -377,21 +377,21 @@ function SparesRegister() {
                               <button
                                 onClick={() => setMovement({ spare: s, type: "ISSUE", qty: "1", reason: "" })}
                                 title="Issue to a job"
-                                className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                                className="p-2 rounded-lg text-ink-500 hover:text-danger-600 hover:bg-danger-50"
                               >
                                 <ArrowUpFromLine className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => setMovement({ spare: s, type: "RECEIPT", qty: String(reorder || 1), reason: "" })}
                                 title="Receive stock"
-                                className="p-2 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
+                                className="p-2 rounded-lg text-ink-500 hover:text-brand-600 hover:bg-brand-50"
                               >
                                 <ArrowDownToLine className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => setMovement({ spare: s, type: "ADJUSTMENT", qty: String(s.quantityOnHand), reason: "" })}
                                 title="Correct after a stock count"
-                                className="p-2 rounded-lg text-slate-500 hover:text-sky-600 hover:bg-sky-50"
+                                className="p-2 rounded-lg text-ink-500 hover:text-info-600 hover:bg-info-50"
                               >
                                 <Scale className="w-4 h-4" />
                               </button>
@@ -434,7 +434,7 @@ function SparesRegister() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-ink-500 mt-1">
                 Linking it to a machine is what lets the register grade the risk by that machine&apos;s criticality.
               </p>
             </div>
@@ -465,7 +465,7 @@ function SparesRegister() {
                 <input id="sp-lead" inputMode="decimal" value={form.leadTimeDays} onChange={(e) => set("leadTimeDays", e.target.value)} placeholder="e.g. 21" className={FIELD_CLASS} />
               </Field>
             </div>
-            <p className="text-[11px] text-slate-500 -mt-1">
+            <p className="text-[11px] text-ink-500 -mt-1">
               The lead time is how long the machine stays down if this part is not on the shelf. Without it the register
               can flag a shortfall but cannot tell you what it costs.
             </p>
@@ -503,7 +503,7 @@ function SparesRegister() {
                 />
               </Field>
               {movement.type === "ADJUSTMENT" && (
-                <p className="text-[11px] text-slate-500 -mt-2">
+                <p className="text-[11px] text-ink-500 -mt-2">
                   This sets the balance to what you actually counted, rather than adding or removing an amount.
                 </p>
               )}

@@ -50,7 +50,7 @@ export default function LocationField({
           onChange={(e) => onChange(e.target.value)}
           placeholder="New location name…"
           aria-label={ariaLabel}
-          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+          className="w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
         />
         {known.length > 0 && (
           <button
@@ -59,7 +59,7 @@ export default function LocationField({
               setFreeform(false);
               onChange("");
             }}
-            className="text-[11px] text-emerald-600 hover:underline"
+            className="text-[11px] text-brand-600 hover:underline"
           >
             Choose an existing location instead
           </button>

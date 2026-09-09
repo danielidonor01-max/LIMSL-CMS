@@ -71,8 +71,8 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-400">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-400">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -80,12 +80,12 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
   if (!eq) {
     return (
       <div className="p-8 max-w-md mx-auto text-center space-y-3">
-        <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto" />
-        <p className="text-sm font-semibold text-slate-900">Machine not found</p>
-        <p className="text-xs text-slate-500">
+        <AlertTriangle className="w-8 h-8 text-danger-500 mx-auto" />
+        <p className="text-sm font-semibold text-ink-900">Machine not found</p>
+        <p className="text-xs text-ink-500">
           The code on this label doesn&apos;t match a machine in the register.
         </p>
-        <Link href="/equipment" className="text-xs text-emerald-700 hover:underline">
+        <Link href="/equipment" className="text-xs text-brand-700 hover:underline">
           Open the equipment register
         </Link>
       </div>
@@ -123,26 +123,26 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
   ];
 
   const toneMap = {
-    rose: "bg-rose-50 text-rose-600 border-rose-200",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    rose: "bg-danger-50 text-danger-600 border-danger-200",
+    emerald: "bg-brand-50 text-brand-600 border-brand-200",
     violet: "bg-violet-50 text-violet-600 border-violet-200",
   };
 
   return (
     <div className="p-4 sm:p-6 max-w-lg w-full mx-auto space-y-5">
       {/* Which machine you're standing at, confirm before acting. */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="bg-white border border-ink-200 rounded-xl p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 truncate">{eq.name}</h1>
-            <p className="text-xs font-mono text-slate-500 mt-0.5">{eq.assetId}</p>
+            <h1 className="text-lg font-bold tracking-tight text-ink-900 truncate">{eq.name}</h1>
+            <p className="text-xs font-mono text-ink-500 mt-0.5">{eq.assetId}</p>
           </div>
           <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
             {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
           </Badge>
         </div>
         {(eq.location || eq.bay) && (
-          <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+          <p className="text-xs text-ink-500 mt-2 flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
             {[eq.location, eq.bay].filter(Boolean).join(" · ")}
           </p>
@@ -156,16 +156,16 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
             <Link
               key={a.title}
               href={a.href}
-              className="flex items-center gap-4 bg-white border border-slate-200 rounded-xl p-4 min-h-[76px] hover:border-emerald-300 hover:shadow-sm active:scale-[0.99] transition-all group"
+              className="flex items-center gap-4 bg-white border border-ink-200 rounded-xl p-4 min-h-[76px] hover:border-brand-300 hover:shadow-sm active:scale-[0.99] transition-all group"
             >
               <div className={`p-3 rounded-xl border shrink-0 ${toneMap[a.tone]}`}>
                 <Icon className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold text-slate-900 leading-tight">{a.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5 leading-snug">{a.desc}</p>
+                <p className="text-base font-semibold text-ink-900 leading-tight">{a.title}</p>
+                <p className="text-xs text-ink-500 mt-0.5 leading-snug">{a.desc}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 shrink-0 transition-colors" />
+              <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-brand-500 shrink-0 transition-colors" />
             </Link>
           );
         })}
@@ -173,7 +173,7 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
 
       <Link
         href={`/equipment/${assetId}`}
-        className="flex items-center justify-center gap-2 min-h-11 text-xs font-semibold text-slate-500 hover:text-slate-900"
+        className="flex items-center justify-center gap-2 min-h-11 text-xs font-semibold text-ink-500 hover:text-ink-900"
       >
         <Layers className="w-4 h-4" /> Open the full machine record
       </Link>

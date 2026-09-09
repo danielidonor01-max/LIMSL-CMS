@@ -69,7 +69,7 @@ export default function RootLayout({
           />
         ))}
       </head>
-      <body className="min-h-full bg-slate-50 text-slate-900 font-sans">
+      <body className="min-h-full bg-ink-50 text-ink-900 font-sans">
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

@@ -134,18 +134,18 @@ export default function Sidebar({
     <>
       {/* Mobile backdrop */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" onClick={onClose} aria-hidden="true" />
+        <div className="fixed inset-0 z-40 bg-ink-900/40 lg:hidden" onClick={onClose} aria-hidden="true" />
       )}
       <aside
         aria-label="Main navigation"
         role={mobileOpen ? "dialog" : undefined}
         aria-modal={mobileOpen ? true : undefined}
-        className={`w-60 shrink-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50
+        className={`w-60 shrink-0 h-screen bg-white border-r border-ink-200 flex flex-col z-50
           fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
           lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
           ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
       >
-      <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 border-b border-slate-200 shrink-0">
+      <Link href="/" onClick={onClose} className="flex items-center gap-2.5 px-5 h-14 border-b border-ink-200 shrink-0">
         <Image
           src="/brand/logo-80.png"
           alt=""
@@ -155,8 +155,8 @@ export default function Sidebar({
           className="w-8 h-8 rounded-lg shrink-0"
         />
         <div>
-          <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-none">LIMSL CMS</h1>
-          <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">
+          <h1 className="text-sm font-bold tracking-tight text-ink-900 leading-none">LIMSL CMS</h1>
+          <p className="text-[10px] text-ink-500 font-medium tracking-wide uppercase mt-0.5">
             Maintenance Portal
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function Sidebar({
         {sections.map((s, si) => (
           <div key={s.section ?? `s-${si}`} className="space-y-0.5">
             {s.section && (
-              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
                 {s.section}
               </p>
             )}
@@ -181,11 +181,11 @@ export default function Sidebar({
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 px-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm font-medium transition-all ${
                     active
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                      ? "bg-brand-50 text-brand-700 border border-brand-200"
+                      : "text-ink-600 hover:text-ink-900 hover:bg-ink-100 border border-transparent"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-emerald-600" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-600" : "text-ink-400"}`} />
                   {item.label}
                 </Link>
               );

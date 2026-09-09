@@ -116,7 +116,7 @@ export default function NewEquipmentPage() {
         backLabel="Back to registry"
       />
 
-      <form onSubmit={submit} className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+      <form onSubmit={submit} className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
         {/* What kind of asset, decided first, because it drives everything below */}
         <fieldset>
           <legend className={LABEL_CLASS}>What are you adding?</legend>
@@ -131,23 +131,23 @@ export default function NewEquipmentPage() {
                   onClick={() => chooseType(p)}
                   className={`text-left p-4 rounded-xl border transition-colors ${
                     active
-                      ? "border-emerald-500 bg-emerald-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-brand-500 bg-brand-50"
+                      : "border-ink-200 bg-white hover:border-ink-300"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span
                       className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded ${
-                        active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"
+                        active ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-500"
                       }`}
                     >
                       {p}
                     </span>
-                    <span className={`text-sm font-semibold ${active ? "text-emerald-900" : "text-slate-700"}`}>
+                    <span className={`text-sm font-semibold ${active ? "text-brand-900" : "text-ink-700"}`}>
                       {ASSET_PREFIX_META[p].label}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
+                  <p className="text-[11px] text-ink-500 mt-1.5 leading-snug">
                     {ASSET_PREFIX_META[p].help}
                   </p>
                 </button>
@@ -172,13 +172,13 @@ export default function NewEquipmentPage() {
               onClick={() => generateId(assetType)}
               disabled={genLoading}
               title="Generate next available code"
-              className="inline-flex items-center gap-1.5 px-3 min-h-11 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 min-h-11 border border-ink-200 rounded-lg text-xs font-semibold text-ink-600 hover:bg-ink-100 shrink-0"
             >
               {genLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Regenerate
             </button>
           </div>
-          <p className="text-[10px] text-slate-500 mt-1">
+          <p className="text-[10px] text-ink-500 mt-1">
             Next free code in the LEE/{assetType}/ series. Editable, a duplicate is refused on save.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function NewEquipmentPage() {
             <Select value={form.criticality} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{CRITICALITY_LABELS[c]}</option>)}
             </Select>
-            <p className="text-[10px] text-slate-500 mt-1">
+            <p className="text-[10px] text-ink-500 mt-1">
               Sets the default service interval, work-order priority and how early overdue work escalates.
             </p>
           </div>
@@ -256,7 +256,7 @@ export default function NewEquipmentPage() {
               {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{FREQUENCY_LABELS[fq] ?? fq}</option>)}
             </Select>
             {form.maintenanceFrequency !== suggestedPmFrequency(form.criticality) && (
-              <p className="text-[10px] text-amber-700 mt-1">
+              <p className="text-[10px] text-warn-700 mt-1">
                 {CRITICALITY_SHORT[form.criticality]} criticality normally means{" "}
                 {(FREQUENCY_LABELS[suggestedPmFrequency(form.criticality)] ?? "").toLowerCase()}.
               </p>

@@ -75,10 +75,10 @@ export default function MeterCard({
   const st = data.state;
   const barTone =
     st.status === "OVERDUE" || st.status === "DUE"
-      ? "bg-rose-500"
+      ? "bg-danger-500"
       : st.status === "DUE_SOON"
-        ? "bg-amber-500"
-        : "bg-emerald-500";
+        ? "bg-warn-500"
+        : "bg-brand-500";
 
   const submit = async () => {
     if (!form.reading.trim()) {
@@ -117,9 +117,9 @@ export default function MeterCard({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+    <div className="bg-white border border-ink-200 rounded-xl p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <Gauge className="w-4 h-4 text-cyan-600" />
           Run-hours servicing
         </h3>
@@ -131,17 +131,17 @@ export default function MeterCard({
       </div>
 
       {!configured ? (
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-xs text-ink-500 leading-relaxed">
           This machine is serviced by the calendar. For a compressor, crane or genset that is a proxy for how hard it
           actually works, record a meter reading and a service interval to schedule on real usage instead.
         </p>
       ) : (
         <>
           <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="text-3xl font-bold text-slate-900 tabular-nums">
+            <span className="text-3xl font-bold text-ink-900 tabular-nums">
               {data.currentMeter ?? "-"}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-ink-500">
               {data.meterUnit ? METER_UNIT_LABELS[data.meterUnit] : ""}
               {data.meterUpdatedAt ? ` · read ${formatDate(data.meterUpdatedAt)}` : ""}
             </span>
@@ -150,14 +150,14 @@ export default function MeterCard({
 
           {data.meterServiceInterval && st.status !== "NO_READING" && (
             <div className="space-y-1.5">
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-ink-100 rounded-full overflow-hidden">
                 <div className={`h-full ${barTone} transition-all`} style={{ width: `${st.percent}%` }} />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-500">
+              <div className="flex justify-between text-[11px] text-ink-500">
                 <span>
                   {st.used} of {data.meterServiceInterval} {unit} since last service
                 </span>
-                <span className={st.remaining < 0 ? "text-rose-700 font-semibold" : ""}>
+                <span className={st.remaining < 0 ? "text-danger-700 font-semibold" : ""}>
                   {st.remaining < 0
                     ? `${Math.abs(st.remaining)} ${unit} past due`
                     : `${st.remaining} ${unit} remaining`}
@@ -166,27 +166,27 @@ export default function MeterCard({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-ink-100">
             <div>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Actual usage</p>
-              <p className="text-sm text-slate-900 mt-0.5">
+              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Actual usage</p>
+              <p className="text-sm text-ink-900 mt-0.5">
                 {data.usagePerDay !== null ? (
                   <span className="inline-flex items-center gap-1">
-                    <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
+                    <TrendingUp className="w-3.5 h-3.5 text-ink-400" />
                     {Math.round(data.usagePerDay * 10) / 10} {unit}/day
                   </span>
                 ) : (
-                  <span className="text-slate-400">Needs two readings</span>
+                  <span className="text-ink-400">Needs two readings</span>
                 )}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Projected due</p>
-              <p className="text-sm text-slate-900 mt-0.5">
+              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Projected due</p>
+              <p className="text-sm text-ink-900 mt-0.5">
                 {data.projectedDueDate ? (
                   formatDate(data.projectedDueDate)
                 ) : (
-                  <span className="text-slate-400">Not enough history</span>
+                  <span className="text-ink-400">Not enough history</span>
                 )}
               </p>
             </div>
@@ -194,18 +194,18 @@ export default function MeterCard({
 
           {data.readings.length > 0 && (
             <details className="text-xs">
-              <summary className="cursor-pointer text-slate-500 hover:text-slate-900 select-none">
+              <summary className="cursor-pointer text-ink-500 hover:text-ink-900 select-none">
                 {data.readings.length} recorded reading{data.readings.length === 1 ? "" : "s"}
               </summary>
               <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                 {data.readings.map((r) => (
-                  <li key={r.id} className="flex justify-between gap-3 text-[11px] text-slate-600 py-1 border-b border-slate-50">
+                  <li key={r.id} className="flex justify-between gap-3 text-[11px] text-ink-600 py-1 border-b border-ink-50">
                     <span className="font-mono">{formatDate(r.readingDate)}</span>
                     <span className="tabular-nums">
                       {r.reading} {unit}
                       {r.isReset ? " · meter replaced" : ""}
                     </span>
-                    <span className="text-slate-400 truncate">{r.recordedByName ?? "-"}</span>
+                    <span className="text-ink-400 truncate">{r.recordedByName ?? "-"}</span>
                   </li>
                 ))}
               </ul>
@@ -246,7 +246,7 @@ export default function MeterCard({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Meter measures</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">Meter measures</label>
               <Select
                 value={form.meterUnit}
                 onChange={(v) => setForm((f) => ({ ...f, meterUnit: v as MeterUnit }))}
@@ -271,29 +271,29 @@ export default function MeterCard({
             </Field>
           </div>
 
-          <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+          <label className="flex items-start gap-2.5 text-xs text-ink-700 cursor-pointer">
             <input
               type="checkbox"
               checked={form.serviceDone}
               onChange={(e) => setForm((f) => ({ ...f, serviceDone: e.target.checked }))}
-              className="mt-0.5 w-4 h-4 accent-emerald-600"
+              className="mt-0.5 w-4 h-4 accent-brand-600"
             />
             <span>
               The service was carried out at this reading
-              <span className="block text-slate-500 text-[11px]">Restarts the interval from here.</span>
+              <span className="block text-ink-500 text-[11px]">Restarts the interval from here.</span>
             </span>
           </label>
 
-          <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+          <label className="flex items-start gap-2.5 text-xs text-ink-700 cursor-pointer">
             <input
               type="checkbox"
               checked={form.isReset}
               onChange={(e) => setForm((f) => ({ ...f, isReset: e.target.checked }))}
-              className="mt-0.5 w-4 h-4 accent-emerald-600"
+              className="mt-0.5 w-4 h-4 accent-brand-600"
             />
             <span>
               The meter was replaced or reset
-              <span className="block text-slate-500 text-[11px]">
+              <span className="block text-ink-500 text-[11px]">
                 Allows a reading lower than the last one, and starts the usage rate again from here.
               </span>
             </span>

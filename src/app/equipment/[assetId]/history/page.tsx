@@ -30,35 +30,35 @@ export default function EquipmentHistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
 
   if (!eq || eq.error) {
     return (
-      <div className="p-10 text-center text-slate-500">
+      <div className="p-10 text-center text-ink-500">
         Equipment not found.{" "}
-        <Link href="/equipment" className="text-emerald-600 hover:underline">Back to registry</Link>
+        <Link href="/equipment" className="text-brand-600 hover:underline">Back to registry</Link>
       </div>
     );
   }
 
   return (
     <div className="p-6 max-w-4xl w-full mx-auto space-y-6">
-      <Link href="/equipment" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
+      <Link href="/equipment" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to registry
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
+          <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
             <History className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">Machine History Log</h2>
-            <p className="text-xs text-slate-500 font-mono">
+            <h2 className="text-xl font-bold tracking-tight text-ink-900">Machine History Log</h2>
+            <p className="text-xs text-ink-500 font-mono">
               {eq.name} · {eq.assetId}
             </p>
           </div>
@@ -69,13 +69,13 @@ export default function EquipmentHistoryPage() {
               {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
             </Badge>
           )}
-          <Link href={`/equipment/${assetId}`} className="text-xs text-emerald-600 hover:underline ml-2">
+          <Link href={`/equipment/${assetId}`} className="text-xs text-brand-600 hover:underline ml-2">
             Digital Twin →
           </Link>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+      <div className="bg-white border border-ink-200 rounded-xl p-5 sm:p-6">
         <EquipmentLog assetId={assetId} canWrite={canWrite} />
       </div>
     </div>

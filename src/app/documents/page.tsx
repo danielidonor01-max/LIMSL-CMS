@@ -39,9 +39,9 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  AVAILABLE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  REQUIRED: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  EXPIRED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  AVAILABLE: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  REQUIRED: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  EXPIRED: "bg-warn-500/10 text-warn-600 border-warn-500/20",
 };
 
 export default function DocumentsPage() {
@@ -112,26 +112,26 @@ export default function DocumentsPage() {
       />
 
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           <TableSkeleton rows={6} cols={4} />
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat label="Doc Compliance" value={`${summary.compliance}%`} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} />
-            <Stat label="On File" value={String(summary.available)} tone="border-slate-200 bg-white" text="text-slate-900" icon={<FolderOpen className="w-4 h-4 text-slate-400" />} />
-            <Stat label="Missing" value={String(summary.missing)} tone="border-rose-200 bg-rose-50" text="text-rose-600" icon={<FileWarning className="w-4 h-4 text-rose-600" />} />
-            <Stat label="Expired" value={String(summary.expired)} tone="border-amber-200 bg-amber-50" text="text-amber-600" icon={<Clock className="w-4 h-4 text-amber-600" />} />
+            <Stat label="Doc Compliance" value={`${summary.compliance}%`} tone="border-brand-200 bg-brand-50" text="text-brand-600" icon={<CheckCircle2 className="w-4 h-4 text-brand-600" />} />
+            <Stat label="On File" value={String(summary.available)} tone="border-ink-200 bg-white" text="text-ink-900" icon={<FolderOpen className="w-4 h-4 text-ink-400" />} />
+            <Stat label="Missing" value={String(summary.missing)} tone="border-danger-200 bg-danger-50" text="text-danger-600" icon={<FileWarning className="w-4 h-4 text-danger-600" />} />
+            <Stat label="Expired" value={String(summary.expired)} tone="border-warn-200 bg-warn-50" text="text-warn-600" icon={<Clock className="w-4 h-4 text-warn-600" />} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-ink-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search machine / document…"
-                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/40 w-56"
+                className="pl-8 pr-3 py-1.5 bg-white border border-ink-200 rounded-lg text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500/40 w-56"
               />
             </div>
             <Select value={typeFilter} onChange={(v) => setTypeFilter(v)}>
@@ -147,7 +147,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Accordion: one row per machine, expand to reveal its documents */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden divide-y divide-ink-200">
             {groups.length === 0 ? (
               filtersActive ? (
                 <EmptyState
@@ -176,17 +176,17 @@ export default function DocumentsPage() {
                     {/* Equipment row (accordion header) */}
                     <button
                       onClick={() => toggle(g.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-ink-50 text-left transition-colors"
                     >
-                      <ChevronRight className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                      <ChevronRight className={`w-4 h-4 text-ink-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{g.name}</p>
-                        <p className="text-[10px] font-mono text-slate-400">
+                        <p className="text-sm font-semibold text-ink-900 truncate">{g.name}</p>
+                        <p className="text-[10px] font-mono text-ink-400">
                           {g.assetId ? (
                             <Link
                               href={`/equipment/${g.assetId.replace(/\//g, "-")}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="hover:text-emerald-600 hover:underline"
+                              className="hover:text-brand-600 hover:underline"
                             >
                               {g.assetId}
                             </Link>
@@ -197,25 +197,25 @@ export default function DocumentsPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {missing > 0 && (
-                          <span className="text-[10px] font-semibold text-rose-600 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-[10px] font-semibold text-danger-600 bg-danger-500/10 border border-danger-500/20 rounded-full px-2 py-0.5">
                             {missing} missing
                           </span>
                         )}
                         {expiredN > 0 && (
-                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-[10px] font-semibold text-warn-600 bg-warn-500/10 border border-warn-500/20 rounded-full px-2 py-0.5">
                             {expiredN} expired
                           </span>
                         )}
-                        <span className="text-[11px] text-slate-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
+                        <span className="text-[11px] text-ink-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
                       </div>
                     </button>
 
                     {/* Documents for this machine */}
                     {isOpen && (
-                      <div className="bg-slate-50/60 px-4 pb-3">
+                      <div className="bg-ink-50/60 px-4 pb-3">
                         <table className="w-full text-left text-xs">
                           <thead>
-                            <tr className="text-slate-400">
+                            <tr className="text-ink-400">
                               <th className="py-2 pl-7 font-medium">Document</th>
                               <th className="py-2 px-3 font-medium">Type</th>
                               <th className="py-2 px-3 font-medium">Rev</th>
@@ -224,27 +224,27 @@ export default function DocumentsPage() {
                               <th className="py-2 px-3 font-medium text-right">File</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200">
+                          <tbody className="divide-y divide-ink-200">
                             {g.docs.map((d) => (
                               <tr key={d.id} className="hover:bg-white">
-                                <td className="py-2 pl-7 text-slate-800 max-w-xs truncate flex items-center gap-2">
-                                  <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {d.title}
+                                <td className="py-2 pl-7 text-ink-800 max-w-xs truncate flex items-center gap-2">
+                                  <FileText className="w-3.5 h-3.5 text-ink-400 shrink-0" /> {d.title}
                                 </td>
-                                <td className="py-2 px-3 text-slate-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
-                                <td className="py-2 px-3 text-slate-500">{d.revision ?? "-"}</td>
-                                <td className="py-2 px-3 font-mono text-slate-500">{formatDate(d.expiryDate)}</td>
+                                <td className="py-2 px-3 text-ink-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
+                                <td className="py-2 px-3 text-ink-500">{d.revision ?? "-"}</td>
+                                <td className="py-2 px-3 font-mono text-ink-500">{formatDate(d.expiryDate)}</td>
                                 <td className="py-2 px-3">
-                                  <Badge className={STATUS_BADGE[d.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
+                                  <Badge className={STATUS_BADGE[d.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
                                     {d.status === "REQUIRED" ? "MISSING" : d.status}
                                   </Badge>
                                 </td>
                                 <td className="py-2 px-3 text-right">
                                   {d.fileUrl && !d.fileUrl.startsWith("#") ? (
-                                    <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-600 hover:underline">
+                                    <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                                       <Download className="w-3.5 h-3.5" /> Open
                                     </a>
                                   ) : (
-                                    <span className="text-slate-400">, </span>
+                                    <span className="text-ink-400">, </span>
                                   )}
                                 </td>
                               </tr>
@@ -258,7 +258,7 @@ export default function DocumentsPage() {
               })
             )}
           </div>
-          <p className="text-[11px] text-slate-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
+          <p className="text-[11px] text-ink-400">{groups.length} machine{groups.length === 1 ? "" : "s"} · {filtered.length} of {docs.length} documents.</p>
         </>
       )}
     </div>
@@ -269,7 +269,7 @@ function Stat({ label, value, tone, text, icon }: { label: string; value: string
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
         {icon}
       </div>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>

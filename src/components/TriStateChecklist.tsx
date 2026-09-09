@@ -12,9 +12,9 @@ import { Check, X, Minus } from "lucide-react";
 export type TriState = "YES" | "NO" | "NA";
 
 const OPTIONS: { value: TriState; label: string; icon: typeof Check; on: string }[] = [
-  { value: "YES", label: "Required and in place", icon: Check, on: "bg-emerald-600 border-emerald-600 text-white" },
-  { value: "NO", label: "Not required", icon: X, on: "bg-rose-600 border-rose-600 text-white" },
-  { value: "NA", label: "Not applicable", icon: Minus, on: "bg-slate-500 border-slate-500 text-white" },
+  { value: "YES", label: "Required and in place", icon: Check, on: "bg-brand-600 border-brand-600 text-white" },
+  { value: "NO", label: "Not required", icon: X, on: "bg-danger-600 border-danger-600 text-white" },
+  { value: "NA", label: "Not applicable", icon: Minus, on: "bg-ink-500 border-ink-500 text-white" },
 ];
 
 export default function TriStateChecklist({
@@ -46,21 +46,21 @@ export default function TriStateChecklist({
     <div>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          {hint && <p className="text-[11px] text-slate-500 mt-0.5">{hint}</p>}
+          <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
+          {hint && <p className="text-[11px] text-ink-500 mt-0.5">{hint}</p>}
         </div>
         {!disabled && (
           <button
             type="button"
             onClick={() => setAll("NA")}
-            className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 shrink-0"
+            className="text-[10px] font-semibold text-ink-500 hover:text-ink-900 shrink-0"
           >
             Mark rest N/A
           </button>
         )}
       </div>
 
-      <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 overflow-hidden">
+      <div className="border border-ink-200 rounded-lg divide-y divide-ink-100 overflow-hidden">
         {items.map((item) => {
           const current = value[item.key];
           const required = highlightKeys?.includes(item.key);
@@ -68,13 +68,13 @@ export default function TriStateChecklist({
             <div
               key={item.key}
               className={`flex items-center justify-between gap-3 px-3 py-2 ${
-                required && current !== "YES" ? "bg-amber-50" : ""
+                required && current !== "YES" ? "bg-warn-50" : ""
               }`}
             >
-              <span className="text-xs text-slate-700 min-w-0">
+              <span className="text-xs text-ink-700 min-w-0">
                 {item.label}
                 {required && (
-                  <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                  <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-warn-700">
                     required
                   </span>
                 )}
@@ -93,7 +93,7 @@ export default function TriStateChecklist({
                       aria-label={`${item.label}: ${o.label}`}
                       title={o.label}
                       className={`w-7 h-7 rounded-md border flex items-center justify-center transition-colors disabled:opacity-50 ${
-                        on ? o.on : "bg-white border-slate-200 text-slate-400 hover:border-slate-300"
+                        on ? o.on : "bg-white border-ink-200 text-ink-400 hover:border-ink-300"
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -107,7 +107,7 @@ export default function TriStateChecklist({
       </div>
 
       {unmarked > 0 && (
-        <p className="text-[10px] text-amber-700 mt-1.5">
+        <p className="text-[10px] text-warn-700 mt-1.5">
           {unmarked} line{unmarked === 1 ? "" : "s"} not yet marked. Every line is ticked or crossed
           before the permit is signed.
         </p>

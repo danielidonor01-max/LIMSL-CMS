@@ -111,9 +111,9 @@ export default function WorkOrderParts({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+    <div className="bg-white border border-ink-200 rounded-xl p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <Package className="w-4 h-4 text-cyan-600" /> Parts used
         </h3>
         {canWrite && (
@@ -124,22 +124,22 @@ export default function WorkOrderParts({
       </div>
 
       {!used.length ? (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-ink-500">
           Nothing issued to this job yet. Issuing here takes the part off the shelf and records it against the machine,
           so the register knows what it actually consumes.
         </p>
       ) : (
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-ink-100">
           {used.map((m) => (
             <li key={m.id} className="py-2 flex items-center justify-between gap-3 text-xs">
               <span className="min-w-0">
-                <span className="font-medium text-slate-900">{m.partName ?? "Part"}</span>
-                {m.partNumber && <span className="font-mono text-slate-500"> · {m.partNumber}</span>}
-                {m.reason && <span className="block text-[11px] text-slate-500">{m.reason}</span>}
+                <span className="font-medium text-ink-900">{m.partName ?? "Part"}</span>
+                {m.partNumber && <span className="font-mono text-ink-500"> · {m.partNumber}</span>}
+                {m.reason && <span className="block text-[11px] text-ink-500">{m.reason}</span>}
               </span>
               <span className="shrink-0 text-right">
-                <span className="font-semibold text-slate-900">{Math.abs(m.quantity)}</span>
-                <span className="block text-[10px] text-slate-400">{m.performedByName ?? ""}</span>
+                <span className="font-semibold text-ink-900">{Math.abs(m.quantity)}</span>
+                <span className="block text-[10px] text-ink-400">{m.performedByName ?? ""}</span>
               </span>
             </li>
           ))}
@@ -165,7 +165,7 @@ export default function WorkOrderParts({
               ))}
             </Select>
             {!spares.length && (
-              <p className="text-[11px] text-amber-700 mt-1">
+              <p className="text-[11px] text-warn-700 mt-1">
                 Nothing on the spares register yet. Add parts there first.
               </p>
             )}

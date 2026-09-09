@@ -333,18 +333,18 @@ export default function SchedulePage() {
   ) => (
     <div className={`p-4 rounded-xl border ${tone} backdrop-blur-sm`}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
           {label}
         </span>
-        <div className="p-1.5 rounded-lg bg-slate-100">{icon}</div>
+        <div className="p-1.5 rounded-lg bg-ink-100">{icon}</div>
       </div>
-      <div className="mt-3 text-2xl font-bold text-slate-900">{value}</div>
-      <p className="text-[11px] text-slate-500 mt-1">{sub}</p>
+      <div className="mt-3 text-2xl font-bold text-ink-900">{value}</div>
+      <p className="text-[11px] text-ink-500 mt-1">{sub}</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Calendar}
@@ -353,11 +353,11 @@ export default function SchedulePage() {
           code="LIMSL-MAIN-PLN-013"
           actions={
             <>
-              <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
+              <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1">
                 <button
                   onClick={() => setView("list")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    view === "list" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    view === "list" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                   }`}
                 >
                   <List className="w-3.5 h-3.5" /> List
@@ -365,7 +365,7 @@ export default function SchedulePage() {
                 <button
                   onClick={() => setView("calendar")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    view === "calendar" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    view === "calendar" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                   }`}
                 >
                   <CalendarDays className="w-3.5 h-3.5" /> Calendar
@@ -386,33 +386,33 @@ export default function SchedulePage() {
           {stat(
             "PM Compliance",
             `${summary.compliance}%`,
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />,
+            <ShieldCheck className="w-4 h-4 text-brand-600" />,
             summary.compliance >= 95
-              ? "bg-emerald-50 border-emerald-200"
+              ? "bg-brand-50 border-brand-200"
               : summary.compliance >= 50
-                ? "bg-amber-50 border-amber-200"
-                : "bg-rose-50 border-rose-200",
+                ? "bg-warn-50 border-warn-200"
+                : "bg-danger-50 border-danger-200",
             "Completed ÷ due PM · target ≥95%",
           )}
           {stat(
             "Overdue",
             String(summary.overdue),
-            <AlertTriangle className="w-4 h-4 text-rose-600" />,
-            "bg-rose-50 border-rose-200",
+            <AlertTriangle className="w-4 h-4 text-danger-600" />,
+            "bg-danger-50 border-danger-200",
             "Activities past their planned date",
           )}
           {stat(
             "Upcoming",
             String(summary.upcoming),
-            <Clock className="w-4 h-4 text-sky-600" />,
-            "bg-sky-50 border-sky-200",
+            <Clock className="w-4 h-4 text-info-600" />,
+            "bg-info-50 border-info-200",
             "Scheduled activities still ahead",
           )}
           {stat(
             "Completed",
             String(summary.completed),
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
-            "bg-emerald-50 border-emerald-200",
+            <CheckCircle2 className="w-4 h-4 text-brand-600" />,
+            "bg-brand-50 border-brand-200",
             "PM activities signed off this year",
           )}
         </div>
@@ -423,15 +423,15 @@ export default function SchedulePage() {
         <>
         {/* Tabs + filters */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
             {(["upcoming", "all", "deferred"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                   tab === t
-                    ? "bg-emerald-500/15 text-emerald-600"
-                    : "text-slate-500 hover:text-slate-900"
+                    ? "bg-brand-500/15 text-brand-600"
+                    : "text-ink-500 hover:text-ink-900"
                 }`}
               >
                 {t === "upcoming"
@@ -445,12 +445,12 @@ export default function SchedulePage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-ink-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search equipment / tag…"
-                className="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-48"
+                className="pl-8 pr-3 py-1.5 bg-ink-100 border border-ink-200 rounded-lg text-xs text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40 w-48"
               />
             </div>
             <FilterSelect value={typeFilter} onChange={setTypeFilter} label="Type">
@@ -476,7 +476,7 @@ export default function SchedulePage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           {error && !loading ? (
             <LoadError what="the maintenance schedule" onRetry={refresh} />
           ) : loading ? (
@@ -525,7 +525,7 @@ export default function SchedulePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
+                  <tr className="border-b border-ink-200 text-ink-500">
                     <th className="py-3 px-4 font-medium">Planned</th>
                     <th className="py-3 px-4 font-medium">Equipment</th>
                     <th className="py-3 px-4 font-medium">Activity</th>
@@ -535,24 +535,24 @@ export default function SchedulePage() {
                     <th className="py-3 px-4 font-medium text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-ink-200">
                   {filtered.map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-50">
+                    <tr key={r.id} className="hover:bg-ink-50">
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-mono text-slate-900">{formatDate(r.plannedDate)}</div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="font-mono text-ink-900">{formatDate(r.plannedDate)}</div>
+                        <div className="text-[10px] text-ink-500">
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900 max-w-[220px] truncate">
+                        <div className="font-medium text-ink-900 max-w-[220px] truncate">
                           {r.equipmentName}
                         </div>
-                        <div className="text-[10px] font-mono text-slate-500">
+                        <div className="text-[10px] font-mono text-ink-500">
                           {r.assetId ? (
                             <Link
                               href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
-                              className="hover:text-emerald-600 hover:underline"
+                              className="hover:text-brand-600 hover:underline"
                             >
                               {r.assetId}
                             </Link>
@@ -566,13 +566,13 @@ export default function SchedulePage() {
                           {r.activityType}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-slate-500">
+                      <td className="py-3 px-4 text-ink-500">
                         {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "-"}
                       </td>
-                      <td className="py-3 px-4 text-slate-700">
+                      <td className="py-3 px-4 text-ink-700">
                         {r.responsiblePersonName ?? "-"}
                         {safeIds(r.assistantIds).length > 0 && (
-                          <span className="text-slate-400"> +{safeIds(r.assistantIds).length}</span>
+                          <span className="text-ink-400"> +{safeIds(r.assistantIds).length}</span>
                         )}
                       </td>
                       <td className="py-3 px-4">
@@ -580,12 +580,12 @@ export default function SchedulePage() {
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
                         {r.status === "DEFERRED" && (
-                          <div className="mt-1.5 max-w-[280px] text-[10px] leading-relaxed text-slate-500">
+                          <div className="mt-1.5 max-w-[280px] text-[10px] leading-relaxed text-ink-500">
                             <span className="text-violet-700 font-medium">
                               {r.deferredByName ?? "-"}
                             </span>
                             {r.deferredReviewDate ? ` · review ${formatDate(r.deferredReviewDate)}` : ""}
-                            {r.deferredReason ? <div className="text-slate-500">{r.deferredReason}</div> : null}
+                            {r.deferredReason ? <div className="text-ink-500">{r.deferredReason}</div> : null}
                           </div>
                         )}
                       </td>
@@ -594,7 +594,7 @@ export default function SchedulePage() {
                           {r.status !== "COMPLETED" && (
                             <button
                               onClick={() => setAssign(r)}
-                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                              className="text-ink-500 hover:text-ink-900 hover:underline"
                             >
                               Assign
                             </button>
@@ -602,7 +602,7 @@ export default function SchedulePage() {
                           {r.status !== "COMPLETED" && (
                             <button
                               onClick={() => setReschedule({ row: r, date: r.plannedDate })}
-                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                              className="text-ink-500 hover:text-ink-900 hover:underline"
                             >
                               Reschedule
                             </button>
@@ -616,7 +616,7 @@ export default function SchedulePage() {
                                   until: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10),
                                 })
                               }
-                              className="text-slate-500 hover:text-slate-900 hover:underline"
+                              className="text-ink-500 hover:text-ink-900 hover:underline"
                             >
                               Quieten
                             </button>
@@ -640,14 +640,14 @@ export default function SchedulePage() {
                           {r.workOrderId ? (
                             <Link
                               href={`/work-orders/${r.workOrderId}`}
-                              className="text-emerald-600 hover:underline"
+                              className="text-brand-600 hover:underline"
                             >
                               View WO →
                             </Link>
                           ) : (
                             <Link
                               href={`/work-orders/new?scheduleId=${r.id}`}
-                              className="text-sky-600 hover:underline"
+                              className="text-info-600 hover:underline"
                             >
                               Raise WO
                             </Link>
@@ -661,7 +661,7 @@ export default function SchedulePage() {
             </div>
           )}
         </div>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-ink-500">
           Showing {filtered.length} of {rows.length} scheduled activities.
         </p>
         </>
@@ -755,7 +755,7 @@ export default function SchedulePage() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-ink-500 mt-1">
                 Overdue and due-soon reminders go to this person directly. Leaving it unassigned means only the
                 managers hear about it.
               </p>
@@ -771,8 +771,8 @@ export default function SchedulePage() {
         <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
           {reschedule && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-500">
-                Currently planned for <span className="font-mono text-slate-700">{formatDate(reschedule.row.plannedDate)}</span>.
+              <p className="text-xs text-ink-500">
+                Currently planned for <span className="font-mono text-ink-700">{formatDate(reschedule.row.plannedDate)}</span>.
               </p>
               <Field label="New planned date" htmlFor="schedule-new-date">
                 <input
@@ -815,7 +815,7 @@ export default function SchedulePage() {
         >
           {snooze && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-ink-600 leading-relaxed">
                 This activity <strong>stays overdue</strong> and still counts against PM compliance. All this does is
                 stop the daily reminder while you deal with it. If you want it formally put off, use{" "}
                 <strong>Defer</strong> instead, that records a risk accepted and needs a review date.
@@ -856,8 +856,8 @@ export default function SchedulePage() {
         >
           {defer && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-500">
-                Planned for <span className="font-mono text-slate-700">{formatDate(defer.row.plannedDate)}</span>.
+              <p className="text-xs text-ink-500">
+                Planned for <span className="font-mono text-ink-700">{formatDate(defer.row.plannedDate)}</span>.
                 Deferring records a risk you are accepting, against your name. It does not close the
                 activity, on the review date it returns to the overdue list.
               </p>

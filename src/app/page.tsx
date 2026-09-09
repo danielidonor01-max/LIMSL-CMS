@@ -32,15 +32,15 @@ type AttentionItem = {
 };
 
 const TILE_PANEL: Record<string, string> = {
-  danger: "bg-rose-50 border-rose-200",
-  warning: "bg-amber-50 border-amber-200",
-  success: "bg-emerald-50 border-emerald-200",
+  danger: "bg-danger-50 border-danger-200",
+  warning: "bg-warn-50 border-warn-200",
+  success: "bg-brand-50 border-brand-200",
 };
 
 const TILE_TEXT: Record<string, string> = {
-  danger: "text-rose-600",
-  warning: "text-amber-600",
-  success: "text-emerald-600",
+  danger: "text-danger-600",
+  warning: "text-warn-600",
+  success: "text-brand-600",
 };
 
 type SignoffItem = {
@@ -138,17 +138,17 @@ export default function Home() {
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
 
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         {/* Role-aware greeting */}
         {mounted && session?.user && (
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-xl font-bold tracking-tight text-ink-900">
                 {firstName ? `Welcome, ${firstName}` : "Welcome"}
               </h1>
-              <p className="text-xs text-slate-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
+              <p className="text-xs text-ink-500 font-mono">{ROLE_LABELS[role ?? ""] ?? role ?? ""}</p>
             </div>
           </div>
         )}
@@ -161,36 +161,36 @@ export default function Home() {
         {attention.length > 0 && (
           <section
             aria-labelledby="attention-heading"
-            className="rounded-xl border border-slate-200 bg-white overflow-hidden"
+            className="rounded-xl border border-ink-200 bg-white overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <h3 id="attention-heading" className="text-sm font-bold text-slate-900">
+            <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-warn-600" />
+              <h3 id="attention-heading" className="text-sm font-bold text-ink-900">
                 Needs attention
               </h3>
-              <span className="text-xs text-slate-500">{attention.length}</span>
+              <span className="text-xs text-ink-500">{attention.length}</span>
             </div>
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-ink-100">
               {attention.map((a) => (
                 <li key={a.key}>
                   <Link
                     href={a.href}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50 transition-colors"
                   >
                     <span
                       className={`w-1.5 h-8 rounded-full shrink-0 ${
-                        a.severity === "danger" ? "bg-rose-500" : "bg-amber-500"
+                        a.severity === "danger" ? "bg-danger-500" : "bg-warn-500"
                       }`}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-slate-900">{a.title}</span>
-                      <span className="block text-xs text-slate-500 mt-0.5">{a.detail}</span>
+                      <span className="block text-sm font-semibold text-ink-900">{a.title}</span>
+                      <span className="block text-xs text-ink-500 mt-0.5">{a.detail}</span>
                     </span>
-                    <span className="hidden sm:inline text-xs font-semibold text-emerald-700 shrink-0">
+                    <span className="hidden sm:inline text-xs font-semibold text-brand-700 shrink-0">
                       {a.cta}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-ink-300 shrink-0" />
                   </Link>
                 </li>
               ))}
@@ -201,41 +201,41 @@ export default function Home() {
         {/* Your jobs, the technician's dashboard used to be an executive KPI
             board with an empty approver's card. This is their actual work. */}
         {myJobs.length > 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2 flex-wrap">
-              <ClipboardList className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold text-slate-900">Your jobs</h3>
-              <span className="text-xs text-slate-500">
+          <div className="rounded-xl border border-ink-200 bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2 flex-wrap">
+              <ClipboardList className="w-4 h-4 text-brand-600" />
+              <h3 className="text-sm font-bold text-ink-900">Your jobs</h3>
+              <span className="text-xs text-ink-500">
                 {myWork.openCount} open
                 {myWork.overdueCount > 0 && (
-                  <span className="text-rose-600 font-semibold"> · {myWork.overdueCount} overdue</span>
+                  <span className="text-danger-600 font-semibold"> · {myWork.overdueCount} overdue</span>
                 )}
               </span>
-              <Link href="/work-orders" className="ml-auto text-xs text-emerald-700 hover:underline">
+              <Link href="/work-orders" className="ml-auto text-xs text-brand-700 hover:underline">
                 All work orders
               </Link>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ink-100">
               {myJobs.slice(0, 5).map((j) => (
                 <Link
                   key={j.id}
                   href={j.type === "PREVENTIVE" || j.type === "INSPECTION" ? `/work-orders/${j.id}/pm-checklist` : `/work-orders/${j.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-3 min-h-[60px] hover:bg-slate-50 transition-colors group"
+                  className="flex items-center justify-between gap-3 px-5 py-3 min-h-[60px] hover:bg-ink-50 transition-colors group"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">
+                    <p className="text-sm font-semibold text-ink-900 truncate">
                       {j.title}
                       {j.overdue && (
-                        <span className="ml-2 text-[11px] font-semibold text-rose-700">overdue</span>
+                        <span className="ml-2 text-[11px] font-semibold text-danger-700">overdue</span>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-ink-500 truncate">
                       <span className="font-mono">{j.workOrderNumber}</span>
                       {j.equipmentName ? ` · ${j.equipmentName}` : ""}
                       {j.plannedDate ? ` · due ${formatDate(j.plannedDate)}` : ""}
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-ink-300 group-hover:text-brand-500 shrink-0" />
                 </Link>
               ))}
             </div>
@@ -244,29 +244,29 @@ export default function Home() {
 
         {/* My sign-offs, what's awaiting THIS user's signature, across every module */}
         {signoffs.length > 0 && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
-            <div className="px-5 py-3 border-b border-emerald-200 flex items-center gap-2">
-              <PenLine className="w-4 h-4 text-emerald-700" />
-              <h3 className="text-sm font-bold text-emerald-900">Awaiting your sign-off</h3>
-              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
+          <div className="rounded-xl border border-brand-200 bg-brand-50/60 overflow-hidden">
+            <div className="px-5 py-3 border-b border-brand-200 flex items-center gap-2">
+              <PenLine className="w-4 h-4 text-brand-700" />
+              <h3 className="text-sm font-bold text-brand-900">Awaiting your sign-off</h3>
+              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-[10px] font-bold flex items-center justify-center">
                 {signoffs.length}
               </span>
             </div>
-            <div className="divide-y divide-emerald-100">
+            <div className="divide-y divide-brand-100">
               {signoffs.map((s) => (
                 <Link
                   key={s.stepId}
                   href={s.link}
-                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-emerald-100/40 transition-colors group"
+                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-brand-100/40 transition-colors group"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-ink-900">
                       {s.typeLabel}
-                      {s.reference ? <span className="font-mono text-slate-500"> · {s.reference}</span> : null}
+                      {s.reference ? <span className="font-mono text-ink-500"> · {s.reference}</span> : null}
                     </p>
-                    <p className="text-xs text-slate-500">Your step: {s.roleLabel}</p>
+                    <p className="text-xs text-ink-500">Your step: {s.roleLabel}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 shrink-0">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 shrink-0">
                     Review &amp; sign <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </Link>
@@ -279,17 +279,17 @@ export default function Home() {
         {brokenDown.map((eq) => (
           <div
             key={eq.id}
-            className="relative overflow-hidden rounded-xl border border-rose-200 bg-rose-50 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            className="relative overflow-hidden rounded-xl border border-danger-200 bg-danger-50 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3 relative z-10">
-              <div className="p-2 bg-rose-500/20 text-rose-600 rounded-lg">
+              <div className="p-2 bg-danger-500/20 text-danger-600 rounded-lg">
                 <AlertTriangle className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-rose-700">
+                <p className="text-sm font-semibold text-danger-700">
                   Critical Breakdown: {eq.name} ({eq.assetId})
                 </p>
-                <p className="text-xs text-rose-700/80">
+                <p className="text-xs text-danger-700/80">
                   Status is Broken Down, raise a corrective request and RCA.
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function Home() {
             {mounted && canAccessPath(role ?? "", "/corrective/new") && (
               <Link
                 href={`/corrective/new?equipmentId=${eq.id}`}
-                className="relative z-10 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
+                className="relative z-10 px-4 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
               >
                 Report Corrective Fault
               </Link>
@@ -308,8 +308,8 @@ export default function Home() {
         {/* Executive stats */}
         {loading ? (
           <div className="py-12 flex justify-center items-center">
-            <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-            <span className="text-xs text-slate-500 ml-2">Loading live metrics…</span>
+            <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+            <span className="text-xs text-ink-500 ml-2">Loading live metrics…</span>
           </div>
         ) : (
           // Four equal tiles asked the reader to work out which one mattered.
@@ -320,7 +320,7 @@ export default function Home() {
             {hero && (
               <div className={`lg:col-span-1 p-6 rounded-xl border ${TILE_PANEL[hero.status] ?? TILE_PANEL.success} flex flex-col justify-between`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
                     {hero.status === "success" ? "Best measure" : "Needs attention"}
                   </span>
                   <div className={`p-2 rounded-lg bg-white/70 ${TILE_TEXT[hero.status] ?? TILE_TEXT.success}`}>
@@ -328,12 +328,12 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="mt-5">
-                  <p className="text-sm font-semibold text-slate-700">{hero.title}</p>
+                  <p className="text-sm font-semibold text-ink-700">{hero.title}</p>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-5xl font-bold tracking-tight text-slate-900">{hero.value}</span>
-                    <span className="text-xs font-mono text-slate-500">/ {hero.target}</span>
+                    <span className="text-5xl font-bold tracking-tight text-ink-900">{hero.value}</span>
+                    <span className="text-xs font-mono text-ink-500">/ {hero.target}</span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-2">{hero.desc}</p>
+                  <p className="text-xs text-ink-600 mt-2">{hero.desc}</p>
                 </div>
               </div>
             )}
@@ -347,17 +347,17 @@ export default function Home() {
                     className={`p-4 rounded-xl border ${TILE_PANEL[stat.status] ?? TILE_PANEL.success} flex flex-col justify-between`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider leading-tight">
+                      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
                         {stat.title}
                       </span>
                       <Icon className={`w-4 h-4 shrink-0 ${TILE_TEXT[stat.status] ?? TILE_TEXT.success}`} />
                     </div>
                     <div className="mt-4">
                       <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-bold tracking-tight text-slate-900">{stat.value}</span>
-                        <span className="text-[10px] font-mono text-slate-500">/ {stat.target}</span>
+                        <span className="text-2xl font-bold tracking-tight text-ink-900">{stat.value}</span>
+                        <span className="text-[10px] font-mono text-ink-500">/ {stat.target}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1.5 line-clamp-2">{stat.desc}</p>
+                      <p className="text-[11px] text-ink-500 mt-1.5 line-clamp-2">{stat.desc}</p>
                     </div>
                   </div>
                 );
@@ -368,15 +368,15 @@ export default function Home() {
 
         {/* Critical machinery + recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+          <div className="lg:col-span-2 p-5 bg-white border border-ink-200 rounded-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold tracking-wide text-slate-900">Critical Machinery Status</h3>
-              <Link href="/equipment" className="text-xs text-emerald-600 hover:underline">View All Assets</Link>
+              <h3 className="text-sm font-semibold tracking-wide text-ink-900">Critical Machinery Status</h3>
+              <Link href="/equipment" className="text-xs text-brand-600 hover:underline">View All Assets</Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-medium">
+                  <tr className="border-b border-ink-200 text-ink-500 font-medium">
                     <th className="py-2">Equipment</th>
                     <th className="py-2">Tag ID</th>
                     <th className="py-2">Location</th>
@@ -384,21 +384,21 @@ export default function Home() {
                     <th className="py-2">Next PM</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-ink-200">
                   {critical.map((eq) => (
-                    <tr key={eq.id} className="hover:bg-slate-50 text-slate-700">
-                      <td className="py-3 font-medium text-slate-900">
+                    <tr key={eq.id} className="hover:bg-ink-50 text-ink-700">
+                      <td className="py-3 font-medium text-ink-900">
                         {/* Asset IDs carry slashes (LEE/PE/1904), routes take the dash form. */}
-                        <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-emerald-600">{eq.name}</Link>
+                        <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-brand-600">{eq.name}</Link>
                       </td>
-                      <td className="py-3 font-mono text-slate-500">{eq.assetId}</td>
+                      <td className="py-3 font-mono text-ink-500">{eq.assetId}</td>
                       <td className="py-3">{eq.location ?? eq.bay ?? "-"}</td>
                       <td className="py-3">
                         <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                           {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
                         </Badge>
                       </td>
-                      <td className="py-3 font-mono text-slate-500">{formatDate(eq.nextMaintenanceDate)}</td>
+                      <td className="py-3 font-mono text-ink-500">{formatDate(eq.nextMaintenanceDate)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -406,26 +406,26 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-4">
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold tracking-wide text-slate-900">Recent Activity</h3>
+              <h3 className="text-sm font-semibold tracking-wide text-ink-900">Recent Activity</h3>
               {mounted && canAccessPath(role ?? "", "/audit/logs") && (
-                <Link href="/audit/logs" className="text-xs text-emerald-600 hover:underline">Audit Log</Link>
+                <Link href="/audit/logs" className="text-xs text-brand-600 hover:underline">Audit Log</Link>
               )}
             </div>
             <div className="space-y-4">
               {activity.length === 0 && (
-                <p className="text-xs text-slate-500">No recorded activity yet.</p>
+                <p className="text-xs text-ink-500">No recorded activity yet.</p>
               )}
               {activity.slice(0, 6).map((act) => (
-                <div key={act.id} className="flex gap-3 text-xs leading-relaxed border-l-2 border-slate-200 pl-3">
+                <div key={act.id} className="flex gap-3 text-xs leading-relaxed border-l-2 border-ink-200 pl-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold tracking-wider text-[10px] text-emerald-600">{act.action}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">{formatDate(act.timestamp)}</span>
+                      <span className="font-semibold tracking-wider text-[10px] text-brand-600">{act.action}</span>
+                      <span className="text-[10px] text-ink-500 font-mono">{formatDate(act.timestamp)}</span>
                     </div>
-                    <p className="font-medium text-slate-900 capitalize">{act.entityType.replace(/_/g, " ")}</p>
-                    <p className="text-slate-500 text-[11px]">{act.entityDescription ?? `by ${act.userName ?? "system"}`}</p>
+                    <p className="font-medium text-ink-900 capitalize">{act.entityType.replace(/_/g, " ")}</p>
+                    <p className="text-ink-500 text-[11px]">{act.entityDescription ?? `by ${act.userName ?? "system"}`}</p>
                   </div>
                 </div>
               ))}
@@ -434,7 +434,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white/90 py-4 px-6 text-center text-[10px] text-slate-500 font-mono">
+      <footer className="border-t border-ink-200 bg-white/90 py-4 px-6 text-center text-[10px] text-ink-500 font-mono">
         &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited · Compliance: ISO 9001:2015, ISO 45001.
       </footer>
     </div>

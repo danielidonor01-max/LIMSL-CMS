@@ -31,14 +31,14 @@ export default function PageHeader({
   actions?: React.ReactNode;
   tone?: "emerald" | "rose";
 }) {
-  const chip = tone === "rose" ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-emerald-50 text-emerald-600 border-emerald-200";
+  const chip = tone === "rose" ? "bg-danger-50 text-danger-600 border-danger-200" : "bg-brand-50 text-brand-600 border-brand-200";
 
   return (
     <div className="space-y-3">
       {backHref && (
         <Link
           href={backHref}
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {backLabel}
         </Link>
@@ -51,12 +51,12 @@ export default function PageHeader({
             </div>
           )}
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 truncate">{title}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-ink-900 truncate">{title}</h1>
             {(subtitle || code) && (
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-ink-500 mt-0.5">
                 {subtitle}
                 {subtitle && code ? " · " : ""}
-                {code && <span className="font-mono text-slate-400">{code}</span>}
+                {code && <span className="font-mono text-ink-400">{code}</span>}
               </p>
             )}
           </div>

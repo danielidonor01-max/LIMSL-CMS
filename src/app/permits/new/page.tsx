@@ -161,14 +161,14 @@ function NewPermitForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      <div className="min-h-screen flex items-center justify-center text-ink-500">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ShieldCheck}
@@ -180,9 +180,9 @@ function NewPermitForm() {
 
         <form onSubmit={submit} className="space-y-6">
           {/* The chain behind the permit */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-emerald-600" /> Approved hazard analysis
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-brand-600" /> Approved hazard analysis
             </h3>
             <Select value={jhaId} onChange={setJhaId} className="w-full">
               <option value="">Select the analysis this permit is issued against</option>
@@ -193,14 +193,14 @@ function NewPermitForm() {
               ))}
             </Select>
             {jhaList.length === 0 ? (
-              <p className="text-[11px] text-amber-700">
+              <p className="text-[11px] text-warn-700">
                 No approved hazard analysis yet. The chain runs work order, then method statement,
                 then hazard analysis, then this permit, and each one has to be approved before the
                 next can be raised.
               </p>
             ) : (
               selectedJha && (
-                <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
+                <div className="text-[11px] text-ink-500 flex flex-wrap gap-x-3 gap-y-1">
                   {selectedJha.wmsNumber && (
                     <span className="inline-flex items-center gap-1">
                       <FileText className="w-3 h-3" /> {selectedJha.wmsNumber}
@@ -213,10 +213,10 @@ function NewPermitForm() {
           </div>
 
           {/* Type of work */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Type of work</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <h3 className="text-sm font-semibold text-ink-900">Type of work</h3>
+              <p className="text-[11px] text-ink-500 mt-0.5">
                 Determines which controls are mandatory below.
               </p>
               <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -230,8 +230,8 @@ function NewPermitForm() {
                       aria-pressed={on}
                       className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                         on
-                          ? "bg-emerald-600 border-emerald-600 text-white"
-                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                          ? "bg-brand-600 border-brand-600 text-white"
+                          : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
                       }`}
                     >
                       {t.label}
@@ -292,8 +292,8 @@ function NewPermitForm() {
           </div>
 
           {/* Timing and validity */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900">When and who</h3>
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-ink-900">When and who</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Start date</label>
@@ -356,7 +356,7 @@ function NewPermitForm() {
                   className={FIELD_CLASS}
                 />
                 {expiresOn && (
-                  <p className="text-[10px] text-slate-500 mt-1">Expires after {expiresOn}.</p>
+                  <p className="text-[10px] text-ink-500 mt-1">Expires after {expiresOn}.</p>
                 )}
               </div>
               <div>
@@ -380,16 +380,16 @@ function NewPermitForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-ink-500 mt-1">
                 He signs the permit himself, and nobody signs that line for him.
               </p>
             </div>
           </div>
 
           {/* The checklists */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-emerald-600" /> The permit checklists
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-6">
+            <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-brand-600" /> The permit checklists
             </h3>
 
             <TriStateChecklist
@@ -416,30 +416,30 @@ function NewPermitForm() {
             />
 
             {missing.length > 0 && (
-              <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
-                <p className="text-[11px] font-semibold text-amber-900">
+              <div className="rounded-lg bg-warn-50 border border-warn-200 px-3 py-2.5">
+                <p className="text-[11px] font-semibold text-warn-900">
                   The type of work selected requires these controls
                 </p>
-                <p className="text-[11px] text-amber-800 mt-0.5">{missing.join(", ")}</p>
+                <p className="text-[11px] text-warn-800 mt-0.5">{missing.join(", ")}</p>
               </div>
             )}
 
             <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-xs text-slate-700">
+              <label className="flex items-center gap-2 text-xs text-ink-700">
                 <input
                   type="checkbox"
                   checked={lotoApplied}
                   onChange={(e) => setLotoApplied(e.target.checked)}
-                  className="w-4 h-4 accent-emerald-600"
+                  className="w-4 h-4 accent-brand-600"
                 />
                 Lock-out / tag-out applied
               </label>
-              <label className="flex items-center gap-2 text-xs text-slate-700">
+              <label className="flex items-center gap-2 text-xs text-ink-700">
                 <input
                   type="checkbox"
                   checked={areaBarricaded}
                   onChange={(e) => setAreaBarricaded(e.target.checked)}
-                  className="w-4 h-4 accent-emerald-600"
+                  className="w-4 h-4 accent-brand-600"
                 />
                 Area barricaded
               </label>
@@ -475,8 +475,8 @@ export default function NewPermit() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center text-slate-500">
-          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        <div className="min-h-screen flex items-center justify-center text-ink-500">
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
         </div>
       }
     >

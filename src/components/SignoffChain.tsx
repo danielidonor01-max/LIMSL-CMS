@@ -87,17 +87,17 @@ export default function SignoffChain({
   const summary = chainSummary(chain);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" /> {title}
+        <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-brand-600" /> {title}
         </h3>
         {!loading && (
           <Badge
             className={
               summary.complete
-                ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
-                : "bg-amber-500/10 text-amber-700 border-amber-500/20"
+                ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
+                : "bg-warn-500/10 text-warn-700 border-warn-500/20"
             }
           >
             {summary.complete ? "Fully signed off" : `${summary.signed}/${summary.total} signed`}
@@ -106,11 +106,11 @@ export default function SignoffChain({
       </div>
 
       {loading ? (
-        <div className="py-6 flex items-center justify-center text-slate-400">
-          <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+        <div className="py-6 flex items-center justify-center text-ink-400">
+          <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
         </div>
       ) : chain.length === 0 ? (
-        <p className="text-xs text-slate-400">No sign-off chain configured for this record.</p>
+        <p className="text-xs text-ink-400">No sign-off chain configured for this record.</p>
       ) : (
         <ol className="space-y-2">
           {chain.map((step) => {
@@ -124,32 +124,32 @@ export default function SignoffChain({
             const canSign = step.status === "PENDING" && unlocked && mine;
             const isOpen = openStep === step.id;
             return (
-              <li key={step.id} className="border border-slate-200 rounded-lg overflow-hidden">
+              <li key={step.id} className="border border-ink-200 rounded-lg overflow-hidden">
                 <div className="flex items-center justify-between gap-3 p-3">
                   <div className="flex items-center gap-3 min-w-0">
                     {step.status === "SIGNED" ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-brand-600 shrink-0" />
                     ) : step.status === "REJECTED" ? (
-                      <Circle className="w-5 h-5 text-rose-500 shrink-0" />
+                      <Circle className="w-5 h-5 text-danger-500 shrink-0" />
                     ) : unlocked ? (
-                      <Circle className="w-5 h-5 text-slate-300 shrink-0" />
+                      <Circle className="w-5 h-5 text-ink-300 shrink-0" />
                     ) : (
-                      <Lock className="w-4 h-4 text-slate-300 shrink-0" />
+                      <Lock className="w-4 h-4 text-ink-300 shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-900">{step.roleLabel}</p>
+                      <p className="text-xs font-semibold text-ink-900">{step.roleLabel}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge className={ROLE_BADGE[step.role] ?? "bg-slate-100 text-slate-500 border-slate-200"}>
+                        <Badge className={ROLE_BADGE[step.role] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
                           {ROLE_LABELS[step.role] ?? step.role}
                         </Badge>
                         {step.signerUserName && (
-                          <span className="text-[10px] font-medium text-slate-600">
+                          <span className="text-[10px] font-medium text-ink-600">
                             {step.signerUserName} only
                           </span>
                         )}
-                        {!step.required && <span className="text-[9px] text-slate-400">optional</span>}
+                        {!step.required && <span className="text-[9px] text-ink-400">optional</span>}
                         {step.status === "SIGNED" && step.signedByName && (
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-ink-500">
                             · {step.signedByName} · {formatDate(step.signedAt)}
                           </span>
                         )}
@@ -159,13 +159,13 @@ export default function SignoffChain({
                           nobody should have to compare two role fields to
                           notice that somebody else signed this step. */}
                       {step.isOverride && (
-                        <div className="mt-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5">
-                          <p className="text-[10px] font-semibold text-amber-900">
+                        <div className="mt-1.5 rounded-md bg-warn-50 border border-warn-200 px-2 py-1.5">
+                          <p className="text-[10px] font-semibold text-warn-900">
                             Signed in place of {ROLE_LABELS[step.role] ?? step.role} by{" "}
                             {ROLE_LABELS[step.signedByRole ?? ""] ?? step.signedByRole}
                           </p>
                           {step.overrideReason && (
-                            <p className="text-[10px] text-amber-800 mt-0.5 leading-relaxed">
+                            <p className="text-[10px] text-warn-800 mt-0.5 leading-relaxed">
                               {step.overrideReason}
                             </p>
                           )}
@@ -182,7 +182,7 @@ export default function SignoffChain({
                         width={90}
                         height={32}
                         unoptimized
-                        className="h-8 w-auto bg-slate-50 rounded border border-slate-200"
+                        className="h-8 w-auto bg-ink-50 rounded border border-ink-200"
                       />
                     )}
                     {canSign && !isOpen && (
@@ -193,22 +193,22 @@ export default function SignoffChain({
                           setComments("");
                           setError(null);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
                       >
                         <PenLine className="w-3.5 h-3.5" /> Sign
                       </button>
                     )}
                     {step.status === "PENDING" && !unlocked && (
-                      <span className="text-[10px] text-slate-400">awaiting earlier steps</span>
+                      <span className="text-[10px] text-ink-400">awaiting earlier steps</span>
                     )}
                     {step.status === "PENDING" && unlocked && !mine && (
-                      <span className="text-[10px] text-slate-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
+                      <span className="text-[10px] text-ink-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
                     )}
                   </div>
                 </div>
 
                 {isOpen && (
-                  <div className="border-t border-slate-200 p-3 bg-slate-50/60 space-y-2">
+                  <div className="border-t border-ink-200 p-3 bg-ink-50/60 space-y-2">
                     <SignaturePad label={`Sign as ${ROLE_LABELS[step.role] ?? step.role}`} onChange={setSig} />
 
                     {/* Signing a step your role does not name is an exception.
@@ -216,8 +216,8 @@ export default function SignoffChain({
                         it a deliberate act rather than something discovered in
                         the audit trail six months later. */}
                     {role && role !== step.role && (
-                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 space-y-1.5">
-                        <p className="text-[11px] text-amber-900 leading-relaxed">
+                      <div className="rounded-lg border border-warn-200 bg-warn-50 p-2.5 space-y-1.5">
+                        <p className="text-[11px] text-warn-900 leading-relaxed">
                           This step names <strong>{ROLE_LABELS[step.role] ?? step.role}</strong>. You may sign it, but
                           it will be recorded as an override against your name.
                         </p>
@@ -226,7 +226,7 @@ export default function SignoffChain({
                           onChange={(e) => setOverrideReason(e.target.value)}
                           placeholder="Why are you signing in their place?"
                           aria-label="Reason for signing in place of the named role"
-                          className="w-full px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                          className="w-full px-3 py-1.5 bg-white border border-warn-300 rounded-lg text-xs text-ink-900 focus:outline-none focus:border-warn-500"
                         />
                       </div>
                     )}
@@ -235,20 +235,20 @@ export default function SignoffChain({
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
                       placeholder="Comments (optional)"
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-500/40"
+                      className="w-full px-3 py-1.5 bg-white border border-ink-200 rounded-lg text-xs text-ink-900 focus:outline-none focus:border-brand-500/40"
                     />
-                    {error && <p className="text-[11px] text-rose-600">{error}</p>}
+                    {error && <p className="text-[11px] text-danger-600">{error}</p>}
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setOpenStep(null)}
-                        className="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100"
+                        className="px-3 py-1.5 text-xs font-semibold text-ink-600 border border-ink-200 rounded-lg hover:bg-ink-100"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => sign(step.id)}
                         disabled={saving || !sig}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold"
                       >
                         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                         Confirm sign-off
@@ -261,7 +261,7 @@ export default function SignoffChain({
           })}
         </ol>
       )}
-      {error && !openStep && <p className="text-[11px] text-rose-600">{error}</p>}
+      {error && !openStep && <p className="text-[11px] text-danger-600">{error}</p>}
     </div>
   );
 }

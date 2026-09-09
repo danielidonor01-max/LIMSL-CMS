@@ -19,10 +19,10 @@ export const STOCK_LEVEL_LABELS: Record<StockLevel, string> = {
 };
 
 export const STOCK_LEVEL_BADGE: Record<StockLevel, string> = {
-  OUT_OF_STOCK: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  OUT_OF_STOCK: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   BELOW_MINIMUM: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-  AT_MINIMUM: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  ADEQUATE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  AT_MINIMUM: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  ADEQUATE: "bg-brand-500/10 text-brand-700 border-brand-500/20",
 };
 
 export function stockLevelOf(quantityOnHand: number, minimumQuantity: number): StockLevel {

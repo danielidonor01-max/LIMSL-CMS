@@ -65,7 +65,7 @@ export default function QuickActions() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 pl-3 pr-2 min-h-10 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 transition-colors"
+        className="inline-flex items-center gap-1.5 pl-3 pr-2 min-h-10 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition-colors"
       >
         <Plus className="w-4 h-4" />
         <span className="hidden sm:inline">New</span>
@@ -76,9 +76,9 @@ export default function QuickActions() {
         <div
           role="menu"
           aria-label="Create"
-          className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50"
+          className="absolute right-0 mt-2 w-60 bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50"
         >
-          <div className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+          <div className="px-3 py-2 text-[10px] font-semibold text-ink-500 uppercase tracking-wider border-b border-ink-100">
             Create
           </div>
           {actions.map((a) => {
@@ -89,9 +89,9 @@ export default function QuickActions() {
                 href={a.href}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 min-h-11 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                className="flex items-center gap-3 px-3 min-h-11 text-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700 transition-colors"
               >
-                <Icon className="w-4 h-4 text-emerald-600 shrink-0" />
+                <Icon className="w-4 h-4 text-brand-600 shrink-0" />
                 {a.label}
               </Link>
             );

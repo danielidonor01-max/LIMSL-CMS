@@ -11,7 +11,7 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
   boldParts.forEach((part, i) => {
     if (/^\*\*[^*]+\*\*$/.test(part)) {
       nodes.push(
-        <strong key={`${keyBase}-b${i}`} className="font-semibold text-slate-900">
+        <strong key={`${keyBase}-b${i}`} className="font-semibold text-ink-900">
           {part.slice(2, -2)}
         </strong>,
       );
@@ -44,7 +44,7 @@ export default function Markdown({ content }: { content: string }) {
         {items.map((it, i) => (
           <li
             key={i}
-            className="text-[13px] text-slate-700 leading-relaxed list-disc"
+            className="text-[13px] text-ink-700 leading-relaxed list-disc"
             style={{ marginLeft: 18 + it.indent * 16 }}
           >
             {renderInline(it.text, `li-${key}-${i}`)}
@@ -62,7 +62,7 @@ export default function Markdown({ content }: { content: string }) {
     }
     if (line.trim() === "---") {
       flushList();
-      blocks.push(<hr key={`hr-${key++}`} className="my-6 border-slate-200" />);
+      blocks.push(<hr key={`hr-${key++}`} className="my-6 border-ink-200" />);
       continue;
     }
     const bullet = line.match(/^(\s*)-\s+(.*)$/);
@@ -73,13 +73,13 @@ export default function Markdown({ content }: { content: string }) {
     }
     flushList();
     if (line.startsWith("### ")) {
-      blocks.push(<h4 key={`h-${key++}`} className="text-sm font-bold text-slate-900 mt-5 mb-1.5">{renderInline(line.slice(4), `h${key}`)}</h4>);
+      blocks.push(<h4 key={`h-${key++}`} className="text-sm font-bold text-ink-900 mt-5 mb-1.5">{renderInline(line.slice(4), `h${key}`)}</h4>);
     } else if (line.startsWith("## ")) {
-      blocks.push(<h3 key={`h-${key++}`} className="text-base font-bold text-slate-900 mt-6 mb-2 pb-1 border-b border-slate-200">{renderInline(line.slice(3), `h${key}`)}</h3>);
+      blocks.push(<h3 key={`h-${key++}`} className="text-base font-bold text-ink-900 mt-6 mb-2 pb-1 border-b border-ink-200">{renderInline(line.slice(3), `h${key}`)}</h3>);
     } else if (line.startsWith("# ")) {
-      blocks.push(<h2 key={`h-${key++}`} className="text-xl font-bold tracking-tight text-slate-900 mt-2 mb-3">{renderInline(line.slice(2), `h${key}`)}</h2>);
+      blocks.push(<h2 key={`h-${key++}`} className="text-xl font-bold tracking-tight text-ink-900 mt-2 mb-3">{renderInline(line.slice(2), `h${key}`)}</h2>);
     } else {
-      blocks.push(<p key={`p-${key++}`} className="text-[13px] text-slate-700 leading-relaxed my-2">{renderInline(line, `p${key}`)}</p>);
+      blocks.push(<p key={`p-${key++}`} className="text-[13px] text-ink-700 leading-relaxed my-2">{renderInline(line, `p${key}`)}</p>);
     }
   }
   flushList();

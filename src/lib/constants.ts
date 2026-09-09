@@ -27,11 +27,11 @@ export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const EQUIPMENT_STATUS_BADGE: Record<string, string> = {
-  OPERATIONAL: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  UNDER_MAINTENANCE: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  BROKEN_DOWN: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  OPERATIONAL: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  UNDER_MAINTENANCE: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  BROKEN_DOWN: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   AWAITING_PARTS: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  DECOMMISSIONED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  DECOMMISSIONED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 // Criticality is a business judgement, so it is spelled out rather than shown as
@@ -53,10 +53,10 @@ export const CRITICALITY_SHORT: Record<string, string> = {
 // The registry hand-rolled this and had no branch for CRITICAL, so the most
 // important level rendered in the same grey as the least.
 export const CRITICALITY_BADGE: Record<string, string> = {
-  CRITICAL: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  CRITICAL: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   HIGH: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-  MEDIUM: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  LOW: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  MEDIUM: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  LOW: "bg-ink-500/10 text-ink-600 border-ink-500/20",
 };
 
 export const FREQUENCY_LABELS: Record<string, string> = {
@@ -77,9 +77,9 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ACTIVITY_TYPE_BADGE: Record<string, string> = {
-  PM: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  INS: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  CM: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  PM: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  INS: "bg-info-500/10 text-info-700 border-info-500/20",
+  CM: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   PRS: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
@@ -93,11 +93,11 @@ export const SCHEDULE_STATUS_LABELS: Record<string, string> = {
 };
 
 export const SCHEDULE_STATUS_BADGE: Record<string, string> = {
-  SCHEDULED: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  COMPLETED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  OVERDUE: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  MISSED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  RESCHEDULED: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  SCHEDULED: "bg-info-500/10 text-info-700 border-info-500/20",
+  COMPLETED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  OVERDUE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  MISSED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  RESCHEDULED: "bg-warn-500/10 text-warn-700 border-warn-500/20",
   DEFERRED: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
 
@@ -116,14 +116,14 @@ export const PERMIT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const PERMIT_STATUS_BADGE: Record<string, string> = {
-  DRAFT: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  PENDING_APPROVAL: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  ACTIVE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  CLOSED: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  DRAFT: "bg-info-500/10 text-info-700 border-info-500/20",
+  PENDING_APPROVAL: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  ACTIVE: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  CLOSED: "bg-ink-500/10 text-ink-600 border-ink-500/20",
   CLOSED_LATE: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-  CLOSED_WORK_ONGOING: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  EXPIRED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  CANCELLED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  CLOSED_WORK_ONGOING: "bg-info-500/10 text-info-700 border-info-500/20",
+  EXPIRED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  CANCELLED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 // ─── Controlled documents ───────────────────────────────────────────────────
@@ -145,9 +145,9 @@ export const WO_TYPE_LABELS: Record<string, string> = {
 };
 
 export const WO_TYPE_BADGE: Record<string, string> = {
-  PREVENTIVE: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  CORRECTIVE: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  INSPECTION: "bg-sky-500/10 text-sky-700 border-sky-500/20",
+  PREVENTIVE: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  CORRECTIVE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  INSPECTION: "bg-info-500/10 text-info-700 border-info-500/20",
   EMERGENCY: "bg-orange-500/10 text-orange-600 border-orange-500/20",
   CALIBRATION: "bg-violet-500/10 text-violet-700 border-violet-500/20",
 };
@@ -161,11 +161,11 @@ export const WO_STATUS_LABELS: Record<string, string> = {
 };
 
 export const WO_STATUS_BADGE: Record<string, string> = {
-  OPEN: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  IN_PROGRESS: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+  OPEN: "bg-info-500/10 text-info-700 border-info-500/20",
+  IN_PROGRESS: "bg-warn-500/10 text-warn-700 border-warn-500/20",
   PENDING_APPROVAL: "bg-violet-500/10 text-violet-700 border-violet-500/20",
-  COMPLETED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  CANCELLED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  COMPLETED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  CANCELLED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 export const PRIORITY_LABELS: Record<string, string> = {
@@ -176,10 +176,10 @@ export const PRIORITY_LABELS: Record<string, string> = {
 };
 
 export const PRIORITY_BADGE: Record<string, string> = {
-  LOW: "bg-slate-500/10 text-slate-500 border-slate-500/20",
-  MEDIUM: "bg-sky-500/10 text-sky-700 border-sky-500/20",
-  HIGH: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  CRITICAL: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  LOW: "bg-ink-500/10 text-ink-500 border-ink-500/20",
+  MEDIUM: "bg-info-500/10 text-info-700 border-info-500/20",
+  HIGH: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  CRITICAL: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 // Option lists for <select> inputs

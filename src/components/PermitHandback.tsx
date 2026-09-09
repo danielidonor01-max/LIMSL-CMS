@@ -112,13 +112,13 @@ export default function PermitHandback({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
-      <h3 className="text-sm font-semibold text-slate-900">Handover, handback and acceptance</h3>
+    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-5">
+      <h3 className="text-sm font-semibold text-ink-900">Handover, handback and acceptance</h3>
 
       {/* Handover of work */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
             Handover of work
           </h4>
           {canHandback && (
@@ -133,16 +133,16 @@ export default function PermitHandback({
           )}
         </div>
         {handovers.length === 0 ? (
-          <p className="text-xs text-slate-400">The permit has not changed hands.</p>
+          <p className="text-xs text-ink-400">The permit has not changed hands.</p>
         ) : (
-          <ul className="text-xs text-slate-700 space-y-1">
+          <ul className="text-xs text-ink-700 space-y-1">
             {handovers.map((h, i) => (
               <li key={i} className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-slate-400">{i + 1}</span>
+                <span className="font-mono text-[10px] text-ink-400">{i + 1}</span>
                 <span className="font-medium">{h.from}</span>
-                <ArrowRightLeft className="w-3 h-3 text-slate-400" />
+                <ArrowRightLeft className="w-3 h-3 text-ink-400" />
                 <span className="font-medium">{h.to}</span>
-                <span className="text-slate-400">{formatDate(h.at)}</span>
+                <span className="text-ink-400">{formatDate(h.at)}</span>
               </li>
             ))}
           </ul>
@@ -150,9 +150,9 @@ export default function PermitHandback({
       </div>
 
       {/* Handback of work */}
-      <div className="pt-4 border-t border-slate-200">
+      <div className="pt-4 border-t border-ink-200">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
             Handback of work
           </h4>
           {canHandback && (
@@ -172,27 +172,27 @@ export default function PermitHandback({
         </div>
         {permit.handbackOutcome ? (
           <div className="text-xs">
-            <p className="text-slate-900 font-medium">
+            <p className="text-ink-900 font-medium">
               {permit.handbackOutcome === "COMPLETED"
                 ? "Job completed and worksite cleared"
                 : "Job suspended"}
             </p>
             {permit.handbackReason && (
-              <p className="text-slate-600 mt-0.5 whitespace-pre-line">{permit.handbackReason}</p>
+              <p className="text-ink-600 mt-0.5 whitespace-pre-line">{permit.handbackReason}</p>
             )}
-            <p className="text-slate-400 mt-0.5">
+            <p className="text-ink-400 mt-0.5">
               {permit.handbackByName ?? "-"} · {formatDate(permit.handbackAt)}
             </p>
           </div>
         ) : (
-          <p className="text-xs text-slate-400">The work party has not handed the job back yet.</p>
+          <p className="text-xs text-ink-400">The work party has not handed the job back yet.</p>
         )}
       </div>
 
       {/* Work acceptance closure */}
-      <div className="pt-4 border-t border-slate-200">
+      <div className="pt-4 border-t border-ink-200">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">
             Work acceptance
           </h4>
           {canAccept && !permit.acceptedAt && permit.handbackOutcome && (
@@ -201,7 +201,7 @@ export default function PermitHandback({
                 value={dept}
                 onChange={(e) => setDept(e.target.value)}
                 placeholder="Dept."
-                className="w-24 px-2 py-1.5 border border-slate-200 rounded-lg text-xs"
+                className="w-24 px-2 py-1.5 border border-ink-200 rounded-lg text-xs"
               />
               <Button type="button" icon={Stamp} loading={saving} onClick={submitAccept}>
                 Accept
@@ -210,13 +210,13 @@ export default function PermitHandback({
           )}
         </div>
         {permit.acceptedAt ? (
-          <p className="text-xs text-slate-700">
+          <p className="text-xs text-ink-700">
             Job accepted as stated by{" "}
-            <span className="font-medium text-slate-900">{permit.acceptedByName ?? "-"}</span>
+            <span className="font-medium text-ink-900">{permit.acceptedByName ?? "-"}</span>
             {permit.acceptedByDept && ` (${permit.acceptedByDept})`} on {formatDate(permit.acceptedAt)}.
           </p>
         ) : (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-ink-400">
             {permit.handbackOutcome
               ? "Waiting on the asset holder to accept the job."
               : "Acceptance follows handback."}
@@ -225,11 +225,11 @@ export default function PermitHandback({
       </div>
 
       {permit.closureNote && (
-        <div className="pt-4 border-t border-slate-200">
-          <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+        <div className="pt-4 border-t border-ink-200">
+          <h4 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">
             Closure
           </h4>
-          <p className="text-xs text-slate-700">{permit.closureNote}</p>
+          <p className="text-xs text-ink-700">{permit.closureNote}</p>
         </div>
       )}
 

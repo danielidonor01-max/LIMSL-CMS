@@ -130,7 +130,7 @@ function NewWorkOrderForm() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ClipboardList}
@@ -141,14 +141,14 @@ function NewWorkOrderForm() {
         />
 
         {loading ? (
-          <div className="py-16 flex justify-center items-center text-slate-500">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          <div className="py-16 flex justify-center items-center text-ink-500">
+            <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
             <span className="text-xs ml-2">Loading…</span>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 bg-white border border-slate-200 rounded-xl p-6">
+          <form onSubmit={submit} className="space-y-5 bg-white border border-ink-200 rounded-xl p-6">
             {error && (
-              <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs">
+              <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-danger-700 text-xs">
                 {error}
               </div>
             )}
@@ -267,8 +267,8 @@ export default function NewWorkOrderPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+        <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500">
+          <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         </div>
       }
     >

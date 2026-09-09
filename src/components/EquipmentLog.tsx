@@ -30,18 +30,18 @@ type Event = {
 };
 
 const CATEGORY_META: Record<string, { label: string; icon: typeof Wrench; color: string; ring: string }> = {
-  PM: { label: "PM", icon: ClipboardCheck, color: "text-emerald-600", ring: "bg-emerald-50 border-emerald-200" },
-  CM: { label: "Corrective", icon: Wrench, color: "text-rose-600", ring: "bg-rose-50 border-rose-200" },
-  INSPECTION: { label: "Inspection", icon: Gauge, color: "text-sky-600", ring: "bg-sky-50 border-sky-200" },
+  PM: { label: "PM", icon: ClipboardCheck, color: "text-brand-600", ring: "bg-brand-50 border-brand-200" },
+  CM: { label: "Corrective", icon: Wrench, color: "text-danger-600", ring: "bg-danger-50 border-danger-200" },
+  INSPECTION: { label: "Inspection", icon: Gauge, color: "text-info-600", ring: "bg-info-50 border-info-200" },
   ACCIDENT: { label: "Accident", icon: AlertTriangle, color: "text-orange-600", ring: "bg-orange-50 border-orange-200" },
   TRANSFER: { label: "Transfer", icon: Truck, color: "text-violet-600", ring: "bg-violet-50 border-violet-200" },
   DIAGNOSIS: { label: "Diagnosis", icon: Stethoscope, color: "text-indigo-600", ring: "bg-indigo-50 border-indigo-200" },
-  STATUS: { label: "Status", icon: Activity, color: "text-amber-600", ring: "bg-amber-50 border-amber-200" },
+  STATUS: { label: "Status", icon: Activity, color: "text-warn-600", ring: "bg-warn-50 border-warn-200" },
   CALIBRATION: { label: "Calibration", icon: Gauge, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
-  DOCUMENT: { label: "Document", icon: FileText, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
+  DOCUMENT: { label: "Document", icon: FileText, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
   METER: { label: "Meter", icon: Gauge, color: "text-cyan-600", ring: "bg-cyan-50 border-cyan-200" },
-  NOTE: { label: "Note", icon: StickyNote, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
-  OTHER: { label: "Other", icon: CircleDot, color: "text-slate-500", ring: "bg-slate-50 border-slate-200" },
+  NOTE: { label: "Note", icon: StickyNote, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
+  OTHER: { label: "Other", icon: CircleDot, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
 };
 
 const FILTERS = ["ALL", "PM", "CM", "INSPECTION", "ACCIDENT", "TRANSFER", "DIAGNOSIS", "STATUS", "DOCUMENT", "NOTE"];
@@ -113,20 +113,20 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
     }
   };
 
-  const field = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/40";
+  const field = "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500/40";
 
   return (
     <div className="space-y-4">
       {/* Filters + add */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mb-1">
-          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <Filter className="w-3.5 h-3.5 text-ink-400 shrink-0" />
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all border ${
-                filter === f ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                filter === f ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
               }`}
             >
               {f === "ALL" ? "All" : CATEGORY_META[f]?.label ?? f}
@@ -142,15 +142,15 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
 
       {/* Timeline */}
       {events === null ? (
-        <div className="py-12 flex justify-center text-slate-400">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+        <div className="py-12 flex justify-center text-ink-400">
+          <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-slate-400">
+        <div className="py-12 text-center text-sm text-ink-400">
           {filter === "ALL" ? "No history recorded for this machine yet." : `No ${CATEGORY_META[filter]?.label ?? filter} entries.`}
         </div>
       ) : (
-        <ol className="relative border-l-2 border-slate-100 ml-3 space-y-4">
+        <ol className="relative border-l-2 border-ink-100 ml-3 space-y-4">
           {filtered.map((ev) => {
             const meta = CATEGORY_META[ev.category] ?? CATEGORY_META.OTHER;
             const Icon = meta.icon;
@@ -159,25 +159,25 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
                 <span className={`absolute -left-[13px] flex items-center justify-center w-6 h-6 rounded-full border ${meta.ring}`}>
                   <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
                 </span>
-                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                <div className="bg-white border border-ink-200 rounded-lg p-3">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.ring} ${meta.color}`}>
                           {meta.label}
                         </span>
-                        {ev.source === "MANUAL" && <span className="text-[9px] text-slate-400 uppercase">manual</span>}
-                        {ev.source === "AUTO" && <span className="text-[9px] text-slate-400 uppercase">auto</span>}
+                        {ev.source === "MANUAL" && <span className="text-[9px] text-ink-400 uppercase">manual</span>}
+                        {ev.source === "AUTO" && <span className="text-[9px] text-ink-400 uppercase">auto</span>}
                       </div>
-                      <p className="text-sm font-medium text-slate-900 mt-1 break-words">{ev.title}</p>
-                      {ev.detail && <p className="text-xs text-slate-500 mt-0.5 break-words">{ev.detail}</p>}
+                      <p className="text-sm font-medium text-ink-900 mt-1 break-words">{ev.title}</p>
+                      {ev.detail && <p className="text-xs text-ink-500 mt-0.5 break-words">{ev.detail}</p>}
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 shrink-0">{fmtDate(ev.occurredAt)}</span>
+                    <span className="text-[10px] font-mono text-ink-400 shrink-0">{fmtDate(ev.occurredAt)}</span>
                   </div>
                   <div className="flex items-center gap-3 mt-1.5">
-                    {ev.performedByName && <span className="text-[10px] text-slate-400">by {ev.performedByName}</span>}
+                    {ev.performedByName && <span className="text-[10px] text-ink-400">by {ev.performedByName}</span>}
                     {ev.href && (
-                      <Link href={ev.href} className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-0.5">
+                      <Link href={ev.href} className="text-[10px] text-brand-600 hover:underline inline-flex items-center gap-0.5">
                         Open <ExternalLink className="w-2.5 h-2.5" />
                       </Link>
                     )}
@@ -194,28 +194,28 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 uppercase">Category</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">Category</label>
               <Select value={form.category} onChange={(v) => setForm((f) => ({ ...f, category: v }))} className="w-full">
                 {MANUAL_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 uppercase">When</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">When</label>
               <input type="datetime-local" value={form.occurredAt} onChange={(e) => setForm((f) => ({ ...f, occurredAt: e.target.value }))} className={field} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-500 uppercase">Title</label>
+            <label className="text-[11px] font-semibold text-ink-500 uppercase">Title</label>
             <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Operator reported unusual vibration" className={field} required />
           </div>
           {form.category === "TRANSFER" && (
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 uppercase">New location (updates the asset)</label>
+              <label className="text-[11px] font-semibold text-ink-500 uppercase">New location (updates the asset)</label>
               <LocationField value={form.newLocation} onChange={(v) => setForm((f) => ({ ...f, newLocation: v }))} />
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-500 uppercase">Detail (optional)</label>
+            <label className="text-[11px] font-semibold text-ink-500 uppercase">Detail (optional)</label>
             <textarea value={form.detail} onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))} rows={3} className={`${field} resize-none`} />
           </div>
           <div className="flex justify-end gap-2 pt-1">

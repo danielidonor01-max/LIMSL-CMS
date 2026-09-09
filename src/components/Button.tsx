@@ -24,11 +24,11 @@ const SIZES: Record<ButtonSize, string> = {
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-950/10",
-  secondary: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300",
-  danger: "bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-950/10",
-  ghost: "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
-  subtle: "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200",
+  primary: "bg-brand-600 hover:bg-brand-500 text-white shadow-sm shadow-brand-950/10",
+  secondary: "bg-surface border border-line text-ink-700 hover:bg-ink-100 hover:border-ink-300",
+  danger: "bg-danger-600 hover:bg-danger-500 text-white shadow-sm shadow-danger-950/10",
+  ghost: "text-ink-600 hover:text-ink-900 hover:bg-ink-100",
+  subtle: "bg-ink-100 hover:bg-ink-200 text-ink-700 border border-line",
 };
 
 type CommonProps = {

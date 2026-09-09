@@ -175,7 +175,7 @@ export default function ContractorsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
         <PageHeader
           icon={HardHat}
@@ -200,24 +200,24 @@ export default function ContractorsPage() {
 
         {!loading && summary && summary.total > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-xl border ${summary.blocked > 0 ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Cleared to work</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
+            <div className={`p-4 rounded-xl border ${summary.blocked > 0 ? "bg-danger-50 border-danger-200" : "bg-brand-50 border-brand-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Cleared to work</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">
                 {summary.eligible}
-                <span className="text-lg text-slate-500 font-semibold"> / {summary.total}</span>
+                <span className="text-lg text-ink-500 font-semibold"> / {summary.total}</span>
               </p>
-              <p className="text-[11px] text-slate-600 mt-1">
+              <p className="text-[11px] text-ink-600 mt-1">
                 {summary.blocked > 0 ? `${summary.blocked} cannot be given a permit today` : "Every contractor is current"}
               </p>
             </div>
-            <div className={`p-4 rounded-xl border ${summary.expiringSoon > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Expiring within 30 days</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{summary.expiringSoon}</p>
-              <p className="text-[11px] text-slate-600 mt-1">Chase these before they block a job</p>
+            <div className={`p-4 rounded-xl border ${summary.expiringSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Expiring within 30 days</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">{summary.expiringSoon}</p>
+              <p className="text-[11px] text-ink-600 mt-1">Chase these before they block a job</p>
             </div>
-            <div className="p-4 rounded-xl border bg-white border-slate-200">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Enforcement</p>
-              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+            <div className="p-4 rounded-xl border bg-white border-ink-200">
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Enforcement</p>
+              <p className="text-sm text-ink-700 mt-2 leading-relaxed">
                 A permit naming a blocked contractor is refused at issue, this register is a gate, not a list.
               </p>
             </div>
@@ -226,19 +226,19 @@ export default function ContractorsPage() {
 
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Company, trade or contact…"
-              className="w-full bg-white border border-slate-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+              className="w-full bg-white border border-ink-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
           </div>
           <button
             onClick={() => setBlockedOnly((v) => !v)}
             aria-pressed={blockedOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-              blockedOnly ? "bg-rose-50 border-rose-300 text-rose-700" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+              blockedOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
             }`}
           >
             <AlertTriangle className="w-4 h-4" /> Blocked only
@@ -246,15 +246,15 @@ export default function ContractorsPage() {
         </div>
 
         {error && !loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl">
+          <div className="bg-white border border-ink-200 rounded-xl">
             <LoadError what="the contractor register" onRetry={refresh} />
           </div>
         ) : loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl">
+          <div className="bg-white border border-ink-200 rounded-xl">
             <TableSkeleton rows={4} cols={4} />
           </div>
         ) : !filtered.length ? (
-          <div className="bg-white border border-slate-200 rounded-xl">
+          <div className="bg-white border border-ink-200 rounded-xl">
             {q.trim() || blockedOnly ? (
               <EmptyState
                 icon={Search}
@@ -287,23 +287,23 @@ export default function ContractorsPage() {
                 key={c.id}
                 data-list-card
                 className={`bg-white border rounded-xl p-4 space-y-3 ${
-                  c.eligibility.eligible ? "border-slate-200" : "border-rose-200"
+                  c.eligibility.eligible ? "border-ink-200" : "border-danger-200"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-slate-900">{c.companyName}</p>
+                      <p className="text-sm font-semibold text-ink-900">{c.companyName}</p>
                       {c.eligibility.eligible ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">May work on site</Badge>
+                        <Badge className="bg-brand-500/10 text-brand-700 border-brand-500/20">May work on site</Badge>
                       ) : (
-                        <Badge className="bg-rose-500/10 text-rose-700 border-rose-500/20">Blocked</Badge>
+                        <Badge className="bg-danger-500/10 text-danger-700 border-danger-500/20">Blocked</Badge>
                       )}
                       {c.status === "SUSPENDED" && (
-                        <Badge className="bg-slate-800 text-white border-slate-800">Suspended</Badge>
+                        <Badge className="bg-ink-800 text-white border-ink-800">Suspended</Badge>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-ink-500 mt-0.5">
                       {c.tradeSpecialty ?? "Trade not recorded"}
                       {c.contactPerson ? ` · ${c.contactPerson}` : ""}
                       {c.phone ? ` · ${c.phone}` : ""}
@@ -313,21 +313,21 @@ export default function ContractorsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setAddPerson({ c, name: "", jobTitle: "", inductionValidUntil: "" })}
-                        className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-semibold hover:bg-slate-50"
+                        className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-ink-200 text-ink-600 text-[11px] font-semibold hover:bg-ink-50"
                       >
                         <UserPlus className="w-3.5 h-3.5" /> Add person
                       </button>
                       {c.status === "SUSPENDED" ? (
                         <button
                           onClick={() => reinstate(c)}
-                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-emerald-200 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-50"
+                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-brand-200 text-brand-700 text-[11px] font-semibold hover:bg-brand-50"
                         >
                           <ShieldCheck className="w-3.5 h-3.5" /> Reinstate
                         </button>
                       ) : (
                         <button
                           onClick={() => setSuspend({ c, reason: "" })}
-                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-rose-200 text-rose-700 text-[11px] font-semibold hover:bg-rose-50"
+                          className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-200 text-danger-700 text-[11px] font-semibold hover:bg-danger-50"
                         >
                           <ShieldOff className="w-3.5 h-3.5" /> Suspend
                         </button>
@@ -337,45 +337,45 @@ export default function ContractorsPage() {
                 </div>
 
                 {!c.eligibility.eligible && (
-                  <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5">
-                    <p className="text-[11px] text-rose-900 leading-relaxed">
+                  <div className="rounded-lg bg-danger-50 border border-danger-200 p-2.5">
+                    <p className="text-[11px] text-danger-900 leading-relaxed">
                       {c.eligibility.messages.join(" ")}
                       {c.suspensionReason ? ` (${c.suspensionReason})` : ""}
                     </p>
                   </div>
                 )}
                 {c.eligibility.expiringSoon.length > 0 && (
-                  <p className="text-[11px] text-amber-700">{c.eligibility.expiringSoon.join(" ")}</p>
+                  <p className="text-[11px] text-warn-700">{c.eligibility.expiringSoon.join(" ")}</p>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 text-[11px] pt-1 border-t border-slate-100">
+                <div className="grid grid-cols-2 gap-3 text-[11px] pt-1 border-t border-ink-100">
                   <div>
-                    <p className="font-semibold text-slate-500 uppercase tracking-wider">Insurance to</p>
-                    <p className="text-slate-800 mt-0.5">
-                      {c.insuranceExpiryDate ? formatDate(c.insuranceExpiryDate) : <span className="text-rose-600">Not recorded</span>}
+                    <p className="font-semibold text-ink-500 uppercase tracking-wider">Insurance to</p>
+                    <p className="text-ink-800 mt-0.5">
+                      {c.insuranceExpiryDate ? formatDate(c.insuranceExpiryDate) : <span className="text-danger-600">Not recorded</span>}
                     </p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-500 uppercase tracking-wider">Induction to</p>
-                    <p className="text-slate-800 mt-0.5">
-                      {c.inductionValidUntil ? formatDate(c.inductionValidUntil) : <span className="text-rose-600">Not recorded</span>}
+                    <p className="font-semibold text-ink-500 uppercase tracking-wider">Induction to</p>
+                    <p className="text-ink-800 mt-0.5">
+                      {c.inductionValidUntil ? formatDate(c.inductionValidUntil) : <span className="text-danger-600">Not recorded</span>}
                     </p>
                   </div>
                 </div>
 
                 {c.personnel.length > 0 && (
                   <details className="text-[11px]">
-                    <summary className="cursor-pointer text-slate-500 hover:text-slate-900 select-none">
+                    <summary className="cursor-pointer text-ink-500 hover:text-ink-900 select-none">
                       {c.personnel.length} person{c.personnel.length === 1 ? "" : "s"} inducted
                     </summary>
                     <ul className="mt-2 space-y-1">
                       {c.personnel.map((p) => (
-                        <li key={p.id} className="flex justify-between gap-3 py-1 border-b border-slate-50">
-                          <span className="text-slate-700">
+                        <li key={p.id} className="flex justify-between gap-3 py-1 border-b border-ink-50">
+                          <span className="text-ink-700">
                             {p.name}
-                            {p.jobTitle ? <span className="text-slate-400"> · {p.jobTitle}</span> : null}
+                            {p.jobTitle ? <span className="text-ink-400"> · {p.jobTitle}</span> : null}
                           </span>
-                          <span className={p.eligibility.eligible ? "text-emerald-700" : "text-rose-700"}>
+                          <span className={p.eligibility.eligible ? "text-brand-700" : "text-danger-700"}>
                             {p.eligibility.eligible ? formatDate(p.inductionValidUntil ?? "") : p.eligibility.message}
                           </span>
                         </li>
@@ -445,7 +445,7 @@ export default function ContractorsPage() {
                 <input id="c-indexp" type="date" value={form.inductionValidUntil} onChange={(e) => setForm((f) => ({ ...f, inductionValidUntil: e.target.value }))} className={FIELD_CLASS} />
               </Field>
             </div>
-            <p className="text-[11px] text-slate-500 -mt-1">
+            <p className="text-[11px] text-ink-500 -mt-1">
               Leaving either date blank blocks the contractor rather than clearing them, &ldquo;never checked&rdquo;
               and &ldquo;checked and valid&rdquo; must not look the same to whoever issues the permit.
             </p>
@@ -461,7 +461,7 @@ export default function ContractorsPage() {
         <Modal open={!!suspend} onClose={() => setSuspend(null)} title="Suspend this contractor" subtitle={suspend?.c.companyName}>
           {suspend && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-ink-600">
                 While suspended, no permit can be issued naming this company, the request is refused at the point of
                 issue.
               </p>
@@ -487,7 +487,7 @@ export default function ContractorsPage() {
         <Modal open={!!addPerson} onClose={() => setAddPerson(null)} title="Add an inducted person" subtitle={addPerson?.c.companyName}>
           {addPerson && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-ink-600">
                 A person&apos;s induction can lapse while their company&apos;s is current, a new hire sent to site by an
                 otherwise compliant contractor is exactly what this catches.
               </p>

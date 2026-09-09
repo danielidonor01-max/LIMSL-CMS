@@ -190,7 +190,7 @@ export default function OemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Building2}
@@ -226,21 +226,21 @@ export default function OemPage() {
         />
 
         {loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat label="Vendors" value={String(summary.total)} tone="border-slate-200 bg-slate-50" text="text-slate-900" />
-              <Stat label="Active Warranty" value={String(summary.active)} tone="border-emerald-200 bg-emerald-50" text="text-emerald-600" />
-              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-amber-200 bg-amber-50" text="text-amber-600" />
-              <Stat label="Expired" value={String(summary.expired)} tone="border-rose-200 bg-rose-50" text="text-rose-600" />
+              <Stat label="Vendors" value={String(summary.total)} tone="border-ink-200 bg-ink-50" text="text-ink-900" />
+              <Stat label="Active Warranty" value={String(summary.active)} tone="border-brand-200 bg-brand-50" text="text-brand-600" />
+              <Stat label="Expiring ≤60d" value={String(summary.expiringSoon)} tone="border-warn-200 bg-warn-50" text="text-warn-600" />
+              <Stat label="Expired" value={String(summary.expired)} tone="border-danger-200 bg-danger-50" text="text-danger-600" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {vendors.length === 0 && (
-                <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl">
+                <div className="lg:col-span-2 bg-white border border-ink-200 rounded-xl">
                   <EmptyState
                     icon={Building2}
                     title="No vendors registered"
@@ -261,35 +261,35 @@ export default function OemPage() {
                 const days = daysUntil(v.warrantyEnd);
                 const active = !!v.warrantyActive && (v.warrantyEnd ?? "") >= TODAY;
                 return (
-                  <div key={v.id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+                  <div key={v.id} className="bg-white border border-ink-200 rounded-xl p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-900">{v.vendorName}</h3>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <h3 className="text-sm font-semibold text-ink-900">{v.vendorName}</h3>
+                        <p className="text-[11px] text-ink-500 mt-0.5">
                           {v.equipmentName} · <span className="font-mono">{v.assetId}</span>
                         </p>
                       </div>
                       {active ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        <Badge className="bg-brand-500/10 text-brand-600 border-brand-500/20">
                           <ShieldCheck className="w-3 h-3 mr-1" /> In Warranty
                         </Badge>
                       ) : (
-                        <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20">
+                        <Badge className="bg-danger-500/10 text-danger-600 border-danger-500/20">
                           <ShieldX className="w-3 h-3 mr-1" /> Out of Warranty
                         </Badge>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-ink-500">
                       <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {v.phone ?? "-"}</span>
                       <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {v.email ?? "-"}</span>
                       <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {v.avgResponseTimeHrs ?? "-"} hr response</span>
                       <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {v.avgSpareLeadTimeDays ?? "-"} d lead</span>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500">{v.warrantyScope}</span>
-                      <span className={active ? "text-emerald-600" : "text-rose-600"}>
+                    <div className="pt-2 border-t border-ink-200 flex items-center justify-between text-[11px]">
+                      <span className="text-ink-500">{v.warrantyScope}</span>
+                      <span className={active ? "text-brand-600" : "text-danger-600"}>
                         {active && days !== null
                           ? `${days}d left · ${formatDate(v.warrantyEnd)}`
                           : `Expired ${formatDate(v.warrantyEnd)}`}
@@ -301,10 +301,10 @@ export default function OemPage() {
             </div>
 
             {/* Interventions */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <h3 className="text-sm font-semibold text-slate-900">OEM Intervention Log</h3>
+            <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-ink-200 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-warn-600" />
+                <h3 className="text-sm font-semibold text-ink-900">OEM Intervention Log</h3>
               </div>
               {interventions.length === 0 ? (
                 <EmptyState
@@ -327,7 +327,7 @@ export default function OemPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
+                      <tr className="border-b border-ink-200 text-ink-500">
                         <th className="py-2.5 px-5 font-medium">Date</th>
                         <th className="py-2.5 px-4 font-medium">Problem</th>
                         <th className="py-2.5 px-4 font-medium">Warranty</th>
@@ -336,30 +336,30 @@ export default function OemPage() {
                         <th className="py-2.5 px-4 font-medium">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-ink-200">
                       {interventions.map((it) => (
-                        <tr key={it.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-5 font-mono text-slate-500">{formatDate(it.interventionDate)}</td>
-                          <td className="py-2.5 px-4 text-slate-700 max-w-xs">{it.problemDescription}</td>
+                        <tr key={it.id} className="hover:bg-ink-50">
+                          <td className="py-2.5 px-5 font-mono text-ink-500">{formatDate(it.interventionDate)}</td>
+                          <td className="py-2.5 px-4 text-ink-700 max-w-xs">{it.problemDescription}</td>
                           <td className="py-2.5 px-4">
-                            <Badge className={it.warrantyStatus === "IN" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20"}>
+                            <Badge className={it.warrantyStatus === "IN" ? "bg-brand-500/10 text-brand-600 border-brand-500/20" : "bg-ink-500/10 text-ink-500 border-ink-500/20"}>
                               {it.warrantyStatus ?? "-"}
                             </Badge>
                           </td>
-                          <td className="py-2.5 px-4 text-slate-700">{it.responseTimeHrs ?? "-"} hrs</td>
-                          <td className="py-2.5 px-4 text-slate-500 max-w-xs">{it.resolutionSummary}</td>
+                          <td className="py-2.5 px-4 text-ink-700">{it.responseTimeHrs ?? "-"} hrs</td>
+                          <td className="py-2.5 px-4 text-ink-500 max-w-xs">{it.resolutionSummary}</td>
                           <td className="py-2.5 px-4">
                             {it.closed ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Closed</Badge>
+                              <Badge className="bg-brand-500/10 text-brand-600 border-brand-500/20">Closed</Badge>
                             ) : canWrite ? (
                               <button
                                 onClick={() => closeIntervention(it.id)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Close
                               </button>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Open</Badge>
+                              <Badge className="bg-warn-500/10 text-warn-600 border-warn-500/20">Open</Badge>
                             )}
                           </td>
                         </tr>
@@ -468,8 +468,8 @@ export default function OemPage() {
               <label className={LABEL_CLASS}>Response Time (hrs)</label>
               <input name="responseTimeHrs" type="number" step="0.5" className={FIELD_CLASS} />
             </div>
-            <label className="flex items-center gap-2 text-xs text-slate-600 self-end pb-2">
-              <input name="closed" type="checkbox" className="rounded border-slate-300 text-emerald-500" /> Already resolved
+            <label className="flex items-center gap-2 text-xs text-ink-600 self-end pb-2">
+              <input name="closed" type="checkbox" className="rounded border-ink-300 text-brand-500" /> Already resolved
             </label>
           </div>
           <div>
@@ -499,7 +499,7 @@ function SubmitRow({ saving, onCancel, label }: { saving: boolean; onCancel: () 
 function Stat({ label, value, tone, text }: { label: string; value: string; tone: string; text: string }) {
   return (
     <div className={`p-4 rounded-xl border ${tone}`}>
-      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
       <div className={`text-2xl font-bold mt-2 ${text}`}>{value}</div>
     </div>
   );

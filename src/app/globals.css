@@ -1,9 +1,104 @@
 @import "tailwindcss";
 
+/* The palette contract.
+
+   Colour was a convention rather than a contract: 3,746 raw utilities across
+   93 of 98 component files, every one naming a Tailwind palette directly
+   (bg-slate-50, text-emerald-600). The convention was consistent, which is why
+   it held together, but nothing enforced it and nothing could change it. A
+   change of accent meant 210 edits and a reviewer's memory.
+
+   Colour is now named by ROLE. `brand` is whatever the primary action is;
+   today it resolves to emerald, and a reskin changes it here and nowhere else.
+   Names avoid Tailwind's own (`ink` not `neutral`, `warn` not `amber`) so a
+   token can never be confused with, or silently overridden by, a stock palette.
+
+   These alias the stock ramps rather than restating them as hex, so adopting
+   the contract changes no pixels. When the visual direction lands, the var()
+   targets become real values.
+
+   Use the role, not the colour: bg-brand-600, never bg-emerald-600. */
+@theme {
+  /* Text, surfaces and lines. The workhorse ramp, two thirds of the app. */
+  --color-ink-50: var(--color-slate-50);
+  --color-ink-100: var(--color-slate-100);
+  --color-ink-200: var(--color-slate-200);
+  --color-ink-300: var(--color-slate-300);
+  --color-ink-400: var(--color-slate-400);
+  --color-ink-500: var(--color-slate-500);
+  --color-ink-600: var(--color-slate-600);
+  --color-ink-700: var(--color-slate-700);
+  --color-ink-800: var(--color-slate-800);
+  --color-ink-900: var(--color-slate-900);
+  --color-ink-950: var(--color-slate-950);
+
+  /* The primary action, and anything the eye should reach first. */
+  --color-brand-50: var(--color-emerald-50);
+  --color-brand-100: var(--color-emerald-100);
+  --color-brand-200: var(--color-emerald-200);
+  --color-brand-300: var(--color-emerald-300);
+  --color-brand-400: var(--color-emerald-400);
+  --color-brand-500: var(--color-emerald-500);
+  --color-brand-600: var(--color-emerald-600);
+  --color-brand-700: var(--color-emerald-700);
+  --color-brand-800: var(--color-emerald-800);
+  --color-brand-900: var(--color-emerald-900);
+  --color-brand-950: var(--color-emerald-950);
+
+  /* Overdue, breakdown, rejected, destructive.
+     Every role carries the full 50-950 ramp even where only a few shades are
+     used today. A half-defined ramp is a trap: migrating text-rose-400 to
+     text-danger-400 would emit no utility at all and the text would silently
+     lose its colour, with nothing failing to say so. */
+  --color-danger-50: var(--color-rose-50);
+  --color-danger-100: var(--color-rose-100);
+  --color-danger-200: var(--color-rose-200);
+  --color-danger-300: var(--color-rose-300);
+  --color-danger-400: var(--color-rose-400);
+  --color-danger-500: var(--color-rose-500);
+  --color-danger-600: var(--color-rose-600);
+  --color-danger-700: var(--color-rose-700);
+  --color-danger-800: var(--color-rose-800);
+  --color-danger-900: var(--color-rose-900);
+  --color-danger-950: var(--color-rose-950);
+
+  /* Due soon, awaiting a signature, an exception that is still legitimate. */
+  --color-warn-50: var(--color-amber-50);
+  --color-warn-100: var(--color-amber-100);
+  --color-warn-200: var(--color-amber-200);
+  --color-warn-300: var(--color-amber-300);
+  --color-warn-400: var(--color-amber-400);
+  --color-warn-500: var(--color-amber-500);
+  --color-warn-600: var(--color-amber-600);
+  --color-warn-700: var(--color-amber-700);
+  --color-warn-800: var(--color-amber-800);
+  --color-warn-900: var(--color-amber-900);
+  --color-warn-950: var(--color-amber-950);
+
+  /* Scheduled, informational, nothing is wrong. */
+  --color-info-50: var(--color-sky-50);
+  --color-info-100: var(--color-sky-100);
+  --color-info-200: var(--color-sky-200);
+  --color-info-300: var(--color-sky-300);
+  --color-info-400: var(--color-sky-400);
+  --color-info-500: var(--color-sky-500);
+  --color-info-600: var(--color-sky-600);
+  --color-info-700: var(--color-sky-700);
+  --color-info-800: var(--color-sky-800);
+  --color-info-900: var(--color-sky-900);
+  --color-info-950: var(--color-sky-950);
+
+  /* The three surfaces every page is built from, named so a page never has to
+     remember which grey is the page and which is the card. */
+  --color-canvas: var(--color-slate-50);
+  --color-surface: #ffffff;
+  --color-line: var(--color-slate-200);
+}
+
 /* Light theme is the default. A dark theme will be added later as a toggle. */
 :root {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink-900);
 }
 
 @theme inline {

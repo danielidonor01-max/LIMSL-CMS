@@ -88,10 +88,10 @@ const emptyDrill = {
 };
 
 const DRILL_BADGE: Record<string, string> = {
-  OK: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  DUE_SOON: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  OVERDUE: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  NEVER: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  OK: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  DUE_SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  OVERDUE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  NEVER: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 const DRILL_LABEL: Record<string, string> = {
@@ -238,7 +238,7 @@ export default function EmergencyPage() {
   const prog = data?.drillProgramme;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
         <PageHeader
           icon={ShieldAlert}
@@ -268,34 +268,34 @@ export default function EmergencyPage() {
             <div
               className={`p-4 rounded-xl border ${
                 (summary.percent ?? 0) === 100
-                  ? "bg-emerald-50 border-emerald-200"
+                  ? "bg-brand-50 border-brand-200"
                   : (summary.percent ?? 0) >= 90
-                    ? "bg-amber-50 border-amber-200"
-                    : "bg-rose-50 border-rose-200"
+                    ? "bg-warn-50 border-warn-200"
+                    : "bg-danger-50 border-danger-200"
               }`}
             >
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Ready for use</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Ready for use</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">
                 {summary.ready}
-                <span className="text-lg text-slate-500 font-semibold"> / {summary.inService}</span>
+                <span className="text-lg text-ink-500 font-semibold"> / {summary.inService}</span>
               </p>
-              <p className="text-[11px] text-slate-600 mt-1">
+              <p className="text-[11px] text-ink-600 mt-1">
                 {summary.notReady > 0
                   ? `${summary.notReady} cannot be relied on right now`
                   : "Every item is serviceable, in date and inspected"}
               </p>
             </div>
-            <div className={`p-4 rounded-xl border ${summary.dueSoon > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Inspection due soon</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{summary.dueSoon}</p>
-              <p className="text-[11px] text-slate-600 mt-1">Still usable, but approaching their interval</p>
+            <div className={`p-4 rounded-xl border ${summary.dueSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Inspection due soon</p>
+              <p className="text-3xl font-bold text-ink-900 mt-2">{summary.dueSoon}</p>
+              <p className="text-[11px] text-ink-600 mt-1">Still usable, but approaching their interval</p>
             </div>
-            <div className={`p-4 rounded-xl border ${prog && prog.status !== "OK" ? "bg-rose-50 border-rose-200" : "bg-white border-slate-200"}`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Evacuation drill</p>
-              <p className="text-lg font-bold text-slate-900 mt-2">
+            <div className={`p-4 rounded-xl border ${prog && prog.status !== "OK" ? "bg-danger-50 border-danger-200" : "bg-white border-ink-200"}`}>
+              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Evacuation drill</p>
+              <p className="text-lg font-bold text-ink-900 mt-2">
                 {prog?.lastDrillDate ? formatDate(prog.lastDrillDate) : "Never held"}
               </p>
-              <p className="text-[11px] text-slate-600 mt-1">
+              <p className="text-[11px] text-ink-600 mt-1">
                 {prog?.status === "OK" && prog.nextDueDate
                   ? `Next due ${formatDate(prog.nextDueDate)}`
                   : DRILL_LABEL[prog?.status ?? "NEVER"]}
@@ -305,7 +305,7 @@ export default function EmergencyPage() {
         )}
 
         {data && data.drillFollowUp.unresolved > 0 && (
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-warn-50 border border-warn-200 text-warn-900 text-xs">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
               <strong>{data.drillFollowUp.unresolved}</strong> drill
@@ -317,13 +317,13 @@ export default function EmergencyPage() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
             {(["register", "drills"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
-                  tab === t ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  tab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                 }`}
               >
                 {t === "register" ? `Equipment (${items.length})` : `Drill log (${data?.drills.length ?? 0})`}
@@ -334,19 +334,19 @@ export default function EmergencyPage() {
           {tab === "register" && (
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Tag, type or location…"
-                  className="w-full sm:w-56 bg-white border border-slate-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                  className="w-full sm:w-56 bg-white border border-ink-200 rounded-lg min-h-11 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
                 />
               </div>
               <button
                 onClick={() => setNotReadyOnly((v) => !v)}
                 aria-pressed={notReadyOnly}
                 className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-                  notReadyOnly ? "bg-rose-50 border-rose-300 text-rose-700" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                  notReadyOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
                 }`}
               >
                 <AlertTriangle className="w-4 h-4" /> Not ready only
@@ -357,7 +357,7 @@ export default function EmergencyPage() {
 
         {/* ── Equipment register ── */}
         {tab === "register" && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             {error && !loading ? (
               <LoadError what="the emergency register" onRetry={refresh} />
             ) : loading ? (
@@ -391,7 +391,7 @@ export default function EmergencyPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
                       <th className="py-3 px-4 font-semibold">Tag</th>
                       <th className="py-3 px-4 font-semibold">Type</th>
                       <th className="py-3 px-4 font-semibold">Location</th>
@@ -400,40 +400,40 @@ export default function EmergencyPage() {
                       {canWrite && <th className="py-3 px-4 font-semibold text-right">Action</th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-ink-200">
                     {filtered.map((i) => (
-                      <tr key={i.id} className="hover:bg-slate-50">
-                        <td className="py-3 px-4 font-mono font-semibold text-slate-900">{i.tagNumber}</td>
-                        <td className="py-3 px-4 text-slate-700">
+                      <tr key={i.id} className="hover:bg-ink-50">
+                        <td className="py-3 px-4 font-mono font-semibold text-ink-900">{i.tagNumber}</td>
+                        <td className="py-3 px-4 text-ink-700">
                           {EMERGENCY_TYPE_LABELS[i.type as EmergencyEquipmentType] ?? i.type}
-                          {i.capacity ? <span className="text-slate-400"> · {i.capacity}</span> : null}
+                          {i.capacity ? <span className="text-ink-400"> · {i.capacity}</span> : null}
                         </td>
-                        <td className="py-3 px-4 text-slate-600">
+                        <td className="py-3 px-4 text-ink-600">
                           <span className="inline-flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400" />
+                            <MapPin className="w-3 h-3 text-ink-400" />
                             {i.location}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-slate-600">
-                          {i.lastInspectionDate ? formatDate(i.lastInspectionDate) : <span className="text-rose-600">Never</span>}
+                        <td className="py-3 px-4 text-ink-600">
+                          {i.lastInspectionDate ? formatDate(i.lastInspectionDate) : <span className="text-danger-600">Never</span>}
                         </td>
                         <td className="py-3 px-4 max-w-[280px]">
                           {i.status === "REMOVED" ? (
-                            <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">Withdrawn</Badge>
+                            <Badge className="bg-ink-500/10 text-ink-500 border-ink-500/20">Withdrawn</Badge>
                           ) : i.readiness.ready ? (
                             <Badge
                               className={
                                 i.readiness.severity === "warn"
-                                  ? "bg-amber-500/10 text-amber-700 border-amber-500/20"
-                                  : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                                  ? "bg-warn-500/10 text-warn-700 border-warn-500/20"
+                                  : "bg-brand-500/10 text-brand-700 border-brand-500/20"
                               }
                             >
                               {i.readiness.severity === "warn" ? "Ready, check due" : "Ready"}
                             </Badge>
                           ) : (
                             <>
-                              <Badge className="bg-rose-500/10 text-rose-700 border-rose-500/20">Not ready</Badge>
-                              <p className="text-[10px] text-rose-700 mt-1 leading-snug">
+                              <Badge className="bg-danger-500/10 text-danger-700 border-danger-500/20">Not ready</Badge>
+                              <p className="text-[10px] text-danger-700 mt-1 leading-snug">
                                 {i.readiness.reasons.join(" ")}
                               </p>
                             </>
@@ -443,7 +443,7 @@ export default function EmergencyPage() {
                           <td className="py-3 px-4 text-right">
                             <button
                               onClick={() => setInspect({ item: i, verdict: "PASS", findings: "", actionTaken: "" })}
-                              className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-emerald-700 hover:bg-emerald-50 text-xs font-semibold"
+                              className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-brand-700 hover:bg-brand-50 text-xs font-semibold"
                             >
                               <ClipboardCheck className="w-4 h-4" /> Inspect
                             </button>
@@ -460,7 +460,7 @@ export default function EmergencyPage() {
 
         {/* ── Drill log ── */}
         {tab === "drills" && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             {loading ? (
               <TableSkeleton rows={4} cols={4} />
             ) : !data?.drills.length ? (
@@ -472,31 +472,31 @@ export default function EmergencyPage() {
                 onAction={canWrite ? () => setShowDrill(true) : undefined}
               />
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-ink-200">
                 {data.drills.map((d: any) => (
                   <div key={d.id} data-list-card className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-ink-900">
                           {DRILL_TYPE_LABELS[d.drillType as DrillType] ?? d.drillType}
                         </p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-ink-500 mt-0.5">
                           {formatDate(d.drillDate)}
                           {d.location ? ` · ${d.location}` : ""}
                           {d.participantCount ? ` · ${d.participantCount} took part` : ""}
                           {d.evacuationMinutes ? ` · cleared in ${d.evacuationMinutes} min` : ""}
                         </p>
                       </div>
-                      <span className="text-[11px] text-slate-400">{d.conductedByName ?? "-"}</span>
+                      <span className="text-[11px] text-ink-400">{d.conductedByName ?? "-"}</span>
                     </div>
-                    {d.scenario && <p className="text-xs text-slate-600">{d.scenario}</p>}
-                    {d.observations && <p className="text-xs text-slate-600">{d.observations}</p>}
+                    {d.scenario && <p className="text-xs text-ink-600">{d.scenario}</p>}
+                    {d.observations && <p className="text-xs text-ink-600">{d.observations}</p>}
                     {d.deficiencies && (
                       <div
                         className={`text-xs rounded-lg border p-2.5 ${
                           d.correctiveActions
-                            ? "bg-slate-50 border-slate-200 text-slate-700"
-                            : "bg-amber-50 border-amber-200 text-amber-900"
+                            ? "bg-ink-50 border-ink-200 text-ink-700"
+                            : "bg-warn-50 border-warn-200 text-warn-900"
                         }`}
                       >
                         <p>
@@ -554,7 +554,7 @@ export default function EmergencyPage() {
                 <input id="em-exp" type="date" value={itemForm.expiryDate} onChange={(e) => setItemForm((f) => ({ ...f, expiryDate: e.target.value }))} className={FIELD_CLASS} />
               </Field>
             </div>
-            <p className="text-[11px] text-slate-500 -mt-1">
+            <p className="text-[11px] text-ink-500 -mt-1">
               Leaving &ldquo;last checked&rdquo; blank is fine and honest, the item will show as never inspected until
               someone checks it, which is the truth.
             </p>
@@ -633,9 +633,9 @@ export default function EmergencyPage() {
                     className={`min-h-11 rounded-lg border text-sm font-semibold transition-colors ${
                       inspect.verdict === v
                         ? v === "PASS"
-                          ? "bg-emerald-600 border-emerald-600 text-white"
-                          : "bg-rose-600 border-rose-600 text-white"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                          ? "bg-brand-600 border-brand-600 text-white"
+                          : "bg-danger-600 border-danger-600 text-white"
+                        : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
                     }`}
                   >
                     {v === "PASS" ? "Serviceable" : "Not fit for use"}
@@ -655,7 +655,7 @@ export default function EmergencyPage() {
               </Field>
 
               {inspect.verdict === "FAIL" && (
-                <p className="text-[11px] text-rose-700 -mt-2">
+                <p className="text-[11px] text-danger-700 -mt-2">
                   Recording a failure takes this item out of service immediately, so it stops counting towards readiness
                   until it has been repaired and re-checked.
                 </p>

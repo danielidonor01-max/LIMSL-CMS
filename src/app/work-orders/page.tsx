@@ -77,7 +77,7 @@ export default function WorkOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ClipboardList}
@@ -92,12 +92,12 @@ export default function WorkOrdersPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-ink-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search WO # / equipment…"
-              className="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40 w-56"
+              className="pl-8 pr-3 py-1.5 bg-ink-100 border border-ink-200 rounded-lg text-xs text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40 w-56"
             />
           </div>
           <Select
@@ -122,7 +122,7 @@ export default function WorkOrdersPage() {
           </Select>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
           {error && !loading ? (
             <LoadError what="work orders" onRetry={refresh} />
           ) : loading ? (
@@ -149,7 +149,7 @@ export default function WorkOrdersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
+                  <tr className="border-b border-ink-200 text-ink-500">
                     <th className="py-3 px-4 font-medium">WO #</th>
                     <th className="py-3 px-4 font-medium">Equipment</th>
                     <th className="py-3 px-4 font-medium">Type</th>
@@ -159,24 +159,24 @@ export default function WorkOrdersPage() {
                     <th className="py-3 px-4 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-ink-200">
                   {filtered.map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-50 cursor-pointer">
+                    <tr key={r.id} className="hover:bg-ink-50 cursor-pointer">
                       <td className="py-3 px-4">
-                        <Link href={`/work-orders/${r.id}`} className="font-mono text-emerald-600 hover:underline">
+                        <Link href={`/work-orders/${r.id}`} className="font-mono text-brand-600 hover:underline">
                           {r.workOrderNumber}
                         </Link>
                       </td>
                       <td className="py-3 px-4">
                         <Link href={`/work-orders/${r.id}`} className="block">
-                          <div className="font-medium text-slate-900 max-w-[220px] truncate">
+                          <div className="font-medium text-ink-900 max-w-[220px] truncate">
                             {r.equipmentName}
                           </div>
                         </Link>
                         {r.assetId && (
                           <Link
                             href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
-                            className="text-[10px] font-mono text-slate-500 hover:text-emerald-600 hover:underline"
+                            className="text-[10px] font-mono text-ink-500 hover:text-brand-600 hover:underline"
                           >
                             {r.assetId}
                           </Link>
@@ -190,11 +190,11 @@ export default function WorkOrdersPage() {
                           {PRIORITY_LABELS[r.priority] ?? r.priority}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-500">{formatDate(r.plannedDate)}</td>
-                      <td className="py-3 px-4 text-slate-700">{r.technicianName ?? "-"}</td>
+                      <td className="py-3 px-4 font-mono text-ink-500">{formatDate(r.plannedDate)}</td>
+                      <td className="py-3 px-4 text-ink-700">{r.technicianName ?? "-"}</td>
                       <td className="py-3 px-4">
                         {r.approvalRetrospective && !r.approvedAt && (
-                          <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">
+                          <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20">
                             Unsigned emergency
                           </Badge>
                         )}
@@ -209,7 +209,7 @@ export default function WorkOrdersPage() {
             </div>
           )}
         </div>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-ink-500">
           Showing {filtered.length} of {rows.length} work orders.
         </p>
       </main>

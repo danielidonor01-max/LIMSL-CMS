@@ -98,7 +98,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-900/40 p-4 sm:p-8"
       onClick={onClose}
     >
       <div
@@ -107,18 +107,18 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-xl bg-white border border-slate-200 shadow-2xl my-auto outline-none"
+        className="w-full max-w-lg rounded-xl bg-white border border-ink-200 shadow-2xl my-auto outline-none"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-slate-200">
+        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
           <div>
-            <h3 id={titleId} className="text-sm font-bold text-slate-900">{title}</h3>
-            {subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>}
+            <h3 id={titleId} className="text-sm font-bold text-ink-900">{title}</h3>
+            {subtitle && <p className="text-[11px] text-ink-500 mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-1.5 -m-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="p-1.5 -m-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-900 hover:bg-ink-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

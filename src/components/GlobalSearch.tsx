@@ -14,17 +14,17 @@ import { Search, Loader2 } from "lucide-react";
 type Result = { type: string; label: string; sub: string; href: string };
 
 const TYPE_COLOR: Record<string, string> = {
-  Equipment: "text-emerald-700 bg-emerald-50",
-  "Work Order": "text-sky-700 bg-sky-50",
-  Corrective: "text-rose-700 bg-rose-50",
+  Equipment: "text-brand-700 bg-brand-50",
+  "Work Order": "text-info-700 bg-info-50",
+  Corrective: "text-danger-700 bg-danger-50",
   WMS: "text-violet-700 bg-violet-50",
-  Permit: "text-amber-700 bg-amber-50",
+  Permit: "text-warn-700 bg-warn-50",
   Spare: "text-cyan-700 bg-cyan-50",
   Instrument: "text-teal-700 bg-teal-50",
   Emergency: "text-orange-700 bg-orange-50",
   Contractor: "text-indigo-700 bg-indigo-50",
-  "Non-conformity": "text-rose-700 bg-rose-50",
-  Training: "text-slate-700 bg-slate-100",
+  "Non-conformity": "text-danger-700 bg-danger-50",
+  Training: "text-ink-700 bg-ink-100",
 };
 
 export default function GlobalSearch() {
@@ -113,7 +113,7 @@ export default function GlobalSearch() {
 
   return (
     <div ref={boxRef} className="relative w-full max-w-lg">
-      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      <Search className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
       <input
         ref={inputRef}
         value={q}
@@ -130,14 +130,14 @@ export default function GlobalSearch() {
         aria-autocomplete="list"
         aria-activedescendant={showList && results.length ? `search-result-${active}` : undefined}
         placeholder="Search equipment, work orders, faults…"
-        className="w-full pl-9 pr-16 min-h-10 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white transition-colors"
+        className="w-full pl-9 pr-16 min-h-10 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:border-brand-500 focus:bg-white transition-colors"
       />
 
       {loading ? (
-        <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
+        <Loader2 className="w-3.5 h-3.5 text-ink-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
       ) : (
         // Discoverability: the shortcut is worthless if nobody knows it exists.
-        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 pointer-events-none">
+        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border border-ink-300 bg-white px-1.5 py-0.5 text-[10px] font-medium text-ink-500 pointer-events-none">
           {isMac ? "⌘" : "Ctrl"} K
         </kbd>
       )}
@@ -147,10 +147,10 @@ export default function GlobalSearch() {
           id="global-search-results"
           role="listbox"
           aria-label="Search results"
-          className="absolute top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto"
+          className="absolute top-full mt-2 w-full bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto"
         >
           {results.length === 0 && !loading ? (
-            <div className="px-4 py-6 text-center text-xs text-slate-500">No matches for “{q}”.</div>
+            <div className="px-4 py-6 text-center text-xs text-ink-500">No matches for “{q}”.</div>
           ) : (
             <>
               {results.map((r, i) => (
@@ -161,24 +161,24 @@ export default function GlobalSearch() {
                   aria-selected={i === active}
                   onMouseEnter={() => setActive(i)}
                   onClick={() => go(r.href)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left border-b border-slate-100 last:border-0 ${
-                    i === active ? "bg-emerald-50" : "hover:bg-slate-50"
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left border-b border-ink-100 last:border-0 ${
+                    i === active ? "bg-brand-50" : "hover:bg-ink-50"
                   }`}
                 >
                   <span
                     className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
-                      TYPE_COLOR[r.type] ?? "text-slate-600 bg-slate-100"
+                      TYPE_COLOR[r.type] ?? "text-ink-600 bg-ink-100"
                     }`}
                   >
                     {r.type}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-slate-900 truncate">{r.label}</p>
-                    <p className="text-[11px] text-slate-500 truncate">{r.sub}</p>
+                    <p className="text-xs font-semibold text-ink-900 truncate">{r.label}</p>
+                    <p className="text-[11px] text-ink-500 truncate">{r.sub}</p>
                   </div>
                 </button>
               ))}
-              <div className="px-4 py-1.5 text-[10px] text-slate-400 bg-slate-50 border-t border-slate-100">
+              <div className="px-4 py-1.5 text-[10px] text-ink-400 bg-ink-50 border-t border-ink-100">
                 ↑↓ to move · Enter to open · Esc to close
               </div>
             </>

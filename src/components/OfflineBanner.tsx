@@ -28,7 +28,7 @@ export default function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-xs font-semibold text-amber-950 no-print"
+      className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-warn-500 px-4 py-2 text-center text-xs font-semibold text-warn-950 no-print"
     >
       <WifiOff className="w-4 h-4 shrink-0" />
       You&apos;re offline, anything you type is kept on this phone. Reconnect before submitting.

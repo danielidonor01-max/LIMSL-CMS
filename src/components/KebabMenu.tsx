@@ -81,7 +81,7 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
         aria-label={ariaLabel}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="p-1.5 min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
+        className="p-1.5 min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100 border border-ink-200 transition-colors"
       >
         <MoreVertical className="w-4 h-4" />
       </button>
@@ -91,7 +91,7 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
           ref={menuRef}
           style={{ position: "fixed", top: pos.top, left: pos.left, width: 176 }}
           role="menu"
-          className="z-[100] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden py-1"
+          className="z-[100] bg-white border border-ink-200 rounded-lg shadow-lg overflow-hidden py-1"
         >
           {items.map((item, i) => {
             const Icon = item.icon;
@@ -102,8 +102,8 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
                 onClick={() => run(item)}
                 className={`w-full flex items-center gap-2.5 px-3 min-h-11 text-xs font-medium text-left transition-colors ${
                   item.danger
-                    ? "text-rose-600 hover:bg-rose-50"
-                    : "text-slate-700 hover:bg-slate-100"
+                    ? "text-danger-600 hover:bg-danger-50"
+                    : "text-ink-700 hover:bg-ink-100"
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}

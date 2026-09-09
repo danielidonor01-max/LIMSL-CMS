@@ -87,7 +87,7 @@ export default function NonConformityRegister() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
           <PageHeader
@@ -105,9 +105,9 @@ export default function NonConformityRegister() {
         </div>
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 bg-white border border-ink-200 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-xs">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
                 type="text"
                 placeholder="Search by code or description..."
@@ -117,7 +117,7 @@ export default function NonConformityRegister() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-slate-500 uppercase">Filter Status:</span>
+              <span className="text-[11px] font-mono text-ink-500 uppercase">Filter Status:</span>
               <Select
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v)}
@@ -129,11 +129,11 @@ export default function NonConformityRegister() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-ink-200">
                 {filteredNCs.length > 0 ? (
                   filteredNCs.map((nc) => {
                     const isOpen = nc.status === "OPEN";
@@ -141,28 +141,28 @@ export default function NonConformityRegister() {
                       <div
                         key={nc.id}
                         onClick={() => setActiveNc(nc)}
-                        className={`p-5 cursor-pointer hover:bg-slate-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                          activeNc?.id === nc.id ? "bg-slate-50 border-l-2 border-emerald-500" : ""
+                        className={`p-5 cursor-pointer hover:bg-ink-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                          activeNc?.id === nc.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
                         }`}
                       >
                         <div className="space-y-1.5 flex-1">
                           <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs text-emerald-600 font-semibold">{nc.ncNumber}</span>
+                            <span className="font-mono text-xs text-brand-600 font-semibold">{nc.ncNumber}</span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
                                 !isOpen
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                  : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                                  ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+                                  : "bg-danger-500/10 text-danger-600 border-danger-500/20"
                               }`}
                             >
                               {nc.status}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-ink-500">
                               Detected: <span className="font-mono">{nc.detectedDate}</span>
                             </span>
                           </div>
-                          <p className="text-slate-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
-                          <p className="text-[10px] text-slate-500">Source: {nc.detectedBy}</p>
+                          <p className="text-ink-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
+                          <p className="text-[10px] text-ink-500">Source: {nc.detectedBy}</p>
                         </div>
                       </div>
                     );
@@ -194,8 +194,8 @@ export default function NonConformityRegister() {
 
         {/* Right Side: NC Action Log & Resolution */}
         <div className="space-y-6">
-          <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-200 pb-3">
+          <div className="p-5 bg-white border border-ink-200 rounded-xl space-y-6">
+            <h2 className="text-sm font-bold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
               Non-Conformity Action Center
             </h2>
 
@@ -203,22 +203,22 @@ export default function NonConformityRegister() {
               <div className="space-y-4">
                 <div className="space-y-1 text-xs">
                   <span className={LABEL_CLASS}>NC Description</span>
-                  <p className="bg-slate-100 p-3 rounded border border-slate-200 text-slate-600 leading-relaxed font-semibold">
+                  <p className="bg-ink-100 p-3 rounded border border-ink-200 text-ink-600 leading-relaxed font-semibold">
                     {activeNc.description}
                   </p>
                 </div>
 
                 {activeNc.status === "CLOSED" ? (
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs rounded-lg space-y-2">
+                  <div className="p-4 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg space-y-2">
                     <div className="flex items-center gap-1.5 font-bold">
                       <FileCheck className="w-5 h-5 flex-shrink-0" />
                       <span>Non-Conformity Resolved</span>
                     </div>
-                    <p className="text-[11px] text-slate-500">
-                      <span className="font-semibold text-slate-600">Root cause identified:</span> {activeNc.rootCause}
+                    <p className="text-[11px] text-ink-500">
+                      <span className="font-semibold text-ink-600">Root cause identified:</span> {activeNc.rootCause}
                     </p>
-                    <p className="text-[11px] text-slate-500">
-                      <span className="font-semibold text-slate-600">Corrective action implemented:</span> {activeNc.correctiveAction}
+                    <p className="text-[11px] text-ink-500">
+                      <span className="font-semibold text-ink-600">Corrective action implemented:</span> {activeNc.correctiveAction}
                     </p>
                   </div>
                 ) : (

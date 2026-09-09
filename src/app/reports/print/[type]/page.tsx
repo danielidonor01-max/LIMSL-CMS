@@ -75,7 +75,7 @@ const REPORTS: Record<string, ReportDef> = {
       const done = due.filter((s) => s.status === "COMPLETED").length;
       const pct = due.length ? Math.round((done / due.length) * 100) : 0;
       return (
-        <div className="flex gap-6 text-xs bg-slate-50 border border-slate-200 rounded-lg p-3">
+        <div className="flex gap-6 text-xs bg-ink-50 border border-ink-200 rounded-lg p-3">
           <span><strong>{pct}%</strong> compliance</span>
           <span>{done}/{due.length} due PM completed</span>
           <span>{rows.filter((s) => s.status === "OVERDUE").length} overdue</span>
@@ -175,12 +175,12 @@ export default function PrintReportPage({ params }: { params: Promise<{ type: st
   const generatedAt = useMemo(() => new Date().toLocaleString(), []);
 
   if (!def) {
-    return <div className="p-10 text-center text-slate-500 text-sm">Unknown report type.</div>;
+    return <div className="p-10 text-center text-ink-500 text-sm">Unknown report type.</div>;
   }
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+      <div className="min-h-screen flex items-center justify-center text-ink-500">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     );
   }

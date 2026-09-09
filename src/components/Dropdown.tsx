@@ -59,7 +59,7 @@ export default function Dropdown({
       {open && (
         <div
           role="listbox"
-          className={`absolute z-50 mt-1 min-w-[11rem] max-h-64 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg py-1 ${
+          className={`absolute z-50 mt-1 min-w-[11rem] max-h-64 overflow-y-auto bg-white border border-ink-200 rounded-lg shadow-lg py-1 ${
             align === "right" ? "right-0" : "left-0"
           }`}
         >
@@ -76,10 +76,10 @@ export default function Dropdown({
                   setOpen(false);
                 }}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                  selected ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-slate-700 hover:bg-slate-100"
+                  selected ? "bg-brand-50 text-brand-700 font-semibold" : "text-ink-700 hover:bg-ink-100"
                 }`}
               >
-                <Check className={`w-3.5 h-3.5 shrink-0 ${selected ? "opacity-100 text-emerald-600" : "opacity-0"}`} />
+                <Check className={`w-3.5 h-3.5 shrink-0 ${selected ? "opacity-100 text-brand-600" : "opacity-0"}`} />
                 {o.label}
               </button>
             );

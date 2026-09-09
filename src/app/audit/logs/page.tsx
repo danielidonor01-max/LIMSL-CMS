@@ -40,14 +40,14 @@ type AuditRow = {
 const PAGE_SIZE = 100;
 
 const ACTION_BADGE: Record<string, string> = {
-  CREATE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  UPDATE: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-  DELETE: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  CANCEL: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  REJECT: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  SIGN: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  APPROVE: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  IMPORT: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  CREATE: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  UPDATE: "bg-info-500/10 text-info-600 border-info-500/20",
+  DELETE: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  CANCEL: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  REJECT: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  SIGN: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  APPROVE: "bg-brand-500/10 text-brand-600 border-brand-500/20",
+  IMPORT: "bg-warn-500/10 text-warn-600 border-warn-500/20",
   AI_CHAT: "bg-violet-500/10 text-violet-600 border-violet-500/20",
   AI_DIAGNOSE: "bg-violet-500/10 text-violet-600 border-violet-500/20",
 };
@@ -176,7 +176,7 @@ export default function AuditTrailLogs() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         <PageHeader
           icon={Shield}
@@ -193,18 +193,18 @@ export default function AuditTrailLogs() {
         />
 
         {/* Filter bar */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+        <div className="bg-white border border-ink-200 rounded-xl p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">From</span>
+              <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={FIELD_CLASS} />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">To</span>
+              <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={FIELD_CLASS} />
             </label>
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Record type</span>
+              <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Record type</span>
               <Select value={entityType} onChange={setEntityType} ariaLabel="Filter by record type" placeholder="All records">
                 <option value="">All records</option>
                 {facets.entityTypes.map((t) => (
@@ -215,7 +215,7 @@ export default function AuditTrailLogs() {
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Action</span>
+              <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Action</span>
               <Select value={action} onChange={setAction} ariaLabel="Filter by action" placeholder="All actions">
                 <option value="">All actions</option>
                 {facets.actions.map((a) => (
@@ -226,9 +226,9 @@ export default function AuditTrailLogs() {
               </Select>
             </div>
             <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</span>
+              <span className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Search</span>
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-400" />
                 <input
                   type="text"
                   value={search}
@@ -241,14 +241,14 @@ export default function AuditTrailLogs() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-500">
               <Filter className="w-3.5 h-3.5" />
               {loading ? "Searching…" : `${rows.length} shown of ${total} matching entr${total === 1 ? "y" : "ies"}`}
             </span>
             {entityId && (
               <button
                 onClick={() => setEntityId("")}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-brand-500/10 text-brand-700 border-brand-500/20"
                 title="Clear the record filter"
               >
                 Record {entityId}
@@ -264,15 +264,15 @@ export default function AuditTrailLogs() {
         </div>
 
         {error ? (
-          <div className="bg-white border border-slate-200 rounded-xl">
+          <div className="bg-white border border-ink-200 rounded-xl">
             <LoadError what="the audit trail" onRetry={() => setReloadKey((k) => k + 1)} />
           </div>
         ) : loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
             <TableSkeleton rows={8} cols={5} />
           </div>
         ) : rows.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl">
+          <div className="bg-white border border-ink-200 rounded-xl">
             {filtered ? (
               <EmptyState
                 icon={Search}
@@ -292,11 +292,11 @@ export default function AuditTrailLogs() {
         ) : (
           <>
             {/* Desktop table */}
-            <div className="hidden md:block bg-white border border-slate-200 rounded-xl">
+            <div className="hidden md:block bg-white border border-ink-200 rounded-xl">
               <div className="overflow-x-auto rounded-xl">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
                       <th className="py-3 px-4 font-medium whitespace-nowrap">When</th>
                       <th className="py-3 px-4 font-medium">Action</th>
                       <th className="py-3 px-4 font-medium">Record</th>
@@ -304,36 +304,36 @@ export default function AuditTrailLogs() {
                       <th className="py-3 px-4 font-medium">User</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-ink-200">
                     {rows.map((log) => {
                       const t = stamp(log.timestamp);
                       return (
-                        <tr key={log.id} className="hover:bg-slate-50 transition-colors align-top">
+                        <tr key={log.id} className="hover:bg-ink-50 transition-colors align-top">
                           <td className="py-3 px-4 whitespace-nowrap">
-                            <div className="text-slate-900 font-medium">{t.date}</div>
-                            <div className="text-[10px] text-slate-400 font-mono">{t.time}</div>
+                            <div className="text-ink-900 font-medium">{t.date}</div>
+                            <div className="text-[10px] text-ink-400 font-mono">{t.time}</div>
                           </td>
                           <td className="py-3 px-4">
-                            <Badge className={ACTION_BADGE[log.action] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                            <Badge className={ACTION_BADGE[log.action] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                               {titleise(log.action)}
                             </Badge>
                           </td>
                           <td className="py-3 px-4">
-                            <div className="text-slate-700">{titleise(log.entityType)}</div>
+                            <div className="text-ink-700">{titleise(log.entityType)}</div>
                             {log.entityId && (
                               <button
                                 onClick={() => setEntityId(log.entityId ?? "")}
-                                className="text-[10px] text-slate-400 font-mono hover:text-emerald-700 truncate max-w-[12rem] block text-left"
+                                className="text-[10px] text-ink-400 font-mono hover:text-brand-700 truncate max-w-[12rem] block text-left"
                                 title="Show every entry for this record"
                               >
                                 {log.entityId}
                               </button>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-slate-600 max-w-md">
-                            {log.entityDescription || <span className="text-slate-300">, </span>}
+                          <td className="py-3 px-4 text-ink-600 max-w-md">
+                            {log.entityDescription || <span className="text-ink-300">, </span>}
                           </td>
-                          <td className="py-3 px-4 whitespace-nowrap text-slate-600">
+                          <td className="py-3 px-4 whitespace-nowrap text-ink-600">
                             {log.userName || "System"}
                           </td>
                         </tr>
@@ -349,20 +349,20 @@ export default function AuditTrailLogs() {
               {rows.map((log) => {
                 const t = stamp(log.timestamp);
                 return (
-                  <div key={log.id} className="bg-white border border-slate-200 rounded-xl p-4">
+                  <div key={log.id} className="bg-white border border-ink-200 rounded-xl p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <Badge className={ACTION_BADGE[log.action] ?? "bg-slate-100 text-slate-600 border-slate-200"}>
+                      <Badge className={ACTION_BADGE[log.action] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                         {titleise(log.action)}
                       </Badge>
                       <div className="text-right">
-                        <div className="text-[11px] text-slate-600">{t.date}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{t.time}</div>
+                        <div className="text-[11px] text-ink-600">{t.date}</div>
+                        <div className="text-[10px] text-ink-400 font-mono">{t.time}</div>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-700 mt-2">
+                    <p className="text-xs text-ink-700 mt-2">
                       {log.entityDescription || "No description recorded."}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-ink-500">
                       <span className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5" /> {log.userName || "System"}
                       </span>

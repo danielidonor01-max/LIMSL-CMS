@@ -87,13 +87,13 @@ export default function PermitRenewalGrid({
   const existing = open ? marks[open] : null;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
+    <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-ink-200 flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-emerald-600" /> Validity and renewal
+          <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-brand-600" /> Validity and renewal
           </h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[11px] text-ink-500 mt-0.5">
             {summary.expired
               ? `Expired after ${summary.expiresOn}.`
               : `${summary.daysRemaining} day${summary.daysRemaining === 1 ? "" : "s"} left, expires after ${summary.expiresOn}.`}
@@ -106,44 +106,44 @@ export default function PermitRenewalGrid({
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <tbody>
-            <tr className="border-b border-slate-100">
-              <th className="text-left font-semibold text-slate-500 py-2 px-3 w-20 bg-slate-50">Date</th>
+            <tr className="border-b border-ink-100">
+              <th className="text-left font-semibold text-ink-500 py-2 px-3 w-20 bg-ink-50">Date</th>
               {days.map((d) => {
                 const mark = marks[d];
                 const struck = mark?.status === "NOT_WORKED";
                 return (
                   <td
                     key={d}
-                    className={`py-2 px-2 text-center border-l border-slate-100 ${
-                      d === today ? "bg-emerald-50" : ""
+                    className={`py-2 px-2 text-center border-l border-ink-100 ${
+                      d === today ? "bg-brand-50" : ""
                     }`}
                   >
-                    <span className={struck ? "line-through text-slate-400" : "text-slate-900 font-medium"}>
+                    <span className={struck ? "line-through text-ink-400" : "text-ink-900 font-medium"}>
                       {d.slice(8)}/{d.slice(5, 7)}
                     </span>
-                    <span className="block text-[9px] text-slate-400">{dayName(d)}</span>
+                    <span className="block text-[9px] text-ink-400">{dayName(d)}</span>
                   </td>
                 );
               })}
             </tr>
-            <tr className="border-b border-slate-100">
-              <th className="text-left font-semibold text-slate-500 py-2 px-3 bg-slate-50">Time</th>
+            <tr className="border-b border-ink-100">
+              <th className="text-left font-semibold text-ink-500 py-2 px-3 bg-ink-50">Time</th>
               {days.map((d) => {
                 const mark = marks[d];
                 return (
-                  <td key={d} className="py-2 px-2 text-center border-l border-slate-100 text-slate-700">
+                  <td key={d} className="py-2 px-2 text-center border-l border-ink-100 text-ink-700">
                     {mark?.status === "WORKED" ? mark.time : mark?.status === "NOT_WORKED" ? "—" : ""}
                   </td>
                 );
               })}
             </tr>
             <tr>
-              <th className="text-left font-semibold text-slate-500 py-2 px-3 bg-slate-50">Sign</th>
+              <th className="text-left font-semibold text-ink-500 py-2 px-3 bg-ink-50">Sign</th>
               {days.map((d) => {
                 const mark = marks[d];
                 const past = d <= today;
                 return (
-                  <td key={d} className="py-2 px-2 text-center border-l border-slate-100 align-middle">
+                  <td key={d} className="py-2 px-2 text-center border-l border-ink-100 align-middle">
                     {mark?.status === "WORKED" && mark.signatureData ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -153,20 +153,20 @@ export default function PermitRenewalGrid({
                         className="h-7 mx-auto"
                       />
                     ) : mark?.status === "NOT_WORKED" ? (
-                      <span className="block text-slate-300 text-lg leading-none" title="Not worked">
+                      <span className="block text-ink-300 text-lg leading-none" title="Not worked">
                         ／
                       </span>
                     ) : canRenew && past ? (
                       <button
                         type="button"
                         onClick={() => openDay(d)}
-                        className="text-emerald-600 hover:text-emerald-700"
+                        className="text-brand-600 hover:text-brand-700"
                         aria-label={`Record ${d}`}
                       >
                         <PenLine className="w-4 h-4 mx-auto" />
                       </button>
                     ) : (
-                      <span className="text-slate-200">·</span>
+                      <span className="text-ink-200">·</span>
                     )}
                   </td>
                 );
@@ -177,8 +177,8 @@ export default function PermitRenewalGrid({
       </div>
 
       {summary.unaccounted.length > 0 && (
-        <div className="px-6 py-3 bg-amber-50 border-t border-amber-200">
-          <p className="text-[11px] text-amber-800">
+        <div className="px-6 py-3 bg-warn-50 border-t border-warn-200">
+          <p className="text-[11px] text-warn-800">
             {summary.unaccounted.length} day
             {summary.unaccounted.length === 1 ? " has" : "s have"} passed with nothing recorded:{" "}
             {summary.unaccounted.join(", ")}. Mark each one worked or not worked, a blank column is a
@@ -188,7 +188,7 @@ export default function PermitRenewalGrid({
       )}
 
       {canRenew && marks && (
-        <div className="px-6 py-3 border-t border-slate-200 flex flex-wrap gap-1.5">
+        <div className="px-6 py-3 border-t border-ink-200 flex flex-wrap gap-1.5">
           {days
             .filter((d) => d <= today && marks[d])
             .map((d) => (
@@ -196,7 +196,7 @@ export default function PermitRenewalGrid({
                 key={d}
                 type="button"
                 onClick={() => openDay(d)}
-                className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 underline"
+                className="text-[10px] font-semibold text-ink-500 hover:text-ink-900 underline"
               >
                 Amend {d}
               </button>
@@ -248,7 +248,7 @@ export default function PermitRenewalGrid({
                 placeholder="Why the recorded day is being changed"
                 className={FIELD_CLASS}
               />
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-ink-500 mt-1">
                 The previous entry is kept on the record, as a struck-through correction would be on
                 paper.
               </p>

@@ -38,7 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           load before reaching the content. Visible only on focus. */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white"
       >
         Skip to main content
       </a>
@@ -51,10 +51,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             clustered into the first third and the rest of the bar was void,             which is what read as disorganised. The right cluster is grouped and
             separated from the passive indicator by a rule, so a primary action,
             a notification and an account control are not three equal things. */}
-        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center gap-3 px-4 lg:px-6">
+        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur-md flex items-center gap-3 px-4 lg:px-6">
           <button
             onClick={() => setNavOpen(true)}
-            className="lg:hidden p-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            className="lg:hidden p-2 -ml-1 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100"
             aria-label="Open navigation menu"
           >
             <Menu className="w-5 h-5" />
@@ -64,7 +64,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-2">
             <QuickActions />
-            <span className="hidden sm:block w-px h-6 bg-slate-200" aria-hidden="true" />
+            <span className="hidden sm:block w-px h-6 bg-ink-200" aria-hidden="true" />
             <NotificationBell />
             <AccountMenu />
           </div>
@@ -74,9 +74,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             children
           ) : (
             <div className="p-10 max-w-md mx-auto text-center space-y-3">
-              <ShieldAlert className="w-10 h-10 text-rose-500 mx-auto" />
-              <h2 className="text-lg font-bold text-slate-900">Access restricted</h2>
-              <p className="text-sm text-slate-500">
+              <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
+              <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+              <p className="text-sm text-ink-500">
                 Your role (<span className="font-semibold">{ROLE_LABELS[role ?? ""] ?? role}</span>) doesn&apos;t have access to this page.
               </p>
             </div>

@@ -30,17 +30,17 @@ type StepRow = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  DRAFT: "bg-slate-500/10 text-slate-600 border-slate-500/20",
-  UNDER_REVIEW: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  APPROVED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  REJECTED: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-  SUPERSEDED: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  DRAFT: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  UNDER_REVIEW: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  APPROVED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  REJECTED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  SUPERSEDED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
 const RISK_BADGE: Record<string, string> = {
-  LOW: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  MEDIUM: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  HIGH: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+  LOW: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  MEDIUM: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  HIGH: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 const PPE_LABELS: Record<string, string> = Object.fromEntries(
@@ -68,18 +68,18 @@ export default function JhaDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
 
   if (!jha || jha.error) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <div className="p-16 text-center text-slate-500">
+      <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+        <div className="p-16 text-center text-ink-500">
           Job hazard analysis not found.{" "}
-          <Link href="/jha" className="text-emerald-600 hover:underline">
+          <Link href="/jha" className="text-brand-600 hover:underline">
             Back to list
           </Link>
         </div>
@@ -108,29 +108,29 @@ export default function JhaDetailPage() {
   const approved = jha.status === "APPROVED";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <Link
           href="/jha"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 no-print"
+          className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 no-print"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to hazard analyses
         </Link>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="bg-white border border-ink-200 rounded-xl p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-lg font-bold text-emerald-600">{jha.jhaNumber}</span>
+                <span className="font-mono text-lg font-bold text-brand-600">{jha.jhaNumber}</span>
                 {(jha.revision ?? 0) > 0 && (
-                  <span className="text-[11px] text-slate-400">rev {jha.revision}</span>
+                  <span className="text-[11px] text-ink-400">rev {jha.revision}</span>
                 )}
                 <Badge className={STATUS_BADGE[jha.status] ?? STATUS_BADGE.DRAFT}>
                   {String(jha.status).replace(/_/g, " ").toLowerCase()}
                 </Badge>
               </div>
               <h2 className="text-xl font-bold tracking-tight mt-2">{jha.title}</h2>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-ink-500 mt-1">
                 Prepared by {jha.preparedByName ?? "-"}
                 {jha.preparedDate && ` on ${formatDate(jha.preparedDate)}`}
                 {jha.workArea && ` · ${jha.workArea}`}
@@ -149,37 +149,37 @@ export default function JhaDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-ink-200">
             <div>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Work order</p>
+              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Work order</p>
               {jha.workOrder ? (
                 <Link
                   href={`/work-orders/${jha.workOrder.id}`}
-                  className="text-xs font-mono text-emerald-600 hover:underline"
+                  className="text-xs font-mono text-brand-600 hover:underline"
                 >
                   {jha.workOrder.workOrderNumber}
                 </Link>
               ) : (
-                <p className="text-xs text-slate-400">-</p>
+                <p className="text-xs text-ink-400">-</p>
               )}
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Method statement</p>
+              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Method statement</p>
               {jha.wms ? (
-                <Link href={`/wms/${jha.wms.id}`} className="text-xs font-mono text-emerald-600 hover:underline">
+                <Link href={`/wms/${jha.wms.id}`} className="text-xs font-mono text-brand-600 hover:underline">
                   <FileText className="w-3 h-3 inline mr-1" />
                   {jha.wms.wmsNumber}
                 </Link>
               ) : (
-                <p className="text-xs text-slate-400">-</p>
+                <p className="text-xs text-ink-400">-</p>
               )}
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Machine</p>
-              <p className="text-xs text-slate-700">
+              <p className="text-[10px] font-semibold text-ink-500 uppercase tracking-wider">Machine</p>
+              <p className="text-xs text-ink-700">
                 {jha.equipment ? (
                   <>
-                    <Wrench className="w-3 h-3 inline mr-1 text-slate-400" />
+                    <Wrench className="w-3 h-3 inline mr-1 text-ink-400" />
                     {jha.equipment.name}
                   </>
                 ) : (
@@ -190,15 +190,15 @@ export default function JhaDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-emerald-600" /> Job steps, hazards and controls
+        <div className="bg-white border border-ink-200 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-ink-200">
+            <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-brand-600" /> Job steps, hazards and controls
             </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-500">
+              <thead className="bg-ink-50 text-ink-500">
                 <tr>
                   <th className="text-left font-semibold py-2.5 px-4 w-10">#</th>
                   <th className="text-left font-semibold py-2.5 px-4">Job step</th>
@@ -208,19 +208,19 @@ export default function JhaDetailPage() {
                   <th className="text-left font-semibold py-2.5 px-4">Responsible</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-ink-100">
                 {steps.map((s, i) => (
                   <tr key={i} className="align-top">
-                    <td className="py-3 px-4 font-mono text-slate-400">{i + 1}</td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">{s.step ?? "-"}</td>
-                    <td className="py-3 px-4 text-slate-600 whitespace-pre-line">{s.hazards ?? "-"}</td>
-                    <td className="py-3 px-4 text-slate-600 whitespace-pre-line">{s.controls ?? "-"}</td>
+                    <td className="py-3 px-4 font-mono text-ink-400">{i + 1}</td>
+                    <td className="py-3 px-4 text-ink-900 font-medium">{s.step ?? "-"}</td>
+                    <td className="py-3 px-4 text-ink-600 whitespace-pre-line">{s.hazards ?? "-"}</td>
+                    <td className="py-3 px-4 text-ink-600 whitespace-pre-line">{s.controls ?? "-"}</td>
                     <td className="py-3 px-4">
                       <Badge className={RISK_BADGE[s.residualRisk ?? "LOW"] ?? RISK_BADGE.LOW}>
                         {(s.residualRisk ?? "LOW").toLowerCase()}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-slate-600">{s.responsible || "-"}</td>
+                    <td className="py-3 px-4 text-ink-600">{s.responsible || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -229,15 +229,15 @@ export default function JhaDetailPage() {
         </div>
 
         {(ppe.length > 0 || jha.emergencyArrangements) && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
             {ppe.length > 0 && (
               <div>
-                <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-2">
                   PPE required
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {ppe.map((k) => (
-                    <Badge key={k} className="bg-slate-100 text-slate-700 border-slate-200">
+                    <Badge key={k} className="bg-ink-100 text-ink-700 border-ink-200">
                       {PPE_LABELS[k] ?? k}
                     </Badge>
                   ))}
@@ -246,10 +246,10 @@ export default function JhaDetailPage() {
             )}
             {jha.emergencyArrangements && (
               <div>
-                <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                <h3 className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1">
                   Emergency arrangements
                 </h3>
-                <p className="text-xs text-slate-700 whitespace-pre-line">{jha.emergencyArrangements}</p>
+                <p className="text-xs text-ink-700 whitespace-pre-line">{jha.emergencyArrangements}</p>
               </div>
             )}
           </div>

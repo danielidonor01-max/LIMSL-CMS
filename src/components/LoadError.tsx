@@ -16,19 +16,19 @@ export default function LoadError({
 }) {
   return (
     <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
-      <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
+      <div className="p-2.5 rounded-lg bg-warn-50 text-warn-600 border border-warn-200">
         <AlertTriangle className="w-5 h-5" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-slate-900">Couldn&apos;t load {what}</p>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="text-sm font-semibold text-ink-900">Couldn&apos;t load {what}</p>
+        <p className="text-xs text-ink-500 mt-0.5">
           This is a connection problem, the records are safe. Check your signal and try again.
         </p>
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-lg border border-ink-200 text-xs font-semibold text-ink-700 hover:bg-ink-50"
         >
           <RefreshCw className="w-4 h-4" /> Retry
         </button>

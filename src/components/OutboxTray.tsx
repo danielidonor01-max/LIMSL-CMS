@@ -36,17 +36,17 @@ export default function OutboxTray() {
   };
 
   return (
-    <div className="no-print border-b border-slate-200 bg-white">
+    <div className="no-print border-b border-ink-200 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-2.5">
         {waiting.length > 0 && (
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-            <p className="text-xs text-slate-700 flex items-center gap-2">
-              <CloudUpload className="w-4 h-4 text-sky-600 shrink-0" />
+            <p className="text-xs text-ink-700 flex items-center gap-2">
+              <CloudUpload className="w-4 h-4 text-info-600 shrink-0" />
               <span>
                 <strong>
                   {waiting.length} submission{waiting.length === 1 ? "" : "s"} waiting to send
                 </strong>{" "}
-                <span className="text-slate-500">
+                <span className="text-ink-500">
                   {online ? ", sending automatically." : ", they will go as soon as you have signal."}
                 </span>
               </span>
@@ -55,7 +55,7 @@ export default function OutboxTray() {
               <button
                 onClick={sendNow}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 px-3 min-h-9 rounded-lg border border-sky-200 bg-sky-50 text-sky-700 text-xs font-semibold hover:bg-sky-100 disabled:opacity-60 w-fit"
+                className="inline-flex items-center gap-1.5 px-3 min-h-9 rounded-lg border border-info-200 bg-info-50 text-info-700 text-xs font-semibold hover:bg-info-100 disabled:opacity-60 w-fit"
               >
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
                 Send now
@@ -67,7 +67,7 @@ export default function OutboxTray() {
         {waiting.length > 0 && (
           <ul className="space-y-1">
             {waiting.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 text-[11px] text-slate-500">
+              <li key={e.id} className="flex items-center justify-between gap-3 text-[11px] text-ink-500">
                 <span className="truncate">{e.label}</span>
                 <span className="shrink-0">{describeAge(e.createdAt)}</span>
               </li>
@@ -77,15 +77,15 @@ export default function OutboxTray() {
 
         {/* Refused. This is the case that must never be quiet. */}
         {rejected.map((e) => (
-          <div key={e.id} className="rounded-lg border border-rose-200 bg-rose-50 p-3 space-y-2">
+          <div key={e.id} className="rounded-lg border border-danger-200 bg-danger-50 p-3 space-y-2">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-danger-600 shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-rose-900">Not sent, {e.label}</p>
-                <p className="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
+                <p className="text-xs font-semibold text-danger-900">Not sent, {e.label}</p>
+                <p className="text-[11px] text-danger-800 mt-0.5 leading-relaxed">
                   {e.lastError ?? "The server refused this submission."}
                 </p>
-                <p className="text-[10px] text-rose-700/80 mt-1">
+                <p className="text-[10px] text-danger-700/80 mt-1">
                   Queued {describeAge(e.createdAt)} · {e.attempts} attempt{e.attempts === 1 ? "" : "s"}. Nothing has
                   been recorded for this, you will need to redo it or discard it.
                 </p>
@@ -98,7 +98,7 @@ export default function OutboxTray() {
                   refresh();
                   toast.info("Queued again, it will retry on the next send.");
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-rose-300 text-rose-700 text-[11px] font-semibold hover:bg-rose-100"
+                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg border border-danger-300 text-danger-700 text-[11px] font-semibold hover:bg-danger-100"
               >
                 <RotateCw className="w-3.5 h-3.5" /> Try again
               </button>
@@ -108,7 +108,7 @@ export default function OutboxTray() {
                   refresh();
                   toast.success("Discarded.");
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-rose-700 text-[11px] font-semibold hover:bg-rose-100"
+                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-danger-700 text-[11px] font-semibold hover:bg-danger-100"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Discard
               </button>

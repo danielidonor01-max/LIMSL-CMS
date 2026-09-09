@@ -100,7 +100,7 @@ function NewJhaForm() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-5xl w-full mx-auto space-y-6">
         <PageHeader
           icon={ShieldAlert}
@@ -111,7 +111,7 @@ function NewJhaForm() {
         />
 
         <form onSubmit={submit} className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
             <div>
               <label className={LABEL_CLASS}>Approved Work Method Statement</label>
               <Select value={wmsId} onChange={setWmsId} className="w-full">
@@ -122,7 +122,7 @@ function NewJhaForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-ink-500 mt-1">
                 {wmsList.length === 0
                   ? "No approved method statements yet. A WMS must finish its approval chain before it can be analysed."
                   : "Only approved method statements appear here. Analysing an unapproved method assesses work that may still change."}
@@ -163,11 +163,11 @@ function NewJhaForm() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Job steps</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <h3 className="text-sm font-semibold text-ink-900">Job steps</h3>
+                <p className="text-[11px] text-ink-500 mt-0.5">
                   One row per step of the job. Every step needs its hazard and the control for it.
                 </p>
               </div>
@@ -178,9 +178,9 @@ function NewJhaForm() {
 
             <div className="space-y-3">
               {steps.map((s, i) => (
-                <div key={i} className="border border-slate-200 rounded-lg p-3 space-y-2.5">
+                <div key={i} className="border border-ink-200 rounded-lg p-3 space-y-2.5">
                   <div className="flex items-start gap-2">
-                    <span className="mt-2 text-[10px] font-mono font-semibold text-slate-400 w-5 shrink-0">
+                    <span className="mt-2 text-[10px] font-mono font-semibold text-ink-400 w-5 shrink-0">
                       {i + 1}
                     </span>
                     <input
@@ -193,7 +193,7 @@ function NewJhaForm() {
                       <button
                         type="button"
                         onClick={() => setSteps(steps.filter((_, idx) => idx !== i))}
-                        className="mt-1.5 text-slate-400 hover:text-rose-600 shrink-0"
+                        className="mt-1.5 text-ink-400 hover:text-danger-600 shrink-0"
                         aria-label={`Remove step ${i + 1}`}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -244,7 +244,7 @@ function NewJhaForm() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-4">
             <div>
               <label className={LABEL_CLASS}>PPE required</label>
               <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -258,8 +258,8 @@ function NewJhaForm() {
                       aria-pressed={on}
                       className={`px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${
                         on
-                          ? "bg-emerald-600 border-emerald-600 text-white"
-                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                          ? "bg-brand-600 border-brand-600 text-white"
+                          : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
                       }`}
                     >
                       {p.label}
@@ -267,7 +267,7 @@ function NewJhaForm() {
                   );
                 })}
               </div>
-              <p className="text-[10px] text-slate-500 mt-1.5">
+              <p className="text-[10px] text-ink-500 mt-1.5">
                 Carried onto the permit raised against this analysis.
               </p>
             </div>
@@ -304,8 +304,8 @@ export default function NewJhaPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center text-slate-500">
-          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        <div className="min-h-screen flex items-center justify-center text-ink-500">
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
         </div>
       }
     >

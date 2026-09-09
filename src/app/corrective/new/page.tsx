@@ -116,7 +116,7 @@ export default function NewCorrectiveRequest() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 max-w-2xl w-full mx-auto space-y-6">
         <PageHeader
           icon={AlertTriangle}
@@ -127,16 +127,16 @@ export default function NewCorrectiveRequest() {
           backHref="/corrective"
           backLabel="Corrective Maintenance"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
-          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-3 uppercase tracking-wide">
+        <form onSubmit={handleSubmit} className="p-6 bg-white border border-ink-200 rounded-xl space-y-6">
+          <h2 className="text-sm font-bold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
             Corrective Maintenance Request Form
           </h2>
 
           {/* Machine Selection */}
           <Field label="Select Broken Equipment" required>
             {loadingEq ? (
-              <div className="flex items-center text-xs text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin text-rose-600 mr-2" /> Loading equipment list…
+              <div className="flex items-center text-xs text-ink-500">
+                <Loader2 className="w-4 h-4 animate-spin text-danger-600 mr-2" /> Loading equipment list…
               </div>
             ) : (
               <Select

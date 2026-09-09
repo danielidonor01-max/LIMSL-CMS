@@ -9,11 +9,11 @@
 "use client";
 
 export const FIELD_CLASS =
-  "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 " +
-  "placeholder:text-slate-400 transition-colors focus:outline-none focus:border-emerald-500 " +
-  "focus:ring-2 focus:ring-emerald-500/15 disabled:opacity-60 disabled:cursor-not-allowed";
+  "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 " +
+  "placeholder:text-ink-400 transition-colors focus:outline-none focus:border-brand-500 " +
+  "focus:ring-2 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed";
 
-export const LABEL_CLASS = "block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5";
+export const LABEL_CLASS = "block text-[11px] font-semibold text-ink-500 uppercase tracking-wide mb-1.5";
 
 import { Children, cloneElement, isValidElement } from "react";
 
@@ -65,16 +65,16 @@ export default function Field({
           {/* Required is marked, not implied, a form where nothing is marked
               teaches the user that nothing is required until submit fails. The
               asterisk is decorative; aria-required carries it to the control. */}
-          {required && <span className="text-rose-500 ml-0.5" aria-hidden="true">*</span>}
+          {required && <span className="text-danger-500 ml-0.5" aria-hidden="true">*</span>}
         </label>
       )}
       {control}
       {error ? (
-        <p id={errorId} className="text-[11px] text-rose-600" role="alert">
+        <p id={errorId} className="text-[11px] text-danger-600" role="alert">
           {error}
         </p>
       ) : help ? (
-        <p id={helpId} className="text-[11px] text-slate-500">
+        <p id={helpId} className="text-[11px] text-ink-500">
           {help}
         </p>
       ) : null}

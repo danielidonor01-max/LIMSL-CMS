@@ -10,7 +10,7 @@ export default function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; c
     <div className="p-4 space-y-3" aria-busy="true" aria-label="Loading">
       <div className="flex gap-4">
         {Array.from({ length: cols }).map((_, i) => (
-          <div key={i} className="h-3 bg-slate-100 rounded animate-pulse" style={{ width: `${100 / cols}%` }} />
+          <div key={i} className="h-3 bg-ink-100 rounded animate-pulse" style={{ width: `${100 / cols}%` }} />
         ))}
       </div>
       {Array.from({ length: rows }).map((_, r) => (
@@ -18,7 +18,7 @@ export default function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; c
           {Array.from({ length: cols }).map((_, c) => (
             <div
               key={c}
-              className="h-4 bg-slate-100 rounded animate-pulse"
+              className="h-4 bg-ink-100 rounded animate-pulse"
               // Vary the widths a little so it reads as content, not a grid.
               style={{ width: `${100 / cols}%`, opacity: 1 - r * 0.12 }}
             />

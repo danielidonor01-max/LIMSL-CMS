@@ -216,64 +216,64 @@ export default function PMChecklistPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+      <div className="min-h-screen bg-ink-50 flex items-center justify-center text-ink-500">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
       </div>
     );
   }
   if (!wo || wo.error) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <div className="p-16 text-center text-slate-500">
+      <div className="min-h-screen bg-ink-50 text-ink-900 font-sans">
+        <div className="p-16 text-center text-ink-500">
           Work order not found.{" "}
-          <Link href="/work-orders" className="text-emerald-600 hover:underline">Back</Link>
+          <Link href="/work-orders" className="text-brand-600 hover:underline">Back</Link>
         </div>
       </div>
     );
   }
 
   const eq = wo.equipment;
-  const sectionCls = "bg-white border border-slate-200 rounded-xl p-6 space-y-4";
-  const heading = "text-sm font-semibold text-slate-900 flex items-center gap-2";
+  const sectionCls = "bg-white border border-ink-200 rounded-xl p-6 space-y-4";
+  const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
-    <span className="w-5 h-5 rounded bg-emerald-500/15 text-emerald-600 text-[10px] font-bold flex items-center justify-center">{n}</span>;
-  const field = "w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/40";
+    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>;
+  const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-ink-50 text-ink-900 flex flex-col font-sans">
       
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-5">
-        <Link href={`/work-orders/${id}`} className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
+        <Link href={`/work-orders/${id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to {wo.workOrderNumber}
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-brand-500/10 text-brand-600 border border-brand-500/20">
             <ClipboardCheck className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">Preventive Maintenance Checklist</h2>
-            <p className="text-xs text-slate-500 font-mono">{wo.workOrderNumber} · Complete & sign off</p>
+            <p className="text-xs text-ink-500 font-mono">{wo.workOrderNumber} · Complete & sign off</p>
           </div>
         </div>
 
         {/* Offer back what the last visit left unsaved, never apply it
             silently, since a stale draft could overwrite a fresh start. */}
         {draft && (
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <RotateCcw className="w-4 h-4 text-amber-700 shrink-0" />
-            <p className="text-xs text-amber-900 flex-1 min-w-[12rem]">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warn-200 bg-warn-50 px-4 py-3">
+            <RotateCcw className="w-4 h-4 text-warn-700 shrink-0" />
+            <p className="text-xs text-warn-900 flex-1 min-w-[12rem]">
               You have an unfinished checklist for this work order saved on this device.
             </p>
             <button
               onClick={restoreDraft}
-              className="min-h-11 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold"
+              className="min-h-11 px-4 rounded-lg bg-warn-600 hover:bg-warn-500 text-white text-xs font-semibold"
             >
               Restore it
             </button>
             <button
               onClick={dismissDraft}
-              className="min-h-11 px-3 text-xs font-semibold text-amber-800 hover:text-amber-950"
+              className="min-h-11 px-3 text-xs font-semibold text-warn-800 hover:text-warn-950"
             >
               Start fresh
             </button>
@@ -284,7 +284,7 @@ export default function PMChecklistPage() {
             fallback rather than a plan written for this machine type. */}
         {planTitle && (
           <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-xs ${
-            planIsGeneric ? "border-amber-200 bg-amber-50 text-amber-900" : "border-sky-100 bg-sky-50 text-sky-900"
+            planIsGeneric ? "border-warn-200 bg-warn-50 text-warn-900" : "border-info-100 bg-info-50 text-info-900"
           }`}>
             <ClipboardCheck className="w-4 h-4 mt-0.5 shrink-0" />
             <p>
@@ -315,7 +315,7 @@ export default function PMChecklistPage() {
         <div className={sectionCls}>
           <h3 className={heading}>{num(2)} Safety Pre-Checks</h3>
           {!allSafetyOk && (
-            <div className="flex items-center gap-2 text-[11px] text-amber-600">
+            <div className="flex items-center gap-2 text-[11px] text-warn-600">
               <ShieldAlert className="w-3.5 h-3.5" /> All four must be confirmed before sign-off.
             </div>
           )}
@@ -330,15 +330,15 @@ export default function PMChecklistPage() {
                 key={key}
                 className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer text-xs ${
                   safety[key as keyof typeof safety]
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700"
-                    : "bg-slate-100 border-slate-200 text-slate-700"
+                    ? "bg-brand-500/10 border-brand-500/30 text-brand-700"
+                    : "bg-ink-100 border-ink-200 text-ink-700"
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={safety[key as keyof typeof safety]}
                   onChange={(e) => setSafety((s) => ({ ...s, [key]: e.target.checked }))}
-                  className="accent-emerald-500 w-4 h-4"
+                  className="accent-brand-500 w-4 h-4"
                 />
                 {label}
               </label>
@@ -362,12 +362,12 @@ export default function PMChecklistPage() {
             placeholder="Observations, abnormalities, measurements…"
             className={field}
           />
-          <label className="flex items-center gap-2 text-xs text-slate-700">
+          <label className="flex items-center gap-2 text-xs text-ink-700">
             <input
               type="checkbox"
               checked={correctiveActionRequired}
               onChange={(e) => setCorrectiveActionRequired(e.target.checked)}
-              className="accent-amber-500 w-4 h-4"
+              className="accent-warn-500 w-4 h-4"
             />
             Corrective action required (equipment will be flagged Under Maintenance)
           </label>
@@ -393,7 +393,7 @@ export default function PMChecklistPage() {
           <h3 className={heading}>{num(8)} Completion & Sign-Off</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
+              <label className="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
               <input type="date" value={nextPMDate} onChange={(e) => setNextPMDate(e.target.value)} className={field} />
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function PMChecklistPage() {
         </div>
 
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs">
+          <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-danger-700 text-xs">
             {error}
           </div>
         )}
@@ -435,14 +435,14 @@ export default function PMChecklistPage() {
         <div className="flex justify-end gap-3 pb-8">
           <Link
             href={`/work-orders/${id}`}
-            className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-100"
+            className="px-4 py-2 text-xs font-semibold text-ink-700 border border-ink-200 rounded-lg hover:bg-ink-100"
           >
             Cancel
           </Link>
           <button
             onClick={requestSubmit}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-all"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Submitting…" : "Complete & Sign Off PM"}
@@ -458,7 +458,7 @@ export default function PMChecklistPage() {
         subtitle="Attestation before PM completion"
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-warn-200 bg-warn-50 text-[11px] text-warn-800">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               You are completing PM for <strong>{wo?.workOrderNumber}</strong>. If a Permit-to-Work is attached to
@@ -474,17 +474,17 @@ export default function PMChecklistPage() {
               ["Work area safe & barricaded", safety.areaSafe],
             ].map(([label, ok]) => (
               <li key={label as string} className="flex items-center gap-2">
-                <ShieldCheck className={`w-4 h-4 ${ok ? "text-emerald-600" : "text-slate-300"}`} />
-                <span className={ok ? "text-slate-800" : "text-slate-400"}>{label as string}</span>
+                <ShieldCheck className={`w-4 h-4 ${ok ? "text-brand-600" : "text-ink-300"}`} />
+                <span className={ok ? "text-ink-800" : "text-ink-400"}>{label as string}</span>
               </li>
             ))}
           </ul>
-          <label className="flex items-start gap-2 text-xs text-slate-700 cursor-pointer select-none">
+          <label className="flex items-start gap-2 text-xs text-ink-700 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={attested}
               onChange={(e) => setAttested(e.target.checked)}
-              className="mt-0.5 rounded border-slate-300 text-emerald-500"
+              className="mt-0.5 rounded border-ink-300 text-brand-500"
             />
             <span>
               I confirm the above safety controls were <strong>actually carried out and signed off</strong>, and this
@@ -494,14 +494,14 @@ export default function PMChecklistPage() {
           <div className="flex justify-end gap-2 pt-1">
             <button
               onClick={() => setShowConfirm(false)}
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold"
+              className="px-4 py-2 border border-ink-200 hover:bg-ink-100 text-ink-600 rounded-lg text-xs font-semibold"
             >
               Back
             </button>
             <button
               onClick={submit}
               disabled={!attested || saving}
-              className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />} Confirm &amp; Submit
             </button>
@@ -515,8 +515,8 @@ export default function PMChecklistPage() {
 function Info({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
-      <p className={`text-slate-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "-"}</p>
+      <p className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">{label}</p>
+      <p className={`text-ink-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "-"}</p>
     </div>
   );
 }
@@ -533,9 +533,9 @@ function ChecklistEditor({
   onChange: (idx: number, patch: Partial<Item>) => void;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-3">
-      <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-        <span className="w-5 h-5 rounded bg-emerald-500/15 text-emerald-600 text-[10px] font-bold flex items-center justify-center">{n}</span>
+    <div className="bg-white border border-ink-200 rounded-xl p-6 space-y-3">
+      <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[10px] font-bold flex items-center justify-center">{n}</span>
         {title}
       </h3>
       <div className="space-y-2">
@@ -544,12 +544,12 @@ function ChecklistEditor({
             22px tall and 4px apart. Full-width segmented control at the touch
             floor, stacked on small screens. */}
         {items.map((it, i) => (
-          <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-2 py-2 border-b border-slate-100 last:border-0">
+          <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-2 py-2 border-b border-ink-100 last:border-0">
             <div className="flex-1 min-w-0">
-              <span className="text-sm sm:text-xs text-slate-700">{it.item}</span>
+              <span className="text-sm sm:text-xs text-ink-700">{it.item}</span>
               {/* What "OK" actually means, a tick against an unstated standard
                   is not evidence. */}
-              {it.criteria && <p className="text-[11px] text-slate-400 mt-0.5">{it.criteria}</p>}
+              {it.criteria && <p className="text-[11px] text-ink-400 mt-0.5">{it.criteria}</p>}
             </div>
             {it.unit && (
               <input
@@ -558,7 +558,7 @@ function ChecklistEditor({
                 inputMode="decimal"
                 placeholder={it.unit}
                 aria-label={`Measured value for ${it.item} in ${it.unit}`}
-                className="w-full sm:w-24 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm sm:text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                className="w-full sm:w-24 min-h-11 px-3 bg-ink-50 border border-ink-200 rounded-lg text-sm sm:text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
               />
             )}
             <div
@@ -575,13 +575,13 @@ function ChecklistEditor({
                   className={`flex-1 sm:flex-none sm:min-w-[68px] min-h-11 px-3 rounded-lg text-xs font-semibold border transition-colors ${
                     it.status === s
                       ? s === "OK"
-                        ? "bg-emerald-600 text-white border-emerald-600"
+                        ? "bg-brand-600 text-white border-brand-600"
                         : s === "NOT_OK"
-                          ? "bg-rose-600 text-white border-rose-600"
-                          : "bg-slate-600 text-white border-slate-600"
+                          ? "bg-danger-600 text-white border-danger-600"
+                          : "bg-ink-600 text-white border-ink-600"
                       : it.status
-                        ? "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
-                        : "bg-white text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-700"
+                        ? "bg-white text-ink-500 border-ink-200 hover:border-ink-300 hover:text-ink-700"
+                        : "bg-white text-ink-500 border-dashed border-ink-300 hover:border-ink-400 hover:text-ink-700"
                   }`}
                 >
                   {s === "NOT_OK" ? "NOT OK" : s}
@@ -593,7 +593,7 @@ function ChecklistEditor({
               onChange={(e) => onChange(i, { remarks: e.target.value })}
               placeholder="Remarks"
               aria-label={`Remarks for ${it.item}`}
-              className="sm:w-40 min-h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm sm:text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+              className="sm:w-40 min-h-11 px-3 bg-ink-50 border border-ink-200 rounded-lg text-sm sm:text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
           </div>
         ))}
