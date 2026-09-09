@@ -12,6 +12,7 @@ import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
 import AccountMenu from "./AccountMenu";
 import QuickActions from "./QuickActions";
+import PlantStatus from "./PlantStatus";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
 // Global chrome: left vertical sidebar + top bar with global search.
@@ -70,6 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <PlantStatus />
             <QuickActions />
             <span className="hidden sm:block w-px h-6 bg-line" aria-hidden="true" />
             <NotificationBell />

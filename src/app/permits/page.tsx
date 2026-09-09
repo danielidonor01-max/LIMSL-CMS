@@ -112,8 +112,9 @@ export default function PermitsList() {
               icon={ShieldCheck}
               title="No permits raised yet"
               message="No permits raised. A permit must be fully signed before work begins."
-              actionLabel={canIssue ? "Raise PTW" : undefined}
-              actionHref={canIssue ? "/permits/new" : undefined}
+              blockedBy={
+                canIssue ? { label: "Start with a Job Hazard Analysis", href: "/jha" } : undefined
+              }
             />
           ) : (
             <div className="divide-y divide-ink-200">

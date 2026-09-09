@@ -164,8 +164,11 @@ export default function JhaListPage() {
                   ? "No hazard analysis yet. Each one is written against an approved method statement, and a permit needs one."
                   : "Try a different search or tab."
               }
-              actionLabel={rows.length === 0 ? "New Analysis" : undefined}
-              actionHref={rows.length === 0 ? "/jha/new" : undefined}
+              blockedBy={
+                rows.length === 0
+                  ? { label: "Start with a Work Method Statement", href: "/wms" }
+                  : undefined
+              }
             />
           ) : (
             <div className="divide-y divide-ink-200">
