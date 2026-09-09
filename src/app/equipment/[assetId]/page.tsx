@@ -422,12 +422,11 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                           </div>
                         </div>
 
-                        <Link
+                        <Button variant="danger" fullWidth
                           href={`/equipment/${assetIdKey}/troubleshoot`}
-                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold transition-all shadow-md"
                         >
                           <BookOpen className="w-4 h-4" /> Open Troubleshooting Wizard
-                        </Link>
+                        </Button>
                       </div>
                     );
                   })}

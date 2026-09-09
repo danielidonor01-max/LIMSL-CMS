@@ -1,10 +1,11 @@
 // src/app/forgot-password/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, Mail, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -94,14 +95,9 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 min-h-11 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold shadow-sm"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+            <Button type="submit" size="lg" fullWidth loading={loading} icon={Mail}>
               {loading ? "Sending…" : "Send reset link"}
-            </button>
+            </Button>
 
             <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900">
               <ArrowLeft className="w-4 h-4" /> Back to sign in

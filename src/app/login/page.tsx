@@ -1,6 +1,7 @@
 // src/app/login/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -156,14 +157,9 @@ function LoginForm() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold shadow-sm transition-all"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+            <Button type="submit" size="lg" fullWidth loading={loading} icon={LogIn}>
               {loading ? "Signing in…" : "Sign in"}
-            </button>
+            </Button>
           </form>
 
           <p className="text-xs text-ink-400 text-center mt-6">

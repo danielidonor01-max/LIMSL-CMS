@@ -74,3 +74,34 @@ test("the dashboard hero greys its empty figures too", () => {
   const hero = readFileSync(join(SRC, "components", "DashboardHero.tsx"), "utf8");
   assert.ok(/value === 0/.test(hero), "the hero sub-metrics no longer grey a zero");
 });
+
+test("no page builds a tinted figure card by hand", () => {
+  // The first version of this guard looked for a status colour on the number
+  // and for a private Stat component. It missed five more blocks that were the
+  // same pattern in different clothes: a neutral figure on a tinted card, where
+  // the TINT carries the status and stays lit when the count is nothing. The
+  // re-audit found them; the guard did not, which is the guard's fault.
+  //
+  // The tell is a large figure and a status-tinted background in the same
+  // block, so that is what this looks for.
+  const offenders: string[] = [];
+
+  for (const f of PAGES) {
+    const lines = readFileSync(f, "utf8").split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const window = lines.slice(i, i + 6).join(" ");
+      const bigFigure = /text-(?:2xl|3xl|4xl|5xl)\b[^"'`]*font-(?:bold|semibold|extrabold)/.test(window);
+      const tinted = /\bbg-(danger|warn|brand|info)-50\b/.test(window);
+      if (bigFigure && tinted) {
+        offenders.push(`${f.replace(SRC, "src")}:${i + 1}`);
+        i += 6;
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `a tinted card behind a figure is a stat card; use MetricPanel so an empty one stops shouting:\n${offenders.join("\n")}`,
+  );
+});

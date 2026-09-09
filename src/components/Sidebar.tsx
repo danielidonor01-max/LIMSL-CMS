@@ -31,6 +31,7 @@ import {
   Package,
   Siren,
   HardHat,
+  ChevronLeft,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
@@ -102,6 +103,36 @@ export default function Sidebar({
   useEffect(() => setMounted(true), []);
   const role = mounted ? (user as { role?: string })?.role : undefined;
 
+  // Read after mount, never during render: the server has no localStorage, and
+  // a sidebar that renders one width on the server and another on the client is
+  // a hydration mismatch. It opens expanded and narrows if that is the
+  // remembered choice.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("limsl:nav-collapsed") === "1");
+    } catch {
+      // Private windows and locked-down browsers throw on access. The default
+      // is expanded, which is the safe way to be wrong.
+    }
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem("limsl:nav-collapsed", next ? "1" : "0");
+      } catch {
+        // Not remembering is survivable; failing to collapse is not.
+      }
+      return next;
+    });
+  };
+
+  // Collapsing is a desktop affordance. On a phone the sidebar is a drawer that
+  // is already hidden, and an icon-only rail there would just be a second menu.
+  const narrow = collapsed && !mobileOpen;
+
   // The mobile drawer could only be dismissed by tapping the backdrop, no key
   // closed it, which for a keyboard user is a dead end.
   useEffect(() => {
@@ -140,7 +171,7 @@ export default function Sidebar({
         aria-label="Main navigation"
         role={mobileOpen ? "dialog" : undefined}
         aria-modal={mobileOpen ? true : undefined}
-        className={`w-60 shrink-0 h-screen bg-nav flex flex-col z-50
+        className={`${narrow ? "lg:w-16" : "w-60"} w-60 shrink-0 h-screen bg-nav flex flex-col z-50 transition-[width] duration-200
           fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
           lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
           ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
@@ -189,11 +220,14 @@ export default function Sidebar({
                 destinations and can afford a flat list; this one has twenty-odd
                 across four departments, and dropping the grouping to match a
                 chat app would cost a technician the map. */}
-            {s.section && (
-              <p className="px-3 pt-2 pb-1.5 text-[11px] font-semibold text-nav-label uppercase tracking-[0.12em]">
-                {s.section}
-              </p>
-            )}
+            {s.section &&
+              (narrow ? (
+                <span className="hidden lg:block mx-3 my-2 h-px bg-nav-line" aria-hidden="true" />
+              ) : (
+                <p className="px-3 pt-2 pb-1.5 text-[11px] font-semibold text-nav-label uppercase tracking-[0.12em]">
+                  {s.section}
+                </p>
+              ))}
             {s.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
@@ -203,20 +237,35 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onClose}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 px-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-colors ${
+                  title={narrow ? item.label : undefined}
+                  aria-label={narrow ? item.label : undefined}
+                  className={`flex items-center gap-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-colors ${
+                    narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
+                  } ${
                     active
                       ? "bg-nav-active text-nav-text-active font-semibold"
                       : "text-nav-text font-medium hover:text-white hover:bg-nav-raised"
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-400" : "text-nav-text"}`} />
-                  {item.label}
+                  <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
                 </Link>
               );
             })}
           </div>
         ))}
       </nav>
+
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-pressed={collapsed}
+        title={narrow ? "Expand sidebar" : undefined}
+        className="hidden lg:flex items-center gap-2.5 mx-3 mb-3 px-3 py-2 rounded-lg text-xs font-medium text-nav-label hover:text-white hover:bg-nav-raised transition-colors"
+      >
+        <ChevronLeft className={`w-4 h-4 shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+        {!narrow && "Collapse sidebar"}
+      </button>
 
       </aside>
     </>

@@ -241,12 +241,11 @@ export default function WorkOrderDetailPage() {
                 </button>
               )}
               {canFillChecklist && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
-                <Link
+                <Button
                   href={`/work-orders/${id}/pm-checklist`}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
                 >
                   <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
-                </Link>
+                </Button>
               )}
               {!isPreventive && wo.status === "IN_PROGRESS" && (
                 <button

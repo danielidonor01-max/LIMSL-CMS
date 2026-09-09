@@ -1,6 +1,7 @@
 // src/app/corrective/[id]/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import DateTimeField from "@/components/DateTimeField";
 import DateField from "@/components/DateField";
 import { useState, useEffect, use } from "react";
@@ -499,13 +500,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleSaveRca}
               disabled={saving}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-brand-950/20"
             >
               Save RCA Analysis
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -657,14 +657,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 <SignaturePad label="Technician Signature (Drawn)" onSave={setTechSign} />
                 <SignaturePad label="Supervisor Approval Signature (Drawn)" onSave={setSuperSign} />
 
-                <button
+                <Button fullWidth variant="danger"
                   type="button"
                   onClick={handleCloseOut}
                   disabled={saving}
-                  className="w-full py-2.5 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-danger-950/20"
                 >
                   Verify and Close Breakdown Work Order
-                </button>
+                </Button>
               </div>
             )}
           </div>

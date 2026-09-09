@@ -1,6 +1,7 @@
 // src/app/equipment/[assetId]/troubleshoot/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -717,13 +718,12 @@ function NewGuideForm({ assetId, symptom, onDone }: { assetId: string; symptom: 
         placeholder="Resolution action…"
         className="w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40"
       />
-      <button
+      <Button fullWidth
         onClick={save}
         disabled={saving || !cause.trim()}
-        className="w-full px-4 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold"
       >
         {saving ? "Teaching…" : "Teach the engine this resolution"}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // src/app/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -288,12 +289,11 @@ export default function Home() {
               </div>
             </div>
             {mounted && canAccessPath(role ?? "", "/corrective/new") && (
-              <Link
+              <Button variant="danger"
                 href={`/corrective/new?equipmentId=${eq.id}`}
-                className="relative z-10 px-4 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap"
               >
                 Report Corrective Fault
-              </Link>
+              </Button>
             )}
           </div>
         ))}

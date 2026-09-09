@@ -1,6 +1,7 @@
 // src/components/EquipmentDocuments.tsx
 "use client";
 
+import Button from "@/components/Button";
 import DateField from "@/components/DateField";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -190,9 +191,9 @@ export default function EquipmentDocuments({
             <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-ink-200 hover:bg-ink-100 text-ink-600 rounded-lg text-xs font-semibold">
               Cancel
             </button>
-            <button type="submit" disabled={uploading} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold disabled:opacity-60">
+            <Button type="submit" disabled={uploading}>
               {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
-            </button>
+            </Button>
           </div>
         </form>
       )}

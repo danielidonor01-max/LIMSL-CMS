@@ -1,6 +1,7 @@
 // src/app/equipment/qr/[assetId]/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Printer, QrCode, Wrench } from "lucide-react";
@@ -68,12 +69,11 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           </div>
         </div>
 
-        <button
+        <Button
           onClick={handlePrint}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-brand-950/20"
         >
           <Printer className="w-4 h-4" /> Print Label
-        </button>
+        </Button>
       </header>
 
       {/* Label Content */}

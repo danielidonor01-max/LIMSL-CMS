@@ -1,6 +1,7 @@
 // src/app/contractors/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -200,29 +201,40 @@ export default function ContractorsPage() {
         />
 
         {!loading && summary && summary.total > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-xl border ${summary.blocked > 0 ? "bg-danger-50 border-danger-200" : "bg-brand-50 border-brand-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Cleared to work</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">
-                {summary.eligible}
-                <span className="text-lg text-ink-500 font-semibold"> / {summary.total}</span>
-              </p>
-              <p className="text-xs text-ink-600 mt-1">
-                {summary.blocked > 0 ? `${summary.blocked} cannot be given a permit today` : "Every contractor is current"}
-              </p>
-            </div>
-            <div className={`p-4 rounded-xl border ${summary.expiringSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Expiring within 30 days</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">{summary.expiringSoon}</p>
-              <p className="text-xs text-ink-600 mt-1">Chase these before they block a job</p>
-            </div>
-            <div className="p-4 rounded-xl border bg-white border-ink-200">
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Enforcement</p>
-              <p className="text-sm text-ink-700 mt-2 leading-relaxed">
-                A permit naming a blocked contractor is refused at issue, this register is a gate, not a list.
-              </p>
-            </div>
-          </div>
+          <MetricPanel
+            columns={3}
+            label="Contractor clearance"
+            metrics={[
+              {
+                key: "cleared",
+                label: "Cleared to work",
+                count: summary.eligible,
+                value: String(summary.eligible),
+                target: String(summary.total),
+                status: "plain",
+                description:
+                  summary.blocked > 0
+                    ? `${summary.blocked} cannot be given a permit today`
+                    : "Every contractor is current",
+              },
+              {
+                key: "expiring",
+                label: "Expiring within 30 days",
+                count: summary.expiringSoon,
+                value: String(summary.expiringSoon),
+                status: "warning",
+                description: "Chase these before they block a job",
+              },
+              {
+                key: "blocked",
+                label: "Cannot be issued a permit",
+                count: summary.blocked,
+                value: String(summary.blocked),
+                status: "danger",
+                description: "Insurance or induction has lapsed. A permit naming them is refused at issue.",
+              },
+            ]}
+          />
         )}
 
         <div className="flex flex-col sm:flex-row gap-2">

@@ -1,6 +1,7 @@
 // src/app/reset-password/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -111,12 +112,11 @@ function ResetForm() {
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <p>{linkError}</p>
             </div>
-            <Link
+            <Button fullWidth
               href="/forgot-password"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 min-h-11 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-sm font-semibold"
             >
               Request a new link
-            </Link>
+            </Button>
             <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900">
               <ArrowLeft className="w-4 h-4" /> Back to sign in
             </Link>
@@ -175,14 +175,13 @@ function ResetForm() {
               </div>
             )}
 
-            <button
+            <Button fullWidth
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 min-h-11 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
               {loading ? "Saving…" : "Set new password"}
-            </button>
+            </Button>
           </form>
         )}
       </div>

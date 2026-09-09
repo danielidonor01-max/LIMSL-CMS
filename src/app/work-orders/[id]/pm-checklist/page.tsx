@@ -1,6 +1,7 @@
 // src/app/work-orders/[id]/pm-checklist/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -440,14 +441,13 @@ export default function PMChecklistPage() {
           >
             Cancel
           </Link>
-          <button
+          <Button
             onClick={requestSubmit}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-all"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Submitting…" : "Complete & Sign Off PM"}
-          </button>
+          </Button>
         </div>
       </main>
 
@@ -499,13 +499,12 @@ export default function PMChecklistPage() {
             >
               Back
             </button>
-            <button
+            <Button
               onClick={submit}
               disabled={!attested || saving}
-              className="inline-flex items-center gap-1.5 px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />} Confirm &amp; Submit
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

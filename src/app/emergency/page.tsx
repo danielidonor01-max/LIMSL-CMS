@@ -1,6 +1,7 @@
 // src/app/emergency/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -265,44 +266,44 @@ export default function EmergencyPage() {
         {/* Readiness, not headcount. "We have forty extinguishers" is not the
             number; "thirty-one of forty ready" is. */}
         {!loading && summary && summary.inService > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div
-              className={`p-4 rounded-xl border ${
-                (summary.percent ?? 0) === 100
-                  ? "bg-brand-50 border-brand-200"
-                  : (summary.percent ?? 0) >= 90
-                    ? "bg-warn-50 border-warn-200"
-                    : "bg-danger-50 border-danger-200"
-              }`}
-            >
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Ready for use</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">
-                {summary.ready}
-                <span className="text-lg text-ink-500 font-semibold"> / {summary.inService}</span>
-              </p>
-              <p className="text-xs text-ink-600 mt-1">
-                {summary.notReady > 0
-                  ? `${summary.notReady} cannot be relied on right now`
-                  : "Every item is serviceable, in date and inspected"}
-              </p>
-            </div>
-            <div className={`p-4 rounded-xl border ${summary.dueSoon > 0 ? "bg-warn-50 border-warn-200" : "bg-white border-ink-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Inspection due soon</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">{summary.dueSoon}</p>
-              <p className="text-xs text-ink-600 mt-1">Still usable, but approaching their interval</p>
-            </div>
-            <div className={`p-4 rounded-xl border ${prog && prog.status !== "OK" ? "bg-danger-50 border-danger-200" : "bg-white border-ink-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Evacuation drill</p>
-              <p className="text-lg font-bold text-ink-900 mt-2">
-                {prog?.lastDrillDate ? formatDate(prog.lastDrillDate) : "Never held"}
-              </p>
-              <p className="text-xs text-ink-600 mt-1">
-                {prog?.status === "OK" && prog.nextDueDate
-                  ? `Next due ${formatDate(prog.nextDueDate)}`
-                  : DRILL_LABEL[prog?.status ?? "NEVER"]}
-              </p>
-            </div>
-          </div>
+          <MetricPanel
+            columns={3}
+            label="Emergency readiness"
+            metrics={[
+              {
+                key: "ready",
+                label: "Ready for use",
+                count: summary.ready,
+                value: String(summary.ready),
+                target: String(summary.inService),
+                status: "plain",
+                description:
+                  summary.notReady > 0
+                    ? `${summary.notReady} cannot be relied on right now`
+                    : "Every item is serviceable, in date and inspected",
+              },
+              {
+                key: "duesoon",
+                label: "Inspection due soon",
+                count: summary.dueSoon,
+                value: String(summary.dueSoon),
+                status: "warning",
+                description: "Still usable, but approaching their interval",
+              },
+              {
+                // A date, not a count, so the zero rule does not apply and the
+                // status stands on the drill programme's own verdict.
+                key: "drill",
+                label: "Evacuation drill",
+                value: prog?.lastDrillDate ? formatDate(prog.lastDrillDate) : "Never held",
+                status: prog && prog.status !== "OK" ? "danger" : "plain",
+                description:
+                  prog?.status === "OK" && prog.nextDueDate
+                    ? `Next due ${formatDate(prog.nextDueDate)}`
+                    : DRILL_LABEL[prog?.status ?? "NEVER"],
+              },
+            ]}
+          />
         )}
 
         {data && data.drillFollowUp.unresolved > 0 && (

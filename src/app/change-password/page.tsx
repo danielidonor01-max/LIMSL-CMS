@@ -1,6 +1,7 @@
 // src/app/change-password/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import React, { useMemo, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -205,14 +206,13 @@ export default function ChangePasswordPage() {
               <div className="p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-600 text-xs">{error}</div>
             )}
 
-            <button
+            <Button fullWidth
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {loading ? "Updating password…" : "Update password"}
-            </button>
+            </Button>
           </form>
 
           <div className="border-t border-ink-100 pt-4 flex items-center justify-between">

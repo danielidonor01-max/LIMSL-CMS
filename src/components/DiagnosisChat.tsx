@@ -314,9 +314,9 @@ export default function DiagnosisChat({
                 className="flex-1 px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm focus:outline-none focus:border-brand-500/40"
               />
               <div className="flex gap-2">
-                <button onClick={resolve} disabled={!resolveCause.trim()} className="px-3 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold">
+                <Button onClick={resolve} disabled={!resolveCause.trim()}>
                   Mark resolved
-                </button>
+                </Button>
                 <button onClick={() => setResolving(false)} className="px-3 py-2 border border-ink-200 text-ink-600 rounded-lg text-xs">
                   Cancel
                 </button>

@@ -1,6 +1,7 @@
 // src/app/spares/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -232,25 +233,36 @@ function SparesRegister() {
 
         {/* The point of the register, stated up front. */}
         {!loading && spares.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-xl border ${atRiskCount ? "bg-danger-50 border-danger-200" : "bg-brand-50 border-brand-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Parts below minimum</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">{atRiskCount}</p>
-              <p className="text-xs text-ink-600 mt-1">of {spares.length} on the register</p>
-            </div>
-            <div className={`p-4 rounded-xl border ${exposureDays > 0 ? "bg-warn-50 border-warn-200" : "bg-brand-50 border-brand-200"}`}>
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Days already committed</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">{exposureDays}</p>
-              <p className="text-xs text-ink-600 mt-1">
-                Production days lost if each machine with an empty shelf failed today
-              </p>
-            </div>
-            <div className="p-4 rounded-xl border bg-white border-ink-200">
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">On order</p>
-              <p className="text-3xl font-bold text-ink-900 mt-2">{spares.filter((s) => s.onOrder).length}</p>
-              <p className="text-xs text-ink-600 mt-1">A purchase order is not a spare, the wait is unchanged</p>
-            </div>
-          </div>
+          <MetricPanel
+            columns={3}
+            label="Spares exposure"
+            metrics={[
+              {
+                key: "below",
+                label: "Parts below minimum",
+                count: atRiskCount,
+                value: String(atRiskCount),
+                status: "danger",
+                description: `of ${spares.length} on the register`,
+              },
+              {
+                key: "exposure",
+                label: "Days already committed",
+                count: exposureDays,
+                value: String(exposureDays),
+                status: "warning",
+                description: "Production days lost if each machine with an empty shelf failed today",
+              },
+              {
+                key: "onorder",
+                label: "On order",
+                count: spares.filter((s) => s.onOrder).length,
+                value: String(spares.filter((s) => s.onOrder).length),
+                status: "plain",
+                description: "A purchase order is not a spare, the wait is unchanged",
+              },
+            ]}
+          />
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">

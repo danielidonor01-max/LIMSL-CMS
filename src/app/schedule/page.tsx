@@ -1,6 +1,7 @@
 // src/app/schedule/page.tsx
 "use client";
 
+import MetricPanel from "@/components/MetricPanel";
 import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
 import { useMemo, useState } from "react";
@@ -326,25 +327,6 @@ export default function SchedulePage() {
     setQuarterFilter("ALL");
   };
 
-  const stat = (
-    label: string,
-    value: string,
-    icon: React.ReactNode,
-    tone: string,
-    sub: string,
-  ) => (
-    <div className={`p-4 rounded-xl border ${tone} backdrop-blur-sm`}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
-          {label}
-        </span>
-        <div className="p-1.5 rounded-lg bg-ink-100">{icon}</div>
-      </div>
-      <div className="mt-3 text-2xl font-bold text-ink-900">{value}</div>
-      <p className="text-xs text-ink-500 mt-1">{sub}</p>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
@@ -384,40 +366,49 @@ export default function SchedulePage() {
         />
 
         {/* Summary */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stat(
-            "PM Compliance",
-            `${summary.compliance}%`,
-            <ShieldCheck className="w-4 h-4 text-brand-600" />,
-            summary.compliance >= 95
-              ? "bg-brand-50 border-brand-200"
-              : summary.compliance >= 50
-                ? "bg-warn-50 border-warn-200"
-                : "bg-danger-50 border-danger-200",
-            "Completed ÷ due PM · target ≥95%",
-          )}
-          {stat(
-            "Overdue",
-            String(summary.overdue),
-            <AlertTriangle className="w-4 h-4 text-danger-600" />,
-            "bg-danger-50 border-danger-200",
-            "Activities past their planned date",
-          )}
-          {stat(
-            "Upcoming",
-            String(summary.upcoming),
-            <Clock className="w-4 h-4 text-info-600" />,
-            "bg-info-50 border-info-200",
-            "Scheduled activities still ahead",
-          )}
-          {stat(
-            "Completed",
-            String(summary.completed),
-            <CheckCircle2 className="w-4 h-4 text-brand-600" />,
-            "bg-brand-50 border-brand-200",
-            "PM activities signed off this year",
-          )}
-        </div>
+        <MetricPanel
+          label="Schedule health"
+          metrics={[
+            {
+              // A percentage is a scale, not a count, so the zero rule does not
+              // apply: 0% compliance is exactly the case worth colouring.
+              key: "compliance",
+              label: "PM compliance",
+              value: `${summary.compliance}%`,
+              target: "95%",
+              status: summary.compliance >= 95 ? "plain" : summary.compliance >= 50 ? "warning" : "danger",
+              icon: ShieldCheck,
+              description: "Completed against due, this year",
+            },
+            {
+              key: "overdue",
+              label: "Overdue",
+              count: summary.overdue,
+              value: String(summary.overdue),
+              status: "danger",
+              icon: AlertTriangle,
+              description: "Past their planned date",
+            },
+            {
+              key: "upcoming",
+              label: "Upcoming",
+              count: summary.upcoming,
+              value: String(summary.upcoming),
+              status: "plain",
+              icon: Clock,
+              description: "Scheduled and still ahead",
+            },
+            {
+              key: "completed",
+              label: "Completed",
+              count: summary.completed,
+              value: String(summary.completed),
+              status: "plain",
+              icon: CheckCircle2,
+              description: "Signed off this year",
+            },
+          ]}
+        />
 
         {view === "calendar" && <ScheduleCalendar rows={rows} />}
 

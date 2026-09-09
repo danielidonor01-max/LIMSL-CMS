@@ -1,6 +1,7 @@
 // src/app/equipment/[assetId]/edit/page.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -178,10 +179,10 @@ export default function EquipmentEditPage() {
           <Link href={`/equipment/${assetId}`} className="px-4 py-2 text-xs font-semibold text-ink-700 border border-ink-200 rounded-lg hover:bg-ink-100">
             Cancel
           </Link>
-          <button type="submit" disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold">
+          <Button type="submit" disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save Changes"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
