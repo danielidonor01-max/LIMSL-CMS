@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Loader2, LogIn, Eye, EyeOff, ShieldCheck, ClipboardCheck, HardHat, AlertCircle,
+  Loader2, LogIn, Eye, EyeOff, Check, AlertCircle,
 } from "lucide-react";
 
 function LoginForm() {
@@ -43,45 +43,49 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-white lg:grid lg:grid-cols-2 font-sans">
       {/* Brand / value panel, desktop only */}
-      <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-brand-600 to-brand-800 text-white p-12 relative overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
-        <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-white/5" />
+      <div className="hidden lg:flex flex-col justify-between text-white p-12 relative overflow-hidden bg-[linear-gradient(150deg,#022c22_0%,#064e3b_45%,#0f3d3e_100%)]">
         <div className="relative flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm">
-            <Image src="/brand/logo-80.png" alt="" width={40} height={40} priority className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm">
+            <Image src="/brand/logo-80.png" alt="" width={44} height={44} priority className="w-full h-full object-contain" />
           </div>
-          <div>
-            <p className="text-sm font-bold tracking-tight leading-none">LIMSL CMS</p>
-            <p className="text-[11px] text-brand-100 font-mono uppercase tracking-widest mt-1">Maintenance Portal</p>
-          </div>
+          <p className="text-base font-bold tracking-tight leading-none">LIMSL CMS</p>
         </div>
 
-        <div className="relative space-y-8 max-w-md">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight">
-            Every machine, procedure and sign-off, auditable in one place.
+        <div className="relative space-y-8 max-w-lg">
+          <h2 className="text-[2.6rem] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
+            Nobody touches a machine until the paperwork says they can.
           </h2>
-          <p className="text-brand-50/90 text-sm leading-relaxed">
-            The computerized maintenance management system for LEE International Machinery, built compliance-first for
-            ISO&nbsp;9001 &amp; 45001.
+          <p className="text-white/70 text-sm leading-relaxed max-w-md">
+            The maintenance system for LEE International Machinery. Every job carries the chain that
+            authorised it, and every step of that chain is signed.
           </p>
-          <ul className="space-y-3 text-sm">
+
+          {/* The product's characteristic object: the order the four documents
+              have to be approved in before work may start. Structure, not
+              records, so there is nothing here to mistake for live data. */}
+          <ol className="space-y-px rounded-xl overflow-hidden border border-white/10 bg-white/[0.04] max-w-sm">
             {[
-              { icon: ClipboardCheck, text: "Preventive & corrective maintenance with traceable sign-off" },
-              { icon: HardHat, text: "Permits-to-work, WMS and safety compliance" },
-              { icon: ShieldCheck, text: "Full audit trail, who did what, when, under which revision" },
-            ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3">
-                <span className="mt-0.5 w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                  <Icon className="w-3.5 h-3.5" />
+              { step: "Work order", note: "Management authorises the job" },
+              { step: "Method statement", note: "How it will be done" },
+              { step: "Hazard analysis", note: "What can go wrong, and the controls" },
+              { step: "Permit to work", note: "Valid for seven days, renewed daily" },
+            ].map(({ step, note }, i) => (
+              <li key={step} className="flex items-center gap-3 px-4 py-3 bg-white/[0.03]">
+                <span className="w-5 h-5 rounded-full bg-white/10 grid place-items-center shrink-0">
+                  <Check className="w-3 h-3 text-brand-300" aria-hidden="true" />
                 </span>
-                <span className="text-brand-50/90">{text}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-tight">{step}</span>
+                  <span className="block text-xs text-white/60 leading-tight mt-0.5">{note}</span>
+                </span>
+                {i < 3 && <span className="ml-auto text-white/60 text-xs shrink-0" aria-hidden="true">then</span>}
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
 
-        <p className="relative text-xs text-brand-100/70">
-          © {new Date().getFullYear()} LEE International Machinery and Services Limited
+        <p className="relative text-xs text-white/60">
+          © {new Date().getFullYear()} LEE International Machinery and Services Limited · ISO 9001:2015 · ISO 45001
         </p>
       </div>
 
@@ -98,8 +102,8 @@ function LoginForm() {
           </div>
 
           <div className="mb-6 hidden lg:block">
-            <h1 className="text-2xl font-bold tracking-tight text-ink-900">Welcome back</h1>
-            <p className="text-sm text-ink-500 mt-1">Sign in to continue to your maintenance portal.</p>
+            <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink-900">Every sign-off starts here.</h1>
+            <p className="text-sm text-ink-600 mt-1.5">Sign in to pick up the work waiting on you.</p>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
