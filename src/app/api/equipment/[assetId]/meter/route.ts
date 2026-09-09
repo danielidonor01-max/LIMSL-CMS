@@ -18,9 +18,9 @@ import { logEquipmentEvent } from "@/lib/equipment-log";
 // The meter, its readings, and what they mean, computed server-side so the
 // twin, the schedule and any report can never disagree about whether a service
 // is due.
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
-    const { id } = await params;
+    const { assetId: id } = await params;
     const [eq0] = await db.select().from(equipment).where(eq(equipment.id, id)).limit(1);
     if (!eq0) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
 
@@ -58,12 +58,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 // POST → record a reading. PATCH-style config (unit/interval) rides along so a
 // machine can be set up and read in one action.
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
     const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
     if (gate.res) return gate.res;
 
-    const { id } = await params;
+    const { assetId: id } = await params;
     const body = await request.json();
 
     const [eq0] = await db.select().from(equipment).where(eq(equipment.id, id)).limit(1);

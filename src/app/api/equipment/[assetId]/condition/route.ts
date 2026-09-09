@@ -12,9 +12,9 @@ import { logEquipmentEvent } from "@/lib/equipment-log";
 // Points with their readings, verdict and trend. Computed here so the twin, a
 // report and any future dashboard cannot disagree about whether a bearing is
 // heating up.
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
-    const { id } = await params;
+    const { assetId: id } = await params;
     const points = await db.select().from(conditionPoints).where(eq(conditionPoints.equipmentId, id));
     if (!points.length) {
       return NextResponse.json({ points: [], health: programmeHealth([]) });
@@ -53,12 +53,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 // POST creates a measurement point, or records a reading against one.
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
     const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
     if (gate.res) return gate.res;
 
-    const { id } = await params;
+    const { assetId: id } = await params;
     const body = await request.json();
 
     const [eq0] = await db.select().from(equipment).where(eq(equipment.id, id)).limit(1);
