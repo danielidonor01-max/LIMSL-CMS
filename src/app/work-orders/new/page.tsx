@@ -1,6 +1,7 @@
 // src/app/work-orders/new/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ClipboardList, Loader2, Save } from "lucide-react";
@@ -213,12 +214,7 @@ function NewWorkOrderForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Planned Date</label>
-                <input
-                  type="date"
-                  value={form.plannedDate}
-                  onChange={(e) => setForm((f) => ({ ...f, plannedDate: e.target.value }))}
-                  className={FIELD_CLASS}
-                />
+                <DateField value={form.plannedDate} onChange={(v) => setForm((f) => ({ ...f, plannedDate: v }))} />
               </div>
               <div>
                 <label className={LABEL_CLASS}>Assigned Technician</label>

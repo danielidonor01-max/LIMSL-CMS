@@ -1,6 +1,7 @@
 // src/components/MeterCard.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useState } from "react";
 import { Gauge, Plus, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
@@ -233,14 +234,7 @@ export default function MeterCard({
               />
             </Field>
             <Field label="Date read" htmlFor="mtr-date">
-              <input
-                id="mtr-date"
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                value={form.readingDate}
-                onChange={(e) => setForm((f) => ({ ...f, readingDate: e.target.value }))}
-                className={FIELD_CLASS}
-              />
+              <DateField value={form.readingDate} onChange={(v) => setForm((f) => ({ ...f, readingDate: v }))} max={new Date().toISOString().slice(0, 10)} id="mtr-date" />
             </Field>
           </div>
 

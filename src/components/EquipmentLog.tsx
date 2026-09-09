@@ -6,6 +6,7 @@
 // desktop alike. Reused by the digital-twin History tab and the /history page.
 "use client";
 
+import DateTimeField from "@/components/DateTimeField";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -201,7 +202,7 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-ink-500 uppercase">When</label>
-              <input type="datetime-local" value={form.occurredAt} onChange={(e) => setForm((f) => ({ ...f, occurredAt: e.target.value }))} className={field} />
+              <DateTimeField value={form.occurredAt} onChange={(v) => setForm((f) => ({ ...f, occurredAt: v }))} ariaLabel="When it happened" />
             </div>
           </div>
           <div className="space-y-1">

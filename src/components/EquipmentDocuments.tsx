@@ -1,6 +1,7 @@
 // src/components/EquipmentDocuments.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { FileText, Download, FileWarning, Upload, Loader2, Plus } from "lucide-react";
@@ -172,7 +173,7 @@ export default function EquipmentDocuments({
             </div>
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-ink-500 uppercase">Expiry (optional)</label>
-              <input name="expiryDate" type="date" className={inputCls} />
+              <DateField name="expiryDate" />
             </div>
           </div>
           <div className="space-y-1">

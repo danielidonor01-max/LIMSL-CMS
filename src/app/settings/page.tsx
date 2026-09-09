@@ -1,6 +1,8 @@
 // src/app/settings/page.tsx
 "use client";
 
+import DateTimeField from "@/components/DateTimeField";
+import TimeField from "@/components/TimeField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -602,19 +604,19 @@ export default function AppSettingsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <label className={label}>Work start</label>
-            <input type="time" value={form.workDayStart} onChange={(e) => setForm((f) => ({ ...f, workDayStart: e.target.value }))} className={`${timeField} w-full`} />
+            <TimeField value={form.workDayStart} onChange={(v) => setForm((f) => ({ ...f, workDayStart: v }))} />
           </div>
           <div className="space-y-1.5">
             <label className={label}>Work end</label>
-            <input type="time" value={form.workDayEnd} onChange={(e) => setForm((f) => ({ ...f, workDayEnd: e.target.value }))} className={`${timeField} w-full`} />
+            <TimeField value={form.workDayEnd} onChange={(v) => setForm((f) => ({ ...f, workDayEnd: v }))} />
           </div>
           <div className="space-y-1.5">
             <label className={label}>Lunch start</label>
-            <input type="time" value={form.lunchStart ?? ""} disabled={!lunchEnabled} onChange={(e) => setForm((f) => ({ ...f, lunchStart: e.target.value }))} className={`${timeField} w-full disabled:opacity-50`} />
+            <TimeField value={form.lunchStart ?? ""} onChange={(v) => setForm((f) => ({ ...f, lunchStart: v }))} disabled={!lunchEnabled} />
           </div>
           <div className="space-y-1.5">
             <label className={label}>Lunch end</label>
-            <input type="time" value={form.lunchEnd ?? ""} disabled={!lunchEnabled} onChange={(e) => setForm((f) => ({ ...f, lunchEnd: e.target.value }))} className={`${timeField} w-full disabled:opacity-50`} />
+            <TimeField value={form.lunchEnd ?? ""} onChange={(v) => setForm((f) => ({ ...f, lunchEnd: v }))} disabled={!lunchEnabled} />
           </div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -668,11 +670,11 @@ export default function AppSettingsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className={label}>Machine went down</label>
-            <input type="datetime-local" value={previewStart} onChange={(e) => setPreviewStart(e.target.value)} className={`${timeField} w-full`} />
+            <DateTimeField value={previewStart} onChange={setPreviewStart} ariaLabel="Preview window start" />
           </div>
           <div className="space-y-1.5">
             <label className={label}>Restored to service</label>
-            <input type="datetime-local" value={previewEnd} onChange={(e) => setPreviewEnd(e.target.value)} className={`${timeField} w-full`} />
+            <DateTimeField value={previewEnd} onChange={setPreviewEnd} min={previewStart || undefined} ariaLabel="Preview window end" />
           </div>
         </div>
         {previewHours !== null && (

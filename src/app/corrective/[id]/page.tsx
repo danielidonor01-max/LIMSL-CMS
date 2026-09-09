@@ -1,6 +1,8 @@
 // src/app/corrective/[id]/page.tsx
 "use client";
 
+import DateTimeField from "@/components/DateTimeField";
+import DateField from "@/components/DateField";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -561,12 +563,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   onChange={(e) => setNewResp(e.target.value)}
                   className="bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
                 />
-                <input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  className="bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none text-ink-500"
-                />
+                <DateField value={newDate} onChange={(v) => setNewDate(v)} />
               </div>
               <button
                 type="button"
@@ -631,20 +628,19 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-ink-500 uppercase">Machine went down</label>
-                      <input
-                        type="datetime-local"
+                      <DateTimeField
                         value={downStartAt}
-                        onChange={(e) => setDownStartAt(e.target.value)}
-                        className="w-full bg-white border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
+                        onChange={setDownStartAt}
+                        ariaLabel="Machine went down"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-ink-500 uppercase">Restored to service</label>
-                      <input
-                        type="datetime-local"
+                      <DateTimeField
                         value={downEndAt}
-                        onChange={(e) => setDownEndAt(e.target.value)}
-                        className="w-full bg-white border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
+                        onChange={setDownEndAt}
+                        min={downStartAt || undefined}
+                        ariaLabel="Restored to service"
                       />
                     </div>
                   </div>

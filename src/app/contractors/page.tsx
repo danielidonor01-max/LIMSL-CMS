@@ -1,6 +1,7 @@
 // src/app/contractors/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { HardHat, Plus, Search, AlertTriangle, Download, ShieldOff, ShieldCheck, UserPlus } from "lucide-react";
@@ -433,16 +434,16 @@ export default function ContractorsPage() {
                 <input id="c-pol" value={form.insurancePolicyNumber} onChange={(e) => setForm((f) => ({ ...f, insurancePolicyNumber: e.target.value }))} className={FIELD_CLASS} />
               </Field>
               <Field label="Insurance expires" htmlFor="c-insexp">
-                <input id="c-insexp" type="date" value={form.insuranceExpiryDate} onChange={(e) => setForm((f) => ({ ...f, insuranceExpiryDate: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={form.insuranceExpiryDate} onChange={(v) => setForm((f) => ({ ...f, insuranceExpiryDate: v }))} id="c-insexp" />
               </Field>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Site induction given" htmlFor="c-ind">
-                <input id="c-ind" type="date" value={form.inductionDate} onChange={(e) => setForm((f) => ({ ...f, inductionDate: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={form.inductionDate} onChange={(v) => setForm((f) => ({ ...f, inductionDate: v }))} id="c-ind" />
               </Field>
               <Field label="Induction valid until" htmlFor="c-indexp">
-                <input id="c-indexp" type="date" value={form.inductionValidUntil} onChange={(e) => setForm((f) => ({ ...f, inductionValidUntil: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={form.inductionValidUntil} onChange={(v) => setForm((f) => ({ ...f, inductionValidUntil: v }))} id="c-indexp" />
               </Field>
             </div>
             <p className="text-xs text-ink-500 -mt-1">
@@ -500,7 +501,7 @@ export default function ContractorsPage() {
                 </Field>
               </div>
               <Field label="Induction valid until" htmlFor="p-exp">
-                <input id="p-exp" type="date" value={addPerson.inductionValidUntil} onChange={(e) => setAddPerson((s) => (s ? { ...s, inductionValidUntil: e.target.value } : s))} className={FIELD_CLASS} />
+                <DateField value={addPerson.inductionValidUntil} onChange={(v) => setAddPerson((s) => (s ? { ...s, inductionValidUntil: v } : s))} id="p-exp" />
               </Field>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setAddPerson(null)}>Cancel</Button>

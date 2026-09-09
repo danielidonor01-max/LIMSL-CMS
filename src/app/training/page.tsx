@@ -1,6 +1,7 @@
 // src/app/training/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
@@ -453,7 +454,7 @@ export default function TrainingPage() {
             </div>
             <div>
               <label className={LABEL_CLASS}>Recert Due (optional)</label>
-              <input name="expiryDate" type="date" className={FIELD_CLASS} />
+              <DateField name="expiryDate" />
             </div>
           </div>
           <SubmitRow saving={saving} onCancel={() => setShowAssess(false)} label="Save Assessment" />
@@ -495,7 +496,7 @@ export default function TrainingPage() {
             </div>
             <div>
               <label className={LABEL_CLASS}>Planned Date</label>
-              <input name="plannedDate" type="date" className={FIELD_CLASS} defaultValue={TODAY} />
+              <DateField name="plannedDate" defaultValue={TODAY} />
             </div>
             <div>
               <label className={LABEL_CLASS}>Duration</label>

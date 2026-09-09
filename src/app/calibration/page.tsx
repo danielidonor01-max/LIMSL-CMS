@@ -1,6 +1,7 @@
 // src/app/calibration/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { invalidateApi, useApi } from "@/lib/api-cache";
@@ -353,7 +354,7 @@ export default function CalibrationPage() {
             </div>
             <div>
               <label className={LABEL_CLASS}>Calibration Date</label>
-              <input name="calibrationDate" type="date" defaultValue={TODAY} className={FIELD_CLASS} />
+              <DateField name="calibrationDate" defaultValue={TODAY} />
             </div>
             <div>
               <label className={LABEL_CLASS}>Interval (days)</label>

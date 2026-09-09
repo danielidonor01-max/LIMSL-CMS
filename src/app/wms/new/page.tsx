@@ -1,6 +1,7 @@
 // src/app/wms/new/page.tsx
 "use client";
 
+import Select from "@/components/Select";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Trash2 } from "lucide-react";
@@ -147,11 +148,11 @@ export default function NewWms() {
           {/* The job this method statement is written for */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-ink-500 uppercase">Approved Work Order</label>
-            <select
-              required
+            <Select
               value={workOrderId}
-              onChange={(e) => setWorkOrderId(e.target.value)}
-              className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2.5 text-xs focus:outline-none"
+              onChange={setWorkOrderId}
+              ariaLabel="Approved work order"
+              className="w-full"
             >
               <option value="">Select the work order this method statement covers</option>
               {workOrders.map((w) => (
@@ -159,7 +160,7 @@ export default function NewWms() {
                   {w.workOrderNumber} · {w.title}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="text-[11px] text-ink-500">
               Only work orders approved to commence appear here. The permit raised at the end of
               this chain references back to it.

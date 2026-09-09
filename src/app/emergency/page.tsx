@@ -1,6 +1,7 @@
 // src/app/emergency/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
@@ -548,10 +549,10 @@ export default function EmergencyPage() {
                 <input id="em-int" inputMode="numeric" value={itemForm.inspectionIntervalDays} onChange={(e) => setItemForm((f) => ({ ...f, inspectionIntervalDays: e.target.value }))} className={FIELD_CLASS} />
               </Field>
               <Field label="Last checked" htmlFor="em-last">
-                <input id="em-last" type="date" max={new Date().toISOString().slice(0, 10)} value={itemForm.lastInspectionDate} onChange={(e) => setItemForm((f) => ({ ...f, lastInspectionDate: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={itemForm.lastInspectionDate} onChange={(v) => setItemForm((f) => ({ ...f, lastInspectionDate: v }))} max={new Date().toISOString().slice(0, 10)} id="em-last" />
               </Field>
               <Field label="Expires" htmlFor="em-exp">
-                <input id="em-exp" type="date" value={itemForm.expiryDate} onChange={(e) => setItemForm((f) => ({ ...f, expiryDate: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={itemForm.expiryDate} onChange={(v) => setItemForm((f) => ({ ...f, expiryDate: v }))} id="em-exp" />
               </Field>
             </div>
             <p className="text-xs text-ink-500 -mt-1">
@@ -579,7 +580,7 @@ export default function EmergencyPage() {
                 </Select>
               </div>
               <Field label="Date held" htmlFor="dr-date">
-                <input id="dr-date" type="date" max={new Date().toISOString().slice(0, 10)} value={drillForm.drillDate} onChange={(e) => setDrillForm((f) => ({ ...f, drillDate: e.target.value }))} className={FIELD_CLASS} />
+                <DateField value={drillForm.drillDate} onChange={(v) => setDrillForm((f) => ({ ...f, drillDate: v }))} max={new Date().toISOString().slice(0, 10)} id="dr-date" />
               </Field>
             </div>
 

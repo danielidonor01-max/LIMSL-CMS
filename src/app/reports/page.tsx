@@ -1,6 +1,7 @@
 // src/app/reports/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import {
   FileBarChart,
@@ -19,7 +20,6 @@ import Button from "@/components/Button";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import TableSkeleton from "@/components/TableSkeleton";
-import { FIELD_CLASS } from "@/components/Field";
 import { downloadCSV } from "@/lib/export";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
@@ -251,21 +251,11 @@ export default function ReportsPage() {
                 </div>
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
-                  <input
-                    type="date"
-                    value={dossierFrom}
-                    onChange={(e) => setDossierFrom(e.target.value)}
-                    className={FIELD_CLASS}
-                  />
+                  <DateField value={dossierFrom} onChange={(v) => setDossierFrom(v)} />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
-                  <input
-                    type="date"
-                    value={dossierTo}
-                    onChange={(e) => setDossierTo(e.target.value)}
-                    className={FIELD_CLASS}
-                  />
+                  <DateField value={dossierTo} onChange={(v) => setDossierTo(v)} />
                 </label>
               </div>
               <div className="mt-4">

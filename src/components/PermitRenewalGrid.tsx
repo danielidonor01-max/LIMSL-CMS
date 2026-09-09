@@ -8,6 +8,7 @@
 // obvious that a column was skipped and here it would not be.
 "use client";
 
+import TimeField from "@/components/TimeField";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PenLine, CalendarDays } from "lucide-react";
@@ -227,12 +228,7 @@ export default function PermitRenewalGrid({
             <>
               <div>
                 <label className={LABEL_CLASS}>Time work started</label>
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className={FIELD_CLASS}
-                />
+                <TimeField value={time} onChange={(v) => setTime(v)} />
               </div>
               <SignaturePad label="Asset Holder Supervisor signature" onChange={setSignature} />
             </>

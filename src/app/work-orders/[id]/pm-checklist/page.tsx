@@ -1,6 +1,7 @@
 // src/app/work-orders/[id]/pm-checklist/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -394,7 +395,7 @@ export default function PMChecklistPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
-              <input type="date" value={nextPMDate} onChange={(e) => setNextPMDate(e.target.value)} className={field} />
+              <DateField value={nextPMDate} onChange={(v) => setNextPMDate(v)} />
             </div>
           </div>
 

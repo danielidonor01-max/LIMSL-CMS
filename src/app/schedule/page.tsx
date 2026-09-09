@@ -1,6 +1,7 @@
 // src/app/schedule/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
@@ -687,14 +688,7 @@ export default function SchedulePage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Planned date" htmlFor="schedule-planned-date" required>
-                <input
-                  id="schedule-planned-date"
-                  type="date"
-                  value={createForm.plannedDate}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, plannedDate: e.target.value }))}
-                  className={FIELD_CLASS}
-                  required
-                />
+                <DateField value={createForm.plannedDate} onChange={(v) => setCreateForm((f) => ({ ...f, plannedDate: v }))} id="schedule-planned-date" required />
               </Field>
               <Field label="Activity type">
                 <Select
@@ -775,14 +769,7 @@ export default function SchedulePage() {
                 Currently planned for <span className="font-mono text-ink-700">{formatDate(reschedule.row.plannedDate)}</span>.
               </p>
               <Field label="New planned date" htmlFor="schedule-new-date">
-                <input
-                  id="schedule-new-date"
-                  type="date"
-                  value={reschedule.date}
-                  min={new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => setReschedule((r) => (r ? { ...r, date: e.target.value } : r))}
-                  className={FIELD_CLASS}
-                />
+                <DateField value={reschedule.date} onChange={(v) => setReschedule((r) => (r ? { ...r, date: v } : r))} min={new Date().toISOString().slice(0, 10)} id="schedule-new-date" />
               </Field>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setReschedule(null)}>Cancel</Button>
@@ -830,14 +817,7 @@ export default function SchedulePage() {
                 />
               </Field>
               <Field label="Remind me again on" htmlFor="sn-until">
-                <input
-                  id="sn-until"
-                  type="date"
-                  min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)}
-                  value={snooze.until}
-                  onChange={(e) => setSnooze((s) => (s ? { ...s, until: e.target.value } : s))}
-                  className={FIELD_CLASS}
-                />
+                <DateField value={snooze.until} onChange={(v) => setSnooze((s) => (s ? { ...s, until: v } : s))} min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)} id="sn-until" />
               </Field>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setSnooze(null)}>Cancel</Button>
@@ -872,14 +852,7 @@ export default function SchedulePage() {
                 />
               </Field>
               <Field label="Review date" htmlFor="defer-review">
-                <input
-                  id="defer-review"
-                  type="date"
-                  value={defer.reviewDate}
-                  min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)}
-                  onChange={(e) => setDefer((d) => (d ? { ...d, reviewDate: e.target.value } : d))}
-                  className={FIELD_CLASS}
-                />
+                <DateField value={defer.reviewDate} onChange={(v) => setDefer((d) => (d ? { ...d, reviewDate: v } : d))} min={new Date(Date.now() + 864e5).toISOString().slice(0, 10)} id="defer-review" />
               </Field>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setDefer(null)}>Cancel</Button>

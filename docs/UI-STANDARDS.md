@@ -98,6 +98,43 @@ unchanged and only the floor moved.
 Weights: page titles `font-bold`, card headings `font-semibold` at 16px (bold at
 14px reads as shouting inside a small block), body normal or `font-medium`.
 
+## No native browser controls
+
+Every control is drawn by the app. The browser's own widgets look different on
+every operating system and cannot be made to match anything, so none are used:
+
+| Instead of | Use |
+|---|---|
+| `<select>` | `Select` (or `Dropdown` for menus) |
+| `<input type="date">` | `DateField` |
+| `<input type="time">` | `TimeField` |
+| `<input type="datetime-local">` | `DateTimeField` |
+
+The risk in replacing a native control is that the custom one is worse. Custom
+date pickers routinely lose typing, lose the keyboard, and become unusable on a
+phone. These do not, and that is a requirement rather than a nicety:
+
+- **The field is a text input first.** Type `15/09/2026`, `2026-09-15`, `15.9.26`
+  or `5/9/26` and it resolves on blur. Times take `730`, `7:30`, `8pm`, `0805`.
+  The calendar is an affordance, never the only way in.
+- Full keyboard support in the calendar: arrows for a day, PageUp/PageDown for a
+  month, Home/End for the week, Enter to pick, Escape to close.
+- Day cells are 40px, controls meet the 44px touch floor, and text is 14px so
+  iOS does not zoom the page and refuse to zoom back.
+- The grid is always six rows, so the buttons under it do not move as you page
+  through months.
+- Pass `name` and `defaultValue` for a form read through `FormData`; the field
+  holds its own value and renders a hidden input, so the submit contract is
+  unchanged.
+
+Dates are stored and displayed as `YYYY-MM-DD`. It is unambiguous, it sorts, and
+what a person reads on screen is what an auditor reads in the export. Typed
+input is read day-first, because that is the local convention and the ambiguity
+has to break one way.
+
+The grammar is in `lib/date-field.ts` under test. That is where date fields
+usually go wrong.
+
 ## Density
 
 `main` is `p-6 lg:p-8` with `space-y-8` between sections. Cards are `p-5`/`p-6`,

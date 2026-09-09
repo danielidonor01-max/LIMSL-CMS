@@ -4,6 +4,7 @@
 // contains, the export button reruns the same query server-side.
 "use client";
 
+import DateField from "@/components/DateField";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -197,11 +198,11 @@ export default function AuditTrailLogs() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={FIELD_CLASS} />
+              <DateField value={from} onChange={(v) => setFrom(v)} />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={FIELD_CLASS} />
+              <DateField value={to} onChange={(v) => setTo(v)} />
             </label>
             <div className="flex flex-col gap-1">
               <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Record type</span>

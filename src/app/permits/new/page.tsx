@@ -4,6 +4,8 @@
 // should not have to translate between them.
 "use client";
 
+import DateField from "@/components/DateField";
+import TimeField from "@/components/TimeField";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Loader2, FileText, ShieldAlert, ClipboardList } from "lucide-react";
@@ -297,21 +299,11 @@ function NewPermitForm() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Start date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={FIELD_CLASS}
-                />
+                <DateField value={startDate} onChange={(v) => setStartDate(v)} />
               </div>
               <div>
                 <label className={LABEL_CLASS}>Time</label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className={FIELD_CLASS}
-                />
+                <TimeField value={startTime} onChange={(v) => setStartTime(v)} />
               </div>
               <div>
                 <label className={LABEL_CLASS}>Duration (hours)</label>

@@ -1,6 +1,7 @@
 // src/components/ConditionCard.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useState } from "react";
 import { Activity, Plus, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { toast } from "sonner";
@@ -247,7 +248,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                 <input id="cr-val" inputMode="decimal" value={reading.value} onChange={(e) => setReading((s) => (s ? { ...s, value: e.target.value } : s))} className={FIELD_CLASS} />
               </Field>
               <Field label="Taken on" htmlFor="cr-date">
-                <input id="cr-date" type="date" max={new Date().toISOString().slice(0, 10)} value={reading.takenOn} onChange={(e) => setReading((s) => (s ? { ...s, takenOn: e.target.value } : s))} className={FIELD_CLASS} />
+                <DateField value={reading.takenOn} onChange={(v) => setReading((s) => (s ? { ...s, takenOn: v } : s))} max={new Date().toISOString().slice(0, 10)} id="cr-date" />
               </Field>
             </div>
             <Field label="Notes" htmlFor="cr-notes">

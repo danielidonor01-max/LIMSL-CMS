@@ -1,6 +1,7 @@
 // src/app/equipment/new/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -239,7 +240,7 @@ export default function NewEquipmentPage() {
             <label className={LABEL_CLASS}>
               {assetType === "SYS" ? "Installation Date" : "Commissioning Date"}
             </label>
-            <input type="date" value={form.commissioningDate} onChange={(e) => set("commissioningDate", e.target.value)} className={FIELD_CLASS} />
+            <DateField value={form.commissioningDate} onChange={(v) => set("commissioningDate", v)} />
           </div>
           <div>
             <label className={LABEL_CLASS}>How critical is it?</label>

@@ -1,6 +1,7 @@
 // src/app/oem/page.tsx
 "use client";
 
+import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
@@ -408,11 +409,11 @@ export default function OemPage() {
             </div>
             <div>
               <label className={LABEL_CLASS}>Warranty Start</label>
-              <input name="warrantyStart" type="date" className={FIELD_CLASS} />
+              <DateField name="warrantyStart" />
             </div>
             <div>
               <label className={LABEL_CLASS}>Warranty End</label>
-              <input name="warrantyEnd" type="date" className={FIELD_CLASS} />
+              <DateField name="warrantyEnd" />
             </div>
             <div>
               <label className={LABEL_CLASS}>Avg Response (hrs)</label>
@@ -455,7 +456,7 @@ export default function OemPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={LABEL_CLASS}>Intervention Date</label>
-              <input name="interventionDate" type="date" className={FIELD_CLASS} defaultValue={TODAY} />
+              <DateField name="interventionDate" defaultValue={TODAY} />
             </div>
             <div>
               <label className={LABEL_CLASS}>Warranty Status</label>
