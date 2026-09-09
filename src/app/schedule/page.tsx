@@ -1,6 +1,7 @@
 // src/app/schedule/page.tsx
 "use client";
 
+import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -424,25 +425,16 @@ export default function SchedulePage() {
         <>
         {/* Tabs + filters */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {(["upcoming", "all", "deferred"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  tab === t
-                    ? "bg-brand-500/15 text-brand-600"
-                    : "text-ink-500 hover:text-ink-900"
-                }`}
-              >
-                {t === "upcoming"
-                  ? "Upcoming (60 days)"
-                  : t === "all"
-                    ? "All Activities"
-                    : `Deferred${deferredCount ? ` (${deferredCount})` : ""}`}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            ariaLabel="Filter scheduled activities"
+            value={tab}
+            onChange={setTab}
+            items={[
+              { value: "upcoming", label: "Upcoming, 60 days" },
+              { value: "all", label: "All activities" },
+              { value: "deferred", label: "Deferred", count: deferredCount || undefined },
+            ]}
+          />
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">

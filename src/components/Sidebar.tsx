@@ -32,7 +32,7 @@ import {
   Siren,
   HardHat,
 } from "lucide-react";
-import { isSuperAdmin, canAccessPath } from "@/lib/roles";
+import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
 type NavSection = { section: string | null; items: NavItem[] };
@@ -161,6 +161,26 @@ export default function Sidebar({
           </p>
         </div>
       </Link>
+
+      {/* Who is signed in and where. The reference product carries a workspace
+          chip here and it is worth borrowing for a different reason: in a system
+          where every signature is attributable, the person should be able to see
+          whose name is about to go on the record without opening a menu. */}
+      {mounted && user?.name && (
+        <div className="mx-3 mb-2 flex items-center gap-2.5 rounded-lg bg-nav-raised px-3 py-2.5">
+          <span className="w-7 h-7 rounded-md bg-brand-600 text-white grid place-items-center text-xs font-bold shrink-0">
+            {String(user.name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs font-semibold text-white truncate leading-tight">
+              {user.name}
+            </span>
+            <span className="block text-[11px] text-nav-label truncate leading-tight mt-0.5">
+              {ROLE_LABELS[role ?? ""] ?? "LEE International"}
+            </span>
+          </span>
+        </div>
+      )}
 
       <nav aria-label="Modules" className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
         {sections.map((s, si) => (

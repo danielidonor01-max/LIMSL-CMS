@@ -1,6 +1,7 @@
 // src/app/jha/page.tsx
 "use client";
 
+import Tabs from "@/components/Tabs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useApi } from "@/lib/api-cache";
@@ -85,7 +86,7 @@ export default function JhaListPage() {
         <PageHeader
           icon={ShieldAlert}
           title="Job Hazard Analysis"
-          subtitle="HSE's step-by-step analysis of an approved method statement. A permit cannot be raised without one."
+          subtitle="Where safety takes the method apart, step by step, and says what could go wrong"
           backHref="/"
           backLabel="Dashboard"
           actions={
@@ -126,19 +127,16 @@ export default function JhaListPage() {
         />
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="flex gap-1 bg-ink-100 p-1 rounded-lg">
-            {(["open", "approved", "all"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-colors ${
-                  tab === t ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            ariaLabel="Filter hazard analyses"
+            value={tab}
+            onChange={setTab}
+            items={[
+              { value: "open", label: "Open", count: awaiting },
+              { value: "approved", label: "Approved", count: approved },
+              { value: "all", label: "All", count: rows.length },
+            ]}
+          />
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
