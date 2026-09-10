@@ -1110,6 +1110,44 @@ export const procedureRevisions = pgTable("procedure_revisions", {
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Safety incidents & near misses (ISO 45001 10.2) ────────────────────────
+// A different record from corrective maintenance, and the distinction is the
+// point: a corrective record is about a machine that stopped, an incident is
+// about a person who was hurt or nearly was. The investigation fields are all
+// nullable because reporting must not require them, near misses are only cheap
+// warnings if people actually file them.
+export const safetyIncidents = pgTable("safety_incidents", {
+  id: text("id").primaryKey(),
+  incidentNumber: text("incident_number").notNull().unique(), // INC-2026-XXXX
+  // NEAR_MISS | FIRST_AID | MEDICAL_TREATMENT | LOST_TIME | PROPERTY_DAMAGE
+  // | ENVIRONMENTAL | DANGEROUS_OCCURRENCE
+  type: text("type").notNull(),
+  severity: text("severity").notNull().default("MEDIUM"), // LOW | MEDIUM | HIGH | CRITICAL
+  occurredAt: text("occurred_at").notNull(),
+  location: text("location"),
+  equipmentId: text("equipment_id").references(() => equipment.id),
+  // Was the work under a permit when it happened? An incident during permitted
+  // work asks a different question of the system than one outside it.
+  permitId: text("permit_id").references(() => permits.id),
+  description: text("description").notNull(),
+  injuredPersonName: text("injured_person_name"),
+  witnesses: text("witnesses"),
+  reportedById: text("reported_by_id").references(() => users.id),
+  reportedByName: text("reported_by_name"),
+  reportedAt: text("reported_at").notNull(),
+  // ── Investigation, filled afterwards by HSE ──
+  immediateAction: text("immediate_action"),
+  rootCause: text("root_cause"),
+  correctiveAction: text("corrective_action"),
+  investigatorId: text("investigator_id").references(() => users.id),
+  investigatorName: text("investigator_name"),
+  targetDate: text("target_date"),
+  status: text("status").notNull().default("REPORTED"), // REPORTED | UNDER_INVESTIGATION | ACTIONS_ASSIGNED | CLOSED
+  closedAt: text("closed_at"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("safety_incidents_status_idx").on(t.status)]);
+
 // ─── App Settings ────────────────────────────────────────────────────────────
 // Single-row (id = "singleton") organisation settings, administered by the Super
 // Admin. The working-hours window drives production-time downtime accounting and

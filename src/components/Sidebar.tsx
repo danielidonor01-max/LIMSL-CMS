@@ -34,6 +34,7 @@ import {
   ChevronLeft,
   PenLine,
   ClipboardCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
@@ -74,7 +75,8 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/wms", label: "WMS", icon: FileText },
       { href: "/jha", label: "Job Hazard Analysis", icon: Biohazard },
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
-      { href: "/emergency", label: "Emergency Prep", icon: Siren },
+      { href: "/incidents", label: "Incidents & Near Misses", icon: Siren },
+      { href: "/emergency", label: "Emergency Prep", icon: LifeBuoy },
       { href: "/contractors", label: "Contractors", icon: HardHat },
       { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
       { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },

@@ -26,6 +26,7 @@ import {
   contractors,
   nonConformities,
   trainingRecords,
+  safetyIncidents,
 } from "@/lib/db/schema";
 import { ilike, or } from "drizzle-orm";
 
@@ -45,6 +46,7 @@ export const SEARCHABLE_TYPES = [
   "Contractor",
   "Non-conformity",
   "Training",
+  "Incident",
 ] as const;
 
 const PER_ENTITY = 4;
@@ -56,7 +58,7 @@ export async function GET(request: Request) {
     // Escape LIKE wildcards so a literal "%" in the query can't blow up the scan.
     const pat = `%${q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
 
-    const [eqRows, woRows, cmRows, wmsRows, jhaRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows] =
+    const [eqRows, woRows, cmRows, wmsRows, jhaRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows, incRows] =
       await Promise.all([
         db
           .select({ name: equipment.name, assetId: equipment.assetId, location: equipment.location })
@@ -161,6 +163,21 @@ export async function GET(request: Request) {
           .from(trainingRecords)
           .where(or(ilike(trainingRecords.employeeName, pat), ilike(trainingRecords.trainingTitle, pat)))
           .limit(PER_ENTITY),
+        db
+          .select({
+            id: safetyIncidents.id,
+            incidentNumber: safetyIncidents.incidentNumber,
+            description: safetyIncidents.description,
+            status: safetyIncidents.status,
+          })
+          .from(safetyIncidents)
+          .where(
+            or(
+              ilike(safetyIncidents.incidentNumber, pat),
+              ilike(safetyIncidents.description, pat),
+            ),
+          )
+          .limit(PER_ENTITY),
       ]);
 
     const results: Result[] = [
@@ -193,6 +210,12 @@ export async function GET(request: Request) {
         label: j.jhaNumber,
         sub: j.title,
         href: `/jha/${j.id}`,
+      })),
+      ...incRows.map((i) => ({
+        type: "Incident",
+        label: i.incidentNumber,
+        sub: i.description,
+        href: `/incidents/${i.id}`,
       })),
       ...ptwRows.map((p) => ({
         type: "Permit",

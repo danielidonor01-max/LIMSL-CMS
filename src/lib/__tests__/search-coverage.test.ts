@@ -28,6 +28,7 @@ const SEARCHABLE_MODULES = [
   "emergency",
   "contractors",
   "training",
+  "incidents",
 ];
 
 const TABLE_FOR: Record<string, string> = {
@@ -42,6 +43,7 @@ const TABLE_FOR: Record<string, string> = {
   emergency: "emergencyEquipment",
   contractors: "contractors",
   training: "trainingRecords",
+  incidents: "safetyIncidents",
 };
 
 test("every record-holding module is reachable from global search", () => {

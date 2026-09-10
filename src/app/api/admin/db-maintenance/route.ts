@@ -15,6 +15,36 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 // Kept in lockstep with the index tuples in src/lib/db/schema.ts. Also carries
 // additive column migrations (IF NOT EXISTS, idempotent, data-safe).
 const INDEXES: [string, string][] = [
+  [
+    "safety_incidents",
+    `CREATE TABLE IF NOT EXISTS safety_incidents (
+      id text PRIMARY KEY,
+      incident_number text NOT NULL UNIQUE,
+      type text NOT NULL,
+      severity text NOT NULL DEFAULT 'MEDIUM',
+      occurred_at text NOT NULL,
+      location text,
+      equipment_id text,
+      permit_id text,
+      description text NOT NULL,
+      injured_person_name text,
+      witnesses text,
+      reported_by_id text,
+      reported_by_name text,
+      reported_at text NOT NULL,
+      immediate_action text,
+      root_cause text,
+      corrective_action text,
+      investigator_id text,
+      investigator_name text,
+      target_date text,
+      status text NOT NULL DEFAULT 'REPORTED',
+      closed_at text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      updated_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["safety_incidents_status_idx", "CREATE INDEX IF NOT EXISTS safety_incidents_status_idx ON safety_incidents (status)"],
   ["corrective_maintenance.signer_ids", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS technician_id text, ADD COLUMN IF NOT EXISTS supervisor_id text"],
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
   ["app_settings.escalation_policy", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS escalation_policy text"],

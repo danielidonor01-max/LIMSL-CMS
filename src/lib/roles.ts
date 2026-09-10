@@ -94,8 +94,8 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
 // (SUPER_ADMIN + management + maintenance team) have full access. Drives both the
 // sidebar nav and the page-level guard so they never disagree.
 export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
-  QA_QC: ["/", "/my-tasks", "/approvals", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
-  HSE: ["/", "/my-tasks", "/approvals", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
+  QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
+  HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
   VIEWER: ["/", "/equipment", "/procedure", "/reports"],
 };
 
@@ -175,6 +175,29 @@ export const BREAKDOWN_NOTIFY_ROLES = [
   "MAINTENANCE_MANAGER",
   "FOREMAN",
   "HSE",
+];
+
+// A safety incident is HSE's to investigate, but the Factory Manager owns the
+// close-out because incidents carry legal weight, so both are told at once. The
+// Maintenance Manager is here because most incidents in a fabrication workshop
+// happen on or around a machine somebody has to take out of service.
+// Reporting is open to every authenticated user; investigating is not. The
+// person who saw the event is rarely the person who should be attributing its
+// root cause, and on a record that can end up in front of a regulator that
+// separation is the point.
+export const INCIDENT_INVESTIGATE_ROLES = [
+  "SUPER_ADMIN",
+  "HSE",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "COO",
+];
+
+export const INCIDENT_NOTIFY_ROLES = [
+  "SUPER_ADMIN",
+  "HSE",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
 ];
 
 export const MAINTENANCE_ESCALATION_ROLES = [
