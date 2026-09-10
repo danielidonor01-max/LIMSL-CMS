@@ -20,13 +20,19 @@ import SignoffChain from "@/components/SignoffChain";
 import { formatDate } from "@/lib/utils";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
+import { rate, BAND_LABEL, BAND_TONE, bandFromLegacy } from "@/lib/hse/risk-matrix";
 
 type StepRow = {
   step?: string;
   hazards?: string;
   controls?: string;
-  residualRisk?: string;
   responsible?: string;
+  likelihoodBefore?: number;
+  severityBefore?: number;
+  likelihoodAfter?: number;
+  severityAfter?: number;
+  // Pre-matrix records carry a bare band and no score.
+  residualRisk?: string;
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -37,11 +43,29 @@ const STATUS_BADGE: Record<string, string> = {
   SUPERSEDED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
 };
 
-const RISK_BADGE: Record<string, string> = {
-  LOW: "bg-brand-500/10 text-brand-700 border-brand-500/20",
-  MEDIUM: "bg-warn-500/10 text-warn-700 border-warn-500/20",
-  HIGH: "bg-danger-500/10 text-danger-700 border-danger-500/20",
-};
+// One cell of the rating. An unrated step reads "not rated" and never borrows a
+// band from anywhere: this column previously defaulted to LOW, so a step nobody
+// had assessed displayed as low risk, which is a safety claim the record was
+// not entitled to make.
+function RiskCell({ rating, legacy }: { rating: ReturnType<typeof rate>; legacy?: string }) {
+  if (rating) {
+    return (
+      <Badge className={BAND_TONE[rating.band]}>
+        {rating.likelihood}&times;{rating.severity} = {rating.score} · {BAND_LABEL[rating.band]}
+      </Badge>
+    );
+  }
+  const band = bandFromLegacy(legacy);
+  if (band) {
+    return (
+      <span className="inline-flex flex-col gap-0.5">
+        <Badge className={BAND_TONE[band]}>{BAND_LABEL[band]}</Badge>
+        <span className="text-[11px] text-ink-400">rated before scoring</span>
+      </span>
+    );
+  }
+  return <span className="text-ink-400">Not rated</span>;
+}
 
 const PPE_LABELS: Record<string, string> = Object.fromEntries(
   PPE_REQUIREMENTS.map((p) => [p.key, p.label]),
@@ -204,7 +228,8 @@ export default function JhaDetailPage() {
                   <th className="text-left font-semibold py-3 px-5">Job step</th>
                   <th className="text-left font-semibold py-3 px-5">Hazards</th>
                   <th className="text-left font-semibold py-3 px-5">Controls</th>
-                  <th className="text-left font-semibold py-3 px-5">Residual</th>
+                  <th className="text-left font-semibold py-3 px-5">Before controls</th>
+                  <th className="text-left font-semibold py-3 px-5">After controls</th>
                   <th className="text-left font-semibold py-3 px-5">Responsible</th>
                 </tr>
               </thead>
@@ -216,9 +241,13 @@ export default function JhaDetailPage() {
                     <td className="py-3.5 px-5 text-ink-600 whitespace-pre-line">{s.hazards ?? "-"}</td>
                     <td className="py-3.5 px-5 text-ink-600 whitespace-pre-line">{s.controls ?? "-"}</td>
                     <td className="py-3.5 px-5">
-                      <Badge className={RISK_BADGE[s.residualRisk ?? "LOW"] ?? RISK_BADGE.LOW}>
-                        {(s.residualRisk ?? "LOW").toLowerCase()}
-                      </Badge>
+                      <RiskCell rating={rate(s.likelihoodBefore, s.severityBefore)} />
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <RiskCell
+                        rating={rate(s.likelihoodAfter, s.severityAfter)}
+                        legacy={s.residualRisk}
+                      />
                     </td>
                     <td className="py-3.5 px-5 text-ink-600">{s.responsible || "-"}</td>
                   </tr>

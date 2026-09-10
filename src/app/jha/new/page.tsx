@@ -10,14 +10,30 @@ import PageHeader from "@/components/PageHeader";
 import Select from "@/components/Select";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
+import { LIKELIHOOD, SEVERITY, rate, BAND_LABEL, BAND_TONE } from "@/lib/hse/risk-matrix";
 
-type StepRow = { step: string; hazards: string; controls: string; residualRisk: string; responsible: string };
+type StepRow = {
+  step: string;
+  hazards: string;
+  controls: string;
+  responsible: string;
+  likelihoodBefore: number;
+  severityBefore: number;
+  likelihoodAfter: number;
+  severityAfter: number;
+};
 
 const emptyStep = (): StepRow => ({
   step: "",
   hazards: "",
   controls: "",
-  residualRisk: "LOW",
+  // Deliberately started at the middle of both scales rather than the bottom.
+  // A form that opens on "rare / negligible" gets submitted on rare and
+  // negligible, and the rating means nothing.
+  likelihoodBefore: 3,
+  severityBefore: 3,
+  likelihoodAfter: 2,
+  severityAfter: 3,
   responsible: "",
 });
 
@@ -215,19 +231,26 @@ function NewJhaForm() {
                       className={FIELD_CLASS}
                     />
                   </div>
+                  {/* Scored twice. The pair is what makes a control provable:
+                      "high risk" is a description, "high risk brought to low by
+                      these controls" is a safety case. */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 pl-7">
+                    <RiskScore
+                      title="Before controls"
+                      likelihood={s.likelihoodBefore}
+                      severity={s.severityBefore}
+                      onLikelihood={(v) => setStep(i, { likelihoodBefore: v })}
+                      onSeverity={(v) => setStep(i, { severityBefore: v })}
+                    />
+                    <RiskScore
+                      title="After controls"
+                      likelihood={s.likelihoodAfter}
+                      severity={s.severityAfter}
+                      onLikelihood={(v) => setStep(i, { likelihoodAfter: v })}
+                      onSeverity={(v) => setStep(i, { severityAfter: v })}
+                    />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pl-7">
-                    <div>
-                      <label className={LABEL_CLASS}>Residual risk</label>
-                      <Select
-                        value={s.residualRisk}
-                        onChange={(v) => setStep(i, { residualRisk: v })}
-                        className="w-full"
-                      >
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                      </Select>
-                    </div>
                     <div>
                       <label className={LABEL_CLASS}>Responsible</label>
                       <input
@@ -293,6 +316,59 @@ function NewJhaForm() {
           </div>
         </form>
       </main>
+    </div>
+  );
+}
+
+// One half of a step's rating. The score and its band are shown live, because a
+// person choosing "likely" and "major" should see 4 x 4 = 16, extreme, at the
+// moment they choose it rather than after submitting.
+function RiskScore({
+  title,
+  likelihood,
+  severity,
+  onLikelihood,
+  onSeverity,
+}: {
+  title: string;
+  likelihood: number;
+  severity: number;
+  onLikelihood: (v: number) => void;
+  onSeverity: (v: number) => void;
+}) {
+  const r = rate(likelihood, severity);
+  return (
+    <div className="border border-line rounded-lg p-3 space-y-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold text-ink-700">{title}</p>
+        {r && (
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${BAND_TONE[r.band]}`}>
+            {r.score} · {BAND_LABEL[r.band]}
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className={LABEL_CLASS}>Likelihood</label>
+          <Select value={String(likelihood)} onChange={(v) => onLikelihood(Number(v))} className="w-full">
+            {LIKELIHOOD.map((l) => (
+              <option key={l.value} value={String(l.value)}>
+                {l.value} · {l.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>Severity</label>
+          <Select value={String(severity)} onChange={(v) => onSeverity(Number(v))} className="w-full">
+            {SEVERITY.map((sv) => (
+              <option key={sv.value} value={String(sv.value)}>
+                {sv.value} · {sv.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { jhaDocuments, wmsDocuments, equipment, auditLog } from "@/lib/db/schema
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { rate, blockingSteps } from "@/lib/hse/risk-matrix";
 import { JHA_WRITE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
@@ -69,7 +70,19 @@ export async function GET() {
   }
 }
 
-type StepRow = { step?: string; hazards?: string; controls?: string; residualRisk?: string; responsible?: string };
+type StepRow = {
+  step?: string;
+  hazards?: string;
+  controls?: string;
+  responsible?: string;
+  // Likelihood and severity, 1-5, rated before and after the controls.
+  // residualRisk is the pre-matrix shape and is still read on old records.
+  likelihoodBefore?: number;
+  severityBefore?: number;
+  likelihoodAfter?: number;
+  severityAfter?: number;
+  residualRisk?: string;
+};
 
 export async function POST(request: Request) {
   try {
@@ -118,6 +131,45 @@ export async function POST(request: Request) {
             "A hazard analysis with no hazards authorises nothing (ISO 45001 6.1.2).",
         },
         { status: 400 },
+      );
+    }
+
+    // ── Risk rating (ISO 45001 6.1.2) ─────────────────────────────────────
+    // Every step is scored twice, before and after its controls. The gap
+    // between the two ratings is the only evidence the controls were worth
+    // writing down, and it is what an auditor reads.
+    const rated = steps.map((r) => ({
+      step: r.step,
+      initial: rate(r.likelihoodBefore, r.severityBefore),
+      residual: rate(r.likelihoodAfter, r.severityAfter),
+    }));
+
+    const unrated = rated
+      .filter((r) => !r.initial || !r.residual)
+      .map((r, i) => r.step?.trim() || `Step ${i + 1}`);
+    if (unrated.length) {
+      return NextResponse.json(
+        {
+          error:
+            `Rate the likelihood and severity, before and after controls, for: ${unrated.join(", ")}. ` +
+            `An unscored hazard cannot be shown to have been assessed (ISO 45001 6.1.2).`,
+        },
+        { status: 400 },
+      );
+    }
+
+    // Work is not authorised on the strength of an analysis that still rates a
+    // step as extreme once its controls are applied. Without a rule attached,
+    // scoring the risk changes nothing about what happens next.
+    const blocked = blockingSteps(rated);
+    if (blocked.length) {
+      return NextResponse.json(
+        {
+          error:
+            `${blocked.join(", ")} ${blocked.length === 1 ? "is" : "are"} still extreme risk after controls. ` +
+            `Strengthen the controls or change the method. An analysis cannot authorise work at this rating.`,
+        },
+        { status: 409 },
       );
     }
 
