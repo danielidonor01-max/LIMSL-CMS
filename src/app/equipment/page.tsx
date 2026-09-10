@@ -33,7 +33,7 @@ import {
   EQUIPMENT_STATUS_BADGE,
   CRITICALITY_SHORT,
 } from "@/lib/constants";
-import { parseAssetId, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
+import { parseAssetId, ASSET_PREFIXES, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
 import { downloadCSV } from "@/lib/export";
 import LoadError from "@/components/LoadError";
 
@@ -81,17 +81,29 @@ export default function EquipmentList() {
 
   const prefixOf = (eq: any): AssetPrefix => parseAssetId(eq.assetId)?.prefix ?? "PE";
 
+  // Counted per prefix rather than "SYS or else a machine". The old shape
+  // silently folded any new series into the machine count, so the 19 office AC
+  // units would have been reported as machines on the register everyone quotes.
   const counts = useMemo(() => {
-    let pe = 0;
-    let sys = 0;
+    const byPrefix = Object.fromEntries(ASSET_PREFIXES.map((p) => [p, 0])) as Record<AssetPrefix, number>;
     let attention = 0;
     for (const eq of equipmentList) {
-      if (prefixOf(eq) === "SYS") sys++;
-      else pe++;
+      byPrefix[prefixOf(eq)]++;
       if (NEEDS_ATTENTION.has(eq.status)) attention++;
     }
-    return { pe, sys, attention, total: equipmentList.length };
+    return { byPrefix, attention, total: equipmentList.length };
   }, [equipmentList]);
+
+  // Names only the series that are actually present. A register holding nothing
+  // but machines should not announce "0 office and facility".
+  const registerSummary = useMemo(() => {
+    const total = `${counts.total} asset${counts.total === 1 ? "" : "s"}`;
+    const present = ASSET_PREFIXES.filter((p) => counts.byPrefix[p] > 0);
+    if (present.length < 2) return total;
+    return `${total}: ${present
+      .map((p) => `${counts.byPrefix[p]} ${ASSET_PREFIX_META[p].noun}`)
+      .join(", ")}`;
+  }, [counts]);
 
   const filteredEquipment = equipmentList.filter((eq) => {
     const term = search.toLowerCase();
@@ -198,8 +210,8 @@ export default function EquipmentList() {
           title="Asset Register"
           subtitle={
             loading
-              ? "Every machine and facility system, with status, criticality and location"
-              : `${counts.total} asset${counts.total === 1 ? "" : "s"}, ${counts.pe} production, ${counts.sys} facility system${counts.sys === 1 ? "" : "s"}`
+              ? "Every machine, facility system and serviced unit, with status, criticality and location"
+              : registerSummary
           }
           backHref="/"
           backLabel="Dashboard"
@@ -217,17 +229,22 @@ export default function EquipmentList() {
 
         {/* Type segment + the question the register exists to answer */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {(["ALL", "PE", "SYS"] as const).map((t) => (
+          {/* Wraps between tabs, never inside a label. A fourth series pushed
+              this past a 375px phone, and the segment broke "Office & facility"
+              across three lines rather than moving a whole tab down. */}
+          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
+            {(["ALL", ...ASSET_PREFIXES] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTypeTab(t)}
                 title={t === "ALL" ? undefined : ASSET_PREFIX_META[t].help}
-                className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
+                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
                   typeTab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                 }`}
               >
-                {t === "ALL" ? `All (${counts.total})` : t === "PE" ? `Machines (${counts.pe})` : `Systems (${counts.sys})`}
+                {t === "ALL"
+                  ? `All (${counts.total})`
+                  : `${ASSET_PREFIX_META[t].tab} (${counts.byPrefix[t]})`}
               </button>
             ))}
           </div>

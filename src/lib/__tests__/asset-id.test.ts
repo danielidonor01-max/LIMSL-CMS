@@ -7,6 +7,8 @@ import {
   normaliseAssetId,
   prefixForCategory,
   isAssetPrefix,
+  ASSET_PREFIXES,
+  ASSET_PREFIX_META,
 } from "@/lib/asset-id";
 
 // The finding: the generator only knew how to make PE codes, so a facility
@@ -57,6 +59,22 @@ test("parse round-trips through format", () => {
   assert.equal(parseAssetId("not an id"), null);
 });
 
+// The office AC tags are four digits already and are printed on the units, so
+// the register has to accept them exactly as they read. A prefix the list knows
+// about but the pattern does not is the failure this guards: parseAssetId would
+// return null, the register would quietly file 19 AC units under machines, and
+// the create form would reject an ID that is on the wall.
+test("every declared prefix is one the pattern actually accepts", () => {
+  for (const prefix of ASSET_PREFIXES) {
+    const id = formatAssetId(prefix, 2232);
+    const parsed = parseAssetId(id);
+    assert.deepEqual(parsed, { prefix, serial: 2232 }, `${id} does not parse`);
+    const norm = normaliseAssetId(id.toLowerCase());
+    assert.equal(norm.ok && norm.assetId, id, `${id} does not canonicalise`);
+    assert.ok(ASSET_PREFIX_META[prefix]?.tab, `${prefix} has no register tab label`);
+  }
+});
+
 // Installations are maintained differently from machines, so the category and
 // the prefix must never disagree.
 test("installation categories map to SYS, machines to PE", () => {
@@ -68,9 +86,10 @@ test("installation categories map to SYS, machines to PE", () => {
   }
 });
 
-test("only the two known prefixes are accepted from a query string", () => {
+test("only the known prefixes are accepted from a query string", () => {
   assert.equal(isAssetPrefix("PE"), true);
   assert.equal(isAssetPrefix("sys"), true);
+  assert.equal(isAssetPrefix("oe"), true);
   assert.equal(isAssetPrefix("DROP TABLE"), false);
   assert.equal(isAssetPrefix(null), false);
   assert.equal(isAssetPrefix(7), false);
