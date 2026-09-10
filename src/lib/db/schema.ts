@@ -645,6 +645,29 @@ export const emergencyInspections = pgTable("emergency_inspections", {
 
 // Drill log. A drill that surfaced problems and closed none of them taught the
 // organisation nothing, so deficiencies and their actions live on the record.
+// Who to ring, and where to stand. ISO 45001 8.2 asks for emergency
+// preparedness to be documented and available; a laminated sheet on a wall in
+// the office is neither available at 2am nor available to somebody standing in
+// Bay 3 with a phone.
+//
+// Numbers are NOT seeded. An emergency contact list shipped with plausible
+// placeholder numbers is worse than an empty one, because an empty one is
+// obviously unfinished and a wrong one is discovered by someone dialling it.
+export const emergencyContacts = pgTable("emergency_contacts", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  organisation: text("organisation"),
+  // FIRE | AMBULANCE | CLINIC | POLICE | REGULATOR | UTILITY | INTERNAL | OTHER
+  kind: text("kind").notNull().default("OTHER"),
+  phone: text("phone").notNull(),
+  altPhone: text("alt_phone"),
+  notes: text("notes"),
+  // Lower sorts first. The fire service does not belong below a utility.
+  displayOrder: integer("display_order").notNull().default(100),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
 export const emergencyDrills = pgTable("emergency_drills", {
   id: text("id").primaryKey(),
   drillType: text("drill_type").notNull(),

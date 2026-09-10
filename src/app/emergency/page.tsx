@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
+import EmergencyContacts from "@/components/EmergencyContacts";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
@@ -111,7 +112,7 @@ export default function EmergencyPage() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && COMPLIANCE_WRITE_ROLES.includes(role ?? "");
 
-  const [tab, setTab] = useState<"register" | "drills">("register");
+  const [tab, setTab] = useState<"register" | "drills" | "contacts">("register");
   const [q, setQ] = useState("");
   const [notReadyOnly, setNotReadyOnly] = useState(false);
   const [showItem, setShowItem] = useState(false);
@@ -318,16 +319,20 @@ export default function EmergencyPage() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {(["register", "drills"] as const).map((t) => (
+          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
+            {(["register", "drills", "contacts"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
+                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
                   tab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
                 }`}
               >
-                {t === "register" ? `Equipment (${items.length})` : `Drill log (${data?.drills.length ?? 0})`}
+                {t === "register"
+                  ? `Equipment (${items.length})`
+                  : t === "drills"
+                    ? `Drill log (${data?.drills.length ?? 0})`
+                    : "Who to call"}
               </button>
             ))}
           </div>
@@ -460,6 +465,8 @@ export default function EmergencyPage() {
         )}
 
         {/* ── Drill log ── */}
+        {tab === "contacts" && <EmergencyContacts canWrite={canWrite} />}
+
         {tab === "drills" && (
           <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
             {loading ? (

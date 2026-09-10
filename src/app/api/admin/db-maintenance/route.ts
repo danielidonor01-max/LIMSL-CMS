@@ -16,6 +16,21 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 // additive column migrations (IF NOT EXISTS, idempotent, data-safe).
 const INDEXES: [string, string][] = [
   [
+    "emergency_contacts",
+    `CREATE TABLE IF NOT EXISTS emergency_contacts (
+      id text PRIMARY KEY,
+      name text NOT NULL,
+      organisation text,
+      kind text NOT NULL DEFAULT 'OTHER',
+      phone text NOT NULL,
+      alt_phone text,
+      notes text,
+      display_order integer NOT NULL DEFAULT 100,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      updated_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  [
     "safety_incidents",
     `CREATE TABLE IF NOT EXISTS safety_incidents (
       id text PRIMARY KEY,

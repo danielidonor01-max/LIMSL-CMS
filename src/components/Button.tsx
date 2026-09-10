@@ -77,6 +77,19 @@ export default function Button(props: AsButton | AsLink) {
 
   // `rest` still carries href (for links) or button attrs; spread as-is.
   if ("href" in props && props.href !== undefined) {
+    // tel:, mailto: and absolute URLs are not app routes, and handing one to
+    // the router gives a dead control rather than a phone call. Added when the
+    // emergency contact list needed a dialable button and had to hand-roll the
+    // styling to get one, which the button guard correctly refused.
+    const external = /^(tel:|mailto:|sms:|https?:)/i.test(String(props.href));
+    if (external) {
+      return (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <a className={cls} {...(rest as any)}>
+          {inner}
+        </a>
+      );
+    }
     return (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <Link className={cls} {...(rest as any)}>
