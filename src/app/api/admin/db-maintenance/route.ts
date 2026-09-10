@@ -45,6 +45,7 @@ const INDEXES: [string, string][] = [
     )`,
   ],
   ["safety_incidents_status_idx", "CREATE INDEX IF NOT EXISTS safety_incidents_status_idx ON safety_incidents (status)"],
+  ["corrective_maintenance.restoration_and_assignment", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS expected_restoration_at text, ADD COLUMN IF NOT EXISTS assigned_to_id text, ADD COLUMN IF NOT EXISTS assigned_to_name text, ADD COLUMN IF NOT EXISTS rca_target_date text"],
   ["corrective_maintenance.signer_ids", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS technician_id text, ADD COLUMN IF NOT EXISTS supervisor_id text"],
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
   ["app_settings.escalation_policy", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS escalation_policy text"],

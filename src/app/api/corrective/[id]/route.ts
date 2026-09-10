@@ -149,6 +149,14 @@ export async function PATCH(
       repairCompletedTime: body.repairCompletedTime ?? record.repairCompletedTime,
       restoredToServiceTime: body.restoredToServiceTime ?? record.restoredToServiceTime,
       totalDowntimeHours,
+      // Told to production, not computed from. A breakdown with no estimate is
+      // a distinct and visible state rather than a blank.
+      expectedRestorationAt: body.expectedRestorationAt ?? record.expectedRestorationAt,
+      // Who is investigating, and by when. Without a named next actor the
+      // record sits in "RCA investigation" and nobody comes back to it.
+      assignedToId: body.assignedToId ?? record.assignedToId,
+      assignedToName: body.assignedToName ?? record.assignedToName,
+      rcaTargetDate: body.rcaTargetDate ?? record.rcaTargetDate,
       productionImpact: body.productionImpact ?? record.productionImpact,
       
       // RCA fields

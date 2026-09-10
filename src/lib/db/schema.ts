@@ -406,6 +406,18 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   repairCompletedTime: text("repair_completed_time"),
   restoredToServiceTime: text("restored_to_service_time"),
   totalDowntimeHours: real("total_downtime_hours"),
+  // When maintenance expects the machine back. Nothing computes from it; it
+  // exists so production can be told something, and so a breakdown with NO
+  // estimate is visibly distinct from one that is on track.
+  expectedRestorationAt: text("expected_restoration_at"),
+  // Who is investigating. Without this the record sits in "RCA investigation"
+  // with no next actor, which is how a fault report becomes a fault report
+  // nobody ever came back to. Deliberately separate from reportedById: the
+  // person who reported a failure is not automatically the person who should
+  // be attributing its root cause.
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  assignedToName: text("assigned_to_name"),
+  rcaTargetDate: text("rca_target_date"),
   productionImpact: text("production_impact"),
   // RCA
   evidenceCollected: text("evidence_collected"), // JSON (photos, logs, readings)

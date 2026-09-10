@@ -8,7 +8,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Clock, ShieldCheck, Plus, Trash2 } from "lucide-react";
+import { Clock, ShieldCheck, Plus, Trash2, UserCheck } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
 import Select from "@/components/Select";
@@ -56,9 +56,23 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   // Downtime window, production hours are derived from these against the
   // working-hours settings, so a weekend or off-shift outage isn't over-counted.
+  const [assignedToId, setAssignedToId] = useState("");
+  const [rcaTargetDate, setRcaTargetDate] = useState("");
+  const [expectedRestorationAt, setExpectedRestorationAt] = useState("");
+  const [userList, setUserList] = useState<any[]>([]);
+  const [assigning, setAssigning] = useState(false);
   const [downStartAt, setDownStartAt] = useState("");
   const [downEndAt, setDownEndAt] = useState("");
   const [workSettings, setWorkSettings] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
+
+  // The roster for the investigator picker. A free-text name here would be the
+  // same mistake the close-out just stopped making.
+  useEffect(() => {
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setUserList(Array.isArray(d) ? d : []))
+      .catch(() => setUserList([]));
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -70,6 +84,9 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
           // Seed the downtime window. Default the "down" moment to the reported
           // day at the start of shift so the technician only adjusts if needed.
+          setAssignedToId(data.assignedToId || "");
+          setRcaTargetDate(data.rcaTargetDate || "");
+          setExpectedRestorationAt(data.expectedRestorationAt || "");
           setDownStartAt(data.downStartAt || (data.reportedDate ? `${data.reportedDate}T08:00` : ""));
           setDownEndAt(data.downEndAt || "");
 
@@ -194,6 +211,36 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     verifiedRootCause,
     correctiveActions: actions,
   });
+
+  const saveAssignment = async () => {
+    setAssigning(true);
+    try {
+      const res = await fetch(`/api/corrective/${recordId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignedToId: assignedToId || null,
+          assignedToName: userList.find((u) => u.id === assignedToId)?.name ?? null,
+          rcaTargetDate: rcaTargetDate || null,
+          expectedRestorationAt: expectedRestorationAt || null,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Couldn't save the assignment.");
+        return;
+      }
+      toast.success(
+        assignedToId
+          ? `Assigned to ${userList.find((u) => u.id === assignedToId)?.name ?? "the investigator"}.`
+          : "Assignment cleared.",
+      );
+    } catch {
+      toast.error("Couldn't save the assignment.");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleSaveRca = async () => {
     setSaving(true);
@@ -603,6 +650,58 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     onChange={(e) => setSupervisorComments(e.target.value)}
                     className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
                   />
+                </div>
+
+                {/* Who is investigating, and when the machine is expected
+                    back. Without a named next actor a fault report becomes a
+                    fault report nobody came back to, which is how a record ends
+                    up sitting in "RCA investigation" for a month. */}
+                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-brand-600" />
+                    <span className="text-xs font-semibold text-ink-700 uppercase tracking-wide">
+                      Investigation &amp; restoration
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">Assigned to</label>
+                      <Select
+                        value={assignedToId}
+                        onChange={setAssignedToId}
+                        ariaLabel="Assigned investigator"
+                        className="w-full"
+                      >
+                        <option value="">Nobody yet</option>
+                        {userList.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">RCA due by</label>
+                      <DateField value={rcaTargetDate} onChange={setRcaTargetDate} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">Expected back in service</label>
+                      <DateTimeField
+                        value={expectedRestorationAt}
+                        onChange={setExpectedRestorationAt}
+                        ariaLabel="Expected back in service"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Button variant="secondary" loading={assigning} onClick={saveAssignment}>
+                      Save assignment
+                    </Button>
+                    <p className="text-xs text-ink-500">
+                      The estimate is what production is told. A breakdown with none reads as
+                      &ldquo;no estimate given&rdquo; on the dashboard.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Downtime window, feeds MTTR. Production hours only. */}

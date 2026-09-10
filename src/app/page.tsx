@@ -19,6 +19,7 @@ import DashboardHero from "@/components/DashboardHero";
 import MetricPanel, { type Metric } from "@/components/MetricPanel";
 import { formatDate } from "@/lib/utils";
 import { useApi } from "@/lib/api-cache";
+import { downFor, expectedBack } from "@/lib/maintenance/downtime";
 import { operationalFeed } from "@/lib/activity-feed";
 import { ROLE_LABELS, canAccessPath } from "@/lib/roles";
 import {
@@ -84,6 +85,40 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 
+
+// The open corrective record for a machine, if there is one. A machine marked
+// broken down with no corrective record is itself worth saying out loud: it
+// means the status was set by hand and nobody raised the paperwork.
+function openCorrectiveFor(records: any[], equipmentId: string) {
+  return (
+    records.find(
+      (r) => r.equipmentId === equipmentId && r.status !== "CLOSED" && r.status !== "CANCELLED",
+    ) ?? null
+  );
+}
+
+function BreakdownDetail({ record }: { record: any | null }) {
+  if (!record) {
+    return (
+      <p className="text-xs text-danger-700/80 leading-relaxed">
+        No corrective record has been raised. Nothing is tracking this breakdown.
+      </p>
+    );
+  }
+
+  const down = downFor(record.downStartAt);
+  const back = expectedBack(record.expectedRestorationAt);
+
+  return (
+    <p className="text-xs text-danger-700/80 leading-relaxed">
+      <span className="font-semibold">{down ? down.label : "Down since an unrecorded time"}</span>
+      {" · "}
+      {back.label}
+      {record.assignedToName ? ` · ${record.assignedToName} investigating` : " · nobody assigned"}
+    </p>
+  );
+}
+
 export default function Home() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
@@ -99,6 +134,10 @@ export default function Home() {
   const attention = attentionData?.items ?? [];
   const { data: equipment } = useApi<Equip[]>("/api/equipment", []);
   const { data: activity } = useApi<Audit[]>("/api/audit", []);
+  // The open corrective records, so a breakdown alert can say how long the
+  // machine has been down and when it is expected back. "2 machines are down"
+  // on its own gives a plant manager nothing to prioritise with.
+  const { data: correctives } = useApi<any[]>("/api/corrective", []);
   const { data: mine } = useApi<{ items: SignoffItem[] }>("/api/signoffs/mine", { items: [] });
   const signoffs = mine.items ?? [];
   const { data: myWork } = useApi<{ items: MyJob[]; openCount: number; overdueCount: number }>(
@@ -117,6 +156,7 @@ export default function Home() {
 
 
   const brokenDown = equipment.filter((e) => e.status === "BROKEN_DOWN");
+  const openFor = (equipmentId: string) => openCorrectiveFor(correctives ?? [], equipmentId);
   const critical = equipment
     .filter((e) => e.criticality === "HIGH" || e.criticality === "CRITICAL")
     // Broken-down first, then alphabetical by name.
@@ -275,17 +315,15 @@ export default function Home() {
             key={eq.id}
             className="relative overflow-hidden rounded-xl border border-danger-200 bg-danger-50 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
           >
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="p-2 bg-danger-500/20 text-danger-600 rounded-lg">
-                <AlertTriangle className="w-5 h-5 animate-pulse" />
+            <div className="flex items-start gap-3 relative z-10 min-w-0">
+              <div className="p-2 bg-danger-500/20 text-danger-600 rounded-lg shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-danger-700">
-                  Critical Breakdown: {eq.name} ({eq.assetId})
+                  {eq.name} is down ({eq.assetId})
                 </p>
-                <p className="text-xs text-danger-700/80">
-                  Status is Broken Down, raise a corrective request and RCA.
-                </p>
+                <BreakdownDetail record={openFor(eq.id)} />
               </div>
             </div>
             {mounted && canAccessPath(role ?? "", "/corrective/new") && (
