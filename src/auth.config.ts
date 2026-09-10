@@ -3,6 +3,7 @@
 // middleware for route protection; the full config in auth.ts adds the
 // Credentials provider that touches the database.
 import type { NextAuthConfig } from "next-auth";
+import { publicScanRedirect } from "@/lib/scan-redirect";
 
 // `/offline` is served by the service worker when there is no connection. It is
 // public because the session cannot be checked with the network down, and
@@ -33,12 +34,13 @@ export const authConfig = {
       );
       if (isPublic) return true;
       if (!auth?.user) {
-        // If an unauthenticated user visits a machine's direct page (e.g. from an existing QR sticker),
-        // gracefully redirect them to the public scan passport instead of an unhelpful login wall.
-        const equipmentMatch = pathname.match(/^\/equipment\/([^\/]+)$/);
-        if (equipmentMatch && equipmentMatch[1] !== "new") {
-          return Response.redirect(new URL(`/equipment/scan/${equipmentMatch[1]}`, request.nextUrl));
-        }
+        // Somebody scanned a sticker. Stickers outlive code: this label has
+        // encoded three different URLs over its life and all three are on
+        // machines right now, so the rule is by ASSET rather than by path.
+        // Showing a login form to a welder who scanned a code to find out
+        // whether a machine is safe to touch is the failure this prevents.
+        const passport = publicScanRedirect(pathname);
+        if (passport) return Response.redirect(new URL(passport, request.nextUrl));
         return false;
       }
 
