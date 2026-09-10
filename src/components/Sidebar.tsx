@@ -32,6 +32,7 @@ import {
   Siren,
   HardHat,
   ChevronLeft,
+  PenLine,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
@@ -41,7 +42,13 @@ type NavSection = { section: string | null; items: NavItem[] };
 // Grouped navigation, related modules under a labelled section for clearer
 // information hierarchy instead of one long flat list.
 const NAV_SECTIONS: NavSection[] = [
-  { section: null, items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true }] },
+  {
+    section: null,
+    items: [
+      { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/approvals", label: "My Approvals", icon: PenLine },
+    ],
+  },
   {
     section: "Assets",
     items: [

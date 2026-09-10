@@ -60,6 +60,9 @@ test("no page-level module has appeared without being considered for search", ()
   const appDir = join(process.cwd(), "src", "app");
   const known = new Set([
     ...SEARCHABLE_MODULES,
+    // A view onto signoff steps that belong to modules already searchable
+    // here. Indexing it would return the same work order twice.
+    "approvals",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",
