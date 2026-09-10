@@ -5,12 +5,10 @@ import Button from "@/components/Button";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
 import SchematicViewer from "@/components/SchematicViewer";
 import DiagnosisChat from "@/components/DiagnosisChat";
 import {
   ArrowLeft,
-  Loader2,
   Stethoscope,
   Search,
   FileText,
@@ -287,14 +285,16 @@ export default function TroubleshootPage() {
               className="w-full min-h-[44px] pl-9 pr-3 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-base sm:text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
           </div>
-          <button
+          <Button
+            size="lg"
+            className="shrink-0"
             onClick={() => runDiagnosis()}
-            disabled={diagnosing || symptom.trim().length < 2}
-            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-sm font-semibold shrink-0"
+            disabled={symptom.trim().length < 2}
+            loading={diagnosing}
+            icon={Sparkles}
           >
-            {diagnosing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             Diagnose
-          </button>
+          </Button>
         </div>
         {meta.knownSymptoms.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1 items-center">
@@ -476,12 +476,9 @@ export default function TroubleshootPage() {
                   ) : (
                     <>
                       <span className="text-xs text-ink-500">Was this the cause? Confirm to teach the engine.</span>
-                      <button
-                        onClick={() => resolveWith(d)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" /> This resolved it
-                      </button>
+                      <Button size="sm" onClick={() => resolveWith(d)} icon={CheckCircle2}>
+                        This resolved it
+                      </Button>
                     </>
                   )}
                 </div>

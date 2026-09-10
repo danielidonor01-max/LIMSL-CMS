@@ -49,7 +49,6 @@ type ChecklistItem = { item: string; status: string; remarks?: string };
 
 export default function WorkOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
@@ -248,13 +247,9 @@ export default function WorkOrderDetailPage() {
                 </Button>
               )}
               {!isPreventive && wo.status === "IN_PROGRESS" && (
-                <button
-                  onClick={() => setCompleteOpen(true)}
-                  disabled={acting}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold disabled:opacity-60"
-                >
-                  <CheckCircle2 className="w-4 h-4" /> Complete Work
-                </button>
+                <Button onClick={() => setCompleteOpen(true)} disabled={acting} icon={CheckCircle2}>
+                  Complete Work
+                </Button>
               )}
               {canIssuePermit && eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
                 <Link

@@ -291,14 +291,15 @@ export default function DiagnosisChat({
               placeholder="Report what you observed…"
               className="flex-1 resize-none max-h-32 px-3 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
-            <button
+            <Button
+              className="shrink-0"
               onClick={() => send(input)}
-              disabled={sending || (!input.trim() && attachments.length === 0)}
-              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg shrink-0"
+              disabled={!input.trim() && attachments.length === 0}
+              loading={sending}
+              icon={Send}
               title="Send"
-            >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </button>
+              aria-label="Send"
+            />
           </div>
           <p className="text-[11px] text-ink-400 text-right">
             {prefs.chatEnterToSend ? "Enter sends · Shift+Enter for a new line" : "Ctrl+Enter sends · Enter for a new line"}

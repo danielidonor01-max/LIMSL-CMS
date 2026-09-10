@@ -1,6 +1,7 @@
 // src/components/SignoffChain.tsx
 "use client";
 
+import Button from "@/components/Button";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -186,17 +187,18 @@ export default function SignoffChain({
                       />
                     )}
                     {canSign && !isOpen && (
-                      <button
+                      <Button
                         onClick={() => {
                           setOpenStep(step.id);
                           setSig(null);
                           setComments("");
                           setError(null);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
+                        icon={PenLine}
+                        size="sm"
                       >
-                        <PenLine className="w-3.5 h-3.5" /> Sign
-                      </button>
+                        Sign
+                      </Button>
                     )}
                     {step.status === "PENDING" && !unlocked && (
                       <span className="text-[11px] text-ink-400">awaiting earlier steps</span>
@@ -245,14 +247,15 @@ export default function SignoffChain({
                       >
                         Cancel
                       </button>
-                      <button
+                      <Button
+                        size="sm"
                         onClick={() => sign(step.id)}
-                        disabled={saving || !sig}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-60 text-white rounded-lg text-xs font-semibold"
+                        disabled={!sig}
+                        loading={saving}
+                        icon={CheckCircle2}
                       >
-                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                         Confirm sign-off
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

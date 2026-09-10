@@ -4,6 +4,7 @@
 // details; if it's empty it offers to schedule work (corrective flow / work order).
 "use client";
 
+import Button from "@/components/Button";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -205,12 +206,14 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-ink-500">No maintenance scheduled for this day. Schedule work:</p>
-            <button
+            <Button
+              variant="danger"
+              fullWidth
+              icon={Plus}
               onClick={() => router.push("/corrective/new")}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-danger-600 hover:bg-danger-500 text-white rounded-lg text-xs font-bold"
             >
-              <Plus className="w-4 h-4" /> Schedule Corrective Maintenance
-            </button>
+              Schedule Corrective Maintenance
+            </Button>
             <button
               onClick={() => router.push("/work-orders/new")}
               className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-ink-200 hover:bg-ink-100 text-ink-700 rounded-lg text-xs font-semibold"

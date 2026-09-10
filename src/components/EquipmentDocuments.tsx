@@ -143,12 +143,13 @@ export default function EquipmentDocuments({
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-ink-400 font-mono">{docs.length} records</span>
           {canUpload && (
-            <button
+            <Button
+              size="sm"
+              icon={Plus}
               onClick={() => { setDocType("OPERATIONAL_MANUAL"); setShowForm((s) => !s); }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
             >
-              <Plus className="w-3.5 h-3.5" /> Upload
-            </button>
+              Upload
+            </Button>
           )}
         </div>
       </div>
