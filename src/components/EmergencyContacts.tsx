@@ -18,6 +18,7 @@ import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import EmptyState from "@/components/EmptyState";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
+import { CONTACT_KINDS, contactKindLabel } from "@/lib/hse/emergency-contact-kinds";
 
 type Contact = {
   id: string;
@@ -29,20 +30,9 @@ type Contact = {
   notes: string | null;
 };
 
-// Ordered the way an emergency runs, not alphabetically. The default display
-// order follows this list so a new contact lands somewhere sensible.
-const KINDS: { value: string; label: string; order: number }[] = [
-  { value: "FIRE", label: "Fire service", order: 10 },
-  { value: "AMBULANCE", label: "Ambulance", order: 20 },
-  { value: "CLINIC", label: "Clinic or hospital", order: 30 },
-  { value: "INTERNAL", label: "Internal (first aider, warden, manager)", order: 40 },
-  { value: "POLICE", label: "Police", order: 50 },
-  { value: "REGULATOR", label: "Regulator or agency", order: 60 },
-  { value: "UTILITY", label: "Utility (power, gas, water)", order: 70 },
-  { value: "OTHER", label: "Other", order: 100 },
-];
-
-const KIND_LABEL: Record<string, string> = Object.fromEntries(KINDS.map((k) => [k.value, k.label]));
+// One list, shared with the public scan passport, which shows the same contacts
+// to somebody standing at a machine.
+const KINDS = CONTACT_KINDS;
 
 export default function EmergencyContacts({ canWrite }: { canWrite: boolean }) {
   const [rows, setRows] = useState<Contact[]>([]);
@@ -147,7 +137,7 @@ export default function EmergencyContacts({ canWrite }: { canWrite: boolean }) {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-ink-900">{c.name}</p>
                 <p className="text-xs text-ink-600">
-                  {KIND_LABEL[c.kind] ?? c.kind}
+                  {contactKindLabel(c.kind)}
                   {c.organisation ? ` · ${c.organisation}` : ""}
                 </p>
                 {c.notes && <p className="text-xs text-ink-500 mt-0.5">{c.notes}</p>}

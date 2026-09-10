@@ -29,10 +29,12 @@ import { equipment, permits, emergencyContacts } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 import { ppeForCategory } from "@/lib/hse/category-ppe";
+// Which kinds a stranger at a machine may need, held with the labels rather
+// than copied here. Ordered by the column that exists to order them, so the
+// fire service cannot sort below a stationery supplier.
+import { PUBLIC_CONTACT_KINDS } from "@/lib/hse/emergency-contact-kinds";
 
-// Contacts anybody at a machine may need. Ordered by the column that exists to
-// order them, so the fire service cannot sort below a stationery supplier.
-const PUBLIC_CONTACT_KINDS = ["FIRE", "AMBULANCE", "CLINIC", "INTERNAL"];
+
 
 export async function GET(
   _request: Request,
