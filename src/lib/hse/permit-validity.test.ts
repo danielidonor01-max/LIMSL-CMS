@@ -10,6 +10,8 @@ import {
   isWithinWindow,
   isExpiredOn,
   daysRemaining,
+  remainingLabel,
+  needsExpiryNonConformity,
   validateRenewal,
   renewalSummary,
   expiryDecision,
@@ -277,4 +279,56 @@ test("the window boundaries are inclusive at both ends", () => {
   assert.equal(isWithinWindow(START, 7, "2026-08-10"), true);
   assert.equal(isWithinWindow(START, 7, "2026-08-03"), false);
   assert.equal(isWithinWindow(START, 7, "2026-08-11"), false);
+});
+
+// ── How long is left, in words ────────────────────────────────────────────
+test("the remaining label counts inclusively, like the permit does", () => {
+  // A permit issued on the 1st with 7 days' validity expires on the 7th, and on
+  // the 7th it is still valid. "Expires today" and "expired" are one day apart
+  // and mean entirely different things to somebody holding a torch.
+  const start = "2026-09-01";
+  assert.equal(remainingLabel(start, 7, "2026-09-01").label, "7 days left");
+  assert.equal(remainingLabel(start, 7, "2026-09-05").label, "3 days left");
+  assert.equal(remainingLabel(start, 7, "2026-09-06").label, "Expires tomorrow");
+  assert.equal(remainingLabel(start, 7, "2026-09-07").label, "Expires today");
+  assert.equal(remainingLabel(start, 7, "2026-09-08").label, "Expired yesterday");
+  assert.equal(remainingLabel(start, 7, "2026-09-11").label, "Expired 4 days ago");
+});
+
+test("the tone escalates before the permit runs out, not after", () => {
+  // Warning somebody on the day it expires is too late to renew it.
+  const start = "2026-09-01";
+  assert.equal(remainingLabel(start, 7, "2026-09-01").tone, "OK");
+  assert.equal(remainingLabel(start, 7, "2026-09-05").tone, "SOON");
+  assert.equal(remainingLabel(start, 7, "2026-09-07").tone, "LAST_DAY");
+  assert.equal(remainingLabel(start, 7, "2026-09-09").tone, "EXPIRED");
+});
+
+// ── When an expiry becomes a finding ──────────────────────────────────────
+test("an authorised permit that expires unsigned raises a finding", () => {
+  // Isolation went on real machinery and nobody signed it back off. Either work
+  // carried on past the authorisation or the site was left unsafe on paper.
+  assert.equal(
+    needsExpiryNonConformity({ wasAuthorised: true, closeoutSignatures: 0 }),
+    true,
+  );
+});
+
+test("the ordinary work-ongoing rollover is not a finding", () => {
+  // A permit expiring with the job unfinished is closed and a successor raised.
+  // That is the process working. Filing a non-conformity every time it happens
+  // teaches people to ignore non-conformities.
+  assert.equal(
+    needsExpiryNonConformity({ wasAuthorised: true, closeoutSignatures: 1 }),
+    false,
+  );
+});
+
+test("a permit that never got authorised raises nothing", () => {
+  // No signatures means no work was ever permitted, so there is no unsafe site
+  // to account for. It expires and a fresh permit is raised.
+  assert.equal(
+    needsExpiryNonConformity({ wasAuthorised: false, closeoutSignatures: 0 }),
+    false,
+  );
 });

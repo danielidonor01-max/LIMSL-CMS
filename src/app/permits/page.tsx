@@ -14,6 +14,7 @@ import {
   PlusCircle,
   AlertTriangle,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -21,6 +22,10 @@ import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
+import {
+  remainingLabel,
+  DEFAULT_PERMIT_VALIDITY_DAYS,
+} from "@/lib/hse/permit-validity";
 
 type Permit = {
   id: string;
@@ -30,10 +35,41 @@ type Permit = {
   assetId?: string | null;
   permitHolderName?: string | null;
   expiryDate?: string | null;
+  startDate?: string | null;
+  validityDays?: number | null;
   status: string;
   lotoApplied?: boolean;
   approval?: { total: number; signed: number; complete: boolean };
 };
+
+
+const REMAINING_TONE: Record<string, string> = {
+  OK: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  LAST_DAY: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  EXPIRED: "bg-danger-600 text-white border-danger-700",
+};
+
+function RemainingBadge({
+  startDate,
+  validityDays,
+}: {
+  startDate: string;
+  validityDays?: number | null;
+}) {
+  const r = remainingLabel(
+    startDate,
+    validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS,
+    new Date().toISOString().slice(0, 10),
+  );
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full border w-fit ${REMAINING_TONE[r.tone]}`}
+    >
+      <Clock className="w-3 h-3" /> {r.label}
+    </span>
+  );
+}
 
 export default function PermitsList() {
   const { data: session } = useSession();
@@ -146,6 +182,15 @@ export default function PermitsList() {
                         {rec.permitHolderName ? ` · ${rec.permitHolderName}` : ""}
                         {rec.expiryDate ? ` · expires ${formatDate(rec.expiryDate)}` : ""}
                       </p>
+                      {/* The list is where somebody scans for what is about to
+                          run out, so the days left belong here and not only on
+                          the record. */}
+                      {rec.status === "ACTIVE" && rec.startDate ? (
+                        <RemainingBadge
+                          startDate={rec.startDate}
+                          validityDays={rec.validityDays}
+                        />
+                      ) : null}
                       {pending && (
                         <div className="flex items-center gap-1.5 text-xs text-warn-700 font-semibold">
                           <ShieldAlert className="w-3.5 h-3.5" />

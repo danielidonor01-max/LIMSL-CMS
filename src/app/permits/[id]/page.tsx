@@ -29,7 +29,14 @@ import PermitRenewalGrid from "@/components/PermitRenewalGrid";
 import PermitHandback from "@/components/PermitHandback";
 import PermitFace from "@/components/PermitFace";
 import PermitPrintSheet from "@/components/PermitPrintSheet";
-import type { RenewalDay, RenewalSummary } from "@/lib/hse/permit-validity";
+import { formatDate } from "@/lib/utils";
+import {
+  remainingLabel,
+  expiryDateOf,
+  DEFAULT_PERMIT_VALIDITY_DAYS,
+  type RenewalDay,
+  type RenewalSummary,
+} from "@/lib/hse/permit-validity";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 
 type Permit = {
@@ -111,6 +118,13 @@ function safeParse(v: string | null): string[] {
   }
 }
 
+const REMAINING_TONE: Record<string, string> = {
+  OK: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  LAST_DAY: "bg-danger-500/10 text-danger-600 border-danger-500/20",
+  EXPIRED: "bg-danger-600 text-white border-danger-700",
+};
+
 export default function PermitDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: session } = useSession();
@@ -179,6 +193,18 @@ export default function PermitDetail() {
   } catch {
     jhaRows = [];
   }
+  // How long is left, in words. An active permit that only shows its expiry
+  // date makes the reader do the date arithmetic themselves, at the point where
+  // getting it wrong means working on an authorisation that has run out.
+  const remaining =
+    permit.startDate && permit.status === "ACTIVE"
+      ? remainingLabel(
+          permit.startDate,
+          permit.validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS,
+          new Date().toISOString().slice(0, 10),
+        )
+      : null;
+
   const isActive = permit.status === "ACTIVE";
   const isPending = permit.status === "PENDING_APPROVAL";
   const isDead = permit.status === "CLOSED" || permit.status === "CANCELLED" || permit.status === "EXPIRED";
@@ -196,6 +222,18 @@ export default function PermitDetail() {
         />
 
         <div className="screen-only space-y-8">
+        {remaining && (
+          <div
+            className={`no-print flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${REMAINING_TONE[remaining.tone]}`}
+            role="status"
+          >
+            <Clock className="w-4 h-4 shrink-0" />
+            {remaining.label}
+            <span className="font-normal opacity-80">
+              · validity ends {formatDate(expiryDateOf(permit.startDate!, permit.validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS))}
+            </span>
+          </div>
+        )}
         <div className="no-print">
           <Link href="/permits" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
             <ArrowLeft className="w-3.5 h-3.5" /> All permits

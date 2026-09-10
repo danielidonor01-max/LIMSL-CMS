@@ -829,6 +829,8 @@ export const nonConformities = pgTable("non_conformities", {
   id: text("id").primaryKey(),
   ncNumber: text("nc_number").notNull().unique(),
   // MISSED_PM | KPI_BREACH | SAFETY_INCIDENT | OVERDUE_CA | OVERDUE_CALIBRATION
+  // | PERMIT_NOT_CLOSED (an authorised permit whose validity elapsed with no
+  // close-out signature: raised automatically by permit reconciliation)
   // | CALIBRATION_FAILURE (instrument found out of tolerance, distinct from
   // being merely overdue; triggers the 7.1.5.2 validity assessment) | AUDIT_FINDING
   type: text("type").notNull(),

@@ -82,6 +82,33 @@ export function daysRemaining(startDate: string, validityDays: number, today: st
   return remaining > 0 ? remaining : 0;
 }
 
+export type RemainingTone = "OK" | "SOON" | "LAST_DAY" | "EXPIRED";
+
+// How long is left, said in words, for the person standing in front of the
+// permit. Counted in days rather than hours on purpose: this permit is a seven
+// calendar-day document renewed a day at a time, so an hours-and-minutes
+// countdown would imply a precision the record does not have.
+export function remainingLabel(
+  startDate: string,
+  validityDays: number,
+  today: string,
+): { days: number; label: string; tone: RemainingTone } {
+  const expiry = expiryDateOf(startDate, validityDays);
+  const days = daysRemaining(startDate, validityDays, today);
+
+  if (days === 0) {
+    const over = daysBetween(expiry, today);
+    return {
+      days: 0,
+      label: over === 1 ? "Expired yesterday" : `Expired ${over} days ago`,
+      tone: "EXPIRED",
+    };
+  }
+  if (days === 1) return { days, label: "Expires today", tone: "LAST_DAY" };
+  if (days === 2) return { days, label: "Expires tomorrow", tone: "SOON" };
+  return { days, label: `${days} days left`, tone: days <= 3 ? "SOON" : "OK" };
+}
+
 export type RenewalValidation =
   | { ok: true; day: RenewalDay }
   | { ok: false; error: string };
@@ -249,4 +276,20 @@ export function workOngoingClosureNote(summary: RenewalSummary, successorNumber?
     `${summary.worked} of ${summary.total} days worked, ${summary.notWorked} not worked. ` +
     `Permit closed as work ongoing.`;
   return successorNumber ? `${base} Continued under ${successorNumber}.` : base;
+}
+
+// A permit that ran out with nobody signing the close-out is a finding, not a
+// status. It means one of two things and both are reportable: work carried on
+// past the authorisation, or the site was left with isolation on it and no
+// record that anybody made it safe.
+//
+// The ordinary case is deliberately NOT a finding. A permit that expires with
+// the job unfinished is closed as work-ongoing and a successor is raised, which
+// is the process working, and raising a non-conformity every time it happens
+// would train people to ignore them.
+export function needsExpiryNonConformity(input: {
+  wasAuthorised: boolean;
+  closeoutSignatures: number;
+}): boolean {
+  return input.wasAuthorised && input.closeoutSignatures === 0;
 }

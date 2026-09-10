@@ -11,8 +11,8 @@
 // over another, so the permit is closed as work ongoing and a fresh one
 // referencing it starts its own seven days.
 import { db } from "@/lib/db";
-import { permits, auditLog } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { permits, auditLog, nonConformities } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
@@ -26,6 +26,7 @@ import {
   expiryDecision,
   renewalSummary,
   workOngoingClosureNote,
+  needsExpiryNonConformity,
   type RenewalMarks,
 } from "./permit-validity";
 
@@ -203,6 +204,21 @@ export async function reconcilePermits() {
           : `${p.permitNumber} expired before it was fully signed`,
       });
 
+      // ISO 45001 8.1.2. The permit is now closed either way; this records
+      // that nobody ever signed the site back to safe.
+      if (
+        needsExpiryNonConformity({
+          wasAuthorised: !!p.approvedAt,
+          closeoutSignatures: closeout.filter((c) => c.status === "SIGNED").length,
+        })
+      ) {
+        try {
+          await raiseExpiryNonConformity(p, summary.expiresOn);
+        } catch (err) {
+          console.warn("permit expiry: non-conformity failed", err);
+        }
+      }
+
       if (successor) {
         try {
           await notify({
@@ -261,3 +277,55 @@ export async function reconcilePermits() {
 }
 
 export { DEFAULT_PERMIT_VALIDITY_DAYS };
+
+// Idempotent by the permit it is raised against: reconciliation runs on every
+// read of the permit list, so this would otherwise file a fresh finding every
+// time anybody opened the page.
+async function raiseExpiryNonConformity(p: PermitRow, expiresOn: string) {
+  const existing = await db
+    .select()
+    .from(nonConformities)
+    .where(
+      and(
+        eq(nonConformities.relatedEntityType, "permit"),
+        eq(nonConformities.relatedEntityId, p.id),
+        eq(nonConformities.type, "PERMIT_NOT_CLOSED"),
+      ),
+    )
+    .limit(1);
+  if (existing.length) return;
+
+  const ncNumber = await nextDocNumber("NC");
+  await db.insert(nonConformities).values({
+    id: nanoid(),
+    ncNumber,
+    type: "PERMIT_NOT_CLOSED",
+    severity: "HIGH",
+    detectedDate: new Date().toISOString().slice(0, 10),
+    detectedBy: "System",
+    relatedEntityType: "permit",
+    relatedEntityId: p.id,
+    equipmentId: p.equipmentId ?? null,
+    description:
+      `${p.permitNumber} was authorised and its validity elapsed on ${expiresOn} with no ` +
+      `close-out signature. Either work continued past the authorisation, or the site was ` +
+      `left without a record that isolation was removed and the area made safe.`,
+    autoDetected: true,
+  });
+
+  try {
+    await notify({
+      event: "GENERAL",
+      title: `${ncNumber} raised, ${p.permitNumber} expired without close-out`,
+      body:
+        `${p.permitNumber} ran out on ${expiresOn} and nobody signed the close-out. ` +
+        `Confirm the work stopped and the isolation was removed, then close the finding.`,
+      linkPath: `/audit/non-conformity`,
+      relatedEntityType: "non_conformity",
+      relatedEntityId: p.id,
+      roles: PERMIT_ISSUE_ROLES,
+    });
+  } catch (err) {
+    console.warn("permit expiry NC: notify failed", err);
+  }
+}
