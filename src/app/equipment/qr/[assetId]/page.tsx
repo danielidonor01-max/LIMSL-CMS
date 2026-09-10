@@ -5,7 +5,7 @@ import Button from "@/components/Button";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Smartphone, ExternalLink } from "lucide-react";
 import QRCode from "qrcode";
 
 export default function QRPrintPage({ params }: { params: Promise<{ assetId: string }> }) {
@@ -23,10 +23,9 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       .then((d) => setMachineName(d?.name || "LIMSL Production Asset"))
       .catch(() => setMachineName("LIMSL Production Asset"));
 
-    // The QR points at the ACTION screen, not the record. Whoever scans this
-    // label is standing at the machine with one job in mind, asking them what
-    // they came to do beats opening a four-tab desktop page on a phone.
-    const scanUrl = `${window.location.origin}/equipment/${assetIdKey}/do`;
+    // The QR code points to the public machine status passport page, e.g. /equipment/scan/LEE-PE-1904
+    // Anyone on site can scan to view live machine status without logging in, then sign in for technical controls.
+    const scanUrl = `${window.location.origin}/equipment/scan/${assetIdKey}`;
 
     QRCode.toDataURL(
       scanUrl,
@@ -67,11 +66,18 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           </div>
         </div>
 
-        <Button
-          onClick={handlePrint}
-        >
-          <Printer className="w-4 h-4" /> Print Label
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/equipment/scan/${assetIdKey}`}
+            target="_blank"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-all border border-slate-300"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-emerald-600" /> Preview Mobile Scan <ExternalLink className="w-3 h-3 text-slate-400" />
+          </Link>
+          <Button onClick={handlePrint}>
+            <Printer className="w-4 h-4" /> Print Label
+          </Button>
+        </div>
       </header>
 
       {/* Label Content */}
@@ -116,17 +122,14 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             <h3 className="text-sm font-bold text-ink-800 pt-1 leading-tight">{machineName}</h3>
           </div>
 
-          {/* Scanning instructions. No emoji: this is a label glued to a machine
-              in a fabrication workshop, and an emoji prints as a colour block or
-              an empty box depending on the printer. */}
+          {/* Scanning instructions */}
           <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[11px] text-ink-600 leading-relaxed">
             <p className="font-bold text-ink-900">Scan with a phone camera</p>
-            <p>Log maintenance, check the WMS and OEM details, or raise a work order.</p>
+            <p>Live Machine Status, ISO 45001 Safety Clearance, and Maintenance Login.</p>
           </div>
         </div>
 
-        {/* Print tip. The asterisks here used to render literally, because JSX
-            has no idea what markdown is. */}
+        {/* Print tip */}
         <p className="text-xs text-ink-500 text-center max-w-xs leading-relaxed print:hidden">
           <strong className="text-ink-700">Printing:</strong> use a standard sticker layout at 100% scale. The
           label needs no background graphics.

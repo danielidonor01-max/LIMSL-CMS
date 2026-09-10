@@ -8,7 +8,17 @@ import type { NextAuthConfig } from "next-auth";
 // public because the session cannot be checked with the network down, and
 // redirecting to /login at that moment would show a sign-in form that cannot
 // possibly submit.
-const PUBLIC_PREFIXES = ["/login", "/api/auth", "/equipment/qr", "/offline", "/forgot-password", "/reset-password", "/account/confirm-email"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/api/auth",
+  "/equipment/qr",
+  "/equipment/scan",
+  "/api/equipment/scan",
+  "/offline",
+  "/forgot-password",
+  "/reset-password",
+  "/account/confirm-email",
+];
 
 export const authConfig = {
   pages: { signIn: "/login" },
@@ -22,7 +32,15 @@ export const authConfig = {
         (p) => pathname === p || pathname.startsWith(`${p}/`),
       );
       if (isPublic) return true;
-      if (!auth?.user) return false;
+      if (!auth?.user) {
+        // If an unauthenticated user visits a machine's direct page (e.g. from an existing QR sticker),
+        // gracefully redirect them to the public scan passport instead of an unhelpful login wall.
+        const equipmentMatch = pathname.match(/^\/equipment\/([^\/]+)$/);
+        if (equipmentMatch && equipmentMatch[1] !== "new") {
+          return Response.redirect(new URL(`/equipment/scan/${equipmentMatch[1]}`, request.nextUrl));
+        }
+        return false;
+      }
 
       const user = auth.user as { mustChangePassword?: boolean };
       if (user.mustChangePassword) {
