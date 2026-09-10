@@ -109,7 +109,7 @@ function AssetHistoryDossier() {
 
   const eq = data.equipment;
   const t = data.totals;
-  const availability = t.availability == null ? ", " : `${(t.availability * 100).toFixed(1)}%`;
+  const availability = t.availability == null ? "\u2014" : `${(t.availability * 100).toFixed(1)}%`;
   const identity: [string, string][] = [
     ["Asset ID", String(eq.assetId ?? "-")],
     ["Equipment", String(eq.name ?? "-")],
@@ -119,8 +119,8 @@ function AssetHistoryDossier() {
     ["Serial number", String(eq.serialNumber ?? "-")],
     ["Location", [eq.location, eq.bay].filter(Boolean).join(" · ") || "-"],
     ["Criticality", CRITICALITY_SHORT[String(eq.criticality)] ?? String(eq.criticality ?? "-")],
-    ["Commissioned", eq.commissioningDate ? formatDate(String(eq.commissioningDate)) : ", "],
-    ["Warranty expiry", eq.warrantyExpiry ? formatDate(String(eq.warrantyExpiry)) : ", "],
+    ["Commissioned", eq.commissioningDate ? formatDate(String(eq.commissioningDate)) : "\u2014"],
+    ["Warranty expiry", eq.warrantyExpiry ? formatDate(String(eq.warrantyExpiry)) : "\u2014"],
     ["Service interval", FREQUENCY_LABELS[String(eq.maintenanceFrequency ?? "")] ?? String(eq.maintenanceFrequency ?? "-")],
     ["Current status", EQUIPMENT_STATUS_LABELS[String(eq.status)] ?? String(eq.status ?? "-")],
   ];

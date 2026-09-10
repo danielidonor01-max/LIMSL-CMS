@@ -105,7 +105,7 @@ export default function PrintableReport({
                     <tr key={i} className="text-ink-800 break-inside-avoid">
                       {columns.map((c) => (
                         <td key={c.key} className="py-1.5 pr-3 align-top">
-                          {r[c.key] == null || r[c.key] === "" ? ", " : String(r[c.key])}
+                          {r[c.key] == null || r[c.key] === "" ? "\u2014" : String(r[c.key])}
                         </td>
                       ))}
                     </tr>

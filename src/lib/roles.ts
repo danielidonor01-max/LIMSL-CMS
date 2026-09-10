@@ -40,7 +40,10 @@ export const ROLE_DEPARTMENT: Record<string, string> = {
   QA_QC: "QA_QC",
   HSE: "HSE",
   TECHNICIAN: "MAINTENANCE",
-  VIEWER: ", ",
+  // No VIEWER entry on purpose. A viewer belongs to no department, and the
+  // lookups all fall back to "No department" when the role is absent. It
+  // previously mapped to ", ", a stray comma standing in for an em dash, which
+  // every call site then had to filter out or render as a department name.
 };
 
 // Seniority ranking, used for "a manager can also sign a subordinate step".

@@ -187,14 +187,27 @@ test("every path a scoped role is granted is actually reachable", () => {
 
 // ── Table integrity ──────────────────────────────────────────────────────────
 
-test("every canonical role has a label, department, rank and badge", () => {
+test("every canonical role has a label, rank and badge", () => {
   for (const role of ROLES) {
     assert.ok(ROLE_LABELS[role]?.trim(), `${role} has no label`);
-    assert.ok(ROLE_DEPARTMENT[role]?.trim(), `${role} has no department`);
     assert.equal(typeof ROLE_RANK[role], "number", `${role} has no rank`);
     assert.ok(ROLE_BADGE[role]?.trim(), `${role} has no badge style`);
   }
   assert.equal(new Set(ROLES).size, ROLES.length, "duplicate role in ROLES");
+});
+
+// Department used to be in the list above, and requiring one for every role is
+// what produced a VIEWER whose department was ", ". A read-only observer is not
+// in a department, and inventing one for them wrote a punctuation mark into the
+// column. Absent is the correct answer, and every lookup already falls back.
+test("a role either belongs to a real department or to none", () => {
+  const DEPARTMENTS = ["MAINTENANCE", "QA_QC", "HSE", "FACTORY", "MANAGEMENT"];
+  for (const role of ROLES) {
+    const dept = ROLE_DEPARTMENT[role];
+    if (dept === undefined) continue;
+    assert.ok(DEPARTMENTS.includes(dept), `${role} is in "${dept}", which is not a department`);
+  }
+  assert.equal(ROLE_DEPARTMENT.VIEWER, undefined, "a viewer has been given a department again");
 });
 
 test("the rank table matches the documented approval chain order", () => {

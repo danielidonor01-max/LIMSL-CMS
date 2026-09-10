@@ -43,9 +43,9 @@ const REPORTS: Record<string, ReportDef> = {
       equipment: p.equipmentName ?? "-",
       holder: p.permitHolderName ?? "-",
       status: p.status,
-      issued: p.issuedDate ? formatDate(p.issuedDate) : ", ",
-      expiry: p.expiryDate ? formatDate(p.expiryDate) : ", ",
-      approval: p.approval ? `${p.approval.signed}/${p.approval.total}` : ", ",
+      issued: p.issuedDate ? formatDate(p.issuedDate) : "\u2014",
+      expiry: p.expiryDate ? formatDate(p.expiryDate) : "\u2014",
+      approval: p.approval ? `${p.approval.signed}/${p.approval.total}` : "\u2014",
     }),
   },
   "pm-completion": {
@@ -62,12 +62,12 @@ const REPORTS: Record<string, ReportDef> = {
       { key: "completed", label: "Completed" },
     ],
     map: (s) => ({
-      planned: s.plannedDate ? formatDate(s.plannedDate) : ", ",
+      planned: s.plannedDate ? formatDate(s.plannedDate) : "\u2014",
       asset: s.assetId ?? "-",
       equipment: s.equipmentName ?? "-",
       responsible: s.responsiblePersonName ?? "-",
       status: s.status,
-      completed: s.completedDate ? formatDate(s.completedDate) : ", ",
+      completed: s.completedDate ? formatDate(s.completedDate) : "\u2014",
     }),
     summary: (rows) => {
       const today = new Date().toISOString().slice(0, 10);
@@ -98,8 +98,8 @@ const REPORTS: Record<string, ReportDef> = {
     map: (c) => ({
       instrument: c.instrumentName,
       serial: c.serialNumber ?? "-",
-      last: c.lastCalibrationDate ? formatDate(c.lastCalibrationDate) : ", ",
-      next: c.nextCalibrationDate ? formatDate(c.nextCalibrationDate) : ", ",
+      last: c.lastCalibrationDate ? formatDate(c.lastCalibrationDate) : "\u2014",
+      next: c.nextCalibrationDate ? formatDate(c.nextCalibrationDate) : "\u2014",
       cert: c.certificateNumber ?? "-",
       status: c.status ?? "-",
     }),
@@ -125,7 +125,7 @@ const REPORTS: Record<string, ReportDef> = {
       level: `${c.level} · ${LEVELS[c.level] ?? ""}`,
       required: `${c.requiredLevel ?? 0} · ${LEVELS[c.requiredLevel ?? 0] ?? ""}`,
       gap: c.level < (c.requiredLevel ?? 0) ? "GAP" : "OK",
-      recert: c.expiryDate ? formatDate(c.expiryDate) : ", ",
+      recert: c.expiryDate ? formatDate(c.expiryDate) : "\u2014",
     }),
   },
   "non-conformity": {
@@ -144,7 +144,7 @@ const REPORTS: Record<string, ReportDef> = {
       nc: n.ncNumber,
       type: n.type,
       severity: n.severity,
-      detected: n.detectedDate ? formatDate(n.detectedDate) : ", ",
+      detected: n.detectedDate ? formatDate(n.detectedDate) : "\u2014",
       by: n.detectedBy ?? "-",
       status: n.status,
     }),

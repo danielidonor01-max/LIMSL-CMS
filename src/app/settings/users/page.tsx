@@ -354,7 +354,7 @@ export default function UsersAdminPage() {
   // Departments offered in the edit form come from the canonical role→department
   // map, so the list can never drift from roles.ts.
   const departments = useMemo(
-    () => Array.from(new Set(Object.values(ROLE_DEPARTMENT).filter((d) => d !== ", "))),
+    () => Array.from(new Set(Object.values(ROLE_DEPARTMENT))),
     [],
   );
 
@@ -545,7 +545,7 @@ export default function UsersAdminPage() {
                           </Badge>
                         </td>
                         <td className="py-3.5 px-5 text-ink-600">
-                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">, </span>}
+                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">\u2014</span>}
                         </td>
                         <td className="py-3.5 px-5">
                           {u.phone || u.whatsapp ? (
@@ -562,7 +562,7 @@ export default function UsersAdminPage() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-ink-300">, </span>
+                            <span className="text-ink-300">\u2014</span>
                           )}
                         </td>
                         <td className="py-3.5 px-5">

@@ -371,16 +371,26 @@ export default function KpiPage() {
               </ChartCard>
             </div>
 
-            {/* Per-equipment drill-down */}
+            {/* Already ordered worst-first by the compute step. It was
+                titled "Per-Equipment Drill-Down", which reads as an unordered
+                reference table, so nobody could tell that the top row is the
+                machine costing the most production. */}
             {data.perEquipment.length > 0 && (
               <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
                 <div className="px-6 py-4 border-b border-ink-200">
-                  <h3 className="text-sm font-semibold text-ink-900">Per-Equipment Drill-Down (latest)</h3>
+                  <h3 className="text-sm font-semibold text-ink-900">
+                    Worst-performing assets, last 6 months
+                  </h3>
+                  <p className="text-xs text-ink-500 mt-1">
+                    Ordered by production hours lost, then by number of breakdowns. The top of this
+                    list is where a replacement decision starts.
+                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-ink-200 text-ink-500">
+                        <th className="py-2.5 px-5 font-medium w-10">#</th>
                         <th className="py-2.5 px-5 font-medium">Equipment</th>
                         <th className="py-3 px-5 font-medium">Breakdowns</th>
                         <th className="py-3 px-5 font-medium">Availability</th>
@@ -391,14 +401,21 @@ export default function KpiPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-200">
-                      {data.perEquipment.map((r) => (
+                      {data.perEquipment.map((r, i) => (
                         <tr key={r.id} className="hover:bg-ink-50">
+                          <td className="py-2.5 px-5 text-ink-400 tabular-nums">{i + 1}</td>
                           <td className="py-2.5 px-5 font-medium text-ink-900">{r.equipmentName}</td>
-                          <td className="py-3 px-5 text-ink-700">{r.breakdowns}</td>
-                          <td className="py-3 px-5">{pct(r.availability)}</td>
-                          <td className="py-3 px-5 text-ink-700">{r.mtbf == null ? ", " : `${r.mtbf} hrs`}</td>
-                          <td className="py-3 px-5 text-ink-700">{r.mttr == null ? ", " : `${r.mttr} hrs`}</td>
-                          <td className="py-3 px-5 text-ink-700">{r.downtimeHours} hrs</td>
+                          <td className="py-3 px-5 text-ink-700 tabular-nums">{r.breakdowns}</td>
+                          <td className="py-3 px-5 tabular-nums">{pct(r.availability)}</td>
+                          {/* Both of these read `", "`, a comma and a space
+                              where a figure should be. */}
+                          <td className="py-3 px-5 text-ink-700 tabular-nums">
+                            {r.mtbf == null ? "\u2014" : `${r.mtbf} hrs`}
+                          </td>
+                          <td className="py-3 px-5 text-ink-700 tabular-nums">
+                            {r.mttr == null ? "\u2014" : `${r.mttr} hrs`}
+                          </td>
+                          <td className="py-3 px-5 text-ink-700 tabular-nums">{r.downtimeHours} hrs</td>
                           <td className="py-3 px-5 text-ink-500">{r.remark}</td>
                         </tr>
                       ))}
