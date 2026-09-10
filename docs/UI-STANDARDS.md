@@ -135,6 +135,29 @@ has to break one way.
 The grammar is in `lib/date-field.ts` under test. That is where date fields
 usually go wrong.
 
+### Scrollbars
+
+The scrollbar is UI too, and it was the last piece of the operating system left
+showing: on Windows a light grey slab with arrow buttons, sitting directly on
+the near-black sidebar. It is drawn by the app now, once, in `globals.css` — a
+4px thumb inside a 10px track, transparent track, no buttons. `.scroll-nav`
+switches the thumb to the nav ramp for the dark column.
+
+It is styled, not hidden. `scrollbar-width: none` is banned and a test enforces
+it: the bar is the only thing on screen saying there is more nav below the fold,
+and the sidebar carries twenty-odd destinations.
+
+**Do not lift `scrollbar-width` or `scrollbar-color` out of the
+`@supports not selector(::-webkit-scrollbar)` block.** Chrome ignores every
+`::-webkit-scrollbar` rule on an element that also carries either property, and
+falls back to the OS bar. Applying both sets to everything therefore styles
+Firefox and silently un-styles Chrome and Edge. That was shipped once and caught
+in a screenshot, not in review.
+
+Anything scrollable on the dark navigation needs `scroll-nav`. The icon rail
+also needs `scrollbar-gutter: stable both-edges`, or the bar eats 10px from the
+right of a 64px column and every icon lands 5px left of the control beneath it.
+
 ## Density
 
 `main` is `p-6 lg:p-8` with `space-y-8` between sections. Cards are `p-5`/`p-6`,
@@ -171,14 +194,15 @@ an older set and the two disagreed.
 | Any dropdown/picker in a form or filter bar | `@/components/Select` | **Native `<select>` is banned.** Select renders a styled field trigger + popover (no browser-drawn menu) and accepts the same `<option>` children; `onChange` gets the plain value. |
 | Compact inline picker (tables, badges) | `@/components/Dropdown` | Trigger styled by the call site; popover menu. |
 | Boolean setting (enable/disable) | `@/components/Toggle` | Switch, not a checkbox. Real checkboxes remain **only** for genuine tick-marks: checklist steps and signed attestations. |
-| Page title row | `@/components/PageHeader` | Icon chip + title + subtitle + actions. |
+| Page title row | `@/components/PageHeader` | Title + subtitle + optional code + actions. No icon chip; see the section on chrome. |
 | Status pill | `@/components/Badge` | The `bg/text/border` tint formula. |
 | Notifications | `sonner` `toast.*` | Success/error feedback. |
 
-**Native controls:** no native `<select>` anywhere — use `Select` (forms/filters)
-or `Dropdown` (inline). Date/time still use native `type="date|time|datetime-local"`
-inputs (styled) — the OS picker is deliberate. Checkboxes only as tick-marks (see
-above), styled `accent-emerald-600`.
+**Native controls:** none. Use `Select` (forms and filters) or `Dropdown`
+(inline) rather than `<select>`, and `DateField` / `TimeField` / `DateTimeField`
+rather than the native date inputs — the section above says why, and the OS
+picker is no longer deliberate anywhere. Checkboxes remain only as tick-marks
+(see above).
 
 **AI chat (DiagnosisChat):** buttons and interactive controls use the standard
 emerald primary like the rest of the app; violet is reserved for *AI identity

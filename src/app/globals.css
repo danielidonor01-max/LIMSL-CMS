@@ -120,6 +120,10 @@
      against the nav, under the 4.5:1 floor, so the step down is a chosen colour
      rather than a transparency. This one measures 4.82:1. */
   --color-nav-label: #7a8296;
+  /* The scroll thumb inside the dark column. Not nav-line (#232937), which
+     measures 1.29:1 against the nav and is therefore invisible; this one
+     measures 3.11:1, which is the contrast floor for a non-text control. */
+  --color-nav-scroll: #5a6377;
 }
 
 /* Cards sit on the canvas with a hairline and the faintest lift, never a
@@ -199,6 +203,73 @@ select[multiple],
 select[size]:not([size="1"]) {
   background-image: none;
   padding-right: 0.6rem !important;
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────────
+   The last piece of the operating system still showing through. A Windows
+   scrollbar is a light grey slab with arrow buttons at each end; sitting on the
+   near-black navigation it read as a seam down the edge of the column, and it
+   is the one thing an audit picks out immediately because it is the only
+   element on screen the app did not draw.
+
+   Hiding it was the tempting fix and the wrong one. The sidebar holds
+   twenty-odd destinations across five sections, and the bar is the only thing
+   saying there is more below the fold. So it stays, drawn by us: a 4px thumb
+   painted inside a 10px track, which keeps the pointer target big enough to
+   grab while the visible mark is a hairline. The track is transparent, so it
+   costs nothing when there is nothing to scroll.
+
+   Firefox has no ::-webkit pseudo-elements and takes the two standard
+   properties instead, so both halves are needed. The @supports gate is the
+   part that is easy to get wrong, and this was written the obvious way first
+   and screenshotted: Chrome ignores EVERY ::-webkit-scrollbar rule the moment
+   scrollbar-color or scrollbar-width is set on the same element, and falls
+   back to the operating system's bar, arrow buttons and all. Applying both
+   sets to everything therefore styles the bar in Firefox and quietly restores
+   the native one in Chrome and Edge, which is where most of this workshop
+   runs. The standard properties go only to browsers with no pseudo-elements
+   to ignore. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-400) transparent;
+  }
+
+  /* The dark column needs its own thumb. A light grey mark on #10131c is
+     exactly the seam this removes, so the ink ramp cannot be reused here: it
+     is tuned for marks on white. */
+  .scroll-nav {
+    scrollbar-color: var(--color-nav-scroll) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-400);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-500);
+}
+
+.scroll-nav::-webkit-scrollbar-thumb {
+  background-color: var(--color-nav-scroll);
+}
+
+.scroll-nav::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-nav-label);
 }
 
 /* Compact density (a per-user preference). Tightens the two things that most

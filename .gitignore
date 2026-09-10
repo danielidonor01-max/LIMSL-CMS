@@ -51,3 +51,8 @@ drizzle/
 # Uploaded files (local storage provider) — root runtime folder only,
 # NOT src/lib/storage/ (leading slash anchors this to the repo root).
 /storage/
+
+# Scratch. Screenshot harnesses and throwaway migration scripts land here. A
+# headless browser profile is a pile of files Windows keeps locked for a while
+# after the process exits, so this cannot depend on cleanup succeeding.
+/.tmp-*/
