@@ -63,6 +63,7 @@ test("no page-level module has appeared without being considered for search", ()
     // A view onto signoff steps that belong to modules already searchable
     // here. Indexing it would return the same work order twice.
     "approvals",
+    "my-tasks",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",

@@ -160,9 +160,10 @@ export const workOrders = pgTable("work_orders", {
   assistantIds: text("assistant_ids"), // JSON array of user ids
   supervisorId: text("supervisor_id").references(() => users.id),
   // Management authorising commencement. The work order IS that authorisation
-  // at LIMSL, so it is raised as PENDING_APPROVAL and nothing downstream (a
-  // method statement, a job hazard analysis, a permit, or the work itself) may
-  // proceed until it is approved.
+  // at LIMSL, so it is raised as PENDING_APPROVAL and neither the permit nor
+  // the work itself may proceed until it is approved. The method statement and
+  // hazard analysis deliberately CAN: they are written while the job is still
+  // being decided. See AGENTS.md section 6a.
   approvedById: text("approved_by_id").references(() => users.id),
   approvedByName: text("approved_by_name"),
   approvedAt: text("approved_at"),

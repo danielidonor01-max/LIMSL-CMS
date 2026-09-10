@@ -33,6 +33,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/audit/non-conformity": "Audit & NC",
   "/audit/risks": "Risk Register",
   "/audit/logs": "Audit Log",
+  "/my-tasks": "My Work",
   "/approvals": "My Approvals",
   "/kpi": "KPI Dashboard",
   "/oem": "OEM & Warranty",

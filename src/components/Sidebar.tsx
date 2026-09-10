@@ -33,6 +33,7 @@ import {
   HardHat,
   ChevronLeft,
   PenLine,
+  ClipboardCheck,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
 
@@ -46,6 +47,7 @@ const NAV_SECTIONS: NavSection[] = [
     section: null,
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/my-tasks", label: "My Work", icon: ClipboardCheck },
       { href: "/approvals", label: "My Approvals", icon: PenLine },
     ],
   },
