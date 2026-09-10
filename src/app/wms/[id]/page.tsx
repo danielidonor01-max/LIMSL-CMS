@@ -1,6 +1,7 @@
 // src/app/wms/[id]/page.tsx
 "use client";
 
+import DocumentSeal from "@/components/DocumentSeal";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -214,6 +215,8 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               entityId={wmsId}
               title="WMS Authorisation (Foreman → Maintenance Manager → HSE → Factory Manager)"
             />
+            {/* Prints with the page, and only once the statement is approved. */}
+            <DocumentSeal entityType="WMS" entityId={wmsId} />
           </div>
         </div>
       </main>

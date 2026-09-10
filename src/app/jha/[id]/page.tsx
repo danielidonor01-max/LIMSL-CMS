@@ -1,6 +1,7 @@
 // src/app/jha/[id]/page.tsx
 "use client";
 
+import DocumentSeal from "@/components/DocumentSeal";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -285,6 +286,10 @@ export default function JhaDetailPage() {
         )}
 
         <SignoffChain entityType="JHA" entityId={String(id)} title="Hazard Analysis Approval" />
+
+        {/* Prints with the page. Nothing renders until the analysis is fully
+            approved, so a draft never carries a code. */}
+        <DocumentSeal entityType="JHA" entityId={String(id)} />
       </main>
     </div>
   );
