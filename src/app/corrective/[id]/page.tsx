@@ -52,7 +52,6 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   // Signatures
   const [techSign, setTechSign] = useState("");
   const [superSign, setSuperSign] = useState("");
-  const [supervisorName, setSupervisorName] = useState("");
   const [supervisorComments, setSupervisorComments] = useState("");
 
   // Downtime window, production hours are derived from these against the
@@ -223,10 +222,6 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       toast.error("Both technician and supervisor signatures are required to close out the request.");
       return;
     }
-    if (!supervisorName.trim()) {
-      toast.error("Enter the approving supervisor's name.");
-      return;
-    }
     if (!downStartAt || !downEndAt) {
       toast.error("Record when the machine went down and when it was restored, this drives MTTR.");
       return;
@@ -249,7 +244,6 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           // technicianName is stamped from the session server-side, the client
           // is not trusted to name the signer.
           supervisorSignature: superSign,
-          supervisorName: supervisorName.trim(),
           supervisorComments,
           // The window is the source of truth; the server recomputes production
           // downtime hours from it against the working-hours settings.
@@ -590,16 +584,17 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
                   </p>
                 )}
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-ink-500 uppercase">Approving Supervisor</span>
-                  <input
-                    type="text"
-                    placeholder="Name of the supervisor approving this close-out"
-                    value={supervisorName}
-                    onChange={(e) => setSupervisorName(e.target.value)}
-                    className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
-                  />
-                </div>
+                {/* No name field. It used to be free text, and the server
+                    has always discarded it in favour of the signed chain, so
+                    the box asked for something that looked like it mattered and
+                    did not. The approving supervisor is whoever signs the
+                    foreman step, and now their user id is stored beside their
+                    name, which is what an auditor asking "who signed this and
+                    were they competent to" actually needs. */}
+                <p className="text-xs text-ink-500 leading-relaxed">
+                  The approving supervisor is taken from the signed foreman step on the sign-off
+                  chain above, and recorded against their account. It cannot be typed in.
+                </p>
                 <div className="space-y-2">
                   <span className="text-xs font-semibold text-ink-500 uppercase">Supervisor Comments</span>
                   <textarea

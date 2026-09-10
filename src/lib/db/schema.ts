@@ -431,10 +431,18 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   repairStatus: text("repair_status"), // FULLY_RESTORED | PARTIALLY_RESTORED | TEMPORARY_FIX | REQUIRES_EXTERNAL_EXPERT
   requiresExternalExpert: boolean("requires_external_expert").default(false),
   externalExpertDetails: text("external_expert_details"),
-  // Sign-offs
+  // Sign-offs.
+  //
+  // The names are stamped from the signed CM chain, never from client text, and
+  // the ids beside them are what makes that a real accountability trail. A name
+  // is a string: "A. Okafor" survives the person leaving, matches nobody, and
+  // an auditor asking "who is this and were they competent to sign" gets no
+  // answer from it. The id resolves to an account, a role and a training record.
   technicianSignature: text("technician_signature"),
+  technicianId: text("technician_id").references(() => users.id),
   technicianName: text("technician_name"),
   supervisorSignature: text("supervisor_signature"),
+  supervisorId: text("supervisor_id").references(() => users.id),
   supervisorName: text("supervisor_name"),
   supervisorComments: text("supervisor_comments"),
   effectivenessChecked: boolean("effectiveness_checked").default(false),

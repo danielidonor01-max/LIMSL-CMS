@@ -65,6 +65,8 @@ export async function PATCH(
     const closingOut = body.status === "CLOSED" && record.status !== "CLOSED";
     let chainTechnicianName: string | null = null;
     let chainSupervisorName: string | null = null;
+    let chainTechnicianId: string | null = null;
+    let chainSupervisorId: string | null = null;
     if (closingOut) {
       await ensureSignoffChain("CORRECTIVE", record.id, record.cmrfNumber);
       const chain = await getSignoffChain("CORRECTIVE", record.id);
@@ -109,10 +111,13 @@ export async function PATCH(
       // The names on the closed record come from the authenticated chain
       // signatures, never from client-supplied text, that's what makes the
       // record forgery-proof.
-      chainTechnicianName =
-        chain.find((s) => s.role === "TECHNICIAN" && s.status === "SIGNED")?.signedByName ?? null;
-      chainSupervisorName =
-        chain.find((s) => s.role === "FOREMAN" && s.status === "SIGNED")?.signedByName ?? null;
+      const techStep = chain.find((s) => s.role === "TECHNICIAN" && s.status === "SIGNED");
+      const supStep = chain.find((s) => s.role === "FOREMAN" && s.status === "SIGNED");
+      chainTechnicianName = techStep?.signedByName ?? null;
+      chainSupervisorName = supStep?.signedByName ?? null;
+      // The id is the half that survives the person leaving the company.
+      chainTechnicianId = techStep?.signedById ?? null;
+      chainSupervisorId = supStep?.signedById ?? null;
     }
 
     // Downtime is derived server-side from the down/restored window against the
@@ -178,8 +183,14 @@ export async function PATCH(
         : body.technicianSignature
           ? gate.actor?.name ?? record.technicianName
           : record.technicianName,
+      technicianId: closingOut
+        ? chainTechnicianId ?? record.technicianId
+        : body.technicianSignature
+          ? gate.actor?.id ?? record.technicianId
+          : record.technicianId,
       supervisorSignature: body.supervisorSignature ?? record.supervisorSignature,
       supervisorName: closingOut ? chainSupervisorName ?? record.supervisorName : record.supervisorName,
+      supervisorId: closingOut ? chainSupervisorId ?? record.supervisorId : record.supervisorId,
       supervisorComments: body.supervisorComments ?? record.supervisorComments,
       effectivenessChecked: body.effectivenessChecked ?? record.effectivenessChecked,
       closeOutDate: body.closeOutDate ?? record.closeOutDate,
