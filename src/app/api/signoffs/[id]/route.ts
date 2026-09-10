@@ -107,6 +107,21 @@ export async function POST(
       );
     }
 
+    // Returning something for revision without saying what is wrong sends the
+    // author back to guess. The comment is what makes a rejection actionable,
+    // so it is required rather than optional on this branch.
+    const comments = String(body.comments ?? "").trim();
+    if (action === "reject" && comments.length < 10) {
+      return NextResponse.json(
+        {
+          error:
+            "Say what needs changing. A step returned with no comment sends it back to be guessed at.",
+          requiresComment: true,
+        },
+        { status: 400 },
+      );
+    }
+
     await db
       .update(signoffs)
       .set({
@@ -117,7 +132,7 @@ export async function POST(
         isOverride,
         overrideReason: isOverride ? overrideReason.slice(0, 500) : null,
         signatureData: action === "sign" ? body.signatureData : null,
-        comments: body.comments || null,
+        comments: comments || null,
         signedAt: new Date().toISOString(),
       })
       .where(eq(signoffs.id, id));

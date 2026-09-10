@@ -5,7 +5,7 @@ import Button from "@/components/Button";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { CheckCircle2, Circle, Lock, Loader2, PenLine, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Loader2, PenLine, ShieldCheck, Undo2 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
@@ -66,16 +66,36 @@ export default function SignoffChain({
       setError("Please draw your signature.");
       return;
     }
+    await submit(stepId, "sign");
+  };
+
+  // Sending it back. No signature is asked for, because a rejection is not
+  // something anybody signs; it is a note saying what has to change first.
+  const reject = async (stepId: string) => {
+    setError(null);
+    if (comments.trim().length < 10) {
+      setError("Say what needs changing, in a sentence. It goes back to whoever raised it.");
+      return;
+    }
+    await submit(stepId, "reject");
+  };
+
+  const submit = async (stepId: string, action: "sign" | "reject") => {
     setSaving(true);
     const res = await fetch(`/api/signoffs/${stepId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "sign", signatureData: sig, comments, overrideReason }),
+      body: JSON.stringify({
+        action,
+        signatureData: action === "sign" ? sig : undefined,
+        comments,
+        overrideReason,
+      }),
     });
     setSaving(false);
     if (!res.ok) {
       const d = await res.json();
-      setError(d.error || "Failed to sign");
+      setError(d.error || (action === "reject" ? "Failed to return" : "Failed to sign"));
       return;
     }
     setOpenStep(null);
@@ -122,7 +142,8 @@ export default function SignoffChain({
             const mine = step.signerUserId
               ? step.signerUserId === userId || role === "SUPER_ADMIN"
               : canSignStep(role, step.role);
-            const canSign = step.status === "PENDING" && unlocked && mine;
+            const returned = step.status === "REJECTED";
+            const canSign = (step.status === "PENDING" || returned) && unlocked && mine;
             const isOpen = openStep === step.id;
             return (
               <li key={step.id} className="border border-ink-200 rounded-lg overflow-hidden">
@@ -196,8 +217,9 @@ export default function SignoffChain({
                         }}
                         icon={PenLine}
                         size="sm"
+                        variant={returned ? "secondary" : "primary"}
                       >
-                        Sign
+                        {returned ? "Review again" : "Sign"}
                       </Button>
                     )}
                     {step.status === "PENDING" && !unlocked && (
@@ -208,6 +230,15 @@ export default function SignoffChain({
                     )}
                   </div>
                 </div>
+
+                {returned && step.comments && (
+                  <div className="border-t border-danger-200 bg-danger-50 px-3 py-2.5">
+                    <p className="text-xs font-semibold text-danger-700">
+                      Returned by {step.signedByName ?? "the approver"}
+                    </p>
+                    <p className="text-xs text-danger-700/90 mt-0.5 leading-relaxed">{step.comments}</p>
+                  </div>
+                )}
 
                 {isOpen && (
                   <div className="border-t border-ink-200 p-3 bg-ink-50/60 space-y-2">
@@ -236,7 +267,8 @@ export default function SignoffChain({
                     <input
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
-                      placeholder="Comments (optional)"
+                      placeholder="Comments, or what needs changing if you are returning it"
+                      aria-label="Comments"
                       className="w-full px-3 py-1.5 bg-white border border-ink-200 rounded-lg text-xs text-ink-900 focus:outline-none focus:border-brand-500/40"
                     />
                     {error && <p className="text-xs text-danger-600">{error}</p>}
@@ -247,6 +279,19 @@ export default function SignoffChain({
                       >
                         Cancel
                       </button>
+                      {/* Approve or send back. Before this the only
+                          alternative to signing was cancelling the whole record,
+                          so a supervisor who wanted a small correction had to
+                          either wave it through or destroy it. */}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => reject(step.id)}
+                        loading={saving}
+                        icon={Undo2}
+                      >
+                        Return with comment
+                      </Button>
                       <Button
                         size="sm"
                         onClick={() => sign(step.id)}
