@@ -1,11 +1,13 @@
 // src/app/api/signoffs/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signoffs, auditLog } from "@/lib/db/schema";
+import { signoffs, auditLog, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canSignStep } from "@/lib/roles";
+import { verifyPassword } from "@/lib/password";
+import { needsPinSetup } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
 import { notify, notifyNextSigner } from "@/lib/notifications";
 
@@ -81,6 +83,31 @@ export async function POST(
       if (!body.signatureData) {
         return NextResponse.json({ error: "A drawn signature is required." }, { status: 400 });
       }
+
+      // ── Who is actually here ──────────────────────────────────────────
+      // The drawn signature is an image and proves nothing on its own. This is
+      // the check that says the person signing is the account holder AT THIS
+      // MOMENT, rather than whoever picked up a tablet somebody left logged in.
+      const [signer] = await db.select().from(users).where(eq(users.id, user.id ?? "")).limit(1);
+
+      // Nobody has a PIN the day this ships, so refusing outright would stop
+      // every signature in the business at once. The client sets one inline on
+      // first use; this tells it to.
+      if (needsPinSetup(signer?.signingPinHash)) {
+        return NextResponse.json(
+          {
+            error: "Set your signing PIN before you sign. It takes a moment and it is yours alone.",
+            requiresPinSetup: true,
+          },
+          { status: 428 },
+        );
+      }
+      if (!verifyPassword(String(body.signingPin ?? ""), signer?.signingPinHash)) {
+        return NextResponse.json(
+          { error: "That is not your signing PIN.", requiresPin: true },
+          { status: 403 },
+        );
+      }
     }
 
     // Signing a step your role does not name is an EXCEPTION, a Super Admin
@@ -132,6 +159,9 @@ export async function POST(
         isOverride,
         overrideReason: isOverride ? overrideReason.slice(0, 500) : null,
         signatureData: action === "sign" ? body.signatureData : null,
+        // What was verified, not the secret itself. An auditor asking "how do
+        // you know this was them" reads this column.
+        authMethod: action === "sign" ? "PIN" : null,
         comments: comments || null,
         signedAt: new Date().toISOString(),
       })

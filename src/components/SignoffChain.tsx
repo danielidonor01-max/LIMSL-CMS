@@ -11,6 +11,8 @@ import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
 import { canSignStep, ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
 import { isStepUnlocked, chainSummary } from "@/lib/signoff/chains";
+import { validatePin, PIN_LENGTH } from "@/lib/signing-pin";
+import { toast } from "sonner";
 
 type Step = {
   id: string;
@@ -47,6 +49,10 @@ export default function SignoffChain({
   const [openStep, setOpenStep] = useState<string | null>(null);
   const [sig, setSig] = useState<string | null>(null);
   const [comments, setComments] = useState("");
+  const [pin, setPin] = useState("");
+  const [needsPin, setNeedsPin] = useState(false);
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +72,45 @@ export default function SignoffChain({
       setError("Please draw your signature.");
       return;
     }
+    if (pin.length !== PIN_LENGTH) {
+      setError(`Enter your ${PIN_LENGTH}-digit signing PIN.`);
+      return;
+    }
     await submit(stepId, "sign");
+  };
+
+  // First signature after this shipped. Rather than refusing and sending the
+  // person away to Settings, the dialog sets the PIN here and carries straight
+  // on to the signature they came to give.
+  const setupPin = async (stepId: string) => {
+    setError(null);
+    const check = validatePin(newPin);
+    if (!check.ok) {
+      setError(check.error);
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setError("The two PINs do not match.");
+      return;
+    }
+    setSaving(true);
+    const res = await fetch("/api/account/signing-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: newPin }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const d = await res.json();
+      setError(d.error || "Could not set your signing PIN.");
+      return;
+    }
+    setPin(newPin);
+    setNewPin("");
+    setConfirmPin("");
+    setNeedsPin(false);
+    toast.success("Signing PIN set. It is yours alone, and it is not recoverable.");
+    if (sig) await submit(stepId, "sign");
   };
 
   // Sending it back. No signature is asked for, because a rejection is not
@@ -88,6 +132,7 @@ export default function SignoffChain({
       body: JSON.stringify({
         action,
         signatureData: action === "sign" ? sig : undefined,
+        signingPin: action === "sign" ? pin : undefined,
         comments,
         overrideReason,
       }),
@@ -95,6 +140,11 @@ export default function SignoffChain({
     setSaving(false);
     if (!res.ok) {
       const d = await res.json();
+      if (d.requiresPinSetup) {
+        setNeedsPin(true);
+        setError(null);
+        return;
+      }
       setError(d.error || (action === "reject" ? "Failed to return" : "Failed to sign"));
       return;
     }
@@ -213,6 +263,7 @@ export default function SignoffChain({
                           setOpenStep(step.id);
                           setSig(null);
                           setComments("");
+                          setPin("");
                           setError(null);
                         }}
                         icon={PenLine}
@@ -260,6 +311,59 @@ export default function SignoffChain({
                           placeholder="Why are you signing in their place?"
                           aria-label="Reason for signing in place of the named role"
                           className="w-full px-3 py-1.5 bg-white border border-warn-300 rounded-lg text-xs text-ink-900 focus:outline-none focus:border-warn-500"
+                        />
+                      </div>
+                    )}
+
+                    {/* The drawn mark above is what appears on the printed
+                        sheet. This is what proves the person holding the tablet
+                        is the account holder, right now. */}
+                    {needsPin ? (
+                      <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 space-y-2">
+                        <p className="text-xs text-brand-900 leading-relaxed">
+                          Set your signing PIN. You will enter it each time you sign, it is not your
+                          login password, and it cannot be recovered if you forget it.
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            value={newPin}
+                            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
+                            inputMode="numeric"
+                            autoComplete="off"
+                            type="password"
+                            placeholder={`${PIN_LENGTH} digits`}
+                            aria-label="New signing PIN"
+                            className="px-3 py-2 bg-white border border-brand-300 rounded-lg text-sm tracking-[0.3em] text-ink-900 focus:outline-none focus:border-brand-500"
+                          />
+                          <input
+                            value={confirmPin}
+                            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
+                            inputMode="numeric"
+                            autoComplete="off"
+                            type="password"
+                            placeholder="Again"
+                            aria-label="Confirm signing PIN"
+                            className="px-3 py-2 bg-white border border-brand-300 rounded-lg text-sm tracking-[0.3em] text-ink-900 focus:outline-none focus:border-brand-500"
+                          />
+                        </div>
+                        <Button size="sm" loading={saving} onClick={() => setupPin(step.id)}>
+                          Set PIN and sign
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <label htmlFor={`pin-${step.id}`} className="text-xs font-semibold text-ink-700">
+                          Signing PIN
+                        </label>
+                        <input
+                          id={`pin-${step.id}`}
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
+                          inputMode="numeric"
+                          autoComplete="off"
+                          type="password"
+                          placeholder={`${PIN_LENGTH} digits`}
+                          className="w-32 px-3 py-2 bg-white border border-ink-200 rounded-lg text-sm tracking-[0.3em] text-ink-900 focus:outline-none focus:border-brand-500/40"
                         />
                       </div>
                     )}

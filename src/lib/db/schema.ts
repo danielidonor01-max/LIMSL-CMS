@@ -87,6 +87,11 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash"),
+  // Entered at the moment of signing, not at login. Deliberately a second
+  // secret: a login password typed a dozen times a shift on a shared workshop
+  // tablet, in front of colleagues, becomes a short password and then a shared
+  // one. Hashed with the same scrypt helper as the password.
+  signingPinHash: text("signing_pin_hash"),
   role: text("role").notNull().default("TECHNICIAN"), // SUPER_ADMIN | COO | FACTORY_MANAGER | MAINTENANCE_MANAGER | FOREMAN | QA_QC | HSE | TECHNICIAN | VIEWER
   jobTitle: text("job_title"),
   department: text("department"), // MAINTENANCE | QA_QC | HSE | FACTORY | MANAGEMENT
@@ -1086,6 +1091,11 @@ export const signoffs = pgTable(
     isOverride: boolean("is_override").default(false),
     overrideReason: text("override_reason"),
     signatureData: text("signature_data"), // base64 drawn signature
+    // How the signer was proved to be themselves at the moment of signing.
+    // PIN, or null on records signed before the PIN existed. The drawn image
+    // is the visible mark; this column is the evidence behind it, and it is
+    // what an auditor asking "how do you know this was them" reads.
+    authMethod: text("auth_method"),
     comments: text("comments"),
     signedAt: text("signed_at"),
     createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),

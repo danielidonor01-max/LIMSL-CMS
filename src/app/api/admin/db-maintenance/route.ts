@@ -15,6 +15,8 @@ import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 // Kept in lockstep with the index tuples in src/lib/db/schema.ts. Also carries
 // additive column migrations (IF NOT EXISTS, idempotent, data-safe).
 const INDEXES: [string, string][] = [
+  ["signoffs.auth_method", "ALTER TABLE signoffs ADD COLUMN IF NOT EXISTS auth_method text"],
+  ["users.signing_pin", "ALTER TABLE users ADD COLUMN IF NOT EXISTS signing_pin_hash text"],
   [
     "emergency_contacts",
     `CREATE TABLE IF NOT EXISTS emergency_contacts (
