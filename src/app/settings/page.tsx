@@ -6,7 +6,7 @@ import TimeField from "@/components/TimeField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle, Users2 } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Snowflake, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle, Users2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -267,6 +267,28 @@ export default function AppSettingsPage() {
       else toast.error(`${d.applied.length} applied, ${d.failed.length} failed.`);
     } finally {
       setDbMaintBusy(false);
+    }
+  };
+
+  const [acBusy, setAcBusy] = useState(false);
+  const [acResult, setAcResult] = useState<any>(null);
+  const loadFacilityAssets = async () => {
+    setAcBusy(true);
+    setAcResult(null);
+    try {
+      const res = await fetch("/api/admin/facility-assets", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d.error || "Load failed.");
+        return;
+      }
+      // The assigned tags and the unresolved conflicts have to stay on screen.
+      // A toast that says "23 loaded" and vanishes hides the two things the
+      // person actually has to act on.
+      setAcResult(d);
+      toast.success(`${d.created} created, ${d.updated} updated.`);
+    } finally {
+      setAcBusy(false);
     }
   };
 
@@ -990,6 +1012,55 @@ export default function AppSettingsPage() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Office AC units and calibrated instruments, transcribed from the
+            LIMSL servicing sheets. Data, not schema, so it is deliberately not
+            part of the maintenance button above. */}
+        <section className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <Snowflake className="w-4 h-4 text-brand-600" />
+            <h3 className="text-sm font-semibold text-ink-900">Office AC units and instruments</h3>
+          </div>
+          <p className="text-xs text-ink-500 leading-snug">
+            Adds the 19 office split AC units and the 4 externally calibrated instruments to the asset register,
+            with their servicing and calibration dates. It updates what is already there rather than duplicating
+            it, and never changes an asset&rsquo;s status or criticality, so it is safe to run again.
+          </p>
+          <Button variant="secondary" icon={Snowflake} loading={acBusy} onClick={loadFacilityAssets}>
+            Load AC units and instruments
+          </Button>
+          {acResult && (
+            <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-xs text-brand-800 space-y-2">
+              <p className="font-semibold">
+                {acResult.created} created, {acResult.updated} updated.
+              </p>
+              {acResult.assigned?.length > 0 && (
+                <div>
+                  <p className="font-semibold">Tags assigned to the untagged instruments. Label them to match:</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {acResult.assigned.map((a: any) => (
+                      <li key={a.assetId}>
+                        <span className="font-mono font-semibold">{a.assetId}</span> {a.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {acResult.conflicts?.length > 0 && (
+                <div className="rounded-lg border border-warn-200 bg-warn-50 p-2.5 text-warn-800">
+                  <p className="font-semibold">
+                    The source sheets contradict each other here. Someone has to read the labels:
+                  </p>
+                  <ul className="mt-1 space-y-1 list-disc pl-4">
+                    {acResult.conflicts.map((c: string) => (
+                      <li key={c}>{c}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}

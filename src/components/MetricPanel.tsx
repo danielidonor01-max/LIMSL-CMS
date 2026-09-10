@@ -15,6 +15,7 @@
 "use client";
 
 import type { ElementType } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { EMPTY_TONE } from "@/lib/status-tone";
 
 export type Metric = {
@@ -31,6 +32,11 @@ export type Metric = {
   // metrics; a maintenance system does, and colouring the number is stronger
   // than tinting the whole cell, which shouts at the reader four times over.
   status?: "danger" | "warning" | "success" | "plain";
+  // Direction of travel since the previous period, and which way is good. MTTR
+  // falling and MTBF falling are both "down" and mean opposite things, so the
+  // arrow cannot colour itself from the direction alone.
+  trend?: "up" | "down" | "flat";
+  trendGood?: "up" | "down";
 };
 
 const VALUE_TONE: Record<string, string> = {
@@ -48,6 +54,23 @@ const VALUE_TONE: Record<string, string> = {
 function toneFor(m: Metric): string {
   if (m.count !== undefined && (!Number.isFinite(m.count) || m.count === 0)) return EMPTY_TONE;
   return VALUE_TONE[m.status ?? "plain"];
+}
+
+// A flat arrow, not a coloured chip. It answers "which way is this going" in
+// the corner of the cell and then gets out of the way; the figure is what the
+// reader came for.
+function Trend({ trend, trendGood }: Pick<Metric, "trend" | "trendGood">) {
+  if (!trend || trend === "flat") {
+    return <Minus className="w-3.5 h-3.5 text-ink-300 shrink-0" aria-label="unchanged" />;
+  }
+  const good = trendGood ? trend === trendGood : trend === "up";
+  const Icon = trend === "up" ? TrendingUp : TrendingDown;
+  return (
+    <Icon
+      className={`w-3.5 h-3.5 shrink-0 ${good ? "text-brand-600" : "text-danger-600"}`}
+      aria-label={`trending ${trend}, ${good ? "improving" : "worsening"}`}
+    />
+  );
 }
 
 export default function MetricPanel({
@@ -76,10 +99,14 @@ export default function MetricPanel({
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-500 leading-tight">
                 {m.label}
               </p>
-              {Icon && (
-                <span className="w-7 h-7 rounded-lg border border-line grid place-items-center shrink-0">
-                  <Icon className="w-3.5 h-3.5 text-ink-400" />
-                </span>
+              {m.trend ? (
+                <Trend {...m} />
+              ) : (
+                Icon && (
+                  <span className="w-7 h-7 rounded-lg border border-line grid place-items-center shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-ink-400" />
+                  </span>
+                )
               )}
             </div>
 
@@ -89,7 +116,12 @@ export default function MetricPanel({
               >
                 {m.value}
               </span>
-              {m.target && <span className="text-xs text-ink-400 font-mono">/ {m.target}</span>}
+              {/* Only ever a comparator target, "≥ 200 hrs". A bare number here
+                  reads as a fraction: "4 / 0" for four overdue against a target
+                  of none is nonsense. Anything that is not a threshold belongs
+                  in the description. tabular-nums, not mono: a target is a
+                  measurement, not a code. */}
+              {m.target && <span className="text-xs text-ink-400 tabular-nums">/ {m.target}</span>}
             </div>
 
             {m.description && (

@@ -63,6 +63,20 @@ For a row of related figures use `<MetricPanel>` rather than separate cards.
 One panel with hairline dividers reads as a single object, which is what a set
 of related measures is.
 
+**Never tint a figure card by its status.** Twenty status-tinted cells is a
+traffic light with no hierarchy: everything shouts and nothing leads. The
+status colours the figure, which `MetricPanel` already does, and a count of
+zero is never coloured at all.
+
+**The `target` slot takes a threshold, not a phrase.** It renders as
+`184 hrs / ≥ 200 hrs`, which reads correctly. A bare number there reads as a
+fraction, so four overdue against a target of none came out as `4 / 0`.
+Anything that is not a comparator belongs in `description`.
+
+**Give a panel exactly as many metrics as it has columns.** The dividers are a
+1px grid gap showing the container through, so an incomplete last row shows as
+a grey block rather than as white space.
+
 ### Buttons
 
 `primary` (brand), `secondary`, `danger`, `ghost`, `subtle`, and `dark`. Use
@@ -195,6 +209,7 @@ an older set and the two disagreed.
 | Compact inline picker (tables, badges) | `@/components/Dropdown` | Trigger styled by the call site; popover menu. |
 | Boolean setting (enable/disable) | `@/components/Toggle` | Switch, not a checkbox. Real checkboxes remain **only** for genuine tick-marks: checklist steps and signed attestations. |
 | Page title row | `@/components/PageHeader` | Title + subtitle + optional code + actions. No icon chip; see the section on chrome. |
+| The one card that answers the page | `@/components/PageLead` | Headline that STATES the answer, one supporting sentence, the actions that follow from it, and a single dark panel with the figure worth reading across a room. Used by the dashboard, KPI and reports. A guard test keeps all three on it. |
 | Status pill | `@/components/Badge` | The `bg/text/border` tint formula. |
 | Notifications | `sonner` `toast.*` | Success/error feedback. |
 

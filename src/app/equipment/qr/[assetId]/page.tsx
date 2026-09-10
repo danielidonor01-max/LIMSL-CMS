@@ -4,7 +4,8 @@
 import Button from "@/components/Button";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Printer, QrCode, Wrench } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Printer } from "lucide-react";
 import QRCode from "qrcode";
 
 export default function QRPrintPage({ params }: { params: Promise<{ assetId: string }> }) {
@@ -58,13 +59,10 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
-            <QrCode className="w-5 h-5 text-white" />
-          </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-ink-900">Asset QR Label</h1>
-            <p className="text-[11px] text-brand-600 font-mono tracking-wider uppercase">
-              Printable Equipment Tag
+            <h1 className="text-lg font-bold tracking-tight text-ink-900">Asset QR label</h1>
+            <p className="text-xs text-ink-600 mt-0.5">
+              Print and fix to {assetIdOriginal}
             </p>
           </div>
         </div>
@@ -80,15 +78,24 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-8">
         {/* Printable Card */}
         <div className="bg-white text-ink-900 p-8 rounded-2xl border-4 border-ink-300 shadow-2xl flex flex-col items-center text-center space-y-8 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
-          {/* Logo Header */}
-          <div className="flex items-center gap-2 border-b-2 border-ink-300 pb-3 w-full justify-center">
-            <div className="w-8 h-8 rounded bg-ink-100 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-ink-900" />
-            </div>
-            <div>
+          {/* Letterhead. The company mark, not a generic tool glyph: this label
+              is stuck to a machine and is the only thing on it saying whose
+              asset it is. An <img> also survives printing, where the tinted box
+              it replaced was a background and would have come out blank unless
+              the operator remembered to enable background graphics. */}
+          <div className="flex items-center gap-2.5 border-b-2 border-ink-300 pb-3 w-full justify-center">
+            <Image
+              src="/brand/logo-80.png"
+              alt=""
+              width={36}
+              height={36}
+              priority
+              className="w-9 h-9 object-contain shrink-0"
+            />
+            <div className="text-left">
               <h2 className="text-sm font-black tracking-tight text-ink-900 leading-none">LEE INTERNATIONAL</h2>
               <p className="text-[10px] text-ink-500 font-mono uppercase tracking-widest leading-none mt-1">
-                Machinery & Services Ltd
+                Machinery &amp; Services Limited
               </p>
             </div>
           </div>
@@ -109,16 +116,20 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             <h3 className="text-sm font-bold text-ink-800 pt-1 leading-tight">{machineName}</h3>
           </div>
 
-          {/* Scanning Instructions */}
+          {/* Scanning instructions. No emoji: this is a label glued to a machine
+              in a fabrication workshop, and an emoji prints as a colour block or
+              an empty box depending on the printer. */}
           <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[11px] text-ink-600 leading-relaxed">
-            <p className="font-bold text-ink-900">📷 Scan with Mobile Camera</p>
-            <p>Access Maintenance Log, WMS, OEM specs, and raise work orders instantly.</p>
+            <p className="font-bold text-ink-900">Scan with a phone camera</p>
+            <p>Log maintenance, check the WMS and OEM details, or raise a work order.</p>
           </div>
         </div>
 
-        {/* Print Tip (Hidden on print) */}
+        {/* Print tip. The asterisks here used to render literally, because JSX
+            has no idea what markdown is. */}
         <p className="text-xs text-ink-500 text-center max-w-xs leading-relaxed print:hidden">
-          💡 **Print Settings Tip:** Use standard sticker layout, set size to 100%, and enable background graphics for best label results.
+          <strong className="text-ink-700">Printing:</strong> use a standard sticker layout at 100% scale. The
+          label needs no background graphics.
         </p>
       </main>
     </div>

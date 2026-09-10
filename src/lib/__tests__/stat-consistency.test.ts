@@ -68,11 +68,26 @@ test("MetricPanel still owns the zero rule", () => {
   assert.ok(/count !== undefined/.test(panel), "MetricPanel no longer checks the count before colouring");
 });
 
-test("the dashboard hero greys its empty figures too", () => {
-  // It has its own small stat row on the dark panel, and it was breaking the
-  // rule the rest of the app follows.
-  const hero = readFileSync(join(SRC, "components", "DashboardHero.tsx"), "utf8");
-  assert.ok(/value === 0/.test(hero), "the hero sub-metrics no longer grey a zero");
+test("the lead card greys its empty figures too", () => {
+  // The small stat row on the dark panel was breaking the rule the rest of the
+  // app follows. It now lives in PageLead, which the dashboard, KPI and reports
+  // pages all render, so one slip here would put the bug back on three screens
+  // at once rather than one.
+  const lead = readFileSync(join(SRC, "components", "PageLead.tsx"), "utf8");
+  assert.ok(/value === 0/.test(lead), "the lead sub-metrics no longer grey a zero");
+});
+
+test("every page leading with a big figure uses the shared lead card", () => {
+  // Three pages open with the same card. The moment one of them hand-rolls it
+  // the three drift, which is what the re-audit found across fifteen modules
+  // and is the whole reason PageLead exists.
+  for (const page of ["page.tsx", join("kpi", "page.tsx"), join("reports", "page.tsx")]) {
+    const text = readFileSync(join(SRC, "app", page), "utf8");
+    assert.ok(
+      /PageLead|DashboardHero/.test(text),
+      `src/app/${page.replace(/\\/g, "/")} no longer leads with the shared card`,
+    );
+  }
 });
 
 test("no page builds a tinted figure card by hand", () => {

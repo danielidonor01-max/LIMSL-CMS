@@ -17,17 +17,10 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Activity,
-  Wrench,
-  DollarSign,
-  ShieldCheck,
-  Gauge,
-} from "lucide-react";
+import { Activity, Wrench, Layers, ShieldCheck, Gauge } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import PageLead from "@/components/PageLead";
+import MetricPanel, { type Metric } from "@/components/MetricPanel";
 import TableSkeleton from "@/components/TableSkeleton";
 import { MONTH_NAMES } from "@/lib/constants";
 
@@ -60,6 +53,9 @@ type Kpi = {
   value: string;
   target: string;
   tone: Tone;
+  // The raw number when the value is a plain count, which is what lets the zero
+  // rule apply: "Safety incidents: 0" must not be coloured like a real one.
+  count?: number;
   trend?: Trend;
   trendGood?: "up" | "down"; // which direction is good
   // Says what the number does NOT cover, where the underlying data is partial.
@@ -67,8 +63,10 @@ type Kpi = {
   note?: string;
 };
 
+// An em dash for "no data". This read `", "` — a stray comma and a space,
+// which rendered as an almost invisible smudge where a figure should be.
 const pct = (n: number | null | undefined) =>
-  n === null || n === undefined ? ", " : `${(n * 100).toFixed(1)}%`;
+  n === null || n === undefined ? "—" : `${(n * 100).toFixed(1)}%`;
 
 export default function KpiPage() {
   const { data, loading } = useApi<KpiData | null>("/api/kpi", null);
@@ -103,90 +101,153 @@ export default function KpiPage() {
     const lastMo = m[m.length - 1]?.breakdownFrequency ?? 0;
     const downtimeWindow = m.reduce((a, x) => a + (x.downtimeHours ?? 0), 0);
 
+    // Four to a group, and every measure appears exactly once. Inspection
+    // Compliance and Overdue Activities were each rendered twice, in different
+    // groups, which makes a reader check whether the two are really the same
+    // number. "Maint. Cost: Not tracked" was a placeholder holding a slot the
+    // size of a real measurement.
     const reliability: Kpi[] = [
-      { label: "MTBF", value: l.mtbf == null ? ", " : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
-      { label: "Assets Available Now", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
-      { label: "Breakdown Frequency", value: `${lastMo}/mo`, target: "≤ 2/mo", tone: lastMo <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
-      { label: "Failure Rate", value: `${(l.failureRate ?? 0).toFixed(2)}/asset·mo`, target: "declining", tone: (l.failureRate ?? 0) <= 0.2 ? "good" : "warning" },
-      { label: "Active Breakdowns", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
+      { label: "MTBF", value: l.mtbf == null ? "—" : `${Math.round(l.mtbf)} hrs`, target: "≥ 200 hrs", tone: (l.mtbf ?? 0) >= 200 ? "good" : "warning", trend: trendOf("mtbf"), trendGood: "up" },
+      { label: "Assets available now", value: pct(l.availability), target: "≥ 90%", tone: (l.availability ?? 0) >= 0.9 ? "good" : "warning", trend: trendOf("availability"), trendGood: "up" },
+      { label: "Breakdown frequency", value: `${lastMo}/mo`, count: lastMo, target: "≤ 2/mo", tone: lastMo <= 2 ? "good" : "warning", trend: trendOf("breakdownFrequency"), trendGood: "down" },
+      { label: "Active breakdowns", value: String(l.brokenDown), count: l.brokenDown, target: "", note: "Target is none", tone: l.brokenDown === 0 ? "good" : "danger" },
     ];
     const maintenance: Kpi[] = [
-      { label: "MTTR", value: l.mttr == null ? ", " : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
-      { label: "PM Compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: (l.pmCompliance ?? 0) >= 0.95 ? "good" : (l.pmCompliance ?? 0) >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
-      { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
+      { label: "MTTR", value: l.mttr == null ? "—" : `${l.mttr.toFixed(1)} hrs`, target: "≤ 4 hrs", tone: (l.mttr ?? 0) <= 4 ? "good" : "warning", trend: trendOf("mttr"), trendGood: "down" },
+      { label: "PM compliance", value: pct(l.pmCompliance), target: "≥ 95%", tone: (l.pmCompliance ?? 0) >= 0.95 ? "good" : (l.pmCompliance ?? 0) >= 0.5 ? "warning" : "danger", trend: trendOf("pmCompliance"), trendGood: "up" },
       {
-        label: "Maintenance Backlog",
+        label: "Maintenance backlog",
         value: `${l.maintenanceBacklog ?? 0} MH`,
+        count: l.maintenanceBacklog ?? 0,
         target: "≤ 40 MH",
         tone: (l.maintenanceBacklog ?? 0) <= 40 ? "good" : "warning",
         note:
           l.openWosTotal
-            ? `${l.backlogEstimated ?? 0} of ${l.openWosTotal} estimated; rest at ${l.medianJobHours ?? 2}h median`
+            ? `${l.backlogEstimated ?? 0} of ${l.openWosTotal} estimated, the rest at ${l.medianJobHours ?? 2}h median`
             : undefined,
       },
-      { label: "Open Work Orders", value: String(l.openWos), target: "monitor", tone: "neutral" },
+      { label: "Open work orders", value: String(l.openWos), count: l.openWos, target: "", note: "Monitored, no threshold", tone: "neutral" },
     ];
     const throughput: Kpi[] = [
-      { label: "WO Completion Rate", value: pct(l.woCompletionRate), target: "≥ 90%", tone: (l.woCompletionRate ?? 0) >= 0.9 ? "good" : "warning" },
-      { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
-      { label: "Downtime (6 mo)", value: `${downtimeWindow.toFixed(0)} hrs`, target: "declining", tone: "neutral" },
-      { label: "Breakdowns (6 mo)", value: String(l.breakdownsWindow ?? 0), target: "declining", tone: "neutral" },
-      { label: "Maint. Cost", value: "Not tracked", target: "-", tone: "neutral" },
+      { label: "WO completion rate", value: pct(l.woCompletionRate), target: "≥ 90%", tone: (l.woCompletionRate ?? 0) >= 0.9 ? "good" : "warning" },
+      { label: "Failure rate", value: `${(l.failureRate ?? 0).toFixed(2)}`, target: "", note: "Failures per asset, per month", tone: (l.failureRate ?? 0) <= 0.2 ? "good" : "warning" },
+      { label: "Downtime, 6 months", value: `${downtimeWindow.toFixed(0)} hrs`, count: Math.round(downtimeWindow), target: "", note: "Should be trending down", tone: "neutral" },
+      { label: "Breakdowns, 6 months", value: String(l.breakdownsWindow ?? 0), count: l.breakdownsWindow ?? 0, target: "", note: "Should be trending down", tone: "neutral" },
     ];
     const safety: Kpi[] = [
       {
-        label: "PTW Close-out",
+        label: "PTW close-out",
         value: pct(l.ptwCompliance),
         target: "≥ 98%",
         tone: l.ptwCompliance == null ? "neutral" : l.ptwCompliance >= 0.98 ? "good" : "warning",
         note: l.ptwWentToWork
-          ? `${l.ptwWentToWork} authorised · ${l.ptwClosedLate ?? 0} late · ${l.ptwNotClosed ?? 0} never closed`
+          ? `${l.ptwWentToWork} authorised, ${l.ptwClosedLate ?? 0} late, ${l.ptwNotClosed ?? 0} never closed`
           : "No permits have authorised work yet",
       },
-      { label: "Safety Incidents", value: String(l.safetyIncidents ?? 0), target: "0", tone: (l.safetyIncidents ?? 0) === 0 ? "good" : "danger" },
-      { label: "Inspection Compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning" },
-      { label: "Overdue Activities", value: String(l.overdueActivities ?? 0), target: "0", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
+      { label: "Inspection compliance", value: pct(l.inspectionCompliance), target: "≥ 98%", tone: (l.inspectionCompliance ?? 0) >= 0.98 ? "good" : "warning", trend: trendOf("inspectionCompliance"), trendGood: "up" },
+      { label: "Overdue activities", value: String(l.overdueActivities ?? 0), count: l.overdueActivities ?? 0, target: "", note: "Target is none", tone: (l.overdueActivities ?? 0) === 0 ? "good" : "warning" },
+      { label: "Safety incidents", value: String(l.safetyIncidents ?? 0), count: l.safetyIncidents ?? 0, target: "", note: "Target is none", tone: (l.safetyIncidents ?? 0) === 0 ? "good" : "danger" },
     ];
     const assets: Kpi[] = [
-      { label: "Total Assets", value: String(l.totalAssets), target: "tracked", tone: "neutral" },
-      { label: "Operational", value: String(l.operational ?? 0), target: "max", tone: "good" },
-      { label: "Under Maintenance", value: String(l.underMaint ?? 0), target: "monitor", tone: (l.underMaint ?? 0) === 0 ? "good" : "warning" },
-      { label: "Broken Down", value: String(l.brokenDown), target: "0", tone: l.brokenDown === 0 ? "good" : "danger" },
+      { label: "Total assets", value: String(l.totalAssets), count: l.totalAssets, target: "", note: "Every machine, system and serviced unit", tone: "neutral" },
+      { label: "Operational", value: String(l.operational ?? 0), count: l.operational ?? 0, target: "", note: "Available for production now", tone: "neutral" },
+      { label: "Under maintenance", value: String(l.underMaint ?? 0), count: l.underMaint ?? 0, target: "", note: "Out of service by plan", tone: (l.underMaint ?? 0) === 0 ? "good" : "warning" },
+      { label: "Broken down", value: String(l.brokenDown), count: l.brokenDown, target: "", note: "Target is none", tone: l.brokenDown === 0 ? "good" : "danger" },
     ];
 
     return [
       { name: "Reliability", icon: Activity, items: reliability },
       { name: "Maintenance", icon: Wrench, items: maintenance },
       { name: "Throughput", icon: Gauge, items: throughput },
-      { name: "Safety & Compliance", icon: ShieldCheck, items: safety },
-      { name: "Asset Status", icon: DollarSign, items: assets },
+      { name: "Safety & compliance", icon: ShieldCheck, items: safety },
+      { name: "Asset status", icon: Layers, items: assets },
     ];
   }, [data]);
 
-  const toneCls: Record<Tone, string> = {
-    good: "border-brand-200 bg-brand-50",
-    warning: "border-warn-200 bg-warn-50",
-    danger: "border-danger-200 bg-danger-50",
-    neutral: "border-ink-200 bg-ink-50",
-  };
-  const toneText: Record<Tone, string> = {
-    good: "text-brand-600",
-    warning: "text-warn-600",
-    danger: "text-danger-600",
-    neutral: "text-ink-700",
+  // Worst-first, the same rule as the dashboard. A page of twenty numbers has
+  // no opinion; the reader has to rank them, every time they open it. This
+  // states which target is being missed and by how much.
+  const lead = useMemo(() => {
+    const l = data?.live;
+    if (!l) return null;
+
+    const misses: { text: string; href: string; label: string }[] = [];
+    if ((l.brokenDown ?? 0) > 0) {
+      misses.push({
+        text: `${l.brokenDown === 1 ? "One machine is" : `${l.brokenDown} machines are`} down.`,
+        href: "/corrective",
+        label: "Open corrective records",
+      });
+    }
+    if (l.pmCompliance != null && l.pmCompliance < 0.95) {
+      misses.push({
+        text: `PM compliance is ${pct(l.pmCompliance)}, against a 95% target.`,
+        href: "/schedule",
+        label: "Open the schedule",
+      });
+    }
+    if ((l.overdueActivities ?? 0) > 0) {
+      misses.push({
+        text: `${l.overdueActivities === 1 ? "One activity is" : `${l.overdueActivities} activities are`} overdue.`,
+        href: "/schedule",
+        label: "Open the schedule",
+      });
+    }
+    if (l.availability != null && l.availability < 0.9) {
+      misses.push({
+        text: `Availability is ${pct(l.availability)}, against a 90% target.`,
+        href: "/equipment",
+        label: "Open the register",
+      });
+    }
+
+    const pm = Math.round((l.pmCompliance ?? 0) * 100);
+    return {
+      headline: misses[0]?.text ?? "Every maintenance target is being met.",
+      supporting:
+        misses.length > 1
+          ? `${misses.length} targets are being missed. This one costs the most, and the panels below show the rest.`
+          : misses.length === 1
+            ? "Everything else on this page is within target."
+            : "Availability, PM compliance and permit close-out are all at or above their thresholds.",
+      action: misses[0] ?? { href: "/schedule", label: "Open the schedule" },
+      pm,
+      pmTone: (pm >= 95 ? "good" : pm >= 50 ? "warn" : "bad") as "good" | "warn" | "bad",
+      stats: [
+        { label: "down", value: l.brokenDown ?? 0, tone: "bad" as const },
+        { label: "overdue", value: l.overdueActivities ?? 0, tone: "warn" as const },
+        { label: "open WOs", value: l.openWos ?? 0 },
+      ],
+    };
+  }, [data]);
+
+  // Tinting twenty cells by status turned the page into a traffic light with no
+  // hierarchy: everything shouted at once and nothing led. The status now lives
+  // on the figure, where MetricPanel already puts it.
+  const STATUS: Record<Tone, Metric["status"]> = {
+    good: "success",
+    warning: "warning",
+    danger: "danger",
+    neutral: "plain",
   };
 
-  const trendIcon = (k: Kpi) => {
-    if (!k.trend || k.trend === "flat") return <Minus className="w-3 h-3 text-ink-500" />;
-    const isGood = k.trendGood ? k.trend === k.trendGood : k.trend === "up";
-    const Icon = k.trend === "up" ? TrendingUp : TrendingDown;
-    return <Icon className={`w-3 h-3 ${isGood ? "text-brand-600" : "text-danger-600"}`} />;
-  };
+  const asMetrics = (items: Kpi[]): Metric[] =>
+    items.map((k) => ({
+      key: k.label,
+      label: k.label,
+      value: k.value,
+      count: k.count,
+      target: k.target || undefined,
+      description: k.note,
+      status: STATUS[k.tone],
+      trend: k.trend,
+      trendGood: k.trendGood,
+    }));
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="KPI Dashboard"
           subtitle="Computed live from work orders, breakdowns, PM and permits over the last 6 months"
         />
@@ -197,31 +258,33 @@ export default function KpiPage() {
           </div>
         ) : (
           <>
-            {/* KPI category groups */}
+            {lead && (
+              <PageLead
+                headingId="kpi-lead"
+                headline={lead.headline}
+                supporting={lead.supporting}
+                actions={[{ href: lead.action.href, label: lead.action.label }]}
+                figure={{
+                  label: "PM compliance",
+                  value: String(lead.pm),
+                  unit: "%",
+                  progress: lead.pm,
+                  tone: lead.pmTone,
+                }}
+                stats={lead.stats}
+                meta={<span>Computed live over the last 6 months · target 95%</span>}
+              />
+            )}
+
+            {/* One panel per group, not twenty floating cards. */}
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
                 <section key={cat.name} className="space-y-3">
-                  <h3 className="text-sm font-semibold text-ink-700 flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-brand-600" /> {cat.name}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {cat.items.map((k) => (
-                      <div key={k.label} className={`p-4 rounded-xl border ${toneCls[k.tone]}`}>
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider leading-tight">
-                            {k.label}
-                          </span>
-                          {trendIcon(k)}
-                        </div>
-                        <div className={`text-xl font-bold mt-2 ${toneText[k.tone]}`}>{k.value}</div>
-                        <p className="text-[11px] text-ink-500 mt-1">Target {k.target}</p>
-                        {k.note && (
-                          <p className="text-[11px] text-ink-500 mt-1 leading-snug">{k.note}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <h2 className="text-sm font-semibold text-ink-700 flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-ink-400" /> {cat.name}
+                  </h2>
+                  <MetricPanel label={cat.name} metrics={asMetrics(cat.items)} />
                 </section>
               );
             })}

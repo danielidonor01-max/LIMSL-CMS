@@ -3,21 +3,15 @@
 
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Download,
-  Printer,
-  ShieldCheck,
-  Clock,
-  AlertTriangle,
-  Layers,
-  History,
-} from "lucide-react";
+import { Download, Printer, ShieldCheck, Layers, History } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
+import PageLead from "@/components/PageLead";
+import MetricPanel from "@/components/MetricPanel";
 import TableSkeleton from "@/components/TableSkeleton";
 import { downloadCSV } from "@/lib/export";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
@@ -166,13 +160,72 @@ export default function ReportsPage() {
           </div>
         ) : (
           <>
-            {/* Headline report cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Head icon={<ShieldCheck className="w-4 h-4 text-brand-600" />} label="PM Compliance" value={`${pmCompliance}%`} sub={`${pmDone}/${pmDue.length} due PM done`} />
-              <Head icon={<Clock className="w-4 h-4 text-danger-600" />} label="Overdue Activities" value={String(overdue)} sub="Across all schedules" />
-              <Head icon={<Clock className="w-4 h-4 text-warn-600" />} label="Downtime (6 mo)" value={`${totalDowntime.toFixed(0)} hrs`} sub="Rolling last 6 months" />
-              <Head icon={<AlertTriangle className="w-4 h-4 text-danger-600" />} label="Breakdowns (6 mo)" value={String(totalBreakdowns)} sub="Rolling last 6 months" />
-            </div>
+            {/* What an auditor asks for first, stated rather than listed. This
+                page is opened to produce evidence, so the lead says whether the
+                evidence is good before offering the buttons that print it. */}
+            <PageLead
+              headingId="reports-lead"
+              headline={
+                pmCompliance >= 95
+                  ? "The audit file is current."
+                  : `PM compliance stands at ${pmCompliance}%, against a 95% target.`
+              }
+              supporting={
+                pmCompliance >= 95
+                  ? "Preventive maintenance is on target. Print the registers below for the audit pack, or pull one machine's full history as a dossier."
+                  : "This is the first figure an ISO 9001 auditor asks for. Print the registers below for the audit pack, or pull one machine's full history as a dossier."
+              }
+              actions={[{ href: "/reports/print/pm-completion", label: "Print the PM register" }]}
+              figure={{
+                label: "PM compliance",
+                value: String(pmCompliance),
+                unit: "%",
+                progress: pmCompliance,
+                tone: pmCompliance >= 95 ? "good" : pmCompliance >= 50 ? "warn" : "bad",
+              }}
+              stats={[
+                { label: "overdue", value: overdue, tone: "warn" },
+                { label: "PM done", value: pmDone },
+                { label: "PM due", value: pmDue.length },
+              ]}
+              meta={<span>{equipment.length} assets · rolling 6 months</span>}
+            />
+
+            <MetricPanel
+              label="Evidence at a glance"
+              metrics={[
+                {
+                  key: "overdue",
+                  label: "Overdue activities",
+                  value: String(overdue),
+                  count: overdue,
+                  status: "warning",
+                  description: "Across every schedule",
+                },
+                {
+                  key: "downtime",
+                  label: "Downtime, 6 months",
+                  value: `${totalDowntime.toFixed(0)} hrs`,
+                  count: Math.round(totalDowntime),
+                  description: "Production hours lost to maintenance",
+                },
+                {
+                  key: "breakdowns",
+                  label: "Breakdowns, 6 months",
+                  value: String(totalBreakdowns),
+                  count: totalBreakdowns,
+                  status: "danger",
+                  description: "Unplanned stoppages on the rolling window",
+                },
+                {
+                  key: "assets",
+                  label: "Assets on register",
+                  value: String(equipment.length),
+                  count: equipment.length,
+                  description: "Every machine, system and serviced unit",
+                },
+              ]}
+            />
 
             {/* Equipment status + category */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -278,19 +331,6 @@ export default function ReportsPage() {
           </>
         )}
       </main>
-    </div>
-  );
-}
-
-function Head({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
-  return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink-500 uppercase tracking-wider">{label}</span>
-        {icon}
-      </div>
-      <div className="text-2xl font-bold mt-2 text-ink-900">{value}</div>
-      <p className="text-[11px] text-ink-500 mt-1">{sub}</p>
     </div>
   );
 }

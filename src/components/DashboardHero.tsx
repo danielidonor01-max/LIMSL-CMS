@@ -10,8 +10,7 @@
 // Everything else on this card stays quiet. One bold thing per screen.
 "use client";
 
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import PageLead from "./PageLead";
 
 export type HeroState = {
   firstName: string;
@@ -81,101 +80,41 @@ export default function DashboardHero(props: { state: HeroState }) {
   const availability = s.totalEquipment > 0 ? Math.round((s.operational / s.totalEquipment) * 100) : 0;
 
   return (
-    <section
-      aria-labelledby="hero-heading"
-      className="rounded-2xl border border-line bg-surface overflow-hidden shadow-card"
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 p-6 lg:p-8">
-        <div className="min-w-0 max-w-2xl">
-          <h1
-            id="hero-heading"
-            className="text-3xl sm:text-4xl font-bold tracking-[-0.03em] leading-[1.08] text-ink-900 text-balance"
-          >
-            {text}
-          </h1>
-          <p className="text-sm text-ink-600 mt-3 leading-relaxed">{supporting(s)}</p>
-
-          <div className="flex flex-wrap items-center gap-2.5 mt-6">
-            <Link
-              href={lead.href}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-nav hover:bg-nav-active text-white px-4 min-h-11 text-xs font-semibold transition-colors"
-            >
-              {lead.label}
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/work-orders/new"
-              className="inline-flex items-center rounded-lg bg-surface border border-ink-300 text-ink-700 hover:bg-ink-100 px-4 min-h-11 text-xs font-semibold transition-colors"
-            >
-              Raise a work order
-            </Link>
-          </div>
-
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-5 text-xs text-ink-600">
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${clean ? "bg-brand-500" : "bg-danger-500"}`}
-                aria-hidden="true"
-              />
-              {s.operational} of {s.totalEquipment} machines available
-            </span>
-            <span className="text-ink-400" aria-hidden="true">
-              ·
-            </span>
-            <span>{s.roleLabel}</span>
-          </p>
-        </div>
-
-        {/* The dark panel is the reference's move and it earns its place: it is
-            the one figure worth reading from across a workshop. */}
-        <div className="lg:w-72 rounded-xl bg-nav text-white p-5 flex flex-col justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-nav-label">
-            Fleet availability
-          </p>
-
-          <div className="flex items-end gap-2 mt-4">
-            <span className="text-5xl font-semibold leading-none tabular-nums">{availability}</span>
-            <span className="text-lg text-nav-text leading-none mb-1">%</span>
-          </div>
-
-          <div
-            className="mt-4 h-1 rounded-full bg-nav-active overflow-hidden"
-            role="img"
-            aria-label={`${availability} percent of machines available`}
-          >
+    <PageLead
+      headingId="hero-heading"
+      headline={text}
+      supporting={supporting(s)}
+      actions={[
+        { href: lead.href, label: lead.label },
+        { href: "/work-orders/new", label: "Raise a work order", primary: false },
+      ]}
+      figure={{
+        label: "Fleet availability",
+        value: String(availability),
+        unit: "%",
+        progress: availability,
+        tone: availability >= 90 ? "good" : availability >= 75 ? "warn" : "bad",
+      }}
+      stats={[
+        { label: "down", value: s.brokenDown, tone: "bad" },
+        { label: "overdue", value: s.overdue, tone: "warn" },
+        { label: "to sign", value: s.awaitingSignature },
+      ]}
+      meta={
+        <>
+          <span className="inline-flex items-center gap-1.5">
             <span
-              className={`block h-full rounded-full ${availability >= 90 ? "bg-brand-500" : availability >= 75 ? "bg-warn-500" : "bg-danger-500"}`}
-              style={{ width: `${availability}%` }}
+              className={`w-1.5 h-1.5 rounded-full ${clean ? "bg-brand-500" : "bg-danger-500"}`}
+              aria-hidden="true"
             />
-          </div>
-
-          <dl className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-nav-line">
-            <HeroStat label="down" value={s.brokenDown} tone={s.brokenDown > 0 ? "bad" : "plain"} />
-            <HeroStat label="overdue" value={s.overdue} tone={s.overdue > 0 ? "warn" : "plain"} />
-            <HeroStat label="to sign" value={s.awaitingSignature} tone="plain" />
-          </dl>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HeroStat({ label, value, tone }: { label: string; value: number; tone: "plain" | "warn" | "bad" }) {
-  // The same zero rule as everywhere else, which this component was breaking:
-  // "0 overdue" rendered in the same white as "2 down", so a real number and an
-  // empty one had identical weight on the one panel meant to be read fastest.
-  const colour =
-    value === 0
-      ? "text-nav-text"
-      : tone === "bad"
-        ? "text-danger-400"
-        : tone === "warn"
-          ? "text-warn-400"
-          : "text-white";
-  return (
-    <div>
-      <dd className={`text-xl font-semibold leading-none tabular-nums ${colour}`}>{value}</dd>
-      <dt className="text-xs text-nav-text mt-1.5">{label}</dt>
-    </div>
+            {s.operational} of {s.totalEquipment} machines available
+          </span>
+          <span className="text-ink-400" aria-hidden="true">
+            ·
+          </span>
+          <span>{s.roleLabel}</span>
+        </>
+      }
+    />
   );
 }
