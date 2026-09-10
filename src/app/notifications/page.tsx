@@ -1,7 +1,7 @@
 // src/app/notifications/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -18,12 +18,20 @@ import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
+import {
+  classify,
+  sortNotifications,
+  CATEGORY_LABEL,
+  CATEGORY_TONE,
+  CATEGORY_FILTERS,
+} from "@/lib/notifications/categories";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 type Notif = {
   id: string;
   event: string;
+  relatedEntityType?: string | null;
   title: string;
   body: string;
   linkPath: string | null;
@@ -76,6 +84,7 @@ const DELIVERY_BADGE: Record<string, string> = {
 export default function NotificationsPage() {
   const router = useRouter();
   const [rows, setRows] = useState<Notif[]>([]);
+  const [filter, setFilter] = useState<(typeof CATEGORY_FILTERS)[number]>("ALL");
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -93,6 +102,17 @@ export default function NotificationsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  // Urgent-unread first, then newest. Strictly by date is what buried a permit
+  // expiry under three procedure revisions, and the permit is the one with a
+  // crew waiting on it.
+  const ordered = useMemo(() => sortNotifications(rows), [rows]);
+  const visible = useMemo(
+    () => (filter === "ALL" ? ordered : ordered.filter((n) => classify(n).category === filter)),
+    [ordered, filter],
+  );
+  const countFor = (c: (typeof CATEGORY_FILTERS)[number]) =>
+    c === "ALL" ? rows.length : rows.filter((n) => classify(n).category === c).length;
 
   async function markAll() {
     const res = await fetch("/api/notifications", {
@@ -135,6 +155,25 @@ export default function NotificationsPage() {
           }
         />
 
+        {/* Categories, so a breakdown and a procedure revision are not the
+            same thing at the same weight. Empty ones are not offered. */}
+        {!loading && rows.length > 0 && (
+          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
+            {CATEGORY_FILTERS.filter((c) => countFor(c) > 0).map((c) => (
+              <button
+                key={c}
+                onClick={() => setFilter(c)}
+                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
+                  filter === c ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                }`}
+              >
+                {c === "ALL" ? "All" : CATEGORY_LABEL[c]}{" "}
+                <span className="tabular-nums font-normal">({countFor(c)})</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={3} />
@@ -146,10 +185,17 @@ export default function NotificationsPage() {
               actionLabel="Go to Dashboard"
               actionHref="/"
             />
+          ) : visible.length === 0 ? (
+            <EmptyState
+              icon={Bell}
+              title="Nothing in this category"
+              message="Try another category, or All."
+            />
           ) : (
             <div className="divide-y divide-ink-200">
-              {rows.map((n) => {
+              {visible.map((n) => {
                 const Icon = EVENT_ICON[n.event] ?? Bell;
+                const { category, priority } = classify(n);
                 return (
                   <button
                     key={n.id}
@@ -165,6 +211,16 @@ export default function NotificationsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         {!n.readAt && <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />}
                         <p className={`text-sm ${n.readAt ? "font-medium text-ink-700" : "font-bold text-ink-900"}`}>{n.title}</p>
+                        {/* Category on every row, colour on one. A fire alarm
+                            and a memo used to look identical here. */}
+                        <span
+                          className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${CATEGORY_TONE[category]}`}
+                        >
+                          {CATEGORY_LABEL[category]}
+                        </span>
+                        {priority === "URGENT" && !n.readAt && (
+                          <span className="text-[11px] font-semibold text-danger-600">Needs attention</span>
+                        )}
                       </div>
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-500 flex-wrap">
