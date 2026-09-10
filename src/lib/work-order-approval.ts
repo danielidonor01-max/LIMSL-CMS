@@ -4,8 +4,15 @@
 // system" were the same event and the authorisation meant nothing.
 //
 // Now the work order is raised as PENDING_APPROVAL and carries the standard
-// two-step chain. Everything downstream keys off this: no method statement, no
-// job hazard analysis, no permit and no spanner until it is approved.
+// two-step chain. The permit keys off this: no permit and no spanner until the
+// work order is approved.
+//
+// The method statement and hazard analysis deliberately do NOT. They used to,
+// and it deadlocked every new job: the safety documents could not be prepared
+// until the work was authorised, and nobody could sensibly authorise work
+// without seeing how it would be done. Preparing paperwork for a job that is
+// still being decided is normal and safe; starting the job is what needs
+// authorising, and the permit is what allows that.
 import { db } from "@/lib/db";
 import { workOrders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -64,7 +71,8 @@ export function requiresApproval(status: string): boolean {
 export function approvalBlockMessage(workOrderNumber: string): string {
   return (
     `${workOrderNumber} has not been approved to commence. ` +
-    `Management approval on the work order is what authorises the job, and the ` +
-    `method statement, hazard analysis and permit all hang off it.`
+    `Management approval on the work order is what authorises the job, and no ` +
+    `permit can be issued against it until that approval is signed. The method ` +
+    `statement and hazard analysis can be prepared in the meantime.`
   );
 }

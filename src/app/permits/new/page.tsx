@@ -38,10 +38,14 @@ function NewPermitForm() {
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [userList, setUserList] = useState<any[]>([]);
   const [jhaList, setJhaList] = useState<any[]>([]);
+  const [workOrderList, setWorkOrderList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [jhaId, setJhaId] = useState(prefillJhaId);
+  // Only used when the analysis carries no work order, which is the normal case
+  // now that the safety documents are written before the job is authorised.
+  const [workOrderId, setWorkOrderId] = useState("");
   const [taskNo, setTaskNo] = useState("");
   const [workTypes, setWorkTypes] = useState<string[]>([]);
   const [facility, setFacility] = useState("Factory");
@@ -69,11 +73,19 @@ function NewPermitForm() {
       fetch("/api/equipment").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/users").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/jha").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/work-orders").then((r) => (r.ok ? r.json() : [])),
     ])
-      .then(([eqs, users, jhas]) => {
+      .then(([eqs, users, jhas, wos]) => {
         setEquipmentList(Array.isArray(eqs) ? eqs : []);
         setUserList(Array.isArray(users) ? users : []);
         setJhaList(Array.isArray(jhas) ? jhas.filter((j: any) => j.status === "APPROVED") : []);
+        // Authorised jobs only. An emergency is already OPEN with its signatures
+        // still coming in, and it needs a permit more urgently than anything.
+        setWorkOrderList(
+          Array.isArray(wos)
+            ? wos.filter((w: any) => w.status !== "PENDING_APPROVAL" && w.status !== "CANCELLED")
+            : [],
+        );
         if (prefillEquipmentId && Array.isArray(eqs) && eqs.some((e: any) => e.id === prefillEquipmentId)) {
           setEquipmentId(prefillEquipmentId);
         }
@@ -112,6 +124,9 @@ function NewPermitForm() {
     e.preventDefault();
 
     if (!jhaId) return toast.error("Select the approved Job Hazard Analysis this permit is issued against.");
+    if (selectedJha && !selectedJha.workOrderId && !workOrderId) {
+      return toast.error("Select the approved work order that authorises this job.");
+    }
     if (workTypes.length === 0) return toast.error("Select at least one type of work.");
     if (!equipmentId) return toast.error("Select the machine or system being worked on.");
     if (!workDescription.trim()) return toast.error("Describe the work.");
@@ -127,6 +142,7 @@ function NewPermitForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           jhaId,
+          workOrderId: workOrderId || undefined,
           taskNo: taskNo.trim() || null,
           workTypes,
           facility: facility.trim() || null,
@@ -195,9 +211,9 @@ function NewPermitForm() {
             </Select>
             {jhaList.length === 0 ? (
               <p className="text-xs text-warn-700">
-                No approved hazard analysis yet. The chain runs work order, then method statement,
-                then hazard analysis, then this permit, and each one has to be approved before the
-                next can be raised.
+                No approved hazard analysis yet. The chain runs method statement, then hazard
+                analysis, then the approved work order, then this permit. Each document has to be
+                approved before the next can be raised.
               </p>
             ) : (
               selectedJha && (
@@ -207,9 +223,37 @@ function NewPermitForm() {
                       <FileText className="w-3 h-3" /> {selectedJha.wmsNumber}
                     </span>
                   )}
-                  <span>The work order and method statement are inherited from this analysis.</span>
+                  <span>The method statement is inherited from this analysis.</span>
                 </div>
               )
+            )}
+
+            {/* The permit is where management authorisation actually bites, so
+                this is the last point at which the work order can be missing.
+                It is inherited when the chain started from a raised job, and
+                asked for when the paperwork ran ahead of it. */}
+            {selectedJha && !selectedJha.workOrderId && (
+              <div className="space-y-2 pt-2 border-t border-line">
+                <label className="text-sm font-medium text-ink-700">Approved work order</label>
+                <Select
+                  value={workOrderId}
+                  onChange={setWorkOrderId}
+                  ariaLabel="Approved work order"
+                  className="w-full"
+                >
+                  <option value="">Select the work order that authorises this job</option>
+                  {workOrderList.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.workOrderNumber} · {w.title}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-[11px] text-ink-500">
+                  This analysis was written before the job was raised. A permit cannot be issued
+                  until management has approved the work order, so pick the approved one here.
+                  {workOrderList.length === 0 && " No approved work order exists yet."}
+                </p>
+              </div>
             )}
           </div>
 

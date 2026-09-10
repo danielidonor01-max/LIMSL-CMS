@@ -78,32 +78,34 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    // A method statement describes how an authorised job will be done. Drafting
-    // one against a work order management has not approved gets the sequence
-    // backwards: the method is written for work nobody has sanctioned yet.
-    if (!body.workOrderId) {
-      return NextResponse.json(
-        { error: "Select the approved work order this method statement is written for." },
-        { status: 400 },
-      );
-    }
-    const [wo] = await db
-      .select()
-      .from(workOrders)
-      .where(eq(workOrders.id, body.workOrderId))
-      .limit(1);
-    if (!wo) return NextResponse.json({ error: "Work order not found." }, { status: 400 });
-    if (wo.status === "PENDING_APPROVAL") {
-      return NextResponse.json(
-        { error: `${wo.workOrderNumber} has not been approved to commence. Approve it before drafting the method statement.` },
-        { status: 409 },
-      );
-    }
-    if (wo.status === "CANCELLED") {
-      return NextResponse.json(
-        { error: `${wo.workOrderNumber} was cancelled.` },
-        { status: 409 },
-      );
+    // The work order is optional here, and this is a deliberate reversal.
+    //
+    // It used to be required and had to be approved, on the reasoning that a
+    // method is written for work somebody has sanctioned. The UX review found
+    // that this deadlocks a new job: safety documents cannot be prepared until
+    // the work is authorised, and the work cannot sensibly be authorised
+    // without seeing how it will be done. LIMSL confirmed the review is right
+    // about their process. A method statement is now written when the job is
+    // identified, and the authorisation gate moved downstream to the permit,
+    // which is where it actually bites: see src/app/api/permits/route.ts.
+    //
+    // The rest of the chain is unchanged. A hazard analysis still needs an
+    // approved method statement, and a permit still needs an approved analysis.
+    let workOrderId: string | null = null;
+    if (body.workOrderId) {
+      const [wo] = await db
+        .select()
+        .from(workOrders)
+        .where(eq(workOrders.id, body.workOrderId))
+        .limit(1);
+      if (!wo) return NextResponse.json({ error: "Work order not found." }, { status: 400 });
+      if (wo.status === "CANCELLED") {
+        return NextResponse.json(
+          { error: `${wo.workOrderNumber} was cancelled.` },
+          { status: 409 },
+        );
+      }
+      workOrderId = wo.id;
     }
 
     const wmsNumber = await nextDocNumber("WMS");
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
       id: nanoid(),
       wmsNumber,
       title: body.title,
-      workOrderId: body.workOrderId,
+      workOrderId,
       revision: body.revision || 0,
       machinesScope: body.machinesScope ? JSON.stringify(body.machinesScope) : "[]",
       equipmentIds: body.equipmentIds ? JSON.stringify(body.equipmentIds) : "[]",

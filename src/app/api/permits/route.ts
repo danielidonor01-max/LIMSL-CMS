@@ -7,6 +7,7 @@ import {
   users,
   wmsDocuments,
   jhaDocuments,
+  workOrders,
   isolationPoints,
   contractors,
 } from "@/lib/db/schema";
@@ -19,6 +20,7 @@ import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
+import { approvalBlockMessage } from "@/lib/work-order-approval";
 import {
   DEFAULT_PERMIT_VALIDITY_DAYS,
   normaliseValidityDays,
@@ -122,10 +124,10 @@ export async function POST(request: Request) {
     }
 
     // ── The document chain ────────────────────────────────────────────────
-    // A permit is the last document in WO -> WMS -> JHA -> PTW, and each link
-    // is verified server-side. The form filters its dropdowns, but a direct API
-    // call would otherwise attach a draft method statement or an unapproved
-    // hazard analysis and undo the whole chain.
+    // A permit is the last document in WMS -> JHA -> approved WO -> PTW, and
+    // every link is verified server-side. The form filters its dropdowns, but a
+    // direct API call would otherwise attach a draft method statement or an
+    // unapproved hazard analysis and undo the whole chain.
     if (!body.jhaId) {
       return NextResponse.json(
         { error: "Select the approved Job Hazard Analysis this permit is issued against." },
@@ -151,8 +153,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // The method statement and work order come from the analysis rather than
-    // being re-picked, so the four documents can never point at different jobs.
+    // The method statement comes from the analysis rather than being re-picked,
+    // so the documents can never point at different jobs.
     const wmsId = jhaDoc.wmsId ?? null;
     if (wmsId) {
       const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, wmsId)).limit(1);
@@ -166,6 +168,45 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+    }
+
+    // ── Management authorisation ──────────────────────────────────────────
+    // This gate used to sit on the method statement. It moved here when the
+    // sequence was corrected to WMS -> JHA -> approved WO -> PTW, because a
+    // permit is the document that actually lets somebody pick up a spanner.
+    // Safety paperwork can be prepared for a job that is still being decided;
+    // work cannot start on one.
+    //
+    // The work order is inherited from the analysis when the chain carried one
+    // from the start, and picked here when the paperwork ran ahead of the
+    // authorisation, which is now the normal case.
+    const workOrderId = body.workOrderId ?? jhaDoc.workOrderId ?? null;
+    if (!workOrderId) {
+      return NextResponse.json(
+        { error: "Select the approved work order that authorises this job." },
+        { status: 400 },
+      );
+    }
+    const [permitWo] = await db
+      .select()
+      .from(workOrders)
+      .where(eq(workOrders.id, workOrderId))
+      .limit(1);
+    if (!permitWo) {
+      return NextResponse.json({ error: "The selected work order was not found." }, { status: 400 });
+    }
+    // PENDING_APPROVAL is the only blocking state. An emergency work order is
+    // already OPEN with its signatures still being collected, and blocking that
+    // would leave a breakdown crew unable to raise the permit their own
+    // isolation depends on.
+    if (permitWo.status === "PENDING_APPROVAL") {
+      return NextResponse.json({ error: approvalBlockMessage(permitWo.workOrderNumber) }, { status: 409 });
+    }
+    if (permitWo.status === "CANCELLED") {
+      return NextResponse.json(
+        { error: `${permitWo.workOrderNumber} was cancelled.` },
+        { status: 409 },
+      );
     }
 
     // ── The permit face ───────────────────────────────────────────────────
@@ -233,7 +274,7 @@ export async function POST(request: Request) {
       permitNumber,
       taskNo: body.taskNo ? String(body.taskNo).slice(0, 20) : null,
       // Inherited from the hazard analysis so the chain cannot fork.
-      workOrderId: jhaDoc.workOrderId ?? body.workOrderId ?? null,
+      workOrderId,
       equipmentId: body.equipmentId,
       workDescription: body.workDescription,
       hazardsIdentified: body.hazardsIdentified || "",

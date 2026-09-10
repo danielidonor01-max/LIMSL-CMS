@@ -217,9 +217,12 @@ export const wmsDocuments = pgTable("wms_documents", {
   id: text("id").primaryKey(),
   wmsNumber: text("wms_number").notNull().unique(), // WMS-2026-XXXX
   title: text("title").notNull(),
-  // The approved work order this method statement was drafted for. It is the
-  // first link in the WO -> WMS -> JHA -> PTW chain, and every document
-  // downstream inherits the work order from here.
+  // The work order this method statement was drafted for, when there is one.
+  // NULLABLE ON PURPOSE: the chain is WMS -> JHA -> approved WO -> PTW, so the
+  // method statement is usually written while the job is still being decided.
+  // Requiring an approved work order here deadlocked every new job, because
+  // nobody could authorise work without first seeing how it would be done.
+  // The authorisation gate lives on the permit instead.
   workOrderId: text("work_order_id").references(() => workOrders.id),
   revision: integer("revision").notNull().default(0),
   machinesScope: text("machines_scope"), // JSON array of equipment names

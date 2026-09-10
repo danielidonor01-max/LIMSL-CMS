@@ -4,7 +4,8 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Biohazard } from "lucide-react";
+import Button from "@/components/Button";
 import SignoffChain from "@/components/SignoffChain";
 import PageHeader from "@/components/PageHeader";
 
@@ -75,12 +76,29 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
-          <PageHeader
+          <PageHeader
             title="Work Method Statement"
             subtitle="How the job is to be done safely, with its quality plan and approvals"
             code={wms.wmsNumber}
             backHref="/wms"
             backLabel="Work Method Statements"
+            actions={
+              /* The next document in the chain, raised from the one it is
+                 written against. Without this the analysis is reached by
+                 leaving the record, opening the JHA module and picking this
+                 method statement back out of a list, which is how the two end
+                 up pointing at different jobs. */
+              wms.status === "APPROVED" ? (
+                <Button href={`/jha/new?wmsId=${wms.id}`} icon={Biohazard}>
+                  Create JHA from this WMS
+                </Button>
+              ) : (
+                <span className="text-xs text-ink-500 max-w-xs text-right leading-snug">
+                  A hazard analysis is written against an approved method statement. This one is{" "}
+                  {String(wms.status).toLowerCase().replace(/_/g, " ")}.
+                </span>
+              )
+            }
           />
         </div>
         {/* Left Side: Document Sections */}

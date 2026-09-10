@@ -48,16 +48,17 @@ export default function NewWms() {
     loadEquipment();
   }, []);
 
-  // Only approved work orders. A method statement is written for a job
-  // management has already authorised, so an unapproved work order is not a
-  // valid parent for one.
+  // Every live work order, not just approved ones. A method statement is now
+  // written when the job is identified, which is usually before anyone has
+  // signed the authorisation, so filtering to approved work orders here was
+  // what created the deadlock.
   useEffect(() => {
     fetch("/api/work-orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((d) =>
         setWorkOrders(
           Array.isArray(d)
-            ? d.filter((w: any) => w.status !== "PENDING_APPROVAL" && w.status !== "CANCELLED")
+            ? d.filter((w: any) => w.status !== "CANCELLED")
             : [],
         ),
       )
@@ -146,14 +147,16 @@ export default function NewWms() {
 
           {/* The job this method statement is written for */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-ink-700">Approved Work Order</label>
+            <label className="text-sm font-medium text-ink-700">
+              Work order <span className="font-normal text-ink-500">(optional)</span>
+            </label>
             <Select
               value={workOrderId}
               onChange={setWorkOrderId}
               ariaLabel="Approved work order"
               className="w-full"
             >
-              <option value="">Select the work order this method statement covers</option>
+              <option value="">Not raised yet</option>
               {workOrders.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.workOrderNumber} · {w.title}
@@ -161,8 +164,10 @@ export default function NewWms() {
               ))}
             </Select>
             <p className="text-[11px] text-ink-500">
-              Only work orders approved to commence appear here. The permit raised at the end of
-              this chain references back to it.
+              Leave this if the job has not been raised yet. A method statement can be written
+              before the work is authorised, and often should be, because the authorisation
+              depends on knowing how the job will be done. The work order has to be approved
+              before a permit can be issued at the end of the chain.
             </p>
           </div>
 

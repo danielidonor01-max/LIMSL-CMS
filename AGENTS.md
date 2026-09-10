@@ -115,6 +115,32 @@ approval flow per module.
 To add approvals to a new module: add a chain to `chains.ts` and render
 `<SignoffChain />`. That's it.
 
+## 6a. The safety-chain order (do not "fix" this back)
+
+```
+WMS  →  JHA  →  approved WORK ORDER  →  PTW  →  work starts
+```
+
+The method statement and the hazard analysis are written **before** the job is
+authorised. Neither requires a work order, and the WMS `work_order_id` column is
+nullable on purpose.
+
+It was built the other way round first, requiring an approved work order before
+a WMS could be drafted. That reads correct and is wrong in practice: it deadlocks
+every new job, because the safety documents cannot be prepared until the work is
+authorised and nobody can sensibly authorise work without seeing how it will be
+done. LIMSL confirmed the September 2026 user-journey review was right about
+their process.
+
+**The authorisation gate did not go away, it moved to the permit**
+(`src/app/api/permits/route.ts`). A permit is what actually lets somebody pick up
+a spanner, so that is where an unapproved work order must be refused. Only
+`PENDING_APPROVAL` and `CANCELLED` may block: an emergency work order is already
+`OPEN` with its signatures still being collected, and blocking it would leave a
+breakdown crew unable to raise the permit their own isolation depends on.
+
+`src/lib/__tests__/safety-chain.test.ts` guards all four properties.
+
 ## 6b. UI standard
 
 The locked-in visual system — palette, type scale, **icon sizes (w-4 inline / w-5
