@@ -395,7 +395,7 @@ export default function PMChecklistPage() {
           <h3 className={heading}>{num(8)} Completion & Sign-Off</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Next PM Date</label>
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">Next PM Date</label>
               <DateField value={nextPMDate} onChange={(v) => setNextPMDate(v)} />
             </div>
           </div>

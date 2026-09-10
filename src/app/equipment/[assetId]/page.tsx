@@ -7,19 +7,13 @@ import {
   Wrench,
   CheckCircle2,
   AlertTriangle,
-    Calendar,
-  Layers,
-  Activity,
+  Calendar,
   ShieldCheck,
-  MapPin,
   Clock,
-  Settings,
   ShieldAlert,
   History,
   Pencil,
   QrCode,
-  UserCheck,
-  Loader2,
   Info,
   BookOpen,
   Stethoscope,
@@ -189,8 +183,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={Wrench}
+        <PageHeader
           title={eq.name}
           subtitle="Specification, status, documents and maintenance history"
           code={eq.assetId}

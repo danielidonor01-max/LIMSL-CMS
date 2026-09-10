@@ -13,7 +13,11 @@ export const FIELD_CLASS =
   "placeholder:text-ink-400 transition-colors focus:outline-none focus:border-brand-500 " +
   "focus:ring-2 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed";
 
-export const LABEL_CLASS = "block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5";
+// Sentence case, not capitals. Tracked-out capitals on every field label is
+// what makes a form read as a government document rather than something a
+// person filled in. Capitals are kept for metric labels, where they are a
+// data-label convention rather than a default.
+export const LABEL_CLASS = "block text-sm font-medium text-ink-700 mb-1.5";
 
 import { Children, cloneElement, isValidElement } from "react";
 

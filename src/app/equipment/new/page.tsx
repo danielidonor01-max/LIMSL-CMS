@@ -5,7 +5,7 @@ import DateField from "@/components/DateField";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Save, Layers, RefreshCw } from "lucide-react";
+import { Loader2, Save, RefreshCw } from "lucide-react";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -109,8 +109,7 @@ export default function NewEquipmentPage() {
 
   return (
     <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
-      <PageHeader
-        icon={Layers}
+      <PageHeader
         title="Add to the Asset Register"
         subtitle="What you are adding decides how it is numbered and maintained"
         backHref="/equipment"

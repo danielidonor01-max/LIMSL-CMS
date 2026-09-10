@@ -8,14 +8,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import {
-  AlertTriangle,
-          CheckCircle2,
-  Clock,
-  ShieldCheck,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Clock, ShieldCheck, Plus, Trash2 } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import SignoffChain from "@/components/SignoffChain";
 import Select from "@/components/Select";
@@ -301,9 +294,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
-          <PageHeader
-            icon={AlertTriangle}
-            tone="rose"
+          <PageHeader
             title="Breakdown Record"
             subtitle="Fault report, root-cause analysis and close-out"
             code={record.cmrfNumber}
@@ -627,7 +618,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-ink-500 uppercase">Machine went down</label>
+                      <label className="text-sm font-medium text-ink-700">Machine went down</label>
                       <DateTimeField
                         value={downStartAt}
                         onChange={setDownStartAt}
@@ -635,7 +626,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-ink-500 uppercase">Restored to service</label>
+                      <label className="text-sm font-medium text-ink-700">Restored to service</label>
                       <DateTimeField
                         value={downEndAt}
                         onChange={setDownEndAt}

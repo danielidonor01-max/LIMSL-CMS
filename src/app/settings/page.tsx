@@ -880,7 +880,7 @@ export default function AppSettingsPage() {
                 { k: "siteUrl", label: "Site URL", ph: "https://yourcompany.sharepoint.com/sites/Maintenance" },
               ] as { k: keyof typeof spForm; label: string; ph: string; secret?: boolean }[]).map((f) => (
                 <div key={f.k} className="space-y-1">
-                  <label className="text-xs font-semibold text-ink-500 uppercase">{f.label}</label>
+                  <label className="text-sm font-medium text-ink-700">{f.label}</label>
                   <input
                     type={f.secret ? "password" : "text"}
                     value={spForm[f.k]}

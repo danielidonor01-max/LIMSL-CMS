@@ -4,11 +4,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  FileText,
-  Loader2,
-  ShieldCheck,
-} from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import SignoffChain from "@/components/SignoffChain";
 import PageHeader from "@/components/PageHeader";
 
@@ -79,8 +75,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-3">
-          <PageHeader
-            icon={FileText}
+          <PageHeader
             title="Work Method Statement"
             subtitle="How the job is to be done safely, with its quality plan and approvals"
             code={wms.wmsNumber}

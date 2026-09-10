@@ -195,28 +195,28 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Category</label>
+              <label className="text-sm font-medium text-ink-700">Category</label>
               <Select value={form.category} onChange={(v) => setForm((f) => ({ ...f, category: v }))} className="w-full">
                 {MANUAL_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-ink-500 uppercase">When</label>
+              <label className="text-sm font-medium text-ink-700">When</label>
               <DateTimeField value={form.occurredAt} onChange={(v) => setForm((f) => ({ ...f, occurredAt: v }))} ariaLabel="When it happened" />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-ink-500 uppercase">Title</label>
+            <label className="text-sm font-medium text-ink-700">Title</label>
             <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Operator reported unusual vibration" className={field} required />
           </div>
           {form.category === "TRANSFER" && (
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-ink-500 uppercase">New location (updates the asset)</label>
+              <label className="text-sm font-medium text-ink-700">New location (updates the asset)</label>
               <LocationField value={form.newLocation} onChange={(v) => setForm((f) => ({ ...f, newLocation: v }))} />
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-ink-500 uppercase">Detail (optional)</label>
+            <label className="text-sm font-medium text-ink-700">Detail (optional)</label>
             <textarea value={form.detail} onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))} rows={3} className={`${field} resize-none`} />
           </div>
           <div className="flex justify-end gap-2 pt-1">

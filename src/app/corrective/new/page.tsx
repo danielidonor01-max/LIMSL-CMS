@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -118,9 +118,7 @@ export default function NewCorrectiveRequest() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-2xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={AlertTriangle}
-          tone="rose"
+        <PageHeader
           title="Report a Machinery Fault"
           subtitle="Raise a corrective maintenance request against a machine"
           code="LIMSL-MAIN-015"

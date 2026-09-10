@@ -15,7 +15,6 @@ import {
   Clock,
   Package,
   AlertTriangle,
-  Plus,
   Wrench,
   CheckCircle2,
 } from "lucide-react";
@@ -194,16 +193,14 @@ export default function OemPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={Building2}
+        <PageHeader
           title="OEM & Warranty Management"
           subtitle="Machine suppliers, what is still under warranty, and how fast they respond"
           actions={
             canWrite ? (
               <>
                 <Button
-                  variant="secondary"
-                  icon={Wrench}
+                  variant="secondary"
                   onClick={() => {
                     setIntOemId("");
                     setIntEquipmentId("");
@@ -213,8 +210,7 @@ export default function OemPage() {
                 >
                   Log Intervention
                 </Button>
-                <Button
-                  icon={Plus}
+                <Button
                   onClick={() => {
                     setVendorEquipmentId("");
                     setShowVendor(true);
@@ -370,7 +366,7 @@ export default function OemPage() {
                     <tbody className="divide-y divide-ink-200">
                       {interventions.map((it) => (
                         <tr key={it.id} className="hover:bg-ink-50">
-                          <td className="py-2.5 px-5 font-mono text-ink-500">{formatDate(it.interventionDate)}</td>
+                          <td className="py-2.5 px-5 tabular-nums text-ink-500">{formatDate(it.interventionDate)}</td>
                           <td className="py-3 px-5 text-ink-700 max-w-xs">{it.problemDescription}</td>
                           <td className="py-3 px-5">
                             <Badge className={it.warrantyStatus === "IN" ? "bg-brand-500/10 text-brand-600 border-brand-500/20" : "bg-ink-500/10 text-ink-500 border-ink-500/20"}>

@@ -83,7 +83,7 @@ Fixed steps — don't use sizes outside this set:
 | Class | Use |
 |---|---|
 | `text-3xl`/`text-4xl` | The dashboard hero only. One per screen. |
-| `text-2xl` (24) | Page title (`PageHeader`) |
+| `text-3xl` (30) | Page title (`PageHeader`) |
 | `text-base` (16) | Card and section headings |
 | `text-sm` (14) | Body, row titles, prose |
 | `text-xs` (12) | Table cells, meta, badges, form inputs, buttons |
@@ -149,19 +149,18 @@ does not have to serve both.
 Lucide icons, one family, stroke default. **Only two sizes for UI glyphs:**
 
 - `w-4 h-4` — inline (in buttons, table cells, list items, meta rows).
-- `w-5 h-5` — prominent (page-header icon chip, top-bar actions).
+- `w-5 h-5` — prominent (top-bar actions, empty states).
 - `w-3.5 h-3.5` — allowed for tiny inline affordances (sort arrows, chips).
-- `w-8 h-8` — the emerald **icon chip** container (holds a `w-5 h-5` white icon).
+- There is no page-header icon chip. See the section on chrome below.
 
 Do **not** use `w-4.5` or other off-scale sizes (normalised out).
 
 ## Spacing & composition
 
-- 4/8px rhythm: `gap-2` (8), `gap-3` (12), `gap-4` (16); section spacing `space-y-6`.
-- Page container: `max-w-7xl w-full mx-auto p-6 space-y-6` (list/detail);
-  `max-w-2xl`–`max-w-4xl` for forms.
-- Cards: `bg-white border border-slate-200 rounded-xl p-5` (or `p-6`).
-- Radius: `rounded-lg` for controls, `rounded-xl` for cards, `rounded-full` for pills.
+See **Density** above for the current values; this section previously carried
+an older set and the two disagreed.
+
+- Radius: `rounded-lg` for controls, `rounded-2xl` for cards, `rounded-full` for pills.
 
 ## Components (use these, don't reinvent)
 
@@ -202,3 +201,23 @@ Enter = new line, Ctrl/Cmd+Enter sends) — never hardcode Enter-to-send.
 - Text contrast ≥ 4.5:1 (slate-900/600 on white is fine; avoid slate-400 for body).
 - Icon-only buttons need a `title`/`aria-label`.
 - Keep focus operable; don't remove focus outlines without a replacement.
+
+## Capitals, monospace and chrome
+
+Three habits made the app read as generated, and all three are now rules.
+
+**Field labels are sentence case.** Tracked-out capitals on every label is what
+makes a form read as a government document. Capitals are kept for one thing: the
+small label above a metric figure, where they are a data-label convention and
+where the reference product does the same. `LABEL_CLASS` carries this.
+
+**Monospace is for codes, not for dates.** `LEE/PE/1904` and `CMRF-2026-0031`
+are read character by character and a fixed pitch helps. A date is not a code;
+what a column of dates needs is figures of equal width, which is `tabular-nums`,
+and it aligns them without changing the typeface.
+
+**Page headers have no icon chip.** Fifteen modules opening with a tinted square
+holding a different glyph is decoration pretending to be information, and it is
+the single thing that made every header look like the same template. A page is
+identified by a large heading and a real sentence saying what it is for. Put the
+effort into the sentence.

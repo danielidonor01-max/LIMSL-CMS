@@ -187,7 +187,7 @@ function AssetHistoryDossier() {
             <h2 className="text-xl font-bold tracking-tight text-ink-900">
               Maintenance Dossier, {String(eq.assetId ?? "")} {eq.name ? `· ${eq.name}` : ""}
             </h2>
-            <p className="text-xs text-ink-500 font-mono mt-1">
+            <p className="text-xs text-ink-500 tabular-nums mt-1">
               {formatDate(data.range.from)}, {formatDate(data.range.to)} · generated{" "}
               {new Date(data.generatedAt).toLocaleString()} · by {session?.user?.name ?? "-"} ·{" "}
               {data.events.length} record{data.events.length === 1 ? "" : "s"}

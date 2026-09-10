@@ -193,8 +193,7 @@ export default function CalibrationPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={Gauge}
+        <PageHeader
           title="Calibration Management"
           subtitle="Measuring instrument register with traceable calibration history"
           actions={
@@ -296,8 +295,8 @@ export default function CalibrationPage() {
                           <td className="py-3.5 px-5 text-ink-700">
                             {r.make} {r.model}
                           </td>
-                          <td className="py-3.5 px-5 font-mono text-ink-500">{formatDate(r.lastCalibrationDate)}</td>
-                          <td className="py-3.5 px-5 font-mono text-ink-700">
+                          <td className="py-3.5 px-5 tabular-nums text-ink-500">{formatDate(r.lastCalibrationDate)}</td>
+                          <td className="py-3.5 px-5 tabular-nums text-ink-700">
                             {formatDate(r.nextCalibrationDate)}
                             {d !== null && (
                               <span className={`ml-1 ${d < 0 ? "text-danger-600" : d < 30 ? "text-warn-600" : "text-ink-500"}`}>
@@ -520,7 +519,7 @@ export default function CalibrationPage() {
                   className={`rounded-xl border p-4 space-y-2 ${failed ? "border-danger-200 bg-danger-50" : "border-ink-200 bg-white"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-xs font-semibold text-ink-900">
+                    <span className="tabular-nums text-xs font-semibold text-ink-900">
                       {formatDate(ev.calibrationDate)}
                     </span>
                     <Badge

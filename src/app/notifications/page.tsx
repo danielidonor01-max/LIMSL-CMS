@@ -123,8 +123,7 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={Bell}
+        <PageHeader
           title="Notifications"
           subtitle={`${unread > 0 ? `${unread} unread` : "All caught up"} · alerts are also sent to WhatsApp when configured`}
           actions={
@@ -169,7 +168,7 @@ export default function NotificationsPage() {
                       </div>
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-500 flex-wrap">
-                        <span className="font-mono">{formatDate(n.createdAt)}</span>
+                        <span className="tabular-nums">{formatDate(n.createdAt)}</span>
                         {/* Only when it needs a decision. A message that went
                             out as expected is not news, and saying so on every
                             row buried the two states that are. */}

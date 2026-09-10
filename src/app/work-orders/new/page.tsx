@@ -4,7 +4,7 @@
 import DateField from "@/components/DateField";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ClipboardList, Loader2, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -133,8 +133,7 @@ function NewWorkOrderForm() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={ClipboardList}
+        <PageHeader
           title="New Work Order"
           subtitle={scheduleId ? "Raised from a scheduled activity" : "Manually raised work order"}
           backHref="/work-orders"

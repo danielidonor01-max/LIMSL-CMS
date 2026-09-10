@@ -4,7 +4,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { ShieldAlert, Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import Select from "@/components/Select";
@@ -102,8 +102,7 @@ function NewJhaForm() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={ShieldAlert}
+        <PageHeader
           title="New Job Hazard Analysis"
           subtitle="Break the approved method into steps and state the hazard and control for each"
           backHref="/jha"

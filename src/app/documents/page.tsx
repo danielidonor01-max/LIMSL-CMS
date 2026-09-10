@@ -106,8 +106,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="p-6 max-w-7xl w-full mx-auto space-y-8">
-      <PageHeader
-        icon={FolderOpen}
+      <PageHeader
         title="Document Register"
         subtitle="Schematics, manuals, SOPs, calibration and load-test reports held against each machine"
       />
@@ -268,7 +267,7 @@ export default function DocumentsPage() {
                                 </td>
                                 <td className="py-2 px-3 text-ink-500">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</td>
                                 <td className="py-2 px-3 text-ink-500">{d.revision ?? "-"}</td>
-                                <td className="py-2 px-3 font-mono text-ink-500">{formatDate(d.expiryDate)}</td>
+                                <td className="py-2 px-3 tabular-nums text-ink-500">{formatDate(d.expiryDate)}</td>
                                 <td className="py-2 px-3">
                                   <Badge className={STATUS_BADGE[d.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
                                     {d.status === "REQUIRED" ? "MISSING" : d.status}

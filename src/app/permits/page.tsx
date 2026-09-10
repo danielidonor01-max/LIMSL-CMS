@@ -53,7 +53,6 @@ export default function PermitsList() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
         <PageHeader
-          icon={ShieldCheck}
           title="Permits to Work"
           subtitle="Every permit is signed and approved before work begins"
           backHref="/"

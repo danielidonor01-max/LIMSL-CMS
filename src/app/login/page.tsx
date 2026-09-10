@@ -109,7 +109,7 @@ function LoginForm() {
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -123,7 +123,7 @@ function LoginForm() {
             </div>
             <div>
               <div className="flex items-baseline justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider">Password</label>
+                <label className="block text-sm font-medium text-ink-700">Password</label>
                 <Link href="/forgot-password" className="text-xs font-semibold text-brand-700 hover:underline">
                   Forgot password?
                 </Link>

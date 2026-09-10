@@ -210,8 +210,7 @@ function SparesRegister() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
-        <PageHeader
-          icon={Package}
+        <PageHeader
           title="Critical Spares"
           subtitle="Parts held for the machines that stop production, and what an empty shelf costs"
           code="LIMSL-MAIN-SPR-016"

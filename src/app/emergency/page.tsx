@@ -242,8 +242,7 @@ export default function EmergencyPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
-        <PageHeader
-          icon={ShieldAlert}
+        <PageHeader
           title="Emergency Preparedness"
           subtitle="Fire, first-aid and rescue equipment, plus the drill programme"
           code="LIMSL-HSE-EMG-017"

@@ -271,7 +271,7 @@ export default function TroubleshootPage() {
 
       {/* Symptom input */}
       <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
-        <label className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
+        <label className="text-sm font-medium text-ink-700">
           Describe the fault, symptom, or error code
         </label>
         <div className="flex flex-col sm:flex-row gap-2">

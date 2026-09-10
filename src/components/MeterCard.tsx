@@ -201,7 +201,7 @@ export default function MeterCard({
               <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                 {data.readings.map((r) => (
                   <li key={r.id} className="flex justify-between gap-3 text-xs text-ink-600 py-1 border-b border-ink-50">
-                    <span className="font-mono">{formatDate(r.readingDate)}</span>
+                    <span className="tabular-nums">{formatDate(r.readingDate)}</span>
                     <span className="tabular-nums">
                       {r.reading} {unit}
                       {r.isReset ? " · meter replaced" : ""}
@@ -240,7 +240,7 @@ export default function MeterCard({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">Meter measures</label>
+              <label className="text-sm font-medium text-ink-700">Meter measures</label>
               <Select
                 value={form.meterUnit}
                 onChange={(v) => setForm((f) => ({ ...f, meterUnit: v as MeterUnit }))}

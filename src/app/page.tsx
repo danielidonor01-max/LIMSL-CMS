@@ -356,7 +356,7 @@ export default function Home() {
                           {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
                         </Badge>
                       </td>
-                      <td className="py-3 font-mono text-ink-500">{formatDate(eq.nextMaintenanceDate)}</td>
+                      <td className="py-3 tabular-nums text-ink-500">{formatDate(eq.nextMaintenanceDate)}</td>
                     </tr>
                   ))}
                 </tbody>

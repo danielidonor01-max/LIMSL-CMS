@@ -4,7 +4,6 @@
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import {
-  FileBarChart,
   Download,
   Printer,
   ShieldCheck,
@@ -152,7 +151,6 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-8">
         <PageHeader
-          icon={FileBarChart}
           title="Reports & Data Export"
           subtitle="Printable compliance registers, per-asset dossiers and CSV extracts"
           actions={

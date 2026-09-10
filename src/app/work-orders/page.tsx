@@ -79,8 +79,7 @@ export default function WorkOrdersPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={ClipboardList}
+        <PageHeader
           title="Work Orders"
           subtitle={`${counts.OPEN ?? 0} open · ${counts.IN_PROGRESS ?? 0} in progress · ${counts.COMPLETED ?? 0} completed`}
           actions={
@@ -190,7 +189,7 @@ export default function WorkOrdersPage() {
                           {PRIORITY_LABELS[r.priority] ?? r.priority}
                         </Badge>
                       </td>
-                      <td className="py-3.5 px-5 font-mono text-ink-500">{formatDate(r.plannedDate)}</td>
+                      <td className="py-3.5 px-5 tabular-nums text-ink-500">{formatDate(r.plannedDate)}</td>
                       <td className="py-3.5 px-5 text-ink-700">{r.technicianName ?? "-"}</td>
                       <td className="py-3.5 px-5">
                         {r.approvalRetrospective && !r.approvedAt && (

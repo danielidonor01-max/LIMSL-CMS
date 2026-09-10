@@ -444,7 +444,7 @@ export default function WorkOrderDetailPage() {
       >
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+            <label className="text-sm font-medium text-ink-700">
               Work performed / outcome
             </label>
             <textarea
@@ -456,7 +456,7 @@ export default function WorkOrderDetailPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+            <label className="text-sm font-medium text-ink-700">
               Labour hours spent <span className="text-ink-400 normal-case font-normal">(optional)</span>
             </label>
             <input

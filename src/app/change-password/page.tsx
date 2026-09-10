@@ -133,7 +133,7 @@ export default function ChangePasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">
                 Current Password
               </label>
               <div className="relative">
@@ -151,7 +151,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">
                 New Password
               </label>
               <div className="relative">
@@ -179,7 +179,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">
                 Confirm New Password
               </label>
               <div className="relative">

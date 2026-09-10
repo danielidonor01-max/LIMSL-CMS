@@ -330,8 +330,7 @@ export default function SchedulePage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={Calendar}
+        <PageHeader
           title="Annual Maintenance Schedule"
           subtitle={`Planned preventive work for ${new Date().getFullYear()}, with due dates and adherence`}
           code="LIMSL-MAIN-PLN-013"
@@ -523,7 +522,7 @@ export default function SchedulePage() {
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-ink-50">
                       <td className="py-3.5 px-5 whitespace-nowrap">
-                        <div className="font-mono text-ink-900">{formatDate(r.plannedDate)}</div>
+                        <div className="tabular-nums text-ink-900">{formatDate(r.plannedDate)}</div>
                         <div className="text-[11px] text-ink-500">
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
@@ -749,7 +748,7 @@ export default function SchedulePage() {
           {reschedule && (
             <div className="space-y-4">
               <p className="text-xs text-ink-500">
-                Currently planned for <span className="font-mono text-ink-700">{formatDate(reschedule.row.plannedDate)}</span>.
+                Currently planned for <span className="tabular-nums text-ink-700">{formatDate(reschedule.row.plannedDate)}</span>.
               </p>
               <Field label="New planned date" htmlFor="schedule-new-date">
                 <DateField value={reschedule.date} onChange={(v) => setReschedule((r) => (r ? { ...r, date: v } : r))} min={new Date().toISOString().slice(0, 10)} id="schedule-new-date" />
@@ -820,7 +819,7 @@ export default function SchedulePage() {
           {defer && (
             <div className="space-y-4">
               <p className="text-xs text-ink-500">
-                Planned for <span className="font-mono text-ink-700">{formatDate(defer.row.plannedDate)}</span>.
+                Planned for <span className="tabular-nums text-ink-700">{formatDate(defer.row.plannedDate)}</span>.
                 Deferring records a risk you are accepting, against your name. It does not close the
                 activity, on the review date it returns to the overdue list.
               </p>

@@ -179,8 +179,7 @@ export default function ContractorsPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
-        <PageHeader
-          icon={HardHat}
+        <PageHeader
           title="Contractors"
           subtitle="Insurance and site induction, checked before a permit is issued"
           code="LIMSL-HSE-CON-018"

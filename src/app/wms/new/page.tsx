@@ -4,7 +4,7 @@
 import Select from "@/components/Select";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 
@@ -133,8 +133,7 @@ export default function NewWms() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={FileText}
+        <PageHeader
           title="Draft a Work Method Statement"
           subtitle="Set out how the job will be done safely, step by step, for review and approval"
           backHref="/wms"
@@ -147,7 +146,7 @@ export default function NewWms() {
 
           {/* The job this method statement is written for */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-ink-500 uppercase">Approved Work Order</label>
+            <label className="text-sm font-medium text-ink-700">Approved Work Order</label>
             <Select
               value={workOrderId}
               onChange={setWorkOrderId}
@@ -169,7 +168,7 @@ export default function NewWms() {
 
           {/* Document Title */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-ink-500 uppercase">Document Title</label>
+            <label className="text-sm font-medium text-ink-700">Document Title</label>
             <input
               type="text"
               required
@@ -182,7 +181,7 @@ export default function NewWms() {
 
           {/* Machine Scope Checkboxes */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-ink-500 uppercase block">Associated Machinery Scope</label>
+            <label className="text-sm font-medium text-ink-700 block">Associated Machinery Scope</label>
             {loadingEq ? (
               <p className="text-xs text-ink-500">Loading equipment...</p>
             ) : (
@@ -205,7 +204,7 @@ export default function NewWms() {
           {/* Scope / Purpose */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Purpose of operation</label>
+              <label className="text-sm font-medium text-ink-700">Purpose of operation</label>
               <textarea
                 required
                 placeholder="Describe the main objectives of this technical operation..."
@@ -215,7 +214,7 @@ export default function NewWms() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Scope of work</label>
+              <label className="text-sm font-medium text-ink-700">Scope of work</label>
               <textarea
                 required
                 placeholder="Outline boundaries, targeted machinery subcomponents..."
@@ -229,7 +228,7 @@ export default function NewWms() {
           {/* Tools & Materials list */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Equipment & Tools Needed</label>
+              <label className="text-sm font-medium text-ink-700">Equipment & Tools Needed</label>
               <input
                 type="text"
                 placeholder="Tool A, Tool B, Tool C (comma separated)..."
@@ -239,7 +238,7 @@ export default function NewWms() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Materials & Spares Needed</label>
+              <label className="text-sm font-medium text-ink-700">Materials & Spares Needed</label>
               <input
                 type="text"
                 placeholder="Material X, Spare Part Y (comma separated)..."
@@ -253,7 +252,7 @@ export default function NewWms() {
           {/* This was submitted on every method statement with no way to fill
               it, so every record stored an empty string. */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-ink-500 uppercase">Mobilization</label>
+            <label className="text-sm font-medium text-ink-700">Mobilization</label>
             <textarea
               placeholder="Access, isolation arranged, permits raised, people and plant on site before work starts..."
               value={mobilization}
@@ -266,7 +265,7 @@ export default function NewWms() {
           {/* Procedure Steps Inputs */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Detailed Work Procedure Steps</label>
+              <label className="text-sm font-medium text-ink-700">Detailed Work Procedure Steps</label>
               <button
                 type="button"
                 onClick={addStepField}
@@ -306,7 +305,7 @@ export default function NewWms() {
 
           {/* HSE Requirements */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-ink-500 uppercase">HSE & Safe Work Requirements</label>
+            <label className="text-sm font-medium text-ink-700">HSE & Safe Work Requirements</label>
             <textarea
               required
               placeholder="Detail LOTO isolation points, safety barriers, gas tests, PPE levels..."
@@ -319,7 +318,7 @@ export default function NewWms() {
           {/* QAQC & Emergency */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Quality Control & Tolerance Inspections</label>
+              <label className="text-sm font-medium text-ink-700">Quality Control & Tolerance Inspections</label>
               <textarea
                 placeholder="Visual inspections, torque settings, dial test alignment check values..."
                 value={qualityControlRequirements}
@@ -328,7 +327,7 @@ export default function NewWms() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-500 uppercase">Emergency & Spillage Response Plan</label>
+              <label className="text-sm font-medium text-ink-700">Emergency & Spillage Response Plan</label>
               <textarea
                 placeholder="Steps if oil spill, electrical fire, emergency stop activation occurs..."
                 value={emergencyRequirements}

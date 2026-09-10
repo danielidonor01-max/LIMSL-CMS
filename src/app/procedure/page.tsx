@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import { toast } from "sonner";
 import {
-  BookText,
   Loader2,
   Printer,
   History,
@@ -105,8 +104,7 @@ export default function ProcedurePage() {
     <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
       {/* Header (hidden on print) */}
       <div className="no-print">
-        <PageHeader
-          icon={BookText}
+        <PageHeader
           title="Equipment Maintenance Procedure"
           subtitle="The controlled, signed-off method for maintaining equipment"
           code={current ? `${current.code} · Rev ${current.revision}` : undefined}
@@ -141,7 +139,7 @@ export default function ProcedurePage() {
                   <span className="text-ink-500">{r.changeSummary}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-ink-400 font-mono">{formatDate(r.effectiveDate ?? r.createdAt)}</span>
+                  <span className="text-ink-400 tabular-nums">{formatDate(r.effectiveDate ?? r.createdAt)}</span>
                   <Link href={`/procedure/${r.id}`} className="text-brand-600 hover:underline">View</Link>
                 </div>
               </div>

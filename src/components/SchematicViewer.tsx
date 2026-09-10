@@ -388,7 +388,7 @@ export default function SchematicViewer({
                 {tagDraft && (
                   <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-brand-200 bg-brand-50">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Tag</label>
+                      <label className="text-sm font-medium text-ink-700">Tag</label>
                       <input
                         autoFocus
                         value={tagDraft.tag}
@@ -407,7 +407,7 @@ export default function SchematicViewer({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Name</label>
+                      <label className="text-sm font-medium text-ink-700">Name</label>
                       <input
                         value={tagDraft.name}
                         onChange={(e) => setTagDraft((d) => d && { ...d, name: e.target.value })}
@@ -416,7 +416,7 @@ export default function SchematicViewer({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-ink-500 uppercase">Type</label>
+                      <label className="text-sm font-medium text-ink-700">Type</label>
                       <Select
                         value={tagDraft.type}
                         onChange={(v) => setTagDraft((d) => d && { ...d, type: v })}

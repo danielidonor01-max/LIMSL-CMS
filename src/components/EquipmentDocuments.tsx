@@ -158,7 +158,7 @@ export default function EquipmentDocuments({
         <form onSubmit={handleUpload} className="p-3 bg-ink-50 border border-ink-200 rounded-lg space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">Document Type</label>
+              <label className="text-sm font-medium text-ink-700">Document Type</label>
               <Select value={docType} onChange={setDocType} className="w-full">
                 {DOC_TYPES.map((t) => (
                   <option key={t} value={t}>{DOC_TYPE_LABELS[t]}</option>
@@ -166,20 +166,20 @@ export default function EquipmentDocuments({
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">Revision (optional)</label>
+              <label className="text-sm font-medium text-ink-700">Revision (optional)</label>
               <input name="revision" className={inputCls} placeholder="e.g. Rev B" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">Title (optional)</label>
+              <label className="text-sm font-medium text-ink-700">Title (optional)</label>
               <input name="title" className={inputCls} placeholder="defaults to filename" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-ink-500 uppercase">Expiry (optional)</label>
+              <label className="text-sm font-medium text-ink-700">Expiry (optional)</label>
               <DateField name="expiryDate" />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-ink-500 uppercase">File</label>
+            <label className="text-sm font-medium text-ink-700">File</label>
             <input
               ref={fileRef}
               type="file"

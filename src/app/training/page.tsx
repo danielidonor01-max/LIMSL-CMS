@@ -7,8 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import {
-  GraduationCap,
-  Plus,
   ClipboardCheck,
   AlertTriangle,
   CheckCircle2,
@@ -192,16 +190,14 @@ export default function TrainingPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
-          icon={GraduationCap}
+        <PageHeader
           title="Training & Competency"
           subtitle="Who is qualified to do what, where the gaps are, and what training is booked"
           actions={
             canWrite ? (
               <>
                 <Button
-                  variant="secondary"
-                  icon={ClipboardCheck}
+                  variant="secondary"
                   onClick={() => {
                     setAssessCategory("TECHNICAL");
                     setAssessLevel("2");
@@ -211,8 +207,7 @@ export default function TrainingPage() {
                 >
                   Record Assessment
                 </Button>
-                <Button
-                  icon={Plus}
+                <Button
                   onClick={() => {
                     setTrainCategory("TECHNICAL");
                     setTrainType("INTERNAL");
@@ -398,7 +393,7 @@ export default function TrainingPage() {
                           </td>
                           <td className="py-3 px-5 text-ink-700">{t.employeeName ?? "-"}</td>
                           <td className="py-3 px-5 text-ink-500">{t.type ?? "-"}</td>
-                          <td className="py-3 px-5 font-mono text-ink-500">{formatDate(t.plannedDate)}</td>
+                          <td className="py-3 px-5 tabular-nums text-ink-500">{formatDate(t.plannedDate)}</td>
                           <td className="py-3 px-5">
                             <Badge
                               className={
