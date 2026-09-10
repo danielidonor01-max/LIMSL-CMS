@@ -1,0 +1,20 @@
+# One line ending, decided here rather than by whichever machine touched a file
+# last. Several source files had picked up mixed CRLF and LF endings, so editing
+# one line rewrote the whole file in the diff and buried the real change in five
+# hundred lines of nothing. Worse, two agents working the same file that way
+# collide on every line instead of on the one either of them changed.
+#
+# LF in the repository, LF in the working tree. Windows editors handle it, and
+# it matches what core.autocrlf was already storing.
+* text=auto eol=lf
+
+# Binary, so git never tries to translate anything inside them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

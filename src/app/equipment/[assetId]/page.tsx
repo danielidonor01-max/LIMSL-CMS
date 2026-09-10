@@ -183,7 +183,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title={eq.name}
           subtitle="Specification, status, documents and maintenance history"
           code={eq.assetId}
@@ -408,7 +408,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                           <div className="space-y-1.5">
                             {steps.map((step: string, i: number) => (
                               <label key={i} className="flex gap-2 items-start text-xs text-ink-600 select-none">
-                                <input type="checkbox" className="rounded border-ink-200 bg-white text-danger-500 focus:ring-0 w-3.5 h-3.5 mt-0.5" />
+                                <input type="checkbox" className="rounded border-ink-200 bg-white accent-danger-500 focus:ring-0 w-3.5 h-3.5 mt-0.5" />
                                 <span>{step}</span>
                               </label>
                             ))}

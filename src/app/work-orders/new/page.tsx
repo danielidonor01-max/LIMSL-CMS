@@ -15,6 +15,7 @@ import {
   PRIORITY_LABELS,
   PRIORITY_OPTIONS,
 } from "@/lib/constants";
+import { WORK_ORDER_ASSIGNEE_ROLES } from "@/lib/roles";
 
 type Equipment = { id: string; assetId: string; name: string; criticality: string | null };
 type User = { id: string; name: string; role: string };
@@ -133,7 +134,7 @@ function NewWorkOrderForm() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="New Work Order"
           subtitle={scheduleId ? "Raised from a scheduled activity" : "Manually raised work order"}
           backHref="/work-orders"
@@ -224,7 +225,7 @@ function NewWorkOrderForm() {
                 >
                   <option value="">Unassigned</option>
                   {users
-                    .filter((u) => u.role === "TECHNICIAN" || u.role === "FOREMAN")
+                    .filter((u) => WORK_ORDER_ASSIGNEE_ROLES.includes(u.role))
                     .map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}

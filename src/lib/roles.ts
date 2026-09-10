@@ -139,6 +139,43 @@ export const PERMIT_ISSUE_ROLES = ["SUPER_ADMIN", "HSE"];
 // authority, the issuer owns the permit lifecycle.
 export const PERMIT_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
+// Roles permitted to RENEW a permit for a further day. The AHS block on the
+// paper form is the Maintenance Manager. A foreman may renew a day he is
+// supervising, and Super Admin covers an absence, but a technician cannot
+// authorise another day of his own work.
+export const PERMIT_RENEW_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "HSE",
+];
+
+// Roles permitted to ACCEPT a hand-back, taking the equipment back into custody
+// and closing the permit. Handing back is the working party's act and follows
+// MAINTENANCE_WRITE_ROLES; accepting it is the receiving authority's, so a
+// foreman cannot both hand back his own job and accept it.
+export const PERMIT_ACCEPT_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "HSE",
+];
+
+// Roles permitted to propose a revision of the maintenance procedure. Document
+// control sits with QA/QC under ISO 9001; Super Admin covers an absence.
+export const PROCEDURE_CONTROL_ROLES = ["SUPER_ADMIN", "QA_QC"];
+
+// Who may be named as the person carrying out a work order. A job is done by
+// the people who hold the tools; naming a manager as the doer would make the
+// approval chain sign off on itself.
+export const WORK_ORDER_ASSIGNEE_ROLES = ["TECHNICIAN", "FOREMAN"];
+
+// Who may be named as the supervisor verifying a completed PM checklist. The
+// technician performs, somebody above him verifies, which is the whole point of
+// the second signature.
+export const PM_SUPERVISOR_ROLES = ["FOREMAN", "MAINTENANCE_MANAGER", "FACTORY_MANAGER"];
+
 // Roles permitted to manage the training & competency records.
 export const TRAINING_WRITE_ROLES = [
   "SUPER_ADMIN",

@@ -1,7 +1,7 @@
 // src/app/procedure/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
@@ -18,6 +18,7 @@ import Markdown from "@/components/Markdown";
 import SignoffChain from "@/components/SignoffChain";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
+import { PROCEDURE_CONTROL_ROLES } from "@/lib/roles";
 import PageHeader from "@/components/PageHeader";
 import { FIELD_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
@@ -46,8 +47,12 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function ProcedurePage() {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const role = (session?.user as { role?: string })?.role;
-  const canPropose = role === "QA_QC" || role === "SUPER_ADMIN";
+  // Deferred past mount like every other role-dependent render in the app.
+  // The session resolves client-side only.
+  const canPropose = mounted && PROCEDURE_CONTROL_ROLES.includes(role ?? "");
 
   const { data: procData, loading, refresh } = useApi<{
     current?: Rev | null;
@@ -104,7 +109,7 @@ export default function ProcedurePage() {
     <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
       {/* Header (hidden on print) */}
       <div className="no-print">
-        <PageHeader
+        <PageHeader
           title="Equipment Maintenance Procedure"
           subtitle="The controlled, signed-off method for maintaining equipment"
           code={current ? `${current.code} · Rev ${current.revision}` : undefined}

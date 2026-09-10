@@ -134,7 +134,7 @@ export default function NewWms() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="Draft a Work Method Statement"
           subtitle="Set out how the job will be done safely, step by step, for review and approval"
           backHref="/wms"
@@ -184,26 +184,54 @@ export default function NewWms() {
             />
           </div>
 
-          {/* Machine Scope Checkboxes */}
+          {/* The machines this method statement covers.
+              This list used to read LEE/PE/0114, LEE/PE/0115, LEE/PE/0116 and
+              nothing else, so the person deciding which machines a job may
+              touch was picking them by a number nobody says out loud. Naming
+              the machine is what makes the choice checkable, and getting it
+              wrong here scopes a permit onto the wrong machine. */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-ink-700 block">Associated Machinery Scope</label>
+            <label className="text-sm font-medium text-ink-700 block">Associated machinery scope</label>
             {loadingEq ? (
-              <p className="text-xs text-ink-500">Loading equipment...</p>
+              <p className="text-sm text-ink-500">Loading the asset register…</p>
+            ) : equipmentList.length === 0 ? (
+              <p className="text-sm text-ink-500">
+                No machines are on the register yet, so there is nothing to scope this statement to.
+              </p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 max-h-36 overflow-y-auto p-2 bg-white rounded border border-ink-200">
-                {equipmentList.map((eq) => (
-                  <label key={eq.id} className="flex items-center gap-2 text-xs text-ink-600 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={selectedEquipments.includes(eq.id)}
-                      onChange={() => toggleEquipmentSelect(eq.id)}
-                      className="rounded border-ink-200 bg-ink-100 text-brand-500 focus:ring-0 w-3.5 h-3.5"
-                    />
-                    <span>{eq.assetId}</span>
-                  </label>
-                ))}
+              <div className="max-h-64 overflow-y-auto rounded-lg border border-ink-200 bg-surface divide-y divide-line">
+                {equipmentList.map((eq) => {
+                  const selected = selectedEquipments.includes(eq.id);
+                  return (
+                    <label
+                      key={eq.id}
+                      className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer select-none transition-colors ${
+                        selected ? "bg-brand-50" : "hover:bg-ink-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleEquipmentSelect(eq.id)}
+                        className="rounded border-ink-300 accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-ink-900 truncate">{eq.name}</span>
+                        <span className="block text-xs text-ink-500 tabular-nums">
+                          {eq.assetId}
+                          {eq.location ? ` · ${eq.location}` : ""}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             )}
+            <p className="text-[11px] text-ink-500">
+              {selectedEquipments.length === 0
+                ? "Select every machine the working party will be on or near."
+                : `${selectedEquipments.length} machine${selectedEquipments.length === 1 ? "" : "s"} in scope.`}
+            </p>
           </div>
 
           {/* Scope / Purpose */}

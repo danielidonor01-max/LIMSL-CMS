@@ -193,14 +193,14 @@ export default function OemPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="OEM & Warranty Management"
           subtitle="Machine suppliers, what is still under warranty, and how fast they respond"
           actions={
             canWrite ? (
               <>
                 <Button
-                  variant="secondary"
+                  variant="secondary"
                   onClick={() => {
                     setIntOemId("");
                     setIntEquipmentId("");
@@ -210,7 +210,7 @@ export default function OemPage() {
                 >
                   Log Intervention
                 </Button>
-                <Button
+                <Button
                   onClick={() => {
                     setVendorEquipmentId("");
                     setShowVendor(true);
@@ -496,7 +496,7 @@ export default function OemPage() {
               <input name="responseTimeHrs" type="number" step="0.5" className={FIELD_CLASS} />
             </div>
             <label className="flex items-center gap-2 text-xs text-ink-600 self-end pb-2">
-              <input name="closed" type="checkbox" className="rounded border-ink-300 text-brand-500" /> Already resolved
+              <input name="closed" type="checkbox" className="rounded border-ink-300 accent-brand-600" /> Already resolved
             </label>
           </div>
           <div>

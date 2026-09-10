@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
 import { jobPlanFor, hasBespokePlan, type JobTask } from "@/lib/maintenance/job-plans";
 import { FREQUENCY_LABELS } from "@/lib/constants";
+import { PM_SUPERVISOR_ROLES } from "@/lib/roles";
 import { submitOrQueue } from "@/lib/offline/use-outbox";
 
 type Item = { item: string; status: string; remarks: string; criteria?: string; unit?: string; value?: string };
@@ -418,7 +419,7 @@ export default function PMChecklistPage() {
               >
                 <option value="">Supervisor (optional)…</option>
                 {users
-                  .filter((u) => ["FOREMAN", "MAINTENANCE_MANAGER", "FACTORY_MANAGER"].includes(u.role))
+                  .filter((u) => PM_SUPERVISOR_ROLES.includes(u.role))
                   .map((u) => (
                     <option key={u.id} value={u.name}>{u.name}</option>
                   ))}
@@ -485,7 +486,7 @@ export default function PMChecklistPage() {
               type="checkbox"
               checked={attested}
               onChange={(e) => setAttested(e.target.checked)}
-              className="mt-0.5 rounded border-ink-300 text-brand-500"
+              className="mt-0.5 rounded border-ink-300 accent-brand-600"
             />
             <span>
               I confirm the above safety controls were <strong>actually carried out and signed off</strong>, and this

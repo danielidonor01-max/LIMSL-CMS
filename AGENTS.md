@@ -141,6 +141,34 @@ breakdown crew unable to raise the permit their own isolation depends on.
 
 `src/lib/__tests__/safety-chain.test.ts` guards all four properties.
 
+## 6a-2. Safety information is not gated (do not "tighten" this back)
+
+Two deliberate widenings of access. Both look like holes in a review and are not.
+
+**The scan passport is public.** `/equipment/scan/[assetId]` and its API answer
+without a session. A welder standing at a machine with a phone in a glove has to
+be able to find out whether the thing is safe to touch, and a login form there
+defeats the sticker glued to the machine. Anyone who can read the sticker is
+already standing in the workshop.
+
+The cost is that asset IDs run in sequence, so one sticker is a key to the whole
+register. That is why the split matters: the public half is the safety answer
+(status, lockout, live permits, PPE, emergency contacts) and the signed-in half
+is the commercial record (OEM, model, serial, criticality, service history).
+Widening the public half is a one-line change nothing else would notice, so
+`src/lib/__tests__/public-scan.test.ts` fails if a withheld field crosses over.
+
+**VIEWER can reach `/emergency`.** The least-privileged role holds read access to
+emergency contacts and procedures. Emergency preparedness has to be communicated
+to everybody who works on site (ISO 45001 §8.2); a contractor or visitor account
+that cannot find the fire service number is the failure that matters, not the one
+that reads it without needing to.
+
+Stickers outlive code. `src/lib/scan-redirect.ts` sends every equipment URL an
+unauthenticated visitor hits to that asset's passport, because three generations
+of label are on machines in the workshop right now and only the newest one
+encodes the public path.
+
 ## 6b. UI standard
 
 The locked-in visual system — palette, type scale, **icon sizes (w-4 inline / w-5

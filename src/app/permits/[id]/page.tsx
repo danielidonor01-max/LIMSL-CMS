@@ -22,7 +22,6 @@ import {
 import { Badge } from "@/components/Badge";
 import SignoffChain from "@/components/SignoffChain";
 import { useSession } from "next-auth/react";
-import { PERMIT_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
 import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
 import PermitRenewalGrid from "@/components/PermitRenewalGrid";
@@ -37,7 +36,12 @@ import {
   type RenewalDay,
   type RenewalSummary,
 } from "@/lib/hse/permit-validity";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import {
+  MAINTENANCE_WRITE_ROLES,
+  PERMIT_ACCEPT_ROLES,
+  PERMIT_RENEW_ROLES,
+  PERMIT_WRITE_ROLES,
+} from "@/lib/roles";
 
 type Permit = {
   id: string;
@@ -132,13 +136,12 @@ export default function PermitDetail() {
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && PERMIT_WRITE_ROLES.includes(role ?? "");
   // The AHS block on paper. HSE issues the permit but does not renew it, the
-  // supervisor holding the asset does.
-  const canRenew =
-    mounted &&
-    ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "FOREMAN", "HSE"].includes(role ?? "");
+  // supervisor holding the asset does. Both sets are the ones the renew and
+  // hand-back routes gate on, imported rather than restated, so the button and
+  // the server can never disagree about who may press it.
+  const canRenew = mounted && PERMIT_RENEW_ROLES.includes(role ?? "");
   const canHandback = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
-  const canAccept =
-    mounted && ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "HSE"].includes(role ?? "");
+  const canAccept = mounted && PERMIT_ACCEPT_ROLES.includes(role ?? "");
 
   const [permit, setPermit] = useState<Permit | null>(null);
   const [loading, setLoading] = useState(true);

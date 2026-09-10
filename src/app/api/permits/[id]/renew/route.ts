@@ -9,17 +9,13 @@ import { permits, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { PERMIT_RENEW_ROLES } from "@/lib/roles";
 import { validateRenewal, normaliseValidityDays, type RenewalMarks } from "@/lib/hse/permit-validity";
 import { startDateOf, parseRenewals } from "@/lib/hse/permit-reconcile";
 
-// The AHS block on the paper form is the Maintenance Manager. A foreman may
-// renew a day he is supervising, and Super Admin covers an absence, but a
-// technician cannot authorise another day of his own work.
-const RENEWAL_ROLES = ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "FOREMAN", "HSE"];
-
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const gate = await requireRoles(RENEWAL_ROLES);
+    const gate = await requireRoles(PERMIT_RENEW_ROLES);
     if (gate.res) return gate.res;
 
     const { id } = await params;

@@ -101,3 +101,33 @@ test("every token utility in source points at a declared token", () => {
 
   assert.deepEqual([...bad], [], `these utilities reference tokens that do not exist:\n${[...bad].join("\n")}`);
 });
+
+test("a checkbox is coloured with accent-, not text-", () => {
+  // `text-brand-500` on an <input type="checkbox"> is a Tailwind-forms-plugin
+  // idiom, and this project does not load that plugin. Without it the class is
+  // inert: the box renders in the browser's default blue while the source reads
+  // as though it were brand green. Nothing looks wrong in review, and the tick
+  // ends up the one control on the page wearing another product's colour.
+  //
+  // `accent-brand-600` is the property that actually paints a native control,
+  // and is what the permit, checklist and troubleshooting forms already use.
+  const offenders: string[] = [];
+
+  for (const file of walk(join(SRC, "app")).concat(walk(join(SRC, "components")))) {
+    if (file.includes("__tests__")) continue;
+    const src = readFileSync(file, "utf8");
+    // Each checkbox input and whatever follows it up to the closing bracket,
+    // since className routinely sits several lines below the type attribute.
+    for (const m of src.matchAll(/type="checkbox"[\s\S]{0,400}?\/?>/g)) {
+      const cls = m[0].match(/className="([^"]*)"/)?.[1] ?? "";
+      const inert = cls.match(/\btext-(brand|danger|warn|info|success)-\d{2,3}\b/);
+      if (inert) offenders.push(`${file.slice(SRC.length + 1)}: ${inert[0]}`);
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `these render the browser's default blue, not the token:\n  ${offenders.join("\n  ")}`,
+  );
+});

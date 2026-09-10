@@ -5,6 +5,7 @@ import { procedureRevisions, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
+import { PROCEDURE_CONTROL_ROLES } from "@/lib/roles";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { ingestApprovedProcedure } from "@/lib/diagnostics/ingest-docs";
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     const user = session?.user as { id?: string; name?: string; role?: string } | undefined;
-    if (!(user?.role === "QA_QC" || user?.role === "SUPER_ADMIN")) {
+    if (!user || !PROCEDURE_CONTROL_ROLES.includes(user.role ?? "")) {
       return NextResponse.json(
         { error: "Only QA/QC (document control) or a Super Admin may propose a procedure revision." },
         { status: 403 },

@@ -14,16 +14,14 @@ import { permits, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
-
-const ACCEPT_ROLES = ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER", "HSE"];
+import { MAINTENANCE_WRITE_ROLES, PERMIT_ACCEPT_ROLES } from "@/lib/roles";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await request.json();
     const action = body.action === "accept" ? "accept" : "handback";
 
-    const gate = await requireRoles(action === "accept" ? ACCEPT_ROLES : MAINTENANCE_WRITE_ROLES);
+    const gate = await requireRoles(action === "accept" ? PERMIT_ACCEPT_ROLES : MAINTENANCE_WRITE_ROLES);
     if (gate.res) return gate.res;
 
     const { id } = await params;
