@@ -8,6 +8,7 @@
 // and is hidden on screen.
 "use client";
 
+import DocumentSeal from "@/components/DocumentSeal";
 import {
   PERMIT_WORK_TYPES,
   REQUIRED_DOCUMENTS,
@@ -67,6 +68,7 @@ export default function PermitPrintSheet({
   closeout,
 }: {
   permit: {
+    id: string;
     permitNumber: string;
     taskNo: string | null;
     workTypes: string | null;
@@ -422,6 +424,10 @@ export default function PermitPrintSheet({
         AC = Affected Custodian, PH = Permit Holder, AHSS = Asset Holder Site Supervisor, AHS = Asset
         Holder Supervisor, PA = Permit Applicant, CS = Contractor Supervisor
       </p>
+
+      {/* Renders nothing until the permit is fully signed. A code on a draft
+          would be checked, found not to match, and reported as tampering. */}
+      <DocumentSeal entityType="PERMIT" entityId={permit.id} />
     </div>
   );
 }

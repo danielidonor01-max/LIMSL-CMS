@@ -9,6 +9,8 @@ import { canSignStep } from "@/lib/roles";
 import { verifyPassword } from "@/lib/password";
 import { needsPinSetup } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
+import { chainSummary } from "@/lib/signoff/chains";
+import { sealDocument } from "@/lib/signoff/seal";
 import { notify, notifyNextSigner } from "@/lib/notifications";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
@@ -166,6 +168,22 @@ export async function POST(
         signedAt: new Date().toISOString(),
       })
       .where(eq(signoffs.id, id));
+
+    // The last required signature is the moment the document becomes evidence,
+    // so it is the moment worth hashing. Sealing earlier would capture a draft;
+    // sealing later would capture whatever it had drifted into.
+    if (action === "sign") {
+      try {
+        const after = await getSignoffChain(step.entityType, step.entityId);
+        if (chainSummary(after).complete) {
+          await sealDocument(step.entityType, step.entityId);
+        }
+      } catch (err) {
+        // A seal is evidence ABOUT a signature, never a condition of it. Losing
+        // one must not lose the signature that triggered it.
+        console.warn("seal: failed after signature", err);
+      }
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),

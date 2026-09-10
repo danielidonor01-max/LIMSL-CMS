@@ -66,6 +66,9 @@ test("no page-level module has appeared without being considered for search", ()
     // here. Indexing it would return the same work order twice.
     "approvals",
     "my-tasks",
+    // A lookup BY code, which is its whole purpose. Indexing it would put a
+    // form in the results rather than a record.
+    "verify",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",

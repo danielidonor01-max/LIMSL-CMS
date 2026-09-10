@@ -1193,6 +1193,27 @@ export const safetyIncidents = pgTable("safety_incidents", {
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 }, (t) => [index("safety_incidents_status_idx").on(t.status)]);
 
+// ─── Document seals ─────────────────────────────────────────────────────────
+// A hash of a record taken when its approval chain completed, plus a short code
+// printed on the document. Anyone holding the paper can check it against the
+// system, and any later change to the record breaks the match.
+//
+// One table rather than columns on every module, so a new document type is a
+// row here and not a migration. Keyed on (entity type, entity id) because that
+// is what identifies a record across the whole app.
+export const documentSeals = pgTable("document_seals", {
+  id: text("id").primaryKey(),
+  entityType: text("entity_type").notNull(), // PERMIT | JHA | WMS | PROCEDURE | ...
+  entityId: text("entity_id").notNull(),
+  // What is printed. Short, unambiguous on paper, unique.
+  code: text("code").notNull().unique(),
+  contentHash: text("content_hash").notNull(),
+  // The document number, so a lookup can say what was found without a join.
+  reference: text("reference"),
+  sealedAt: text("sealed_at").notNull(),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("document_seals_entity_idx").on(t.entityType, t.entityId)]);
+
 // ─── App Settings ────────────────────────────────────────────────────────────
 // Single-row (id = "singleton") organisation settings, administered by the Super
 // Admin. The working-hours window drives production-time downtime accounting and
