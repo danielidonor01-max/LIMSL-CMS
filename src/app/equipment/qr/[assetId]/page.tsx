@@ -5,7 +5,7 @@ import Button from "@/components/Button";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Smartphone } from "lucide-react";
 import QRCode from "qrcode";
 
 export default function QRPrintPage({ params }: { params: Promise<{ assetId: string }> }) {
@@ -23,10 +23,11 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       .then((d) => setMachineName(d?.name || "LIMSL Production Asset"))
       .catch(() => setMachineName("LIMSL Production Asset"));
 
-    // The QR points at the ACTION screen, not the record. Whoever scans this
-    // label is standing at the machine with one job in mind, asking them what
-    // they came to do beats opening a four-tab desktop page on a phone.
-    const scanUrl = `${window.location.origin}/equipment/${assetIdKey}/do`;
+    // The public machine passport, not the action screen and not the record.
+    // Whoever scans this is standing at the machine and may have no account at
+    // all: a contractor, a visiting engineer, a driver. They get the answer that
+    // keeps them safe, and signing in adds the rest.
+    const scanUrl = `${window.location.origin}/equipment/scan/${assetIdKey}`;
 
     QRCode.toDataURL(
       scanUrl,
@@ -67,11 +68,16 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
           </div>
         </div>
 
-        <Button
-          onClick={handlePrint}
-        >
-          <Printer className="w-4 h-4" /> Print Label
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* What the sticker actually opens, so nobody has to print one and
+              walk to a machine to find out. */}
+          <Button variant="secondary" icon={Smartphone} href={`/equipment/scan/${assetIdKey}`}>
+            Preview the scan
+          </Button>
+          <Button icon={Printer} onClick={handlePrint}>
+            Print label
+          </Button>
+        </div>
       </header>
 
       {/* Label Content */}
@@ -121,7 +127,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
               an empty box depending on the printer. */}
           <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[11px] text-ink-600 leading-relaxed">
             <p className="font-bold text-ink-900">Scan with a phone camera</p>
-            <p>Log maintenance, check the WMS and OEM details, or raise a work order.</p>
+            <p>Machine status, safety clearance and who to call. Sign in for the full record.</p>
           </div>
         </div>
 

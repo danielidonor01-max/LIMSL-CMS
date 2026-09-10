@@ -99,7 +99,7 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
 export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
   QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/procedure", "/schedule", "/work-orders", "/corrective", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
   HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
-  VIEWER: ["/", "/equipment", "/procedure", "/reports"],
+  VIEWER: ["/", "/equipment", "/procedure", "/reports", "/emergency"],
 };
 
 // Paths every authenticated role may reach, regardless of scope.

@@ -239,11 +239,21 @@ test("the spares register is reachable by the roles that maintain machinery", ()
 
 // HSE owns emergency preparedness, a register they cannot open is not a
 // control they can maintain.
-test("HSE and QA/QC can reach the emergency register", () => {
+test("everyone can reach the emergency register, including a viewer", () => {
   assert.equal(canAccessPath("HSE", "/emergency"), true);
   assert.equal(canAccessPath("QA_QC", "/emergency"), true);
   assert.equal(canAccessPath("MAINTENANCE_MANAGER", "/emergency"), true);
-  assert.equal(canAccessPath("VIEWER", "/emergency"), false);
+
+  // This asserted false until September 2026, and denying it was the cause of
+  // the "/emergency returns 404" report: the guard refuses rather than
+  // explains, so a permissions decision looked like a missing page.
+  //
+  // Reversed deliberately. Fire equipment status, drill records and above all
+  // the contact list are things somebody needs DURING an emergency, and a
+  // permissions check is the wrong thing to meet at that moment. Writing is
+  // still gated: the page offers no edit control to a role outside
+  // COMPLIANCE_WRITE_ROLES, so a viewer reads and cannot change anything.
+  assert.equal(canAccessPath("VIEWER", "/emergency"), true);
 });
 
 test("HSE and QA/QC can reach the contractor register", () => {
