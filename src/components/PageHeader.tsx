@@ -41,7 +41,11 @@ export default function PageHeader({
         <div className="min-w-0 max-w-2xl">
           {/* No truncate. A page title that has to be cut off is a title that
               was too long, and hiding the end of it helps nobody. */}
-          <h1 className="text-3xl font-bold tracking-[-0.025em] text-ink-900 leading-tight">
+          {/* Outfit, and the tracking comes with it rather than being set here.
+              Both title components used to carry their own hand-written
+              tracking value, -0.025em in one and -0.03em in the other, which is
+              a difference nobody chose and nobody could see was wrong. */}
+          <h1 className="font-display text-3xl text-ink-900 leading-tight">
             {title}
           </h1>
           {(subtitle || code) && (

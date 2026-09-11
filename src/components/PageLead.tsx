@@ -68,7 +68,7 @@ export default function PageLead({
         <div className="min-w-0 max-w-2xl">
           <h1
             id={headingId}
-            className="text-3xl sm:text-3xl font-bold tracking-[-0.03em] leading-[1.08] text-ink-900 text-balance"
+            className="font-display text-display text-ink-900 text-balance"
           >
             {headline}
           </h1>
