@@ -180,10 +180,38 @@ export const workOrders = pgTable("work_orders", {
   wmsId: text("wms_id"),
   permitId: text("permit_id"),
   cmsId: text("cms_id"), // linked corrective maintenance
+  // The revision of the maintenance procedure in force when this job was
+  // raised. Stamped once and never recomputed: reading it back from whichever
+  // revision is effective today would make a job done under Rev 2 claim to have
+  // followed Rev 3. The number is denormalised beside the id so the record still
+  // says something true if the revision row is ever archived.
+  procedureRevisionId: text("procedure_revision_id").references(() => procedureRevisions.id),
+  procedureCode: text("procedure_code"),
+  procedureRevision: integer("procedure_revision"),
   createdBy: text("created_by").references(() => users.id),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 }, (t) => [index("work_orders_equipment_idx").on(t.equipmentId)]);
+
+// Time actually booked to a job. One row per stretch of work, never
+// overwritten: a total that can be edited is not evidence of anything, which is
+// exactly what actualDuration was before this — a number typed in at close-out,
+// from memory, days after the work, feeding a headline reliability figure.
+//
+// Several people may be clocked on at once (a lead and assistants). The same
+// person twice is refused, because that means somebody forgot to clock off.
+export const workOrderTimeLogs = pgTable("work_order_time_logs", {
+  id: text("id").primaryKey(),
+  workOrderId: text("work_order_id").notNull().references(() => workOrders.id),
+  userId: text("user_id").references(() => users.id),
+  userName: text("user_name"),
+  startedAt: text("started_at").notNull(),
+  // Null while the clock is running. A running stretch counts for nothing
+  // towards the total until it is stopped.
+  endedAt: text("ended_at"),
+  note: text("note"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [index("work_order_time_logs_wo_idx").on(t.workOrderId)]);
 
 // ─── PM Checklists ──────────────────────────────────────────────────────────
 export const pmChecklists = pgTable("pm_checklists", {

@@ -6,6 +6,7 @@ import {
   equipment,
   maintenanceSchedule,
   auditLog,
+  procedureRevisions,
 } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -17,6 +18,7 @@ import { suggestedWoPriority } from "@/lib/maintenance/adherence";
 import { ensureSignoffChain } from "@/lib/signoff/service";
 import { reconcileWorkOrderApprovals, WO_APPROVAL_ENTITY } from "@/lib/work-order-approval";
 import { commencementFor } from "@/lib/maintenance/work-order-commencement";
+import { governingProcedure } from "@/lib/maintenance/governing-procedure";
 import { BREAKDOWN_NOTIFY_ROLES } from "@/lib/roles";
 
 // List all work orders, joined with their equipment.
@@ -116,6 +118,23 @@ export async function POST(request: Request) {
 
     const commencement = commencementFor(body.type);
 
+    // Which revision of the maintenance procedure governs this job, decided now
+    // and never again. Reading it back at display time would make every closed
+    // job silently re-attribute itself to whatever revision is current, which is
+    // the one thing an auditor sampling old work orders is looking for.
+    const governing = governingProcedure(
+      await db
+        .select({
+          id: procedureRevisions.id,
+          code: procedureRevisions.code,
+          revision: procedureRevisions.revision,
+          status: procedureRevisions.status,
+          effectiveDate: procedureRevisions.effectiveDate,
+        })
+        .from(procedureRevisions),
+      body.plannedDate || new Date().toISOString().slice(0, 10),
+    );
+
     const newWo = {
       id,
       workOrderNumber,
@@ -135,6 +154,9 @@ export async function POST(request: Request) {
       technicianName: body.technicianName || inherited.technicianName,
       assistantIds: inherited.assistantIds,
       supervisorId: body.supervisorId || null,
+      procedureRevisionId: governing?.id ?? null,
+      procedureCode: governing?.code ?? null,
+      procedureRevision: governing?.revision ?? null,
       createdBy: gate.actor?.id ?? null,
     };
 

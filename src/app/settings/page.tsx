@@ -432,7 +432,9 @@ export default function AppSettingsPage() {
       } else {
         toast.success(
           `${d.overdueActivities} overdue, ${d.upcomingActivities} due soon, ` +
-            `${d.lapsedPermits} lapsed permit(s) → ${d.notificationsSent} notification(s) sent.`,
+            `${d.lapsedPermits} lapsed permit(s), ` +
+            `${d.emergencyEquipmentDue ?? 0} emergency item(s) not ready ` +
+            `→ ${d.notificationsSent} notification(s) sent.`,
         );
       }
     } catch {

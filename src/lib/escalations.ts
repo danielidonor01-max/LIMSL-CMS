@@ -15,6 +15,7 @@ import {
   notifications,
   calibrationRecords,
   competencyMatrix,
+  emergencyEquipment,
 } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { notify } from "@/lib/notifications";
@@ -25,6 +26,11 @@ import {
   MAINTENANCE_ESCALATION_ROLES,
   COMPLIANCE_ESCALATION_ROLES,
 } from "@/lib/roles";
+import {
+  assessReadiness,
+  EMERGENCY_TYPE_LABELS,
+  type EmergencyEquipmentType,
+} from "@/lib/hse/emergency";
 import { audienceForAge, diffDigest, shouldSendDigest } from "@/lib/maintenance/escalation-policy";
 import {
   getEscalationPolicy,
@@ -41,6 +47,7 @@ export type EscalationSummary = {
   upcomingActivities: number;
   lapsedPermits: number;
   calibrationDue: number;
+  emergencyEquipmentDue: number;
   trainingExpiring: number;
   notificationsSent: number;
   skippedDuplicate: number;
@@ -91,6 +98,7 @@ export async function runEscalations(now = new Date(), trigger: "manual" | "sche
     upcomingActivities: 0,
     lapsedPermits: 0,
     calibrationDue: 0,
+    emergencyEquipmentDue: 0,
     trainingExpiring: 0,
     notificationsSent: 0,
     skippedDuplicate: 0,
@@ -270,6 +278,64 @@ Oldest outstanding: ${oldest} day(s).`,
         relatedEntityType: "escalation:permits",
         relatedEntityId: "ALL",
         roles: PERMIT_ISSUE_ROLES,
+      });
+      if (sent.length) summary.notificationsSent += sent.length;
+    }
+  }
+
+  // ── Fire and emergency equipment due for inspection ────────────────────────
+  // Audit finding E-02 asked for this to go "on the PM schedule". It cannot
+  // literally: the schedule is keyed to the asset register by a NOT NULL
+  // foreign key, and an extinguisher is not a machine on that register. Forcing
+  // it in would mean either a nullable equipment id that every schedule and KPI
+  // query would then have to guard, or forty extinguishers in the asset register
+  // inflating fleet availability.
+  //
+  // What the finding actually wanted is that a due inspection gets chased the
+  // way an overdue PM gets chased, and lands in front of somebody who will act.
+  // The register already knows what is due — assessReadiness has computed it all
+  // along — and nothing read it. So it is chased from here, on the same run, by
+  // the same engine, with the same no-nagging guard.
+  //
+  // An extinguisher that is present but discharged, expired or last inspected
+  // three years ago is not a fire extinguisher; it is a red cylinder. This is
+  // the pass that says so out loud.
+  const emergencyItems = await db.select().from(emergencyEquipment);
+  const needsAttention = emergencyItems
+    .map((item) => ({ item, readiness: assessReadiness(item, today) }))
+    // REMOVED items are off the register on purpose and are not a finding.
+    .filter(({ item }) => String(item.status).toUpperCase() !== "REMOVED")
+    .filter(({ readiness }) => !readiness.ready);
+  summary.emergencyEquipmentDue = needsAttention.length;
+  if (needsAttention.length) {
+    if (await recentlyEscalated("escalation:emergency-equipment", "ALL", now)) {
+      summary.skippedDuplicate++;
+    } else {
+      // Unserviceable first. A discharged extinguisher is a worse fact than one
+      // that is a fortnight from its next check, and a list sorted by tag number
+      // buries it.
+      const rank = { fail: 0, warn: 1, ok: 2 } as const;
+      needsAttention.sort((a, b) => rank[a.readiness.severity] - rank[b.readiness.severity]);
+      const failing = needsAttention.filter((n) => n.readiness.severity === "fail").length;
+
+      const body =
+        `${needsAttention.length} item${needsAttention.length === 1 ? " on the emergency equipment register is" : "s on the emergency equipment register are"} not ready for use` +
+        `${failing ? `, ${failing} of them unserviceable right now` : ""}:\n` +
+        fmtList(
+          needsAttention.map(
+            ({ item, readiness }) =>
+              `${item.tagNumber}, ${EMERGENCY_TYPE_LABELS[item.type as EmergencyEquipmentType] ?? item.type}` +
+              ` (${item.location}): ${readiness.reasons.join("; ")}`,
+          ),
+        );
+      const sent = await notify({
+        event: "ESCALATION",
+        title: `Emergency equipment, ${needsAttention.length} item${needsAttention.length === 1 ? "" : "s"} not ready`,
+        body,
+        linkPath: "/emergency",
+        relatedEntityType: "escalation:emergency-equipment",
+        relatedEntityId: "ALL",
+        roles: COMPLIANCE_ESCALATION_ROLES,
       });
       if (sent.length) summary.notificationsSent += sent.length;
     }

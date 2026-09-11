@@ -1,7 +1,7 @@
 // src/app/work-orders/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -21,6 +21,9 @@ import {
   Siren,
   ShieldCheck,
   CheckCircle2,
+  BookText,
+  Timer,
+  Square,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
@@ -33,6 +36,8 @@ import {
   isAwaitingRetrospectiveApproval,
   retrospectiveApprovalAgeDays,
 } from "@/lib/maintenance/work-order-commencement";
+import { procedureLabel } from "@/lib/maintenance/governing-procedure";
+import { formatHours } from "@/lib/maintenance/time-log";
 import { formatDate } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
@@ -47,13 +52,32 @@ import {
 
 type ChecklistItem = { item: string; status: string; remarks?: string };
 
+type TimeSessionRow = {
+  id: string;
+  userId: string | null;
+  userName: string | null;
+  startedAt: string;
+  endedAt: string | null;
+};
+type TimeLog = {
+  sessions: TimeSessionRow[];
+  totalHours: number;
+  byPerson: { userId: string | null; userName: string; hours: number }[];
+  running: TimeSessionRow[];
+};
+
 export default function WorkOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
+  const userId = (session?.user as { id?: string })?.id;
   const canIssuePermit = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
   const canAssign = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  const [timeLog, setTimeLog] = useState<TimeLog | null>(null);
+  const [clocking, setClocking] = useState(false);
+  const clockedOn = !!(userId && timeLog?.running.some((r) => r.userId === userId));
   const [wo, setWo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -73,15 +97,49 @@ export default function WorkOrderDetailPage() {
       .catch(() => setPeople([]));
   }, []);
 
+  const loadTime = useCallback(() => {
+    fetch(`/api/work-orders/${id}/time`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setTimeLog(d))
+      .catch(() => setTimeLog(null));
+  }, [id]);
+
   const load = () => {
     setLoading(true);
     fetch(`/api/work-orders/${id}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setWo(d))
       .finally(() => setLoading(false));
+    loadTime();
   };
 
   useEffect(load, [id]);
+
+  const clock = async (action: "on" | "off") => {
+    setClocking(true);
+    try {
+      const res = await fetch(`/api/work-orders/${id}/time`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not record the time.");
+        return;
+      }
+      toast.success(
+        action === "on"
+          ? "Clocked on. The job is now in progress."
+          : `Clocked off. ${formatHours(d.totalHours)} booked to this job.`,
+      );
+      load();
+    } catch {
+      toast.error("Could not record the time.");
+    } finally {
+      setClocking(false);
+    }
+  };
 
   const patch = async (body: Record<string, unknown>) => {
     setActing(true);
@@ -239,6 +297,19 @@ export default function WorkOrderDetailPage() {
                   <Play className="w-4 h-4" /> Start Work
                 </button>
               )}
+              {/* Clocking on is the honest version of "Start Work": it says who
+                  is on the job and when, rather than only that somebody is. */}
+              {canWrite && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
+                <Button
+                  variant={clockedOn ? "secondary" : "primary"}
+                  onClick={() => clock(clockedOn ? "off" : "on")}
+                  disabled={clocking}
+                  loading={clocking}
+                  icon={clockedOn ? Square : Timer}
+                >
+                  {clockedOn ? "Clock off" : "Clock on"}
+                </Button>
+              )}
               {canFillChecklist && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
                 <Button
                   href={`/work-orders/${id}/pm-checklist`}
@@ -247,7 +318,18 @@ export default function WorkOrderDetailPage() {
                 </Button>
               )}
               {!isPreventive && wo.status === "IN_PROGRESS" && (
-                <Button onClick={() => setCompleteOpen(true)} disabled={acting} icon={CheckCircle2}>
+                <Button
+                  onClick={() => {
+                    // Offer the clocked total rather than an empty box. An
+                    // empty box is what made this number guesswork.
+                    if (timeLog && timeLog.totalHours > 0 && !actualHours) {
+                      setActualHours(String(timeLog.totalHours));
+                    }
+                    setCompleteOpen(true);
+                  }}
+                  disabled={acting}
+                  icon={CheckCircle2}
+                >
                   Complete Work
                 </Button>
               )}
@@ -322,6 +404,88 @@ export default function WorkOrderDetailPage() {
               <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                 {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
               </Badge>
+            </div>
+          </div>
+        )}
+
+        {/* Hours booked to the job, and by whom. The number that feeds mean time
+            to repair used to be typed in at close-out from memory, days after
+            the work. This is the same number with evidence behind it. */}
+        {timeLog && (timeLog.sessions.length > 0 || (canWrite && !jobClosed)) && (
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+                <Timer className="w-4 h-4 text-brand-600" /> Time on the job
+              </h3>
+              <span className="text-sm text-ink-900 font-semibold tabular-nums">
+                {formatHours(timeLog.totalHours)} booked
+              </span>
+            </div>
+
+            {timeLog.running.length > 0 && (
+              <div className="mt-4 rounded-lg border border-warn-200 bg-warn-50 px-4 py-3">
+                <p className="text-sm text-warn-800">
+                  {timeLog.running.length === 1
+                    ? `${timeLog.running[0].userName ?? "Someone"} is clocked on now.`
+                    : `${timeLog.running.length} people are clocked on now.`}{" "}
+                  Time is not counted until they clock off.
+                </p>
+              </div>
+            )}
+
+            {timeLog.byPerson.length > 0 && (
+              <dl className="mt-4 divide-y divide-line border-t border-line">
+                {timeLog.byPerson.map((p) => (
+                  <div
+                    key={p.userId ?? p.userName}
+                    className="flex items-baseline justify-between gap-4 py-2.5"
+                  >
+                    <dt className="text-sm text-ink-600">{p.userName}</dt>
+                    <dd className="text-sm font-medium text-ink-900 tabular-nums">
+                      {formatHours(p.hours)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {timeLog.sessions.length === 0 && (
+              <p className="text-sm text-ink-500 mt-3 leading-relaxed">
+                Nobody has booked time to this job yet. Clock on when you start and off when you
+                stop, as many times as the job takes.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* The controlled document this job is carried out under. Stamped when
+            the work order was raised, so it keeps saying what it said even
+            after the procedure is revised. A work order that silently
+            re-attributed itself to the current revision would be the kind of
+            record an auditor samples for precisely because it cannot be wrong. */}
+        {procedureLabel(wo.procedureCode, wo.procedureRevision) && (
+          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+            <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
+              <BookText className="w-4 h-4 text-brand-600" /> Carried out under
+            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="min-w-0">
+                {wo.procedureRevisionId ? (
+                  <Link
+                    href={`/procedure/${wo.procedureRevisionId}`}
+                    className="font-medium text-ink-900 hover:text-brand-600"
+                  >
+                    {procedureLabel(wo.procedureCode, wo.procedureRevision)}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-ink-900">
+                    {procedureLabel(wo.procedureCode, wo.procedureRevision)}
+                  </span>
+                )}
+                <p className="text-xs text-ink-500 mt-0.5">
+                  The revision of the maintenance procedure in force when this job was raised.
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -467,7 +631,9 @@ export default function WorkOrderDetailPage() {
               className="w-full sm:w-40 min-h-11 px-3 bg-ink-50 border border-ink-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
             />
             <p className="text-xs text-ink-400">
-              Feeds the maintenance backlog figure, without it, backlog is an assumption rather than a measurement.
+              {timeLog && timeLog.totalHours > 0
+                ? `Filled in from the ${formatHours(timeLog.totalHours)} clocked to this job. Change it only if the clock missed something, and say so in the notes above.`
+                : "Feeds the maintenance backlog figure, without it, backlog is an assumption rather than a measurement."}
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-1">

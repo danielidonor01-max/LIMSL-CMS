@@ -16,6 +16,8 @@ import {
   PRIORITY_OPTIONS,
 } from "@/lib/constants";
 import { WORK_ORDER_ASSIGNEE_ROLES } from "@/lib/roles";
+import ChainPreview from "@/components/ChainPreview";
+import { WORK_ORDER_CHAIN } from "@/lib/signoff/chains";
 
 type Equipment = { id: string; assetId: string; name: string; criticality: string | null };
 type User = { id: string; name: string; role: string };
@@ -243,6 +245,20 @@ function NewWorkOrderForm() {
                 className={FIELD_CLASS}
               />
             </div>
+
+            {/* A work order IS management authorising the work, so who signs it
+                is the point of raising one. An emergency is the exception and
+                says so here, rather than surprising somebody who expected to
+                wait for a signature. */}
+            <ChainPreview
+              steps={WORK_ORDER_CHAIN}
+              title="Authorisation this will need"
+              note={
+                form.type === "EMERGENCY"
+                  ? "An emergency work order commences immediately. The same two signatures are still required, collected after the fact, and the record shows it was authorised retrospectively."
+                  : "The work cannot start, and no permit can be issued against it, until this is signed."
+              }
+            />
 
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="secondary" href="/work-orders">

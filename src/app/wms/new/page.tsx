@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
+import ChainPreview from "@/components/ChainPreview";
+import { WMS_CHAIN } from "@/lib/signoff/chains";
 
 export default function NewWms() {
   const router = useRouter();
@@ -369,6 +371,15 @@ export default function NewWms() {
               />
             </div>
           </div>
+
+          {/* Who has to sign this, before it is written rather than after.
+              Four named authorities reading a method statement is a different
+              proposition from a supervisor glancing at it, and knowing which it
+              is changes how much detail goes in. */}
+          <ChainPreview
+            steps={WMS_CHAIN}
+            note="Saving puts this in draft. It goes for signature in this order once you submit it, and each person can return it with a comment rather than only approving or rejecting."
+          />
 
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-3">

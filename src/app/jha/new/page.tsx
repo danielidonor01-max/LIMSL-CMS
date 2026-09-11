@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, Save, Loader2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
+import ChainPreview from "@/components/ChainPreview";
+import { JHA_CHAIN } from "@/lib/signoff/chains";
 import Select from "@/components/Select";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
@@ -118,7 +120,7 @@ function NewJhaForm() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="New Job Hazard Analysis"
           subtitle="Break the approved method into steps and state the hazard and control for each"
           backHref="/jha"
@@ -305,6 +307,11 @@ function NewJhaForm() {
               />
             </div>
           </div>
+
+          <ChainPreview
+            steps={JHA_CHAIN}
+            note="No permit may be raised against a hazard analysis that has not finished this chain."
+          />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => router.push("/jha")}>
