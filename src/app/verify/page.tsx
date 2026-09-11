@@ -94,9 +94,9 @@ function VerifyForm() {
               onChange={(e) => setCode(e.target.value)}
               placeholder="LEE-XXXX-XXXX"
               autoComplete="off"
-              className={`${FIELD_CLASS} tracking-[0.15em] uppercase`}
+              className={`${FIELD_CLASS} tracking-[0.15em] `}
             />
-            <p className="text-[11px] text-ink-500">
+            <p className="text-xs text-ink-500">
               It is printed at the foot of the sheet. Dashes, spaces and lower case are all fine.
             </p>
           </div>
@@ -123,7 +123,7 @@ function VerifyForm() {
                 </div>
                 <div>
                   <dt className="opacity-70">Reference</dt>
-                  <dd className="font-semibold font-mono mt-0.5">{result.reference ?? "—"}</dd>
+                  <dd className="font-semibold mt-0.5">{result.reference ?? "—"}</dd>
                 </div>
                 <div>
                   <dt className="opacity-70">Signed and sealed</dt>

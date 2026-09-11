@@ -118,7 +118,7 @@ export default function PermitHandback({
       {/* Handover of work */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
+          <h4 className="text-xs font-semibold text-ink-500">
             Handover of work
           </h4>
           {canHandback && (
@@ -138,7 +138,7 @@ export default function PermitHandback({
           <ul className="text-xs text-ink-700 space-y-1">
             {handovers.map((h, i) => (
               <li key={i} className="flex items-center gap-2">
-                <span className="font-mono text-[11px] text-ink-400">{i + 1}</span>
+                <span className="text-xs text-ink-400">{i + 1}</span>
                 <span className="font-medium">{h.from}</span>
                 <ArrowRightLeft className="w-3 h-3 text-ink-400" />
                 <span className="font-medium">{h.to}</span>
@@ -152,7 +152,7 @@ export default function PermitHandback({
       {/* Handback of work */}
       <div className="pt-4 border-t border-ink-200">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
+          <h4 className="text-xs font-semibold text-ink-500">
             Handback of work
           </h4>
           {canHandback && (
@@ -192,7 +192,7 @@ export default function PermitHandback({
       {/* Work acceptance closure */}
       <div className="pt-4 border-t border-ink-200">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider">
+          <h4 className="text-xs font-semibold text-ink-500">
             Work acceptance
           </h4>
           {canAccept && !permit.acceptedAt && permit.handbackOutcome && (
@@ -226,7 +226,7 @@ export default function PermitHandback({
 
       {permit.closureNote && (
         <div className="pt-4 border-t border-ink-200">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
+          <h4 className="text-xs font-semibold text-ink-500 mb-1">
             Closure
           </h4>
           <p className="text-xs text-ink-700">{permit.closureNote}</p>

@@ -69,7 +69,7 @@ export default function AssignPeople({
               </option>
             ))}
           </Select>
-          <p className="text-[11px] text-ink-500 mt-1">
+          <p className="text-xs text-ink-500 mt-1">
             Reminders go to this person, and this is the name against the work if it is missed.
           </p>
         </div>
@@ -88,10 +88,10 @@ export default function AssignPeople({
                     onClick={() => toggleHelper(p.id)}
                     aria-pressed={on}
                     className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                      on
-                        ? "bg-brand-600 border-brand-600 text-white"
-                        : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                    }`}
+ on
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
                   >
                     {on && <Check className="w-3 h-3" />}
                     {p.name}
@@ -99,7 +99,7 @@ export default function AssignPeople({
                 );
               })}
           </div>
-          <p className="text-[11px] text-ink-500 mt-1.5">
+          <p className="text-xs text-ink-500 mt-1.5">
             They are notified and can do the work. Accountability stays with the person above.
           </p>
         </div>

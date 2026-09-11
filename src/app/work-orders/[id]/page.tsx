@@ -266,7 +266,7 @@ export default function WorkOrderDetailPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-lg font-bold text-brand-600">
+                <span className="text-xl font-bold text-brand-600">
                   {wo.workOrderNumber}
                 </span>
                 <Badge className={WO_TYPE_BADGE[wo.type]}>{WO_TYPE_LABELS[wo.type] ?? wo.type}</Badge>
@@ -397,7 +397,7 @@ export default function WorkOrderDetailPage() {
                 <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="font-medium text-ink-900 hover:text-brand-600">
                   {eq.name}
                 </Link>
-                <p className="text-xs font-mono text-ink-500 mt-0.5">
+                <p className="text-xs text-ink-500 mt-0.5">
                   {eq.assetId} · {eq.location} · {eq.oem ?? "-"}
                 </p>
               </div>
@@ -513,7 +513,7 @@ export default function WorkOrderDetailPage() {
 
             {checklist.observations && (
               <div>
-                <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-ink-500 mb-1">
                   Findings
                 </p>
                 <p className="text-sm text-ink-700">{checklist.observations}</p>
@@ -524,7 +524,7 @@ export default function WorkOrderDetailPage() {
               <SignatureView label="Technician" name={checklist.technicianName} sig={checklist.technicianSignature} />
               <SignatureView label="Supervisor" name={checklist.supervisorName} sig={checklist.supervisorSignature} />
             </div>
-            <p className="text-[11px] text-ink-500 font-mono">
+            <p className="text-xs text-ink-500">
               Signed {formatDate(checklist.signedAt)} · Next PM {formatDate(checklist.nextPMDate)}
             </p>
           </div>
@@ -651,7 +651,7 @@ export default function WorkOrderDetailPage() {
 function Meta({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 text-ink-500 text-[11px] uppercase tracking-wider font-semibold">
+      <div className="flex items-center gap-1.5 text-ink-500 text-xs font-semibold">
         {icon} {label}
       </div>
       <p className="text-sm text-ink-900 mt-1">{value}</p>
@@ -662,11 +662,11 @@ function Meta({ icon, label, value }: { icon: React.ReactNode; label: string; va
 function SafetyChip({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border ${
-        ok
-          ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
-          : "bg-ink-500/10 text-ink-500 border-ink-500/20"
-      }`}
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border ${
+ ok
+ ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+ : "bg-ink-500/10 text-ink-500 border-ink-500/20"
+ }`}
     >
       {ok ? "✓" : "✕"} {label}
     </span>
@@ -677,7 +677,7 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</p>
+      <p className="text-xs font-semibold text-ink-500 mb-2">{title}</p>
       <ul className="space-y-1">
         {items.map((it, i) => (
           <li key={i} className="flex items-center justify-between text-xs">
@@ -703,7 +703,7 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
 function SignatureView({ label, name, sig }: { label: string; name: string | null; sig: string | null }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-xs font-semibold text-ink-500 mb-1">{label}</p>
       {sig ? (
         <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-ink-100 rounded border border-ink-200" unoptimized />
       ) : (

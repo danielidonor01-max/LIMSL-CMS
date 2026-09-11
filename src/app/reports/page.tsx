@@ -273,7 +273,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-ink-900 group-hover:text-brand-700">{r.label}</p>
-                      <p className="text-[11px] text-ink-500">{r.desc}</p>
+                      <p className="text-xs text-ink-500">{r.desc}</p>
                     </div>
                   </Link>
                 ))}
@@ -291,7 +291,7 @@ export default function ReportsPage() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div className="flex flex-col gap-1 lg:col-span-2">
-                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Asset</span>
+                  <span className="text-xs font-semibold text-ink-500">Asset</span>
                   <Select
                     value={dossierAsset}
                     onChange={setDossierAsset}
@@ -301,11 +301,11 @@ export default function ReportsPage() {
                   />
                 </div>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
+                  <span className="text-xs font-semibold text-ink-500">From</span>
                   <DateField value={dossierFrom} onChange={(v) => setDossierFrom(v)} />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
+                  <span className="text-xs font-semibold text-ink-500">To</span>
                   <DateField value={dossierTo} onChange={(v) => setDossierTo(v)} />
                 </label>
               </div>
@@ -341,7 +341,7 @@ function Row({ label, count, total }: { label: string; count: number; total: num
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-ink-700">{label}</span>
-        <span className="text-ink-500 font-mono">{count} ({pct}%)</span>
+        <span className="text-ink-500">{count} ({pct}%)</span>
       </div>
       <div className="h-1.5 bg-ink-200 rounded-full overflow-hidden">
         <div className="h-full bg-brand-500/70 rounded-full" style={{ width: `${pct}%` }} />

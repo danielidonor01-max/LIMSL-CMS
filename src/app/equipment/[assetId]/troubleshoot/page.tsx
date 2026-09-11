@@ -263,7 +263,7 @@ export default function TroubleshootPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-tight text-ink-900">Diagnostic Engine</h2>
-          <p className="text-xs text-ink-500 font-mono">
+          <p className="text-xs text-ink-500">
             {eq.name} · {eq.assetId} · learns from {meta.guideCount} guides + {meta.historyCount} historical cases
           </p>
         </div>
@@ -298,7 +298,7 @@ export default function TroubleshootPage() {
         </div>
         {meta.knownSymptoms.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1 items-center">
-            <span className="text-[11px] text-ink-400">Known:</span>
+            <span className="text-xs text-ink-400">Known:</span>
             {meta.knownSymptoms.map((k) => (
               <button
                 key={k.id}
@@ -331,14 +331,14 @@ export default function TroubleshootPage() {
                   aria-selected={active}
                   onClick={() => setPanel(t.key)}
                   className={`flex-1 min-h-[44px] px-2 sm:px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors ${
-                    active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
-                  }`}
+ active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+ }`}
                 >
                   <Icon className={`w-4 h-4 ${t.key === "ai" ? "text-violet-500" : active ? "text-brand-600" : ""}`} />
                   <span className="hidden sm:inline">{t.label}</span>
                   <span className="sm:hidden">{t.short}</span>
                   {t.count != null && (
-                    <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${active ? "bg-brand-50 text-brand-700" : "bg-ink-200 text-ink-500"}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? "bg-brand-50 text-brand-700" : "bg-ink-200 text-ink-500"}`}>
                       {t.count}
                     </span>
                   )}
@@ -380,16 +380,16 @@ export default function TroubleshootPage() {
                       <div>
                         <p className="text-sm font-semibold text-ink-900">{d.cause}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${SOURCE_BADGE[d.source]}`}>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded border ${SOURCE_BADGE[d.source]}`}>
                             {d.source === "GUIDE" ? <BookOpen className="w-2.5 h-2.5 inline mr-1" /> : d.source === "HISTORY" ? <HistoryIcon className="w-2.5 h-2.5 inline mr-1" /> : <Sparkles className="w-2.5 h-2.5 inline mr-1" />}
                             {SOURCE_LABEL[d.source]}
                           </span>
-                          {d.errorCode && <span className="text-[11px] font-mono text-ink-500">{d.errorCode}</span>}
+                          {d.errorCode && <span className="text-xs text-ink-500">{d.errorCode}</span>}
                         </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-lg font-bold text-brand-600">{d.confidence}%</div>
+                      <div className="text-xl font-bold text-brand-600">{d.confidence}%</div>
                       <div className="w-16 h-1.5 bg-ink-100 rounded-full overflow-hidden mt-1">
                         <div className="h-full bg-brand-500 rounded-full" style={{ width: `${d.confidence}%` }} />
                       </div>
@@ -399,7 +399,7 @@ export default function TroubleshootPage() {
                   {/* Evidence */}
                   <div className="flex flex-wrap gap-1.5">
                     {d.evidence.map((ev, i) => (
-                      <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-ink-50 border border-ink-200 text-ink-600">
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-ink-50 border border-ink-200 text-ink-600">
                         {ev}
                       </span>
                     ))}
@@ -408,25 +408,25 @@ export default function TroubleshootPage() {
                   {/* Implicated components + schematic refs */}
                   {d.components.length > 0 && (
                     <div className="rounded-lg bg-ink-50 border border-ink-200 p-3 space-y-1.5">
-                      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider flex items-center gap-1">
+                      <p className="text-xs font-semibold text-ink-500 flex items-center gap-1">
                         <Cpu className="w-3 h-3" /> Check these components
                       </p>
                       {d.components.map((c) => (
                         <div key={c.componentTag} className="flex items-center justify-between text-xs">
                           <span className="text-ink-700">
-                            <span className="font-mono font-semibold text-ink-900">{c.componentTag}</span> · {c.name}
+                            <span className="font-semibold text-ink-900">{c.componentTag}</span> · {c.name}
                           </span>
                           {c.schematicReference &&
                             (schematicDocs.length > 0 ? (
                               <button
                                 onClick={() => openOnSchematic(c)}
-                                className="text-[11px] text-brand-700 font-mono flex items-center gap-1 hover:underline"
+                                className="text-xs text-brand-700 flex items-center gap-1 hover:underline"
                                 title="View on schematic"
                               >
                                 <MapPin className="w-3 h-3" /> {c.schematicReference}
                               </button>
                             ) : (
-                              <span className="text-[11px] text-brand-700 font-mono flex items-center gap-1">
+                              <span className="text-xs text-brand-700 flex items-center gap-1">
                                 <MapPin className="w-3 h-3" /> {c.schematicReference}
                               </span>
                             ))}
@@ -438,7 +438,7 @@ export default function TroubleshootPage() {
                   {/* Diagnostic steps */}
                   {d.steps.length > 0 && (
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Diagnostic steps</p>
+                      <p className="text-xs font-semibold text-ink-500">Diagnostic steps</p>
                       {d.steps.map((s, i) => (
                         <label key={i} className="flex items-start gap-2 text-xs text-ink-700 cursor-pointer">
                           <input
@@ -461,7 +461,7 @@ export default function TroubleshootPage() {
 
                   {/* History refs */}
                   {d.historyRefs.length > 0 && (
-                    <div className="text-[11px] text-ink-400 font-mono">
+                    <div className="text-xs text-ink-400">
                       History: {d.historyRefs.map((h) => `${h.cmrf}${h.parts ? ` (${h.parts})` : ""}`).join(" · ")}
                     </div>
                   )}
@@ -492,8 +492,8 @@ export default function TroubleshootPage() {
               <div className="px-6 py-4 border-b border-violet-100 bg-violet-50/50 flex items-center gap-2 flex-wrap">
                 <Sparkles className="w-4 h-4 text-violet-600" />
                 <h3 className="text-sm font-semibold text-ink-900">AI diagnosis</h3>
-                <span className="text-[11px] text-ink-400">chat with the assistant, step by step</span>
-                <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
+                <span className="text-xs text-ink-400">chat with the assistant, step by step</span>
+                <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
                   Verify before acting
                 </span>
               </div>
@@ -523,7 +523,7 @@ export default function TroubleshootPage() {
               <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-info-600" />
                 <h3 className="text-sm font-semibold text-ink-900">Relevant documentation</h3>
-                <span className="text-[11px] text-ink-400">manuals &amp; maintenance procedure</span>
+                <span className="text-xs text-ink-400">manuals &amp; maintenance procedure</span>
               </div>
               <div className="divide-y divide-ink-100">
                 {result.passages!.map((p) => (
@@ -534,7 +534,7 @@ export default function TroubleshootPage() {
                         {p.heading ? <span className="text-ink-400 font-normal"> · {p.heading}</span> : null}
                       </span>
                       {p.pageStart != null && (
-                        <span className="text-[11px] font-mono text-ink-400 shrink-0">
+                        <span className="text-xs text-ink-400 shrink-0">
                           p.{p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `-${p.pageEnd}` : ""}
                         </span>
                       )}
@@ -566,7 +566,7 @@ export default function TroubleshootPage() {
                       title="Open tiled viewer"
                     >
                       <span className="text-ink-700 truncate">{s.title}</span>
-                      <span className="text-[11px] font-mono text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                      <span className="text-xs text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
                     </button>
                   ) : (
                     s.fileUrl && !s.fileUrl.startsWith("#") ? (
@@ -576,12 +576,12 @@ export default function TroubleshootPage() {
                         className="flex items-center justify-between p-2.5 rounded-lg border border-ink-200 hover:bg-ink-50 text-xs"
                       >
                         <span className="text-ink-700 truncate">{s.title}</span>
-                        <span className="text-[11px] font-mono text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                        <span className="text-xs text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
                       </a>
                     ) : (
                       <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg border border-ink-100 text-xs opacity-60">
                         <span className="text-ink-500 truncate">{s.title}</span>
-                        <span className="text-[11px] font-mono text-ink-400 shrink-0 ml-2">no file</span>
+                        <span className="text-xs text-ink-400 shrink-0 ml-2">no file</span>
                       </div>
                     )
                   ),
@@ -603,27 +603,27 @@ export default function TroubleshootPage() {
                     key={s.id}
                     onClick={() => setResumeSession(s.id)}
                     className={`w-full text-left p-2.5 rounded-lg border transition-colors ${
-                      resumeSession === s.id ? "border-violet-300 bg-violet-50" : "border-ink-200 hover:bg-ink-50"
-                    }`}
+ resumeSession === s.id ? "border-violet-300 bg-violet-50" : "border-ink-200 hover:bg-ink-50"
+ }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-ink-800 truncate">{s.symptom}</span>
                       <span
-                        className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${
-                          s.status === "RESOLVED"
-                            ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
-                            : s.status === "OPEN"
-                              ? "bg-warn-500/10 text-warn-700 border-warn-500/20"
-                              : "bg-ink-100 text-ink-500 border-ink-200"
-                        }`}
+                        className={`text-xs font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${
+ s.status === "RESOLVED"
+ ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
+ : s.status === "OPEN"
+ ? "bg-warn-500/10 text-warn-700 border-warn-500/20"
+ : "bg-ink-100 text-ink-500 border-ink-200"
+ }`}
                       >
                         {s.status}
                       </span>
                     </div>
                     {s.resolvedCause && (
-                      <p className="text-[11px] text-ink-500 truncate mt-0.5">→ {s.resolvedCause}</p>
+                      <p className="text-xs text-ink-500 truncate mt-0.5">→ {s.resolvedCause}</p>
                     )}
-                    <p className="text-[11px] text-ink-400 mt-0.5">
+                    <p className="text-xs text-ink-400 mt-0.5">
                       {s.startedByName ?? "-"} · {(s.createdAt ?? "").slice(0, 10)}
                     </p>
                   </button>
@@ -641,14 +641,14 @@ export default function TroubleshootPage() {
                 {ctx.components.map((c) => (
                   <div key={c.componentTag} className="text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-semibold text-ink-900">{c.componentTag}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${c.status === "FAULTY" ? "bg-danger-50 text-danger-700 border-danger-200" : "bg-brand-50 text-brand-700 border-brand-200"}`}>
+                      <span className="font-semibold text-ink-900">{c.componentTag}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded border ${c.status === "FAULTY" ? "bg-danger-50 text-danger-700 border-danger-200" : "bg-brand-50 text-brand-700 border-brand-200"}`}>
                         {c.status ?? "-"}
                       </span>
                     </div>
                     <p className="text-ink-500">{c.name}</p>
                     {c.schematicReference && (
-                      <p className="text-[11px] text-ink-400 font-mono flex items-center gap-1">
+                      <p className="text-xs text-ink-400 flex items-center gap-1">
                         <MapPin className="w-2.5 h-2.5" /> {c.schematicReference} · {c.location}
                       </p>
                     )}

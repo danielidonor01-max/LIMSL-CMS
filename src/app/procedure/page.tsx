@@ -139,7 +139,7 @@ export default function ProcedurePage() {
             {revisions.map((r) => (
               <div key={r.id} className="flex items-center justify-between text-xs py-1.5 border-b border-ink-100 last:border-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-semibold text-ink-900">Rev {r.revision}</span>
+                  <span className="font-semibold text-ink-900">Rev {r.revision}</span>
                   <Badge className={STATUS_BADGE[r.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>{DOC_STATUS_LABELS[r.status] ?? r.status}</Badge>
                   <span className="text-ink-500">{r.changeSummary}</span>
                 </div>
@@ -180,9 +180,9 @@ export default function ProcedurePage() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={18}
-            className={`${FIELD_CLASS} text-xs font-mono`}
+            className={`${FIELD_CLASS} text-xs `}
           />
-          <p className="text-[11px] text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
+          <p className="text-xs text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
             <Button icon={FilePlus2} onClick={propose} disabled={saving} loading={saving}>
@@ -196,12 +196,12 @@ export default function ProcedurePage() {
       <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:p-0" id="procedure-doc">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
           <div>
-            <p className="text-[11px] font-mono text-ink-400 uppercase tracking-widest">Controlled Document</p>
+            <p className="text-xs text-ink-400">Controlled Document</p>
             <p className="text-xs font-semibold text-ink-900">{current?.code}</p>
           </div>
           <div className="text-right">
             <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{DOC_STATUS_LABELS[current?.status ?? "APPROVED"] ?? current?.status}</Badge>
-            <p className="text-[11px] text-ink-400 mt-1 font-mono">
+            <p className="text-xs text-ink-400 mt-1">
               Rev {current?.revision} · effective {formatDate(current?.effectiveDate)}
             </p>
           </div>

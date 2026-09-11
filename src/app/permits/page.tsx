@@ -177,7 +177,7 @@ export default function PermitsList() {
                       </div>
                       <p className="text-xs text-ink-600 max-w-xl line-clamp-1">{rec.workDescription}</p>
                       <p className="text-xs text-ink-500">
-                        <span className="font-mono">{rec.permitNumber}</span>
+                        <span className="">{rec.permitNumber}</span>
                         {rec.assetId ? ` · ${rec.assetId}` : ""}
                         {rec.permitHolderName ? ` · ${rec.permitHolderName}` : ""}
                         {rec.expiryDate ? ` · expires ${formatDate(rec.expiryDate)}` : ""}

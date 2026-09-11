@@ -61,7 +61,7 @@ function RiskCell({ rating, legacy }: { rating: ReturnType<typeof rate>; legacy?
     return (
       <span className="inline-flex flex-col gap-0.5">
         <Badge className={BAND_TONE[band]}>{BAND_LABEL[band]}</Badge>
-        <span className="text-[11px] text-ink-400">rated before scoring</span>
+        <span className="text-xs text-ink-400">rated before scoring</span>
       </span>
     );
   }
@@ -146,7 +146,7 @@ export default function JhaDetailPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-lg font-bold text-brand-600">{jha.jhaNumber}</span>
+                <span className="text-xl font-bold text-brand-600">{jha.jhaNumber}</span>
                 {(jha.revision ?? 0) > 0 && (
                   <span className="text-xs text-ink-400">rev {jha.revision}</span>
                 )}
@@ -176,11 +176,11 @@ export default function JhaDetailPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-ink-200">
             <div>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Work order</p>
+              <p className="text-xs font-semibold text-ink-500">Work order</p>
               {jha.workOrder ? (
                 <Link
                   href={`/work-orders/${jha.workOrder.id}`}
-                  className="text-xs font-mono text-brand-600 hover:underline"
+                  className="text-xs text-brand-600 hover:underline"
                 >
                   {jha.workOrder.workOrderNumber}
                 </Link>
@@ -189,9 +189,9 @@ export default function JhaDetailPage() {
               )}
             </div>
             <div>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Method statement</p>
+              <p className="text-xs font-semibold text-ink-500">Method statement</p>
               {jha.wms ? (
-                <Link href={`/wms/${jha.wms.id}`} className="text-xs font-mono text-brand-600 hover:underline">
+                <Link href={`/wms/${jha.wms.id}`} className="text-xs text-brand-600 hover:underline">
                   <FileText className="w-3 h-3 inline mr-1" />
                   {jha.wms.wmsNumber}
                 </Link>
@@ -200,7 +200,7 @@ export default function JhaDetailPage() {
               )}
             </div>
             <div>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Machine</p>
+              <p className="text-xs font-semibold text-ink-500">Machine</p>
               <p className="text-xs text-ink-700">
                 {jha.equipment ? (
                   <>
@@ -237,7 +237,7 @@ export default function JhaDetailPage() {
               <tbody className="divide-y divide-ink-100">
                 {steps.map((s, i) => (
                   <tr key={i} className="align-top">
-                    <td className="py-3.5 px-5 font-mono text-ink-400">{i + 1}</td>
+                    <td className="py-3.5 px-5 text-ink-400">{i + 1}</td>
                     <td className="py-3.5 px-5 text-ink-900 font-medium">{s.step ?? "-"}</td>
                     <td className="py-3.5 px-5 text-ink-600 whitespace-pre-line">{s.hazards ?? "-"}</td>
                     <td className="py-3.5 px-5 text-ink-600 whitespace-pre-line">{s.controls ?? "-"}</td>
@@ -262,7 +262,7 @@ export default function JhaDetailPage() {
           <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
             {ppe.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">
+                <h3 className="text-xs font-semibold text-ink-500 mb-2">
                   PPE required
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
@@ -276,7 +276,7 @@ export default function JhaDetailPage() {
             )}
             {jha.emergencyArrangements && (
               <div>
-                <h3 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
+                <h3 className="text-xs font-semibold text-ink-500 mb-1">
                   Emergency arrangements
                 </h3>
                 <p className="text-xs text-ink-700 whitespace-pre-line">{jha.emergencyArrangements}</p>

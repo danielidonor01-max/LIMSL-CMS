@@ -215,13 +215,13 @@ export default function SignoffChain({
                           {ROLE_LABELS[step.role] ?? step.role}
                         </Badge>
                         {step.signerUserName && (
-                          <span className="text-[11px] font-medium text-ink-600">
+                          <span className="text-xs font-medium text-ink-600">
                             {step.signerUserName} only
                           </span>
                         )}
-                        {!step.required && <span className="text-[10px] text-ink-400">optional</span>}
+                        {!step.required && <span className="text-xs text-ink-400">optional</span>}
                         {step.status === "SIGNED" && step.signedByName && (
-                          <span className="text-[11px] text-ink-500">
+                          <span className="text-xs text-ink-500">
                             · {step.signedByName} · {formatDate(step.signedAt)}
                           </span>
                         )}
@@ -232,12 +232,12 @@ export default function SignoffChain({
                           notice that somebody else signed this step. */}
                       {step.isOverride && (
                         <div className="mt-1.5 rounded-md bg-warn-50 border border-warn-200 px-2 py-1.5">
-                          <p className="text-[11px] font-semibold text-warn-900">
+                          <p className="text-xs font-semibold text-warn-900">
                             Signed in place of {ROLE_LABELS[step.role] ?? step.role} by{" "}
                             {ROLE_LABELS[step.signedByRole ?? ""] ?? step.signedByRole}
                           </p>
                           {step.overrideReason && (
-                            <p className="text-[11px] text-warn-800 mt-0.5 leading-relaxed">
+                            <p className="text-xs text-warn-800 mt-0.5 leading-relaxed">
                               {step.overrideReason}
                             </p>
                           )}
@@ -274,10 +274,10 @@ export default function SignoffChain({
                       </Button>
                     )}
                     {step.status === "PENDING" && !unlocked && (
-                      <span className="text-[11px] text-ink-400">awaiting earlier steps</span>
+                      <span className="text-xs text-ink-400">awaiting earlier steps</span>
                     )}
                     {step.status === "PENDING" && unlocked && !mine && (
-                      <span className="text-[11px] text-ink-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
+                      <span className="text-xs text-ink-400">awaiting {ROLE_LABELS[step.role] ?? step.role}</span>
                     )}
                   </div>
                 </div>

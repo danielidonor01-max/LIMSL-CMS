@@ -72,7 +72,7 @@ export default function EquipmentEditPage() {
   }
 
   const field = "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
-  const label = "block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
+  const label = "block text-xs font-semibold text-ink-500  mb-1.5";
 
   return (
     <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
@@ -86,7 +86,7 @@ export default function EquipmentEditPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-tight text-ink-900">Edit Equipment</h2>
-          <p className="text-xs text-ink-500 font-mono">{form.assetId}</p>
+          <p className="text-xs text-ink-500">{form.assetId}</p>
         </div>
       </div>
 
@@ -100,10 +100,10 @@ export default function EquipmentEditPage() {
           <input
             value={form.assetId ?? ""}
             onChange={(e) => set("assetId", e.target.value)}
-            className={`${field} font-mono`}
+            className={`${field} `}
             placeholder="LEE/PE/0000"
           />
-          <p className="text-[11px] text-ink-400 mt-1">Changing the code re-keys this asset across the registry.</p>
+          <p className="text-xs text-ink-400 mt-1">Changing the code re-keys this asset across the registry.</p>
         </div>
 
         <div>

@@ -139,7 +139,7 @@ function NewJhaForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[11px] text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 {wmsList.length === 0
                   ? "No approved method statements yet. A WMS must finish its approval chain before it can be analysed."
                   : "Only approved method statements appear here. Analysing an unapproved method assesses work that may still change."}
@@ -197,7 +197,7 @@ function NewJhaForm() {
               {steps.map((s, i) => (
                 <div key={i} className="border border-ink-200 rounded-lg p-3 space-y-2.5">
                   <div className="flex items-start gap-2">
-                    <span className="mt-2 text-[11px] font-mono font-semibold text-ink-400 w-5 shrink-0">
+                    <span className="mt-2 text-xs font-semibold text-ink-400 w-5 shrink-0">
                       {i + 1}
                     </span>
                     <input
@@ -281,17 +281,17 @@ function NewJhaForm() {
                       onClick={() => togglePpe(p.key)}
                       aria-pressed={on}
                       className={`px-2.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                        on
-                          ? "bg-brand-600 border-brand-600 text-white"
-                          : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                      }`}
+ on
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
                     >
                       {p.label}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-[11px] text-ink-500 mt-1.5">
+              <p className="text-xs text-ink-500 mt-1.5">
                 Carried onto the permit raised against this analysis.
               </p>
             </div>
@@ -349,7 +349,7 @@ function RiskScore({
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-ink-700">{title}</p>
         {r && (
-          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${BAND_TONE[r.band]}`}>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${BAND_TONE[r.band]}`}>
             {r.score} · {BAND_LABEL[r.band]}
           </span>
         )}

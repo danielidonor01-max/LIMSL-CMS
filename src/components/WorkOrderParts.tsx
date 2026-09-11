@@ -134,12 +134,12 @@ export default function WorkOrderParts({
             <li key={m.id} className="py-2 flex items-center justify-between gap-3 text-xs">
               <span className="min-w-0">
                 <span className="font-medium text-ink-900">{m.partName ?? "Part"}</span>
-                {m.partNumber && <span className="font-mono text-ink-500"> · {m.partNumber}</span>}
+                {m.partNumber && <span className="text-ink-500"> · {m.partNumber}</span>}
                 {m.reason && <span className="block text-xs text-ink-500">{m.reason}</span>}
               </span>
               <span className="shrink-0 text-right">
                 <span className="font-semibold text-ink-900">{Math.abs(m.quantity)}</span>
-                <span className="block text-[11px] text-ink-400">{m.performedByName ?? ""}</span>
+                <span className="block text-xs text-ink-400">{m.performedByName ?? ""}</span>
               </span>
             </li>
           ))}

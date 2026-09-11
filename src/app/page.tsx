@@ -213,8 +213,8 @@ export default function Home() {
                   >
                     <span
                       className={`w-1.5 h-8 rounded-full shrink-0 ${
-                        a.severity === "danger" ? "bg-danger-500" : "bg-warn-500"
-                      }`}
+ a.severity === "danger" ? "bg-danger-500" : "bg-warn-500"
+ }`}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
@@ -264,7 +264,7 @@ export default function Home() {
                       )}
                     </p>
                     <p className="text-xs text-ink-500 truncate">
-                      <span className="font-mono">{j.workOrderNumber}</span>
+                      <span className="">{j.workOrderNumber}</span>
                       {j.equipmentName ? ` · ${j.equipmentName}` : ""}
                       {j.plannedDate ? ` · due ${formatDate(j.plannedDate)}` : ""}
                     </p>
@@ -282,7 +282,7 @@ export default function Home() {
             <div className="px-6 py-4 border-b border-brand-200 flex items-center gap-2">
               <PenLine className="w-4 h-4 text-brand-700" />
               <h3 className="text-sm font-bold text-brand-900">Awaiting your sign-off</h3>
-              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-[11px] font-bold flex items-center justify-center">
+              <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">
                 {signoffs.length}
               </span>
             </div>
@@ -296,7 +296,7 @@ export default function Home() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-ink-900">
                       {s.typeLabel}
-                      {s.reference ? <span className="font-mono text-ink-500"> · {s.reference}</span> : null}
+                      {s.reference ? <span className="text-ink-500"> · {s.reference}</span> : null}
                     </p>
                     <p className="text-xs text-ink-500">Your step: {s.roleLabel}</p>
                   </div>
@@ -387,7 +387,7 @@ export default function Home() {
                         {/* Asset IDs carry slashes (LEE/PE/1904), routes take the dash form. */}
                         <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-brand-600">{eq.name}</Link>
                       </td>
-                      <td className="py-3 font-mono text-ink-500">{eq.assetId}</td>
+                      <td className="py-3 text-ink-500">{eq.assetId}</td>
                       <td className="py-3">{eq.location ?? eq.bay ?? "-"}</td>
                       <td className="py-3">
                         <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
@@ -417,7 +417,7 @@ export default function Home() {
                 <div key={act.id} className="border-l-2 border-line pl-3">
                   <p className="text-xs font-medium text-ink-900">{act.headline}</p>
                   {act.detail && <p className="text-xs text-ink-500 mt-0.5">{act.detail}</p>}
-                  <p className="text-[11px] text-ink-400 mt-0.5">{formatDate(act.timestamp)}</p>
+                  <p className="text-xs text-ink-400 mt-0.5">{formatDate(act.timestamp)}</p>
                 </div>
               ))}
             </div>
@@ -425,7 +425,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="border-t border-ink-200 bg-white/90 py-4 px-6 text-center text-[11px] text-ink-500 font-mono">
+      <footer className="border-t border-ink-200 bg-white/90 py-4 px-6 text-center text-xs text-ink-500">
         &copy; {new Date().getFullYear()} Lee International Machinery and Services Limited · Compliance: ISO 9001:2015, ISO 45001.
       </footer>
     </div>

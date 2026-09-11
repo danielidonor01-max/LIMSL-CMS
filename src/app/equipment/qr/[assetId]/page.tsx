@@ -61,7 +61,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-ink-900">Asset QR label</h1>
+            <h1 className="text-xl font-bold tracking-tight text-ink-900">Asset QR label</h1>
             <p className="text-xs text-ink-600 mt-0.5">
               Print and fix to {assetIdOriginal}
             </p>
@@ -100,7 +100,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
             />
             <div className="text-left">
               <h2 className="text-sm font-black tracking-tight text-ink-900 leading-none">LEE INTERNATIONAL</h2>
-              <p className="text-[10px] text-ink-500 font-mono uppercase tracking-widest leading-none mt-1">
+              <p className="text-xs text-ink-500 leading-none mt-1">
                 Machinery &amp; Services Limited
               </p>
             </div>
@@ -117,15 +117,15 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
 
           {/* Asset Info */}
           <div className="space-y-1">
-            <p className="text-[11px] text-ink-500 uppercase tracking-widest font-mono leading-none">Asset ID Code</p>
-            <p className="text-xl font-black text-ink-900 tracking-wide font-mono leading-none">{assetIdOriginal}</p>
+            <p className="text-xs text-ink-500 leading-none">Asset ID Code</p>
+            <p className="text-xl font-black text-ink-900 tracking-wide leading-none">{assetIdOriginal}</p>
             <h3 className="text-sm font-bold text-ink-800 pt-1 leading-tight">{machineName}</h3>
           </div>
 
           {/* Scanning instructions. No emoji: this is a label glued to a machine
               in a fabrication workshop, and an emoji prints as a colour block or
               an empty box depending on the printer. */}
-          <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-[11px] text-ink-600 leading-relaxed">
+          <div className="bg-ink-50 border border-ink-200 rounded-lg p-2.5 w-full text-xs text-ink-600 leading-relaxed">
             <p className="font-bold text-ink-900">Scan with a phone camera</p>
             <p>Machine status, safety clearance and who to call. Sign in for the full record.</p>
           </div>

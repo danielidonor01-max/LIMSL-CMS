@@ -68,7 +68,7 @@ export default function PageLead({
         <div className="min-w-0 max-w-2xl">
           <h1
             id={headingId}
-            className="text-3xl sm:text-4xl font-bold tracking-[-0.03em] leading-[1.08] text-ink-900 text-balance"
+            className="text-3xl sm:text-3xl font-bold tracking-[-0.03em] leading-[1.08] text-ink-900 text-balance"
           >
             {headline}
           </h1>
@@ -105,14 +105,14 @@ export default function PageLead({
         </div>
 
         <div className="lg:w-72 rounded-xl bg-nav text-white p-5 flex flex-col justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-nav-label">
+          <p className="text-xs font-semibold tracking-[0.12em] text-nav-label">
             {figure.label}
           </p>
 
           <div className="flex items-end gap-2 mt-4">
-            <span className="text-5xl font-semibold leading-none tabular-nums">{figure.value}</span>
+            <span className="text-3xl font-semibold leading-none tabular-nums">{figure.value}</span>
             {figure.unit && (
-              <span className="text-lg text-nav-text leading-none mb-1">{figure.unit}</span>
+              <span className="text-xl text-nav-text leading-none mb-1">{figure.unit}</span>
             )}
           </div>
 
@@ -132,8 +132,8 @@ export default function PageLead({
           {stats.length > 0 && (
             <dl
               className={`grid gap-3 mt-5 pt-4 border-t border-nav-line ${
-                stats.length >= 3 ? "grid-cols-3" : stats.length === 2 ? "grid-cols-2" : "grid-cols-1"
-              }`}
+ stats.length >= 3 ? "grid-cols-3" : stats.length === 2 ? "grid-cols-2" : "grid-cols-1"
+ }`}
             >
               {stats.map((s) => (
                 <LeadStatCell key={s.label} {...s} />

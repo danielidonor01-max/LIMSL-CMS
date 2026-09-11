@@ -101,10 +101,10 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
                 role="menuitem"
                 onClick={() => run(item)}
                 className={`w-full flex items-center gap-2.5 px-3 min-h-11 text-xs font-medium text-left transition-colors ${
-                  item.danger
-                    ? "text-danger-600 hover:bg-danger-50"
-                    : "text-ink-700 hover:bg-ink-100"
-                }`}
+ item.danger
+ ? "text-danger-600 hover:bg-danger-50"
+ : "text-ink-700 hover:bg-ink-100"
+ }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
                 {item.label}

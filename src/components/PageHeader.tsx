@@ -51,7 +51,7 @@ export default function PageHeader({
             <p className="text-sm text-ink-600 mt-2 leading-relaxed">
               {subtitle}
               {code && (
-                <span className="font-mono text-ink-500">
+                <span className="text-ink-500">
                   {subtitle ? " " : ""}
                   {code}
                 </span>

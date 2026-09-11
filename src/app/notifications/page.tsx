@@ -164,8 +164,8 @@ export default function NotificationsPage() {
                 key={c}
                 onClick={() => setFilter(c)}
                 className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  filter === c ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                }`}
+ filter === c ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
               >
                 {c === "ALL" ? "All" : CATEGORY_LABEL[c]}{" "}
                 <span className="tabular-nums font-normal">({countFor(c)})</span>
@@ -201,8 +201,8 @@ export default function NotificationsPage() {
                     key={n.id}
                     onClick={() => open(n)}
                     className={`w-full text-left p-4 flex items-start gap-3 hover:bg-ink-50 transition-colors ${
-                      n.readAt ? "" : "bg-brand-50/40"
-                    }`}
+ n.readAt ? "" : "bg-brand-50/40"
+ }`}
                   >
                     <div className={`mt-0.5 p-1.5 rounded-lg ${n.readAt ? "text-ink-400 bg-ink-100" : "text-brand-600 bg-brand-500/10"}`}>
                       <Icon className="w-4 h-4" />
@@ -214,16 +214,16 @@ export default function NotificationsPage() {
                         {/* Category on every row, colour on one. A fire alarm
                             and a memo used to look identical here. */}
                         <span
-                          className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${CATEGORY_TONE[category]}`}
+                          className={`text-xs font-semibold px-1.5 py-0.5 rounded-full border ${CATEGORY_TONE[category]}`}
                         >
                           {CATEGORY_LABEL[category]}
                         </span>
                         {priority === "URGENT" && !n.readAt && (
-                          <span className="text-[11px] font-semibold text-danger-600">Needs attention</span>
+                          <span className="text-xs font-semibold text-danger-600">Needs attention</span>
                         )}
                       </div>
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ink-500 flex-wrap">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-500 flex-wrap">
                         <span className="tabular-nums">{formatDate(n.createdAt)}</span>
                         {/* Only when it needs a decision. A message that went
                             out as expected is not news, and saying so on every
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                       </div>
                       {/* The reason was recorded and shown to nobody. */}
                       {n.deliveryStatus === "FAILED" && n.deliveryError && (
-                        <p className="mt-1.5 text-[11px] text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
+                        <p className="mt-1.5 text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
                           {n.deliveryError}
                         </p>
                       )}

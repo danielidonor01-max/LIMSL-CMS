@@ -183,9 +183,9 @@ export default function Sidebar({
         role={mobileOpen ? "dialog" : undefined}
         aria-modal={mobileOpen ? true : undefined}
         className={`${narrow ? "lg:w-16" : "w-60"} w-60 shrink-0 h-screen bg-nav flex flex-col z-50 transition-[width] duration-200
-          fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
-          lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
-          ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
+ fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
+ lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
+ ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
       >
       <Link
         href="/"
@@ -193,8 +193,8 @@ export default function Sidebar({
         title={narrow ? "LIMSL CMS" : undefined}
         aria-label={narrow ? "LIMSL CMS" : undefined}
         className={`flex items-center gap-2.5 h-14 shrink-0 ${
-          narrow ? "px-5 lg:px-0 lg:justify-center" : "px-5"
-        }`}
+ narrow ? "px-5 lg:px-0 lg:justify-center" : "px-5"
+ }`}
       >
         <Image
           src="/brand/logo-80.png"
@@ -208,7 +208,7 @@ export default function Sidebar({
             to fit 64px: a wordmark cut in half is worse than no wordmark. */}
         <div className={narrow ? "lg:hidden" : ""}>
           <h1 className="text-sm font-bold tracking-tight text-white leading-none">LIMSL CMS</h1>
-          <p className="text-[11px] text-nav-text font-medium tracking-wide uppercase mt-0.5">
+          <p className="text-xs text-nav-text font-medium mt-0.5">
             Maintenance Portal
           </p>
         </div>
@@ -222,8 +222,8 @@ export default function Sidebar({
         <div
           title={narrow ? `${user.name}, ${ROLE_LABELS[role ?? ""] ?? "LEE International"}` : undefined}
           className={`mx-3 mb-2 flex items-center gap-2.5 rounded-lg bg-nav-raised py-2.5 ${
-            narrow ? "px-3 lg:px-0 lg:justify-center" : "px-3"
-          }`}
+ narrow ? "px-3 lg:px-0 lg:justify-center" : "px-3"
+ }`}
         >
           <span className="w-7 h-7 rounded-md bg-brand-600 text-white grid place-items-center text-xs font-bold shrink-0">
             {String(user.name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")}
@@ -236,7 +236,7 @@ export default function Sidebar({
             <span className="block text-xs font-semibold text-white truncate leading-tight">
               {user.name}
             </span>
-            <span className="block text-[11px] text-nav-label truncate leading-tight mt-0.5">
+            <span className="block text-xs text-nav-label truncate leading-tight mt-0.5">
               {ROLE_LABELS[role ?? ""] ?? "LEE International"}
             </span>
           </span>
@@ -250,8 +250,8 @@ export default function Sidebar({
       <nav
         aria-label="Modules"
         className={`scroll-nav flex-1 overflow-y-auto py-3 space-y-4 ${
-          narrow ? "px-3 lg:px-0 lg:[scrollbar-gutter:stable_both-edges]" : "px-3"
-        }`}
+ narrow ? "px-3 lg:px-0 lg:[scrollbar-gutter:stable_both-edges]" : "px-3"
+ }`}
       >
         {sections.map((s, si) => (
           <div key={s.section ?? `s-${si}`} className="space-y-0.5">
@@ -263,7 +263,7 @@ export default function Sidebar({
               (narrow ? (
                 <span className="hidden lg:block mx-3 my-2 h-px bg-nav-line" aria-hidden="true" />
               ) : (
-                <p className="px-3 pt-2 pb-1.5 text-[11px] font-semibold text-nav-label uppercase tracking-[0.12em]">
+                <p className="px-3 pt-2 pb-1.5 text-xs font-semibold text-nav-label tracking-[0.12em]">
                   {s.section}
                 </p>
               ))}
@@ -279,12 +279,12 @@ export default function Sidebar({
                   title={narrow ? item.label : undefined}
                   aria-label={narrow ? item.label : undefined}
                   className={`flex items-center gap-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-colors ${
-                    narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
-                  } ${
-                    active
-                      ? "bg-nav-active text-nav-text-active font-semibold"
-                      : "text-nav-text font-medium hover:text-white hover:bg-nav-raised"
-                  }`}
+ narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
+ } ${
+ active
+ ? "bg-nav-active text-nav-text-active font-semibold"
+ : "text-nav-text font-medium hover:text-white hover:bg-nav-raised"
+ }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-400" : "text-nav-text"}`} />
                   <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
@@ -302,8 +302,8 @@ export default function Sidebar({
         title={narrow ? "Expand sidebar" : undefined}
         aria-label={narrow ? "Expand sidebar" : undefined}
         className={`hidden lg:flex items-center gap-2.5 mx-3 mb-3 py-2 rounded-lg text-xs font-medium text-nav-label hover:text-white hover:bg-nav-raised transition-colors ${
-          narrow ? "lg:justify-center lg:px-0" : "px-3"
-        }`}
+ narrow ? "lg:justify-center lg:px-0" : "px-3"
+ }`}
       >
         <ChevronLeft className={`w-4 h-4 shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} />
         {!narrow && "Collapse sidebar"}

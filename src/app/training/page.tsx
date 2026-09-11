@@ -270,7 +270,7 @@ export default function TrainingPage() {
                 <h3 className="text-sm font-semibold text-ink-900">Competency Matrix</h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   {LEVELS.map((l, i) => (
-                    <span key={l} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${LEVEL_CLS[i]}`}>
+                    <span key={l} className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${LEVEL_CLS[i]}`}>
                       {i} · {l}
                     </span>
                   ))}
@@ -314,7 +314,7 @@ export default function TrainingPage() {
                             <td className="py-3.5 px-5 sticky left-0 bg-white">
                               <div className="font-medium text-ink-900">{p}</div>
                               {anyRow?.role && (
-                                <div className="text-[11px] text-ink-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
+                                <div className="text-xs text-ink-500">{ROLE_LABELS[anyRow.role] ?? anyRow.role}</div>
                               )}
                             </td>
                             {skills.map((s) => {
@@ -330,7 +330,7 @@ export default function TrainingPage() {
                                   >
                                     {c.level}
                                   </span>
-                                  {recert && <div className="text-[10px] text-warn-600 font-semibold mt-0.5">RECERT</div>}
+                                  {recert && <div className="text-xs text-warn-600 font-semibold mt-0.5">RECERT</div>}
                                 </td>
                               );
                             })}
@@ -389,7 +389,7 @@ export default function TrainingPage() {
                         <tr key={t.id} className="hover:bg-ink-50">
                           <td className="py-2.5 px-5">
                             <div className="font-medium text-ink-900">{t.trainingTitle}</div>
-                            {t.trainer && <div className="text-[11px] text-ink-500">by {t.trainer}</div>}
+                            {t.trainer && <div className="text-xs text-ink-500">by {t.trainer}</div>}
                           </td>
                           <td className="py-3 px-5 text-ink-700">{t.employeeName ?? "-"}</td>
                           <td className="py-3 px-5 text-ink-500">{t.type ?? "-"}</td>

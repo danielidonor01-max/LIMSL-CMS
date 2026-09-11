@@ -290,7 +290,7 @@ export default function SchematicViewer({
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-ink-200 shrink-0">
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-ink-900 truncate">{title}</h3>
-            <p className="text-xs text-ink-500 font-mono">
+            <p className="text-xs text-ink-500">
               {schematicReference ? (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-brand-600" /> {schematicReference}
@@ -322,7 +322,7 @@ export default function SchematicViewer({
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-mono">Sheet {current?.page}</span>
+                <span className="">Sheet {current?.page}</span>
                 <button
                   onClick={() => setPageIdx((i) => Math.min((pages?.length ?? 1) - 1, i + 1))}
                   disabled={pageIdx >= (pages?.length ?? 1) - 1}
@@ -403,7 +403,7 @@ export default function SchematicViewer({
                           });
                         }}
                         placeholder="CB-12"
-                        className="w-28 bg-white border border-ink-200 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-brand-500/40"
+                        className="w-28 bg-white border border-ink-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-brand-500/40"
                       />
                     </div>
                     <div className="space-y-1">
@@ -428,7 +428,7 @@ export default function SchematicViewer({
                     <Button size="sm" variant="ghost" onClick={() => setTagDraft(null)}>Cancel</Button>
                   </div>
                 )}
-                <p className="text-xs text-ink-400 font-mono">{zoomTile.tileKey} · native resolution, scroll to pan</p>
+                <p className="text-xs text-ink-400">{zoomTile.tileKey} · native resolution, scroll to pan</p>
               </div>
             ) : current?.preview ? (
               <div className="space-y-2">
@@ -455,15 +455,15 @@ export default function SchematicViewer({
                         key={c.tag}
                         title={`${c.tag} · ${c.name}`}
                         className={`absolute border rounded-sm pointer-events-none ${
-                          c.include ? "border-info-500 bg-info-400/25" : "border-ink-300 bg-ink-200/20"
-                        }`}
+ c.include ? "border-info-500 bg-info-400/25" : "border-ink-300 bg-ink-200/20"
+ }`}
                         style={ptsToPct(c.bbox, current)}
                       />
                     ))}
                 </div>
                 <p className="text-xs text-ink-500 flex items-center gap-1.5">
                   <ZoomIn className="w-3.5 h-3.5" /> Click anywhere to zoom into the high-resolution tile
-                  <span className="text-ink-400 font-mono">· {current.tiles.length} tiles @ {current.dpi} DPI</span>
+                  <span className="text-ink-400">· {current.tiles.length} tiles @ {current.dpi} DPI</span>
                 </p>
               </div>
             ) : null}
@@ -475,7 +475,7 @@ export default function SchematicViewer({
               <div className="px-4 py-3 border-b border-ink-200 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-ink-900">Extracted components</p>
-                  <p className="text-[11px] text-ink-500">
+                  <p className="text-xs text-ink-500">
                     {candidates.filter((c) => c.include).length}/{candidates.length} selected · from PDF text layer
                   </p>
                 </div>
@@ -493,8 +493,8 @@ export default function SchematicViewer({
                         onChange={() => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, include: !x.include } : x)))}
                         className="accent-brand-600 w-3.5 h-3.5"
                       />
-                      <span className="text-xs font-mono font-bold text-ink-900">{c.tag}</span>
-                      <span className="text-[11px] text-ink-400 ml-auto font-mono">
+                      <span className="text-xs font-bold text-ink-900">{c.tag}</span>
+                      <span className="text-xs text-ink-400 ml-auto">
                         Sheet {c.page}{c.occurrences > 1 ? ` ·×${c.occurrences}` : ""}
                       </span>
                     </div>

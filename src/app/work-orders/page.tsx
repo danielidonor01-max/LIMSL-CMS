@@ -162,7 +162,7 @@ export default function WorkOrdersPage() {
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-ink-50 cursor-pointer">
                       <td className="py-3.5 px-5">
-                        <Link href={`/work-orders/${r.id}`} className="font-mono text-brand-600 hover:underline">
+                        <Link href={`/work-orders/${r.id}`} className="text-brand-600 hover:underline">
                           {r.workOrderNumber}
                         </Link>
                       </td>
@@ -175,7 +175,7 @@ export default function WorkOrdersPage() {
                         {r.assetId && (
                           <Link
                             href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
-                            className="text-[11px] font-mono text-ink-500 hover:text-brand-600 hover:underline"
+                            className="text-xs text-ink-500 hover:text-brand-600 hover:underline"
                           >
                             {r.assetId}
                           </Link>

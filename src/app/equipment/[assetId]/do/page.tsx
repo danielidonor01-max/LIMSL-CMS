@@ -134,8 +134,8 @@ export default function MachineActionsPage({ params }: { params: Promise<{ asset
       <div className="bg-surface border border-line rounded-2xl shadow-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-lg font-bold tracking-tight text-ink-900 truncate">{eq.name}</h1>
-            <p className="text-xs font-mono text-ink-500 mt-0.5">{eq.assetId}</p>
+            <h1 className="text-xl font-bold tracking-tight text-ink-900 truncate">{eq.name}</h1>
+            <p className="text-xs text-ink-500 mt-0.5">{eq.assetId}</p>
           </div>
           <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
             {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}

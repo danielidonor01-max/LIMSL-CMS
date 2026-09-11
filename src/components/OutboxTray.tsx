@@ -85,7 +85,7 @@ export default function OutboxTray() {
                 <p className="text-xs text-danger-800 mt-0.5 leading-relaxed">
                   {e.lastError ?? "The server refused this submission."}
                 </p>
-                <p className="text-[11px] text-danger-700/80 mt-1">
+                <p className="text-xs text-danger-700/80 mt-1">
                   Queued {describeAge(e.createdAt)} · {e.attempts} attempt{e.attempts === 1 ? "" : "s"}. Nothing has
                   been recorded for this, you will need to redo it or discard it.
                 </p>

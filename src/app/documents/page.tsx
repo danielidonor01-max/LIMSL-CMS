@@ -216,7 +216,7 @@ export default function DocumentsPage() {
                       <ChevronRight className={`w-4 h-4 text-ink-400 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-ink-900 truncate">{g.name}</p>
-                        <p className="text-[11px] font-mono text-ink-400">
+                        <p className="text-xs text-ink-400">
                           {g.assetId ? (
                             <Link
                               href={`/equipment/${g.assetId.replace(/\//g, "-")}`}
@@ -232,16 +232,16 @@ export default function DocumentsPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {missing > 0 && (
-                          <span className="text-[11px] font-semibold text-danger-600 bg-danger-500/10 border border-danger-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-xs font-semibold text-danger-600 bg-danger-500/10 border border-danger-500/20 rounded-full px-2 py-0.5">
                             {missing} missing
                           </span>
                         )}
                         {expiredN > 0 && (
-                          <span className="text-[11px] font-semibold text-warn-600 bg-warn-500/10 border border-warn-500/20 rounded-full px-2 py-0.5">
+                          <span className="text-xs font-semibold text-warn-600 bg-warn-500/10 border border-warn-500/20 rounded-full px-2 py-0.5">
                             {expiredN} expired
                           </span>
                         )}
-                        <span className="text-xs text-ink-500 font-mono">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
+                        <span className="text-xs text-ink-500">{g.docs.length} doc{g.docs.length === 1 ? "" : "s"}</span>
                       </div>
                     </button>
 

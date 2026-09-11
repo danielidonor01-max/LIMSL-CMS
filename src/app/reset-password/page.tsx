@@ -124,7 +124,7 @@ function ResetForm() {
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label htmlFor="rp-pass" className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="rp-pass" className="block text-xs font-semibold text-ink-500 mb-1.5">
                 New password
               </label>
               <div className="relative">
@@ -154,7 +154,7 @@ function ResetForm() {
             </div>
 
             <div>
-              <label htmlFor="rp-confirm" className="block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="rp-confirm" className="block text-xs font-semibold text-ink-500 mb-1.5">
                 Confirm new password
               </label>
               <input

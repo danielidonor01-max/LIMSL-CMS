@@ -221,7 +221,7 @@ export default function DateField({
 
           <div className="grid grid-cols-7 gap-0.5" role="grid">
             {WEEKDAYS.map((d) => (
-              <div key={d} className="text-[11px] font-semibold text-ink-400 text-center py-1">
+              <div key={d} className="text-xs font-semibold text-ink-400 text-center py-1">
                 {d}
               </div>
             ))}
@@ -243,14 +243,14 @@ export default function DateField({
                     if (focused && open) el?.focus();
                   }}
                   className={`h-10 rounded-lg text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                    selected
-                      ? "bg-brand-600 text-white font-semibold"
-                      : day.iso === today
-                        ? "text-brand-700 font-semibold hover:bg-ink-100"
-                        : day.inMonth
-                          ? "text-ink-800 hover:bg-ink-100"
-                          : "text-ink-300 hover:bg-ink-100"
-                  }`}
+ selected
+ ? "bg-brand-600 text-white font-semibold"
+ : day.iso === today
+ ? "text-brand-700 font-semibold hover:bg-ink-100"
+ : day.inMonth
+ ? "text-ink-800 hover:bg-ink-100"
+ : "text-ink-300 hover:bg-ink-100"
+ }`}
                 >
                   {Number(day.iso.slice(8))}
                 </button>

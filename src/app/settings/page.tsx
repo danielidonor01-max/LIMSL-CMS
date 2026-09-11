@@ -519,7 +519,7 @@ export default function AppSettingsPage() {
     return (
       <div className="p-10 max-w-md mx-auto text-center space-y-3">
         <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
-        <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+        <h2 className="text-xl font-bold text-ink-900">Access restricted</h2>
         <p className="text-sm text-ink-500">
           App settings are available to Super Admins only. Your role is{" "}
           <span className="font-semibold">{ROLE_LABELS[role ?? "VIEWER"] ?? role}</span>.
@@ -528,7 +528,7 @@ export default function AppSettingsPage() {
     );
   }
 
-  const label = "text-xs font-semibold text-ink-500 uppercase tracking-wide";
+  const label = "text-xs font-semibold text-ink-500 ";
   const timeField =
     "bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
 
@@ -559,7 +559,7 @@ export default function AppSettingsPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-tight text-ink-900">App Settings</h2>
-          <p className="text-xs text-ink-500 font-mono">Super Admin · organisation-wide configuration</p>
+          <p className="text-xs text-ink-500">Super Admin · organisation-wide configuration</p>
         </div>
       </div>
 
@@ -571,8 +571,8 @@ export default function AppSettingsPage() {
               key={id}
               onClick={() => switchTab(id)}
               className={`inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors ${
-                tab === id ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-600"
-              }`}
+ tab === id ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-600"
+ }`}
             >
               <Icon className="w-4 h-4" /> {l}
               {st && <span className={`w-1.5 h-1.5 rounded-full ${st.ok ? "bg-brand-400" : "bg-warn-400"} ${tab === id ? "ring-1 ring-white/60" : ""}`} />}
@@ -588,8 +588,8 @@ export default function AppSettingsPage() {
               onClick={() => switchTab(id)}
               aria-current={tab === id ? "page" : undefined}
               className={`w-full text-left rounded-lg px-3 py-2.5 border transition-colors ${
-                tab === id ? "bg-white border-brand-200 shadow-sm" : "border-transparent hover:bg-white hover:border-ink-200"
-              }`}
+ tab === id ? "bg-white border-brand-200 shadow-sm" : "border-transparent hover:bg-white hover:border-ink-200"
+ }`}
             >
               <span className="flex items-center gap-2">
                 <Icon className={`w-4 h-4 shrink-0 ${tab === id ? "text-brand-600" : "text-ink-400"}`} />
@@ -622,7 +622,7 @@ export default function AppSettingsPage() {
 
       {/* Working hours */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
-        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-600" /> Daily Working Window
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -649,13 +649,13 @@ export default function AppSettingsPage() {
         </div>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-ink-500">Productive hours per working day:</span>
-          <span className="font-bold text-brand-700 font-mono">{perDay.toFixed(2)} h</span>
+          <span className="font-bold text-brand-700">{perDay.toFixed(2)} h</span>
         </div>
       </section>
 
       {/* Working days */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-brand-600" /> Production Days
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -667,10 +667,10 @@ export default function AppSettingsPage() {
                 type="button"
                 onClick={() => toggleDay(d.n)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                  on
-                    ? "bg-brand-600 border-brand-600 text-white"
-                    : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
-                }`}
+ on
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
+ }`}
               >
                 {d.label}
               </button>
@@ -689,7 +689,7 @@ export default function AppSettingsPage() {
 
       {/* Live downtime preview */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Downtime Preview</h3>
+        <h3 className="text-base font-semibold text-ink-900">Downtime Preview</h3>
         <p className="text-xs text-ink-500">Test the current (unsaved) settings against any outage window.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -704,7 +704,7 @@ export default function AppSettingsPage() {
         {previewHours !== null && (
           <div className="flex items-center gap-2 text-sm p-3 rounded-lg bg-ink-50 border border-ink-200">
             <span className="text-ink-500">Production downtime:</span>
-            <span className="font-bold text-ink-900 font-mono">{previewHours.toFixed(2)} h</span>
+            <span className="font-bold text-ink-900">{previewHours.toFixed(2)} h</span>
           </div>
         )}
       </section>
@@ -719,7 +719,7 @@ export default function AppSettingsPage() {
       <div className="space-y-8">
       {/* AI provider API keys */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-brand-600" /> AI Provider API Keys
         </h3>
         <p className="text-xs text-ink-500">
@@ -755,21 +755,21 @@ export default function AppSettingsPage() {
                   className={`cursor-pointer transition-colors ${(aiTab ?? creds[0]?.provider) === c.provider ? "bg-brand-50/50" : "hover:bg-ink-50"}`}
                 >
                   <td className="py-2.5 px-3">
-                    <span className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${c.configured ? "bg-brand-100 text-brand-700" : "bg-ink-100 text-ink-400"}`} title={`Failover priority ${ci + 1}`}>
+                    <span className={`w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${c.configured ? "bg-brand-100 text-brand-700" : "bg-ink-100 text-ink-400"}`} title={`Failover priority ${ci + 1}`}>
                       {ci + 1}
                     </span>
                   </td>
                   <td className="py-2.5 px-3 font-semibold text-ink-900">{c.label}</td>
                   <td className="py-2.5 px-3">
                     {c.configured ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
                         <CheckCircle2 className="w-3 h-3" /> Active · {c.source === "ENV" ? "env" : "saved"}
                       </span>
                     ) : (
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">Not configured</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">Not configured</span>
                     )}
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-ink-500">{c.keyHint ?? "-"}</td>
+                  <td className="py-2.5 px-3 text-ink-500">{c.keyHint ?? "-"}</td>
                   <td className="py-2.5 px-3 text-ink-400 hidden md:table-cell">
                     {c.updatedByName ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}` : "-"}
                   </td>
@@ -793,8 +793,8 @@ export default function AppSettingsPage() {
                 key={c.provider}
                 onClick={() => setAiTab(c.provider)}
                 className={`px-3 py-2 rounded-md text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 transition-colors ${
-                  active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
-                }`}
+ active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+ }`}
               >
                 {c.label}
                 <span className={`w-1.5 h-1.5 rounded-full ${c.configured ? "bg-brand-500" : "bg-ink-300"}`} />
@@ -813,7 +813,7 @@ export default function AppSettingsPage() {
                   value={keyInput[c.provider] ?? ""}
                   onChange={(e) => setKeyInput((k) => ({ ...k, [c.provider]: e.target.value }))}
                   placeholder={c.configured ? "Paste a new key to replace…" : "Paste API key…"}
-                  className="flex-1 min-w-56 bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
+                  className="flex-1 min-w-56 bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
                   disabled={c.source === "ENV"}
                 />
                 <Button size="sm" icon={Save} loading={credBusy === `${c.provider}:save`} onClick={() => saveKey(c.provider)} disabled={c.source === "ENV"}>
@@ -829,10 +829,10 @@ export default function AppSettingsPage() {
                 )}
               </div>
               {c.source === "ENV" && (
-                <p className="text-[11px] text-ink-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
+                <p className="text-xs text-ink-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
               )}
               {c.updatedByName && c.source === "DB" && (
-                <p className="text-[11px] text-ink-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
+                <p className="text-xs text-ink-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
               )}
             </div>
           ))}
@@ -845,7 +845,7 @@ export default function AppSettingsPage() {
       {/* SharePoint (Microsoft 365) connection */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <Cloud className="w-4 h-4 text-brand-600" /> SharePoint Connection
           </h3>
           {spStatus?.configured ? (
@@ -866,10 +866,10 @@ export default function AppSettingsPage() {
         {spStatus?.configured ? (
           <div className="space-y-3">
             <div className="text-xs text-ink-700 bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 space-y-0.5">
-              <p><span className="text-ink-400">Site:</span> <span className="font-mono">{spStatus.siteUrl}</span></p>
-              <p><span className="text-ink-400">App (client) ID:</span> <span className="font-mono">{spStatus.clientIdHint}</span></p>
+              <p><span className="text-ink-400">Site:</span> <span className="">{spStatus.siteUrl}</span></p>
+              <p><span className="text-ink-400">App (client) ID:</span> <span className="">{spStatus.clientIdHint}</span></p>
               {spStatus.updatedByName && (
-                <p className="text-[11px] text-ink-400">Saved by {spStatus.updatedByName}{spStatus.updatedAt ? ` · ${new Date(spStatus.updatedAt).toLocaleString()}` : ""}</p>
+                <p className="text-xs text-ink-400">Saved by {spStatus.updatedByName}{spStatus.updatedAt ? ` · ${new Date(spStatus.updatedAt).toLocaleString()}` : ""}</p>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -888,10 +888,10 @@ export default function AppSettingsPage() {
         ) : (
           <div className="space-y-3">
             <div className="rounded-lg border border-ink-200 bg-ink-50 p-3">
-              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-1">One-time Azure setup (IT admin)</p>
+              <p className="text-xs font-semibold text-ink-600 mb-1">One-time Azure setup (IT admin)</p>
               <ol className="text-xs text-ink-600 list-decimal list-inside space-y-0.5">
                 <li>Azure Portal → Microsoft Entra ID → App registrations → New registration.</li>
-                <li>API permissions → Microsoft Graph → <span className="font-mono">Application</span> → add <span className="font-mono">Sites.Read.All</span> → Grant admin consent.</li>
+                <li>API permissions → Microsoft Graph → <span className="">Application</span> → add <span className="">Sites.Read.All</span> → Grant admin consent.</li>
                 <li>Certificates &amp; secrets → New client secret, copy its <em>Value</em> immediately.</li>
                 <li>The Tenant ID and Client ID are on the app&apos;s Overview page.</li>
               </ol>
@@ -911,7 +911,7 @@ export default function AppSettingsPage() {
                     onChange={(e) => setSpForm((s) => ({ ...s, [f.k]: e.target.value }))}
                     placeholder={f.ph}
                     autoComplete="off"
-                    className="w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
+                    className="w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
                   />
                 </div>
               ))}
@@ -933,7 +933,7 @@ export default function AppSettingsPage() {
       {tab === "data" && (
       <div className="space-y-5">
         <div>
-          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide">Go-live and accounts</h3>
+          <h3 className="text-base font-semibold text-ink-900">Go-live and accounts</h3>
           <p className="text-xs text-ink-500 mt-1">
             These open their own pages. Nothing here is a setting on this screen.
           </p>
@@ -995,10 +995,10 @@ export default function AppSettingsPage() {
           {dbMaintResult && (
             <div
               className={`rounded-lg border p-3 text-xs ${
-                dbMaintResult.failed?.length
-                  ? "bg-danger-50 border-danger-200 text-danger-800"
-                  : "bg-brand-50 border-brand-200 text-brand-800"
-              }`}
+ dbMaintResult.failed?.length
+ ? "bg-danger-50 border-danger-200 text-danger-800"
+ : "bg-brand-50 border-brand-200 text-brand-800"
+ }`}
             >
               <p className="font-semibold">
                 {dbMaintResult.failed?.length
@@ -1009,7 +1009,7 @@ export default function AppSettingsPage() {
                 <ul className="mt-1.5 space-y-1.5 text-xs">
                   {dbMaintResult.failed.map((f: any) => (
                     <li key={f.name}>
-                      <span className="font-mono font-semibold">{f.name}</span>
+                      <span className="font-semibold">{f.name}</span>
                       <span className="block text-danger-700/80">{f.error}</span>
                     </li>
                   ))}
@@ -1046,7 +1046,7 @@ export default function AppSettingsPage() {
                   <ul className="mt-1 space-y-0.5">
                     {acResult.assigned.map((a: any) => (
                       <li key={a.assetId}>
-                        <span className="font-mono font-semibold">{a.assetId}</span> {a.name}
+                        <span className="font-semibold">{a.assetId}</span> {a.name}
                       </li>
                     ))}
                   </ul>
@@ -1075,7 +1075,7 @@ export default function AppSettingsPage() {
       {/* Email delivery */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-600" /> Email Delivery
           </h3>
           <div className="flex items-center gap-2">
@@ -1110,7 +1110,7 @@ export default function AppSettingsPage() {
             {/* Auto-detected likely causes (wrong value / misnamed variable). */}
             {emailStatus.hints && emailStatus.hints.length > 0 && (
               <div className="rounded-lg border border-warn-200 bg-warn-50 p-2.5 space-y-1">
-                <p className="text-xs font-semibold text-warn-800 uppercase tracking-wide flex items-center gap-1">
+                <p className="text-xs font-semibold text-warn-800 flex items-center gap-1">
                   <Info className="w-3.5 h-3.5" /> Likely cause detected
                 </p>
                 {emailStatus.hints.map((h, i) => (
@@ -1120,7 +1120,7 @@ export default function AppSettingsPage() {
             )}
             {/* Per-variable diagnosis, shows exactly what this deployment sees. */}
             <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide">What this deployment sees</p>
+              <p className="text-xs font-semibold text-ink-600">What this deployment sees</p>
               {([
                 { k: "EMAIL_ENABLED", ok: emailStatus.enabled, note: "must be exactly true (no quotes)" },
                 { k: "SMTP_HOST", ok: !!emailStatus.host, note: "e.g. smtp.gmail.com" },
@@ -1135,15 +1135,15 @@ export default function AppSettingsPage() {
                   ) : (
                     <XCircle className={`w-3.5 h-3.5 shrink-0 ${v.optional ? "text-ink-300" : "text-danger-500"}`} />
                   )}
-                  <span className={`font-mono ${v.ok ? "text-ink-700" : v.optional ? "text-ink-400" : "text-danger-600 font-semibold"}`}>{v.k}</span>
+                  <span className={` ${v.ok ? "text-ink-700" : v.optional ? "text-ink-400" : "text-danger-600 font-semibold"}`}>{v.k}</span>
                   <span className="text-ink-400">, {v.ok ? "set" : v.optional ? "not set (optional)" : `missing · ${v.note}`}</span>
                 </div>
               ))}
             </div>
 
             <div className="space-y-1.5 pt-1 border-t border-ink-200">
-              <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide">Set these in Vercel → Settings → Environment Variables (Production), then redeploy</p>
-              <pre className="text-xs font-mono text-ink-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
+              <p className="text-xs font-semibold text-ink-600">Set these in Vercel → Settings → Environment Variables (Production), then redeploy</p>
+              <pre className="text-xs text-ink-700 whitespace-pre-wrap leading-relaxed">{`EMAIL_ENABLED=true
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
@@ -1154,7 +1154,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
               <p className="text-xs text-warn-700">
                 Common cause: env vars only apply to <strong>new</strong> deployments and to the <strong>environment they&apos;re scoped to</strong>.
                 Add them to <strong>Production</strong>, don&apos;t wrap values in quotes, then trigger a fresh redeploy. Full walkthrough:
-                <span className="font-mono"> docs/NOTIFICATIONS.md</span>.
+                <span className=""> docs/NOTIFICATIONS.md</span>.
               </p>
             </div>
           </div>
@@ -1163,16 +1163,16 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         {emailStatus && emailStatus.ready && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div className="rounded-lg border border-ink-200 p-2">
-              <p className="text-ink-400 uppercase tracking-wide">Host</p>
-              <p className="font-mono text-ink-700 truncate">{emailStatus.host}:{emailStatus.port}</p>
+              <p className="text-ink-400">Host</p>
+              <p className="text-ink-700 truncate">{emailStatus.host}:{emailStatus.port}</p>
             </div>
             <div className="rounded-lg border border-ink-200 p-2">
-              <p className="text-ink-400 uppercase tracking-wide">Security</p>
-              <p className="font-mono text-ink-700">{emailStatus.secure ? "SSL (465)" : "STARTTLS"}</p>
+              <p className="text-ink-400">Security</p>
+              <p className="text-ink-700">{emailStatus.secure ? "SSL (465)" : "STARTTLS"}</p>
             </div>
             <div className="rounded-lg border border-ink-200 p-2 col-span-2">
-              <p className="text-ink-400 uppercase tracking-wide">From</p>
-              <p className="font-mono text-ink-700 truncate">{emailStatus.from}</p>
+              <p className="text-ink-400">From</p>
+              <p className="text-ink-700 truncate">{emailStatus.from}</p>
             </div>
           </div>
         )}
@@ -1217,7 +1217,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
           {recipientAudit && (
             <div className="space-y-2">
               <p className="text-xs text-ink-600">
-                Sending as <span className="font-mono">{recipientAudit.sender}</span> ·{" "}
+                Sending as <span className="">{recipientAudit.sender}</span> ·{" "}
                 {recipientAudit.atRiskUsers > 0 ? (
                   <span className="text-warn-700 font-semibold">
                     {recipientAudit.atRiskUsers} of {recipientAudit.totalUsers} users are on a domain that will filter it
@@ -1234,21 +1234,21 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                 <div
                   key={d.domain}
                   className={`rounded-lg border p-3 ${
-                    d.severity === "fail"
-                      ? "bg-danger-50 border-danger-200"
-                      : d.severity === "warn"
-                        ? "bg-warn-50 border-warn-200"
-                        : "bg-brand-50 border-brand-200"
-                  }`}
+ d.severity === "fail"
+ ? "bg-danger-50 border-danger-200"
+ : d.severity === "warn"
+ ? "bg-warn-50 border-warn-200"
+ : "bg-brand-50 border-brand-200"
+ }`}
                 >
                   <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                    <p className="text-xs font-semibold text-ink-900 font-mono">@{d.domain}</p>
+                    <p className="text-xs font-semibold text-ink-900">@{d.domain}</p>
                     <p className="text-xs text-ink-600">
                       {d.userCount} user{d.userCount === 1 ? "" : "s"} · {d.hostLabel}
                     </p>
                   </div>
                   <p className="text-xs text-ink-700 mt-1.5 leading-relaxed">{d.headline}</p>
-                  <p className="text-[11px] text-ink-500 mt-1.5">{d.people.join(", ")}</p>
+                  <p className="text-xs text-ink-500 mt-1.5">{d.people.join(", ")}</p>
                 </div>
               ))}
             </div>
@@ -1261,12 +1261,12 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
         {diagnosis && (
           <div
             className={`rounded-lg border p-4 space-y-3 ${
-              diagnosis.severity === "fail"
-                ? "bg-danger-50 border-danger-200"
-                : diagnosis.severity === "warn"
-                  ? "bg-warn-50 border-warn-200"
-                  : "bg-brand-50 border-brand-200"
-            }`}
+ diagnosis.severity === "fail"
+ ? "bg-danger-50 border-danger-200"
+ : diagnosis.severity === "warn"
+ ? "bg-warn-50 border-warn-200"
+ : "bg-brand-50 border-brand-200"
+ }`}
           >
             <div className="flex items-start gap-2.5">
               {diagnosis.severity === "ok" ? (
@@ -1286,14 +1286,14 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
               <ol className="space-y-1.5 pl-1">
                 {diagnosis.actions.map((a: string, i: number) => (
                   <li key={i} className="flex gap-2 text-xs text-ink-700 leading-relaxed">
-                    <span className="font-mono text-ink-400 shrink-0">{i + 1}.</span>
+                    <span className="text-ink-400 shrink-0">{i + 1}.</span>
                     <span>{a}</span>
                   </li>
                 ))}
               </ol>
             )}
 
-            <div className="pt-2 border-t border-black/5 grid gap-1 text-xs text-ink-500 font-mono">
+            <div className="pt-2 border-t border-black/5 grid gap-1 text-xs text-ink-500">
               {diagnosis.mxHosts?.length > 0 && <p className="truncate">MX · {diagnosis.mxHosts.join(", ")}</p>}
               {diagnosis.smtpResponse && <p className="truncate">SMTP · {diagnosis.smtpResponse}</p>}
             </div>
@@ -1303,7 +1303,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
 
       {/* Overdue escalations */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
-        <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <BellRing className="w-4 h-4 text-brand-600" /> Maintenance Reminders &amp; Escalations
         </h3>
         <p className="text-xs text-ink-500">
@@ -1351,11 +1351,11 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                             tiers[i] = { ...tiers[i], roles };
                             setEscalationPolicy({ ...escalationPolicy, tiers });
                           }}
-                          className={`px-2 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
-                            on
-                              ? "bg-brand-600 border-brand-600 text-white"
-                              : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs font-semibold border transition-colors ${
+ on
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
+ }`}
                         >
                           {ROLE_LABELS[rk] ?? rk}
                         </button>
@@ -1380,7 +1380,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                   />
                   <span className="text-xs text-ink-500">day(s)</span>
                 </div>
-                <p className="text-[11px] text-ink-500 mt-1">
+                <p className="text-xs text-ink-500 mt-1">
                   A <strong>new</strong> breakdown always sends immediately, whatever this says.
                 </p>
               </div>
@@ -1441,7 +1441,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       {/* Notification routing, who gets what */}
       <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+          <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <BellRing className="w-4 h-4 text-brand-600" /> Notification Routing
           </h3>
           <Button icon={Save} loading={routingSaving} onClick={saveRoutingCfg}>Save routing</Button>
@@ -1472,9 +1472,9 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                         <button
                           key={rk}
                           onClick={() => toggleRouteRole(ev, rk)}
-                          className={`px-2 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
-                            on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs font-semibold border transition-colors ${
+ on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
+ }`}
                         >
                           {ROLE_LABELS[rk] ?? rk}
                         </button>
@@ -1483,7 +1483,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
                   </div>
                 )}
                 {r.enabled !== false && !ev.personal && !ev.defaultRoles && (
-                  <p className="text-[11px] text-ink-400">Sent to whoever must sign the pending step (chain-driven).</p>
+                  <p className="text-xs text-ink-400">Sent to whoever must sign the pending step (chain-driven).</p>
                 )}
               </div>
             );

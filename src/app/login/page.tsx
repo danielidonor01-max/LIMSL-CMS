@@ -53,7 +53,7 @@ function LoginForm() {
         </div>
 
         <div className="relative space-y-8 max-w-lg">
-          <h2 className="text-[2.6rem] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
+          <h2 className="font-display text-display text-balance">
             Nobody touches a machine until the paperwork says they can.
           </h2>
           <p className="text-white/70 text-sm leading-relaxed max-w-md">
@@ -99,7 +99,7 @@ function LoginForm() {
               <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-ink-900">LIMSL CMS</h1>
-            <p className="text-xs text-ink-500 font-mono uppercase tracking-widest">Maintenance Portal</p>
+            <p className="text-xs text-ink-500">Maintenance Portal</p>
           </div>
 
           <div className="mb-6 hidden lg:block">

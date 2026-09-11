@@ -248,7 +248,7 @@ function NewPermitForm() {
                     </option>
                   ))}
                 </Select>
-                <p className="text-[11px] text-ink-500">
+                <p className="text-xs text-ink-500">
                   This analysis was written before the job was raised. A permit cannot be issued
                   until management has approved the work order, so pick the approved one here.
                   {workOrderList.length === 0 && " No approved work order exists yet."}
@@ -274,10 +274,10 @@ function NewPermitForm() {
                       onClick={() => toggleWorkType(t.value)}
                       aria-pressed={on}
                       className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                        on
-                          ? "bg-brand-600 border-brand-600 text-white"
-                          : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                      }`}
+ on
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
                     >
                       {t.label}
                     </button>
@@ -391,7 +391,7 @@ function NewPermitForm() {
                   className={FIELD_CLASS}
                 />
                 {expiresOn && (
-                  <p className="text-[11px] text-ink-500 mt-1">Expires after {expiresOn}.</p>
+                  <p className="text-xs text-ink-500 mt-1">Expires after {expiresOn}.</p>
                 )}
               </div>
               <div>
@@ -415,7 +415,7 @@ function NewPermitForm() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[11px] text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 He signs the permit himself, and nobody signs that line for him.
               </p>
             </div>

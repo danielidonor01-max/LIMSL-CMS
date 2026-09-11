@@ -177,9 +177,9 @@ export default function JhaListPage() {
                 >
                   <div className="min-w-0 space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs font-semibold text-ink-500">{r.jhaNumber}</span>
+                      <span className="text-xs font-semibold text-ink-500">{r.jhaNumber}</span>
                       {(r.revision ?? 0) > 0 && (
-                        <span className="text-[11px] text-ink-400">rev {r.revision}</span>
+                        <span className="text-xs text-ink-400">rev {r.revision}</span>
                       )}
                       <Badge className={STATUS_BADGE[r.status] ?? STATUS_BADGE.DRAFT}>
                         {STATUS_LABELS[r.status] ?? r.status}

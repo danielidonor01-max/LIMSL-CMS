@@ -118,7 +118,7 @@ export default function NotificationBell() {
       >
         <Bell className="w-5 h-5" />
         {prefs.notifyInApp && unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger-500 text-white text-[11px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger-500 text-white text-xs font-bold flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

@@ -79,10 +79,10 @@ export default function Tabs<T extends string>({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(t.value)}
             className={`relative -mb-px flex items-center gap-2 border-b-2 pb-2.5 pt-1 text-sm transition-colors ${
-              active
-                ? "border-brand-600 text-ink-900 font-semibold"
-                : "border-transparent text-ink-500 font-medium hover:text-ink-900"
-            }`}
+ active
+ ? "border-brand-600 text-ink-900 font-semibold"
+ : "border-transparent text-ink-500 font-medium hover:text-ink-900"
+ }`}
           >
             {t.label}
             {t.count !== undefined && (

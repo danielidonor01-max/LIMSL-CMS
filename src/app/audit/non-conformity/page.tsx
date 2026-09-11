@@ -116,7 +116,7 @@ export default function NonConformityRegister() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-ink-500 uppercase">Filter Status:</span>
+              <span className="text-xs text-ink-500">Filter Status:</span>
               <Select
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v)}
@@ -141,27 +141,27 @@ export default function NonConformityRegister() {
                         key={nc.id}
                         onClick={() => setActiveNc(nc)}
                         className={`p-5 cursor-pointer hover:bg-ink-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                          activeNc?.id === nc.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
-                        }`}
+ activeNc?.id === nc.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
+ }`}
                       >
                         <div className="space-y-1.5 flex-1">
                           <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs text-brand-600 font-semibold">{nc.ncNumber}</span>
+                            <span className="text-xs text-brand-600 font-semibold">{nc.ncNumber}</span>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                                !isOpen
-                                  ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
-                                  : "bg-danger-500/10 text-danger-600 border-danger-500/20"
-                              }`}
+                              className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+ !isOpen
+ ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+ : "bg-danger-500/10 text-danger-600 border-danger-500/20"
+ }`}
                             >
                               {nc.status}
                             </span>
-                            <span className="text-[11px] text-ink-500">
-                              Detected: <span className="font-mono">{nc.detectedDate}</span>
+                            <span className="text-xs text-ink-500">
+                              Detected: <span className="">{nc.detectedDate}</span>
                             </span>
                           </div>
                           <p className="text-ink-900 text-xs font-semibold leading-relaxed">{nc.description}</p>
-                          <p className="text-[11px] text-ink-500">Source: {nc.detectedBy}</p>
+                          <p className="text-xs text-ink-500">Source: {nc.detectedBy}</p>
                         </div>
                       </div>
                     );
@@ -194,7 +194,7 @@ export default function NonConformityRegister() {
         {/* Right Side: NC Action Log & Resolution */}
         <div className="space-y-8">
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
-            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
+            <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
               Non-Conformity Action Center
             </h2>
 

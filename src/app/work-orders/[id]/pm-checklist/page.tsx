@@ -239,7 +239,7 @@ export default function PMChecklistPage() {
   const sectionCls = "bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4";
   const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
-    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[11px] font-bold flex items-center justify-center">{n}</span>;
+    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>;
   const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
 
   return (
@@ -256,7 +256,7 @@ export default function PMChecklistPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">Preventive Maintenance Checklist</h2>
-            <p className="text-xs text-ink-500 font-mono">{wo.workOrderNumber} · Complete & sign off</p>
+            <p className="text-xs text-ink-500">{wo.workOrderNumber} · Complete & sign off</p>
           </div>
         </div>
 
@@ -287,8 +287,8 @@ export default function PMChecklistPage() {
             fallback rather than a plan written for this machine type. */}
         {planTitle && (
           <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-xs ${
-            planIsGeneric ? "border-warn-200 bg-warn-50 text-warn-900" : "border-info-100 bg-info-50 text-info-900"
-          }`}>
+ planIsGeneric ? "border-warn-200 bg-warn-50 text-warn-900" : "border-info-100 bg-info-50 text-info-900"
+ }`}>
             <ClipboardCheck className="w-4 h-4 mt-0.5 shrink-0" />
             <p>
               Task list: <strong>{planTitle}</strong>.
@@ -332,10 +332,10 @@ export default function PMChecklistPage() {
               <label
                 key={key}
                 className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer text-xs ${
-                  safety[key as keyof typeof safety]
-                    ? "bg-brand-500/10 border-brand-500/30 text-brand-700"
-                    : "bg-ink-100 border-ink-200 text-ink-700"
-                }`}
+ safety[key as keyof typeof safety]
+ ? "bg-brand-500/10 border-brand-500/30 text-brand-700"
+ : "bg-ink-100 border-ink-200 text-ink-700"
+ }`}
               >
                 <input
                   type="checkbox"
@@ -516,8 +516,8 @@ export default function PMChecklistPage() {
 function Info({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
   return (
     <div>
-      <p className="text-[11px] text-ink-500 uppercase tracking-wider font-semibold">{label}</p>
-      <p className={`text-ink-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "-"}</p>
+      <p className="text-xs text-ink-500 font-semibold">{label}</p>
+      <p className={`text-ink-900 mt-0.5 ${mono ? "" : ""}`}>{value || "-"}</p>
     </div>
   );
 }
@@ -536,7 +536,7 @@ function ChecklistEditor({
   return (
     <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-3">
       <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-[11px] font-bold flex items-center justify-center">{n}</span>
+        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>
         {title}
       </h3>
       <div className="space-y-2">
@@ -574,16 +574,16 @@ function ChecklistEditor({
                   aria-pressed={it.status === s}
                   onClick={() => onChange(i, { status: s })}
                   className={`flex-1 sm:flex-none sm:min-w-[68px] min-h-11 px-3 rounded-lg text-xs font-semibold border transition-colors ${
-                    it.status === s
-                      ? s === "OK"
-                        ? "bg-brand-600 text-white border-brand-600"
-                        : s === "NOT_OK"
-                          ? "bg-danger-600 text-white border-danger-600"
-                          : "bg-ink-600 text-white border-ink-600"
-                      : it.status
-                        ? "bg-white text-ink-500 border-ink-200 hover:border-ink-300 hover:text-ink-700"
-                        : "bg-white text-ink-500 border-dashed border-ink-300 hover:border-ink-400 hover:text-ink-700"
-                  }`}
+ it.status === s
+ ? s === "OK"
+ ? "bg-brand-600 text-white border-brand-600"
+ : s === "NOT_OK"
+ ? "bg-danger-600 text-white border-danger-600"
+ : "bg-ink-600 text-white border-ink-600"
+ : it.status
+ ? "bg-white text-ink-500 border-ink-200 hover:border-ink-300 hover:text-ink-700"
+ : "bg-white text-ink-500 border-dashed border-ink-300 hover:border-ink-400 hover:text-ink-700"
+ }`}
                 >
                   {s === "NOT_OK" ? "NOT OK" : s}
                 </button>

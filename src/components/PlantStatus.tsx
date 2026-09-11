@@ -34,10 +34,10 @@ export default function PlantStatus() {
       href={clear ? "/equipment" : "/corrective"}
       aria-label={clear ? "All machines running" : `${down} machines down, open corrective records`}
       className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors ${
-        clear
-          ? "border-line bg-surface text-ink-600 hover:bg-ink-100"
-          : "border-danger-200 bg-danger-50 text-danger-700 hover:bg-danger-100"
-      }`}
+ clear
+ ? "border-line bg-surface text-ink-600 hover:bg-ink-100"
+ : "border-danger-200 bg-danger-50 text-danger-700 hover:bg-danger-100"
+ }`}
     >
       <span
         className={`w-1.5 h-1.5 rounded-full ${clear ? "bg-brand-500" : "bg-danger-500"}`}

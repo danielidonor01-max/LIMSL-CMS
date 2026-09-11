@@ -169,7 +169,7 @@ export default function MeterCard({
 
           <div className="grid grid-cols-2 gap-3 pt-1 border-t border-ink-100">
             <div>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Actual usage</p>
+              <p className="text-xs font-semibold text-ink-500">Actual usage</p>
               <p className="text-sm text-ink-900 mt-0.5">
                 {data.usagePerDay !== null ? (
                   <span className="inline-flex items-center gap-1">
@@ -182,7 +182,7 @@ export default function MeterCard({
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Projected due</p>
+              <p className="text-xs font-semibold text-ink-500">Projected due</p>
               <p className="text-sm text-ink-900 mt-0.5">
                 {data.projectedDueDate ? (
                   formatDate(data.projectedDueDate)

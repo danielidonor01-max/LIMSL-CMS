@@ -113,24 +113,24 @@ export default function RiskRegister() {
                         setMitigationAction(risk.actionToAddressRisk || "");
                       }}
                       className={`p-5 cursor-pointer hover:bg-ink-50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                        activeRisk?.id === risk.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
-                      }`}
+ activeRisk?.id === risk.id ? "bg-ink-50 border-l-2 border-brand-500" : ""
+ }`}
                     >
                       <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-brand-600 font-semibold">{risk.riskNumber}</span>
+                          <span className="text-xs text-brand-600 font-semibold">{risk.riskNumber}</span>
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                              isHigh
-                                ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
-                                : "bg-brand-500/10 text-brand-600 border-brand-500/20"
-                            }`}
+                            className={`px-1.5 py-0.5 rounded text-xs font-bold border ${
+ isHigh
+ ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
+ : "bg-brand-500/10 text-brand-600 border-brand-500/20"
+ }`}
                           >
                             Risk Level: {risk.riskLevel} (Score: {risk.impactRating})
                           </span>
                         </div>
                         <p className="text-ink-900 text-xs font-semibold leading-relaxed">{risk.identifiedRisk}</p>
-                        <p className="text-[11px] text-ink-500">Affects: {risk.affectedProcess}</p>
+                        <p className="text-xs text-ink-500">Affects: {risk.affectedProcess}</p>
                       </div>
                     </div>
                   );
@@ -143,7 +143,7 @@ export default function RiskRegister() {
         {/* Right Side: Risk Assessment Details */}
         <div className="space-y-8">
           <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
-            <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide border-b border-ink-200 pb-3">
+            <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
               Risk Mitigation & Controls
             </h2>
 
@@ -160,7 +160,7 @@ export default function RiskRegister() {
                   </div>
                   <div className="flex justify-between border-b border-ink-200 pb-2">
                     <span className="text-ink-500">Status</span>
-                    <span className="font-semibold text-ink-900 uppercase">{activeRisk.status}</span>
+                    <span className="font-semibold text-ink-900">{activeRisk.status}</span>
                   </div>
                 </div>
 

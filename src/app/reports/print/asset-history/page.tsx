@@ -171,12 +171,12 @@ function AssetHistoryDossier() {
                 <h1 className="text-base font-black tracking-tight text-ink-900 leading-none">
                   LEE INTERNATIONAL
                 </h1>
-                <p className="text-[10px] text-ink-500 font-mono uppercase tracking-widest mt-1">
+                <p className="text-xs text-ink-500 mt-1">
                   Machinery &amp; Services Limited
                 </p>
               </div>
             </div>
-            <div className="text-right text-[11px] text-ink-500 font-mono">
+            <div className="text-right text-xs text-ink-500">
               <p className="font-bold text-ink-900">LIMSL-RPT-ASSET</p>
               <p>ISO 9001:2015 · ISO 45001</p>
             </div>
@@ -196,13 +196,13 @@ function AssetHistoryDossier() {
 
           {/* Equipment identity */}
           <div>
-            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 mb-2">
               Equipment identity
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 print:grid-cols-4 gap-x-6 gap-y-2 border border-ink-200 rounded-lg p-4 print:rounded-none">
               {identity.map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[10px] text-ink-500 uppercase tracking-wider">{label}</p>
+                  <p className="text-xs text-ink-500">{label}</p>
                   <p className="text-xs text-ink-900 font-medium break-words">{value || "-"}</p>
                 </div>
               ))}
@@ -211,24 +211,24 @@ function AssetHistoryDossier() {
 
           {/* Period summary */}
           <div>
-            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 mb-2">
               Period summary
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 bg-ink-50 border border-ink-200 rounded-lg p-4 print:rounded-none">
               {summary.map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[10px] text-ink-500 uppercase tracking-wider">{label}</p>
+                  <p className="text-xs text-ink-500">{label}</p>
                   <p className="text-xs text-ink-900 font-semibold">{value}</p>
                 </div>
               ))}
             </div>
             {!!t.downtimeUnrecorded && (
-              <p className="text-[11px] text-warn-700 mt-2">
+              <p className="text-xs text-warn-700 mt-2">
                 {t.downtimeUnrecorded} breakdown{t.downtimeUnrecorded === 1 ? "" : "s"} in this period have no recorded
                 downtime window, availability above is an upper bound.
               </p>
             )}
-            <p className="text-[11px] text-ink-400 mt-1">
+            <p className="text-xs text-ink-400 mt-1">
               Availability = (planned production hours − recorded downtime) ÷ planned production hours, using the
               organisation&apos;s working-hours calendar.
             </p>
@@ -236,19 +236,19 @@ function AssetHistoryDossier() {
 
           {/* Chronological record set */}
           <div>
-            <h3 className="text-xs font-bold text-ink-900 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-bold text-ink-900 mb-2">
               Chronological maintenance record
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-ink-300 text-ink-600">
-                    <th className="py-2 pr-3 font-semibold uppercase tracking-wide whitespace-nowrap">Date</th>
-                    <th className="py-2 pr-3 font-semibold uppercase tracking-wide">Type</th>
-                    <th className="py-2 pr-3 font-semibold uppercase tracking-wide">Reference</th>
-                    <th className="py-2 pr-3 font-semibold uppercase tracking-wide">Record</th>
-                    <th className="py-2 pr-3 font-semibold uppercase tracking-wide">Performed by</th>
-                    <th className="py-2 font-semibold uppercase tracking-wide">Status / approval</th>
+                    <th className="py-2 pr-3 font-semibold whitespace-nowrap">Date</th>
+                    <th className="py-2 pr-3 font-semibold">Type</th>
+                    <th className="py-2 pr-3 font-semibold">Reference</th>
+                    <th className="py-2 pr-3 font-semibold">Record</th>
+                    <th className="py-2 pr-3 font-semibold">Performed by</th>
+                    <th className="py-2 font-semibold">Status / approval</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
@@ -263,7 +263,7 @@ function AssetHistoryDossier() {
                       <tr key={`${e.date}-${e.reference}-${i}`} className="text-ink-800 break-inside-avoid align-top">
                         <td className="py-1.5 pr-3 whitespace-nowrap">{formatDate(e.date)}</td>
                         <td className="py-1.5 pr-3 whitespace-nowrap">{e.category}</td>
-                        <td className="py-1.5 pr-3 font-mono text-[11px]">{e.reference || "-"}</td>
+                        <td className="py-1.5 pr-3 text-xs">{e.reference || "-"}</td>
                         <td className="py-1.5 pr-3">
                           <span className="font-semibold">{e.title}</span>
                           {e.detail && <span className="block text-ink-500">{e.detail}</span>}

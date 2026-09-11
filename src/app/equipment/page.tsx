@@ -239,8 +239,8 @@ export default function EquipmentList() {
                 onClick={() => setTypeTab(t)}
                 title={t === "ALL" ? undefined : ASSET_PREFIX_META[t].help}
                 className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  typeTab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                }`}
+ typeTab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
               >
                 {t === "ALL"
                   ? `All (${counts.total})`
@@ -253,17 +253,17 @@ export default function EquipmentList() {
             onClick={() => setAttentionOnly((v) => !v)}
             aria-pressed={attentionOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-9 rounded-lg border text-xs font-semibold transition-colors w-fit ${
-              attentionOnly
-                ? "bg-danger-50 border-danger-300 text-danger-700"
-                : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-            }`}
+ attentionOnly
+ ? "bg-danger-50 border-danger-300 text-danger-700"
+ : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
           >
             <AlertTriangle className="w-4 h-4" />
             Needs attention
             <span
-              className={`px-1.5 py-0.5 rounded text-[11px] ${
-                counts.attention ? "bg-danger-600 text-white" : "bg-ink-100 text-ink-500"
-              }`}
+              className={`px-1.5 py-0.5 rounded text-xs ${
+ counts.attention ? "bg-danger-600 text-white" : "bg-ink-100 text-ink-500"
+ }`}
             >
               {counts.attention}
             </span>
@@ -322,7 +322,7 @@ export default function EquipmentList() {
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/equipment/${urlParam}`} className="min-w-0">
                         <p className="font-semibold text-ink-900 text-sm leading-snug">{eq.name}</p>
-                        <p className="font-mono text-xs text-ink-500 mt-0.5">{eq.assetId}</p>
+                        <p className="text-xs text-ink-500 mt-0.5">{eq.assetId}</p>
                       </Link>
                       <KebabMenu ariaLabel={`Actions for ${eq.name}`} items={rowActions(eq)} />
                     </div>
@@ -375,7 +375,7 @@ export default function EquipmentList() {
                               {eq.name}
                             </Link>
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-ink-500">{eq.assetId}</td>
+                          <td className="py-3.5 px-4 text-ink-500">{eq.assetId}</td>
                           <td className="py-3.5 px-4">
                             {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}
                           </td>

@@ -149,7 +149,7 @@ export default function DataImportPage() {
     return (
       <div className="p-10 max-w-md mx-auto text-center space-y-3">
         <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
-        <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+        <h2 className="text-xl font-bold text-ink-900">Access restricted</h2>
         <p className="text-sm text-ink-500">
           Data import is available to Super Admins only. Your role is{" "}
           <span className="font-semibold">{ROLE_LABELS[role ?? "VIEWER"] ?? role}</span>.
@@ -168,7 +168,7 @@ export default function DataImportPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-tight text-ink-900">Data Import</h2>
-          <p className="text-xs text-ink-500 font-mono">Super Admin · go-live register import (CSV / Excel)</p>
+          <p className="text-xs text-ink-500">Super Admin · go-live register import (CSV / Excel)</p>
         </div>
       </div>
 
@@ -179,8 +179,8 @@ export default function DataImportPage() {
             key={t.key}
             onClick={() => switchTab(t.key)}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-              tab === t.key ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-            }`}
+ tab === t.key ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
           >
             {t.label}
           </button>
@@ -254,10 +254,10 @@ export default function DataImportPage() {
                 <tbody className="divide-y divide-ink-100">
                   {preview.preview.map((p) => (
                     <tr key={p.row} className={p.action === "error" ? "bg-danger-500/5" : ""}>
-                      <td className="py-2 px-3 font-mono text-ink-400">{p.row}</td>
+                      <td className="py-2 px-3 text-ink-400">{p.row}</td>
                       <td className="py-2 px-3 text-ink-800">{p.label}</td>
                       <td className="py-2 px-3">
-                        <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-semibold uppercase ${ACTION_BADGE[p.action]}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold ${ACTION_BADGE[p.action]}`}>
                           {p.action}
                         </span>
                       </td>
@@ -298,7 +298,7 @@ export default function DataImportPage() {
                 </p>
                 <div className="space-y-1">
                   {committed.credentials.map((c) => (
-                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs font-mono bg-white border border-ink-200 rounded px-2.5 py-1.5">
+                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs bg-white border border-ink-200 rounded px-2.5 py-1.5">
                       <span className="text-ink-700">{c.email}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-ink-900 font-semibold">{c.tempPassword}</span>

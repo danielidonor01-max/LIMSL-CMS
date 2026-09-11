@@ -196,15 +196,15 @@ export default function AuditTrailLogs() {
         <div className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">From</span>
+              <span className="text-xs font-semibold text-ink-500">From</span>
               <DateField value={from} onChange={(v) => setFrom(v)} />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">To</span>
+              <span className="text-xs font-semibold text-ink-500">To</span>
               <DateField value={to} onChange={(v) => setTo(v)} />
             </label>
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Record type</span>
+              <span className="text-xs font-semibold text-ink-500">Record type</span>
               <Select value={entityType} onChange={setEntityType} ariaLabel="Filter by record type" placeholder="All records">
                 <option value="">All records</option>
                 {facets.entityTypes.map((t) => (
@@ -215,7 +215,7 @@ export default function AuditTrailLogs() {
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Action</span>
+              <span className="text-xs font-semibold text-ink-500">Action</span>
               <Select value={action} onChange={setAction} ariaLabel="Filter by action" placeholder="All actions">
                 <option value="">All actions</option>
                 {facets.actions.map((a) => (
@@ -226,7 +226,7 @@ export default function AuditTrailLogs() {
               </Select>
             </div>
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Search</span>
+              <span className="text-xs font-semibold text-ink-500">Search</span>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-400" />
                 <input
@@ -248,7 +248,7 @@ export default function AuditTrailLogs() {
             {entityId && (
               <button
                 onClick={() => setEntityId("")}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-brand-500/10 text-brand-700 border-brand-500/20"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border bg-brand-500/10 text-brand-700 border-brand-500/20"
                 title="Clear the record filter"
               >
                 Record {entityId}
@@ -311,7 +311,7 @@ export default function AuditTrailLogs() {
                         <tr key={log.id} className="hover:bg-ink-50 transition-colors align-top">
                           <td className="py-3.5 px-5 whitespace-nowrap">
                             <div className="text-ink-900 font-medium">{t.date}</div>
-                            <div className="text-[11px] text-ink-400 font-mono">{t.time}</div>
+                            <div className="text-xs text-ink-400">{t.time}</div>
                           </td>
                           <td className="py-3.5 px-5">
                             <Badge className={ACTION_BADGE[log.action] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
@@ -323,7 +323,7 @@ export default function AuditTrailLogs() {
                             {log.entityId && (
                               <button
                                 onClick={() => setEntityId(log.entityId ?? "")}
-                                className="text-[11px] text-ink-400 font-mono hover:text-brand-700 truncate max-w-[12rem] block text-left"
+                                className="text-xs text-ink-400 hover:text-brand-700 truncate max-w-[12rem] block text-left"
                                 title="Show every entry for this record"
                               >
                                 {log.entityId}
@@ -356,19 +356,19 @@ export default function AuditTrailLogs() {
                       </Badge>
                       <div className="text-right">
                         <div className="text-xs text-ink-600">{t.date}</div>
-                        <div className="text-[11px] text-ink-400 font-mono">{t.time}</div>
+                        <div className="text-xs text-ink-400">{t.time}</div>
                       </div>
                     </div>
                     <p className="text-xs text-ink-700 mt-2">
                       {log.entityDescription || "No description recorded."}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-ink-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-ink-500">
                       <span className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5" /> {log.userName || "System"}
                       </span>
                       <span className="truncate">
                         {titleise(log.entityType)}
-                        {log.entityId ? <span className="font-mono"> · {log.entityId}</span> : ""}
+                        {log.entityId ? <span className=""> · {log.entityId}</span> : ""}
                       </span>
                     </div>
                   </div>

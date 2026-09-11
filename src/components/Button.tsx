@@ -18,8 +18,12 @@ const BASE =
 // technician wearing gloves cannot reliably hit the 32px these used to be.
 // sm stays compact for dense table rows, where taps are rarer and deliberate.
 const SIZES: Record<ButtonSize, string> = {
+  // A button label is the name of an action, not metadata about one, so it
+  // reads at body size. The default sat at 12px, which is the size this app
+  // used for table captions — every primary action in the system was set in
+  // caption type, and that is most of why the interface read as cramped.
   sm: "px-3 py-1.5 text-xs",
-  md: "px-4 py-2 text-xs min-h-11",
+  md: "px-4 py-2 text-sm min-h-11",
   lg: "px-5 py-2.5 text-sm min-h-11",
 };
 

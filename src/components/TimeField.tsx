@@ -146,8 +146,8 @@ export default function TimeField({
                 inputRef.current?.focus();
               }}
               className={`w-full text-left px-3 min-h-11 text-sm transition-colors ${
-                t === current ? "bg-brand-600 text-white font-semibold" : "text-ink-700 hover:bg-ink-100"
-              }`}
+ t === current ? "bg-brand-600 text-white font-semibold" : "text-ink-700 hover:bg-ink-100"
+ }`}
             >
               {t}
             </button>

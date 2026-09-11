@@ -106,7 +106,7 @@ export default function CorrectiveMaintenanceList() {
                           )}
                         </div>
                         <p className="text-xs text-ink-500">
-                          <span className="font-mono">{rec.cmrfNumber}</span>
+                          <span className="">{rec.cmrfNumber}</span>
                           {" · "}
                           {formatDate(rec.reportedDate)}
                           {rec.reportedByName ? ` · ${rec.reportedByName}` : ""}

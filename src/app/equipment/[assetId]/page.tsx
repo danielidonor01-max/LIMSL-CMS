@@ -100,7 +100,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
   if (!eq) {
     return (
-      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center text-ink-500 font-mono text-xs gap-4">
+      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center text-ink-500 text-xs gap-4">
         <AlertTriangle className="w-8 h-8 text-danger-500" /> Asset Digital Twin not found.
         <Link href="/equipment" className="text-brand-600 underline">Return to Registry</Link>
       </div>
@@ -220,8 +220,8 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <statusView.Icon className={`w-6 h-6 ${isBroken ? "animate-pulse" : ""}`} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wider text-ink-500 font-semibold">Current status</p>
-              <h2 className="text-lg font-bold text-ink-900">
+              <p className="text-xs text-ink-500 font-semibold">Current status</p>
+              <h2 className="text-xl font-bold text-ink-900">
                 {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
               </h2>
               <p className="text-xs text-ink-600 mt-0.5">{statusView.meaning}</p>
@@ -235,36 +235,36 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         </div>
 
         {/* Tab Headers */}
-        <div className="flex border-b border-ink-200 gap-6 text-xs font-bold uppercase tracking-wider">
+        <div className="flex border-b border-ink-200 gap-6 text-xs font-bold">
           <button
             onClick={() => setActiveTab("specs")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "specs" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
-            }`}
+ activeTab === "specs" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
+ }`}
           >
             Specifications
           </button>
           <button
             onClick={() => setActiveTab("troubleshooting")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "troubleshooting" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
-            }`}
+ activeTab === "troubleshooting" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
+ }`}
           >
             Diagnostics & BOM
           </button>
           <button
             onClick={() => setActiveTab("safety")}
             className={`pb-2.5 transition-all border-b-2 ${
-              activeTab === "safety" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
-            }`}
+ activeTab === "safety" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
+ }`}
           >
             Safety & OEM
           </button>
           <button
             onClick={() => setActiveTab("history")}
             className={`pb-2.5 transition-all border-b-2 flex items-center gap-1.5 ${
-              activeTab === "history" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
-            }`}
+ activeTab === "history" ? "text-brand-600 border-brand-500" : "text-ink-500 border-transparent hover:text-ink-900"
+ }`}
           >
             <History className="w-3.5 h-3.5" /> History Log
           </button>
@@ -286,16 +286,16 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                   <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
-                    <span className="text-[11px] text-ink-500 uppercase font-mono block mb-1">Manufacturer</span>
+                    <span className="text-xs text-ink-500 block mb-1">Manufacturer</span>
                     <span className="font-semibold text-ink-900">{eq.oem || "-"}</span>
                   </div>
                   <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
-                    <span className="text-[11px] text-ink-500 uppercase font-mono block mb-1">Model</span>
+                    <span className="text-xs text-ink-500 block mb-1">Model</span>
                     <span className="font-semibold text-ink-900">{eq.model || "-"}</span>
                   </div>
                   <div className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-xs">
-                    <span className="text-[11px] text-ink-500 uppercase font-mono block mb-1">Serial Number</span>
-                    <span className="font-semibold text-ink-900 font-mono">{eq.serialNumber || "-"}</span>
+                    <span className="text-xs text-ink-500 block mb-1">Serial Number</span>
+                    <span className="font-semibold text-ink-900">{eq.serialNumber || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -309,7 +309,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                       <Clock className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
-                      <p className="text-ink-500 font-mono text-[10px] uppercase">Last Completed PM</p>
+                      <p className="text-ink-500 text-xs">Last Completed PM</p>
                       <p className="font-bold text-ink-900">{eq.lastMaintenanceDate || "-"}</p>
                     </div>
                   </div>
@@ -318,7 +318,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div className="text-xs">
-                      <p className="text-ink-500 font-mono text-[10px] uppercase">Next Scheduled PM</p>
+                      <p className="text-ink-500 text-xs">Next Scheduled PM</p>
                       <p className={`font-bold ${isBroken ? "text-danger-600" : "text-ink-900"}`}>{eq.nextMaintenanceDate || "-"}</p>
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
               <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-bold tracking-wide text-ink-900">Component Bill of Materials (BOM)</h3>
-                  <span className="text-[11px] text-ink-500 font-mono">{components.length} components registered</span>
+                  <span className="text-xs text-ink-500">{components.length} components registered</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {components.map((comp) => {
@@ -365,14 +365,14 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                       <div key={comp.id} className="p-4 bg-ink-100 border border-ink-200 rounded-lg space-y-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="px-2 py-0.5 rounded bg-white border border-ink-200 font-mono text-[10px] font-bold text-brand-600">
+                            <span className="px-2 py-0.5 rounded bg-white border border-ink-200 text-xs font-bold text-brand-600">
                               {comp.componentTag}
                             </span>
                             <h4 className="text-xs font-bold text-ink-900 mt-1">{comp.name}</h4>
                           </div>
-                          <span className="text-[10px] uppercase font-mono text-ink-500">{comp.type}</span>
+                          <span className="text-xs text-ink-500">{comp.type}</span>
                         </div>
-                        <div className="text-[11px] text-ink-500 space-y-1 font-mono leading-tight">
+                        <div className="text-xs text-ink-500 space-y-1 leading-tight">
                           <p><span className="text-ink-600">Location:</span> {comp.location || "N/A"}</p>
                           <p><span className="text-ink-600">Ref Drawing:</span> {comp.schematicReference || "N/A"}</p>
                           {comp.manufacturer && (
@@ -404,7 +404,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                           <p className="text-ink-500 mt-1">**Probable Cause:** {guide.probableCause}</p>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[11px] font-bold text-ink-500 uppercase tracking-wide block">Verification Checklist</span>
+                          <span className="text-xs font-bold text-ink-500 block">Verification Checklist</span>
                           <div className="space-y-1.5">
                             {steps.map((step: string, i: number) => (
                               <label key={i} className="flex gap-2 items-start text-xs text-ink-600 select-none">
@@ -428,7 +428,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                 <div className="p-5 bg-ink-100 border border-ink-200 rounded-xl text-center space-y-2">
                   <Info className="w-6 h-6 text-ink-500 mx-auto" />
                   <h4 className="text-xs font-bold text-ink-700">No Active Faults</h4>
-                  <p className="text-[11px] text-ink-500 leading-relaxed">
+                  <p className="text-xs text-ink-500 leading-relaxed">
                     Machinery is operational. You can view registered schematics and BOM list, or launch the manual wizard.
                   </p>
                   <Link
@@ -467,8 +467,8 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   <div className="flex justify-between">
                     <span className="text-ink-500">Status</span>
                     <span className={`font-semibold ${
-                      eq.warrantyExpiry && new Date(eq.warrantyExpiry) >= new Date() ? "text-brand-600" : "text-ink-500"
-                    }`}>
+ eq.warrantyExpiry && new Date(eq.warrantyExpiry) >= new Date() ? "text-brand-600" : "text-ink-500"
+ }`}>
                       {eq.warrantyExpiry
                         ? (new Date(eq.warrantyExpiry) >= new Date() ? "In warranty" : "Expired")
                         : "Not recorded"}
@@ -478,7 +478,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                     <span className="text-ink-500">Expiry</span>
                     <span className="font-semibold text-ink-900">{eq.warrantyExpiry || "-"}</span>
                   </div>
-                  <p className="text-[11px] text-ink-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
+                  <p className="text-xs text-ink-400 pt-1">Full OEM terms are in the OEM &amp; Warranty module.</p>
                 </div>
               </div>
             </div>

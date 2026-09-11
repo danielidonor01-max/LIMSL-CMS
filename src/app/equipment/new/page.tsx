@@ -130,16 +130,16 @@ export default function NewEquipmentPage() {
                   aria-pressed={active}
                   onClick={() => chooseType(p)}
                   className={`text-left p-4 rounded-xl border transition-colors ${
-                    active
-                      ? "border-brand-500 bg-brand-50"
-                      : "border-ink-200 bg-white hover:border-ink-300"
-                  }`}
+ active
+ ? "border-brand-500 bg-brand-50"
+ : "border-ink-200 bg-white hover:border-ink-300"
+ }`}
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded ${
-                        active ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-500"
-                      }`}
+                      className={` text-xs font-bold px-1.5 py-0.5 rounded ${
+ active ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-500"
+ }`}
                     >
                       {p}
                     </span>
@@ -164,7 +164,7 @@ export default function NewEquipmentPage() {
               value={form.assetId}
               onChange={(e) => set("assetId", e.target.value)}
               placeholder={`LEE/${assetType}/0000`}
-              className={`${FIELD_CLASS} font-mono`}
+              className={`${FIELD_CLASS} `}
               required
             />
             <button
@@ -178,7 +178,7 @@ export default function NewEquipmentPage() {
               Regenerate
             </button>
           </div>
-          <p className="text-[11px] text-ink-500 mt-1">
+          <p className="text-xs text-ink-500 mt-1">
             Next free code in the LEE/{assetType}/ series. Editable, a duplicate is refused on save.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function NewEquipmentPage() {
             <Select value={form.criticality} onChange={(v) => set("criticality", v)} className="w-full">
               {CRITICALITIES.map((c) => <option key={c} value={c}>{CRITICALITY_LABELS[c]}</option>)}
             </Select>
-            <p className="text-[11px] text-ink-500 mt-1">
+            <p className="text-xs text-ink-500 mt-1">
               Sets the default service interval, work-order priority and how early overdue work escalates.
             </p>
           </div>
@@ -256,7 +256,7 @@ export default function NewEquipmentPage() {
               {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{FREQUENCY_LABELS[fq] ?? fq}</option>)}
             </Select>
             {form.maintenanceFrequency !== suggestedPmFrequency(form.criticality) && (
-              <p className="text-[11px] text-warn-700 mt-1">
+              <p className="text-xs text-warn-700 mt-1">
                 {CRITICALITY_SHORT[form.criticality]} criticality normally means{" "}
                 {(FREQUENCY_LABELS[suggestedPmFrequency(form.criticality)] ?? "").toLowerCase()}.
               </p>

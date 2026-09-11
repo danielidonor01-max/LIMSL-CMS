@@ -11,7 +11,7 @@
 //
 // Light, not dark. The previous version was near-black with tracked-out capital
 // labels and monospace on every caption, which is a look rather than a reading
-// aid: 17 uppercase labels, 22 monospace spans and 17 captions below the 11px
+// aid: 17  labels, 22 monospace spans and 17 captions below the 11px
 // floor the rest of the app keeps. Phones also reach their highest brightness
 // on light backgrounds, which is what matters in a workshop with the doors open.
 "use client";
@@ -136,7 +136,7 @@ export default function MachinePassportPage({
   if (failed || !data) {
     return (
       <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-6 text-center gap-3">
-        <h1 className="text-2xl font-bold text-ink-900">That tag is not on the register</h1>
+        <h1 className="text-3xl font-bold text-ink-900">That tag is not on the register</h1>
         <p className="text-sm text-ink-600 max-w-sm leading-relaxed">
           The code scanned as <span className="tabular-nums font-semibold">{assetId.replace(/-/g, "/")}</span>,
           and no machine on the register carries it. Tell your supervisor which machine the sticker
@@ -163,7 +163,7 @@ export default function MachinePassportPage({
         {/* The machine, quietly, above the answer about it. */}
         <div>
           <p className="text-sm text-ink-600 tabular-nums">{eq.assetId}</p>
-          <h1 className="text-2xl font-bold tracking-[-0.02em] leading-tight mt-0.5">{eq.name}</h1>
+          <h1 className="text-3xl font-bold tracking-[-0.02em] leading-tight mt-0.5">{eq.name}</h1>
           <p className="text-sm text-ink-600 mt-1">
             {eq.categoryLabel}
             {eq.location ? ` · ${eq.location}` : ""}
@@ -186,7 +186,7 @@ export default function MachinePassportPage({
           ) : (
             <ShieldAlert className="w-7 h-7" />
           )}
-          <h2 className="text-2xl font-bold tracking-[-0.02em] leading-[1.12] text-balance mt-3">
+          <h2 className="text-3xl font-bold tracking-[-0.02em] leading-[1.12] text-balance mt-3">
             {v.headline}
           </h2>
           <p className="text-sm mt-2.5 leading-relaxed opacity-90">{v.detail}</p>

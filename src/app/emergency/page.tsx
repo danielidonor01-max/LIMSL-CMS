@@ -325,8 +325,8 @@ export default function EmergencyPage() {
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  tab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                }`}
+ tab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
               >
                 {t === "register"
                   ? `Equipment (${items.length})`
@@ -352,8 +352,8 @@ export default function EmergencyPage() {
                 onClick={() => setNotReadyOnly((v) => !v)}
                 aria-pressed={notReadyOnly}
                 className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-                  notReadyOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                }`}
+ notReadyOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
               >
                 <AlertTriangle className="w-4 h-4" /> Not ready only
               </button>
@@ -409,7 +409,7 @@ export default function EmergencyPage() {
                   <tbody className="divide-y divide-ink-200">
                     {filtered.map((i) => (
                       <tr key={i.id} className="hover:bg-ink-50">
-                        <td className="py-3.5 px-5 font-mono font-semibold text-ink-900">{i.tagNumber}</td>
+                        <td className="py-3.5 px-5 font-semibold text-ink-900">{i.tagNumber}</td>
                         <td className="py-3.5 px-5 text-ink-700">
                           {EMERGENCY_TYPE_LABELS[i.type as EmergencyEquipmentType] ?? i.type}
                           {i.capacity ? <span className="text-ink-400"> · {i.capacity}</span> : null}
@@ -439,7 +439,7 @@ export default function EmergencyPage() {
                           ) : (
                             <>
                               <Badge className="bg-danger-500/10 text-danger-700 border-danger-500/20">Not ready</Badge>
-                              <p className="text-[11px] text-danger-700 mt-1 leading-snug">
+                              <p className="text-xs text-danger-700 mt-1 leading-snug">
                                 {i.readiness.reasons.join(" ")}
                               </p>
                             </>
@@ -502,10 +502,10 @@ export default function EmergencyPage() {
                     {d.deficiencies && (
                       <div
                         className={`text-xs rounded-lg border p-2.5 ${
-                          d.correctiveActions
-                            ? "bg-ink-50 border-ink-200 text-ink-700"
-                            : "bg-warn-50 border-warn-200 text-warn-900"
-                        }`}
+ d.correctiveActions
+ ? "bg-ink-50 border-ink-200 text-ink-700"
+ : "bg-warn-50 border-warn-200 text-warn-900"
+ }`}
                       >
                         <p>
                           <strong>Found:</strong> {d.deficiencies}
@@ -528,7 +528,7 @@ export default function EmergencyPage() {
           <form onSubmit={submitItem} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Tag number *" htmlFor="em-tag">
-                <input id="em-tag" value={itemForm.tagNumber} onChange={(e) => setItemForm((f) => ({ ...f, tagNumber: e.target.value }))} className={`${FIELD_CLASS} font-mono`} required />
+                <input id="em-tag" value={itemForm.tagNumber} onChange={(e) => setItemForm((f) => ({ ...f, tagNumber: e.target.value }))} className={`${FIELD_CLASS} `} required />
               </Field>
               <div>
                 <label className={LABEL_CLASS}>Type</label>
@@ -639,12 +639,12 @@ export default function EmergencyPage() {
                     onClick={() => setInspect((s) => (s ? { ...s, verdict: v } : s))}
                     aria-pressed={inspect.verdict === v}
                     className={`min-h-11 rounded-lg border text-sm font-semibold transition-colors ${
-                      inspect.verdict === v
-                        ? v === "PASS"
-                          ? "bg-brand-600 border-brand-600 text-white"
-                          : "bg-danger-600 border-danger-600 text-white"
-                        : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                    }`}
+ inspect.verdict === v
+ ? v === "PASS"
+ ? "bg-brand-600 border-brand-600 text-white"
+ : "bg-danger-600 border-danger-600 text-white"
+ : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
                   >
                     {v === "PASS" ? "Serviceable" : "Not fit for use"}
                   </button>

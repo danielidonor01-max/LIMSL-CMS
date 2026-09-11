@@ -53,7 +53,7 @@ export default function TriStateChecklist({
           <button
             type="button"
             onClick={() => setAll("NA")}
-            className="text-[11px] font-semibold text-ink-500 hover:text-ink-900 shrink-0"
+            className="text-xs font-semibold text-ink-500 hover:text-ink-900 shrink-0"
           >
             Mark rest N/A
           </button>
@@ -68,13 +68,13 @@ export default function TriStateChecklist({
             <div
               key={item.key}
               className={`flex items-center justify-between gap-3 px-3 py-2 ${
-                required && current !== "YES" ? "bg-warn-50" : ""
-              }`}
+ required && current !== "YES" ? "bg-warn-50" : ""
+ }`}
             >
               <span className="text-xs text-ink-700 min-w-0">
                 {item.label}
                 {required && (
-                  <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-warn-700">
+                  <span className="ml-1.5 text-xs font-bold text-warn-700">
                     required
                   </span>
                 )}
@@ -93,8 +93,8 @@ export default function TriStateChecklist({
                       aria-label={`${item.label}: ${o.label}`}
                       title={o.label}
                       className={`w-7 h-7 rounded-md border flex items-center justify-center transition-colors disabled:opacity-50 ${
-                        on ? o.on : "bg-white border-ink-200 text-ink-400 hover:border-ink-300"
-                      }`}
+ on ? o.on : "bg-white border-ink-200 text-ink-400 hover:border-ink-300"
+ }`}
                     >
                       <Icon className="w-4 h-4" />
                     </button>
@@ -107,7 +107,7 @@ export default function TriStateChecklist({
       </div>
 
       {unmarked > 0 && (
-        <p className="text-[11px] text-warn-700 mt-1.5">
+        <p className="text-xs text-warn-700 mt-1.5">
           {unmarked} line{unmarked === 1 ? "" : "s"} not yet marked. Every line is ticked or crossed
           before the permit is signed.
         </p>

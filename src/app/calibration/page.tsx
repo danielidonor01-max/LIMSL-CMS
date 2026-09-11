@@ -65,7 +65,7 @@ type CalEvent = {
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
-const sectionCls = "text-xs font-mono uppercase tracking-wider text-ink-500";
+const sectionCls = "text-xs   text-ink-500";
 
 const STATUS_BADGE: Record<string, string> = {
   CURRENT: "bg-brand-500/10 text-brand-600 border-brand-500/20",
@@ -289,7 +289,7 @@ export default function CalibrationPage() {
                           <td className="py-3 px-5">
                             <div className="font-medium text-ink-900">{r.instrumentName}</div>
                             {r.serialNumber && (
-                              <div className="text-[11px] font-mono text-ink-500">S/N {r.serialNumber}</div>
+                              <div className="text-xs text-ink-500">S/N {r.serialNumber}</div>
                             )}
                           </td>
                           <td className="py-3.5 px-5 text-ink-700">
@@ -306,14 +306,14 @@ export default function CalibrationPage() {
                           </td>
                           <td className="py-3.5 px-5 text-ink-500">{r.calibrationInterval ?? "-"} d</td>
                           <td className="py-3.5 px-5">
-                            <div className="font-mono text-ink-500">{r.certificateNumber ?? "-"}</div>
+                            <div className="text-ink-500">{r.certificateNumber ?? "-"}</div>
                             {traceability ? (
-                              <div className="text-[11px] text-ink-500 flex items-center gap-1 mt-0.5">
+                              <div className="text-xs text-ink-500 flex items-center gap-1 mt-0.5">
                                 <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
                                 <span className="truncate max-w-[14rem]">{traceability}</span>
                               </div>
                             ) : (
-                              <div className="text-[11px] text-warn-600 flex items-center gap-1 mt-0.5">
+                              <div className="text-xs text-warn-600 flex items-center gap-1 mt-0.5">
                                 <AlertTriangle className="w-3.5 h-3.5" /> No traceability on record
                               </div>
                             )}
@@ -583,8 +583,8 @@ export default function CalibrationPage() {
 function Meta({ label, value, mono = false }: { label: string; value: string | null; mono?: boolean }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider">{label}</dt>
-      <dd className={`text-ink-700 ${mono ? "font-mono" : ""}`}>{value || "-"}</dd>
+      <dt className="text-xs font-semibold text-ink-400">{label}</dt>
+      <dd className={`text-ink-700 ${mono ? "" : ""}`}>{value || "-"}</dd>
     </div>
   );
 }

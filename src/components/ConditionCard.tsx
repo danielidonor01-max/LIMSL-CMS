@@ -123,7 +123,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-ink-900">{p.name}</p>
-                    <p className="text-[11px] text-ink-500 mt-0.5">
+                    <p className="text-xs text-ink-500 mt-0.5">
                       {CONDITION_LABELS[p.kind] ?? p.kind}
                       {p.alertLimit !== null ? ` · alert ${p.alertLimit}${p.unit ?? ""}` : ""}
                       {p.alarmLimit !== null ? ` · alarm ${p.alarmLimit}${p.unit ?? ""}` : ""}
@@ -133,7 +133,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
                 </div>
 
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <span className="text-2xl font-bold text-ink-900 tabular-nums">
+                  <span className="text-3xl font-bold text-ink-900 tabular-nums">
                     {p.latest ? p.latest.value : "-"}
                     <span className="text-xs text-ink-500 font-normal"> {p.unit}</span>
                   </span>

@@ -370,7 +370,7 @@ export default function UsersAdminPage() {
     return (
       <div className="p-10 max-w-md mx-auto text-center space-y-3">
         <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
-        <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+        <h2 className="text-xl font-bold text-ink-900">Access restricted</h2>
         <p className="text-sm text-ink-500">
           User administration is available to Super Admins only. Your role is{" "}
           <span className="font-semibold">{ROLE_LABELS[role ?? "VIEWER"] ?? role}</span>.
@@ -381,7 +381,7 @@ export default function UsersAdminPage() {
 
   const field =
     "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
-  const fieldLabel = "block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5";
+  const fieldLabel = "block text-xs font-semibold text-ink-500  mb-1.5";
 
   const statusBadge = (u: User) => (
     <Badge
@@ -418,7 +418,7 @@ export default function UsersAdminPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight text-ink-900">User Management</h2>
-            <p className="text-xs text-ink-500 font-mono">Super Admin · roles & access control</p>
+            <p className="text-xs text-ink-500">Super Admin · roles & access control</p>
           </div>
         </div>
         {pageTab === "users" && (
@@ -445,10 +445,10 @@ export default function UsersAdminPage() {
             aria-selected={pageTab === t.id}
             onClick={() => setPageTab(t.id)}
             className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors ${
-              pageTab === t.id
-                ? "border-brand-600 text-brand-700"
-                : "border-transparent text-ink-500 hover:text-ink-900"
-            }`}
+ pageTab === t.id
+ ? "border-brand-600 text-brand-700"
+ : "border-transparent text-ink-500 hover:text-ink-900"
+ }`}
           >
             <t.icon className="w-4 h-4" /> {t.label}
           </button>
@@ -534,8 +534,8 @@ export default function UsersAdminPage() {
                             <Avatar name={u.name} />
                             <div className="min-w-0">
                               <div className="font-semibold text-ink-900 truncate">{u.name}</div>
-                              <div className="text-xs text-ink-400 font-mono truncate">{u.email}</div>
-                              {u.jobTitle && <div className="text-[11px] text-ink-400 truncate">{u.jobTitle}</div>}
+                              <div className="text-xs text-ink-400 truncate">{u.email}</div>
+                              {u.jobTitle && <div className="text-xs text-ink-400 truncate">{u.jobTitle}</div>}
                             </div>
                           </div>
                         </td>
@@ -568,7 +568,7 @@ export default function UsersAdminPage() {
                         <td className="py-3.5 px-5">
                           {statusBadge(u)}
                           {u.mustChangePassword && (
-                            <div className="text-[11px] text-warn-600 mt-1">Temp password pending</div>
+                            <div className="text-xs text-warn-600 mt-1">Temp password pending</div>
                           )}
                         </td>
                         <td className="py-3.5 px-5 text-ink-500 whitespace-nowrap">
@@ -610,7 +610,7 @@ export default function UsersAdminPage() {
                     <Avatar name={u.name} />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-ink-900 truncate">{u.name}</p>
-                      <p className="text-xs text-ink-400 font-mono truncate">{u.email}</p>
+                      <p className="text-xs text-ink-400 truncate">{u.email}</p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
                         <Badge className={ROLE_BADGE[u.role] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                           {ROLE_LABELS[u.role] ?? u.role}
@@ -639,7 +639,7 @@ export default function UsersAdminPage() {
               <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
               <p>
                 <strong>Your own account is kept.</strong>{" "}
-                {clearPlan.keptSelf?.email ? <span className="font-mono">{clearPlan.keptSelf.email}</span> : null}, you
+                {clearPlan.keptSelf?.email ? <span className="">{clearPlan.keptSelf.email}</span> : null}, you
                 will still be able to sign in.
               </p>
             </div>
@@ -654,7 +654,7 @@ export default function UsersAdminPage() {
                   {clearPlan.toDelete.map((u: any) => (
                     <li key={u.id} className="text-xs text-ink-600 flex justify-between gap-3">
                       <span>{u.name}</span>
-                      <span className="font-mono text-ink-400 truncate">{u.email}</span>
+                      <span className="text-ink-400 truncate">{u.email}</span>
                     </li>
                   ))}
                 </ul>
@@ -676,7 +676,7 @@ export default function UsersAdminPage() {
                   {clearPlan.toDeactivate.map((u: any) => (
                     <li key={u.id} className="text-xs text-warn-900 flex justify-between gap-3">
                       <span>{u.name}</span>
-                      <span className="font-mono text-warn-700/70 truncate">{u.email}</span>
+                      <span className="text-warn-700/70 truncate">{u.email}</span>
                     </li>
                   ))}
                 </ul>
@@ -714,7 +714,7 @@ export default function UsersAdminPage() {
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
               Role <strong>definitions</strong>, write permissions, sign-off seniority and module scope, are
-              controlled in code (<span className="font-mono">src/lib/roles.ts</span>) and change only through a
+              controlled in code (<span className="">src/lib/roles.ts</span>) and change only through a
               reviewed release, so they stay auditable for ISO 9001/45001. Role <strong>membership</strong> (who holds
               each role) is managed here and every change is audit-logged. A signer may sign steps of their own role or
               any junior rank; a Super Admin may sign or override any step.
@@ -731,8 +731,8 @@ export default function UsersAdminPage() {
                   key={v}
                   onClick={() => setRoleView(v)}
                   className={`px-3 min-h-9 rounded-md text-xs font-semibold transition-all ${
-                    roleView === v ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                  }`}
+ roleView === v ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
                 >
                   {v === "cards" ? "By role" : "Permission matrix"}
                 </button>
@@ -778,19 +778,19 @@ export default function UsersAdminPage() {
                             <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                               {ROLE_LABELS[r]}
                             </Badge>
-                            <p className="text-[11px] text-ink-500 mt-1">
+                            <p className="text-xs text-ink-500 mt-1">
                               {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"}
                             </p>
                           </td>
                           <td
                             className={`py-3 px-3 text-center font-semibold ${
-                              activeMembers === 0 ? "text-warn-600" : "text-ink-700"
-                            }`}
+ activeMembers === 0 ? "text-warn-600" : "text-ink-700"
+ }`}
                             title={activeMembers === 0 ? "Nobody holds this role, any step requiring it cannot be signed" : undefined}
                           >
                             {activeMembers}
                           </td>
-                          <td className="py-3 px-3 text-center text-ink-500 font-mono">{ROLE_RANK[r] ?? 0}</td>
+                          <td className="py-3 px-3 text-center text-ink-500">{ROLE_RANK[r] ?? 0}</td>
                           {PERMISSION_SETS.map((p) => {
                             const has = p.roles.includes(r);
                             return (
@@ -838,7 +838,7 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Members</p>
+                    <p className="text-xs font-semibold text-ink-400 mb-1">Members</p>
                     {members.length === 0 ? (
                       <p className="text-xs text-ink-400">No users hold this role.</p>
                     ) : (
@@ -853,7 +853,7 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Write permissions</p>
+                    <p className="text-xs font-semibold text-ink-400 mb-1">Write permissions</p>
                     {perms.length === 0 ? (
                       <p className="text-xs text-ink-400">
                         {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only, no direct writes."}
@@ -870,11 +870,11 @@ export default function UsersAdminPage() {
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider mb-1">Module access</p>
+                    <p className="text-xs font-semibold text-ink-400 mb-1">Module access</p>
                     {paths ? (
                       <div className="flex flex-wrap gap-1.5">
                         {paths.map((p) => (
-                          <span key={p} className="text-[11px] font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
+                          <span key={p} className="text-xs font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
                             {moduleLabel(p)}
                           </span>
                         ))}
@@ -1018,7 +1018,7 @@ export default function UsersAdminPage() {
       >
         <div className="space-y-4">
           <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 text-center">
-            <p className="text-brand-700 font-mono text-lg font-semibold break-all">{tempPassword?.password}</p>
+            <p className="text-brand-700 text-xl font-semibold break-all">{tempPassword?.password}</p>
           </div>
           <p className="text-xs text-ink-500">
             Shown once only, share it with the user now. They must change it at first login.
@@ -1056,16 +1056,16 @@ export default function UsersAdminPage() {
               <div
                 key={u.id}
                 className={`flex items-center gap-3 rounded-lg border p-2.5 ${
-                  u.role === membersRole ? "border-brand-200 bg-brand-50/50" : "border-ink-200"
-                }`}
+ u.role === membersRole ? "border-brand-200 bg-brand-50/50" : "border-ink-200"
+ }`}
               >
-                <Avatar name={u.name} size="w-8 h-8 text-[11px]" />
+                <Avatar name={u.name} size="w-8 h-8 text-xs" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-ink-900 truncate">
                     {u.name}
                     {u.isActive === false && <span className="text-ink-400 font-normal"> · disabled</span>}
                   </p>
-                  <p className="text-[11px] text-ink-400 font-mono truncate">{u.email}</p>
+                  <p className="text-xs text-ink-400 truncate">{u.email}</p>
                 </div>
                 {roleSaving === u.id ? (
                   <Loader2 className="w-4 h-4 animate-spin text-brand-600 shrink-0 mx-3" />

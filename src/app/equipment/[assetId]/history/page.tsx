@@ -58,7 +58,7 @@ export default function EquipmentHistoryPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight text-ink-900">Machine History Log</h2>
-            <p className="text-xs text-ink-500 font-mono">
+            <p className="text-xs text-ink-500">
               {eq.name} · {eq.assetId}
             </p>
           </div>

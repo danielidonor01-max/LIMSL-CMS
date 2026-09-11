@@ -94,7 +94,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ) : (
             <div className="p-10 max-w-md mx-auto text-center space-y-3">
               <ShieldAlert className="w-10 h-10 text-danger-500 mx-auto" />
-              <h2 className="text-lg font-bold text-ink-900">Access restricted</h2>
+              <h2 className="text-xl font-bold text-ink-900">Access restricted</h2>
               <p className="text-sm text-ink-500">
                 Your role (<span className="font-semibold">{ROLE_LABELS[role ?? ""] ?? role}</span>) doesn&apos;t have access to this page.
               </p>

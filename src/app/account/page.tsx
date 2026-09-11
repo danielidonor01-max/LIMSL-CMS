@@ -128,7 +128,7 @@ export default function AccountPage() {
     );
   }
 
-  const label = "text-xs font-semibold text-ink-500 uppercase tracking-wide";
+  const label = "text-xs font-semibold text-ink-500 ";
   const field =
     "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15";
 
@@ -186,12 +186,12 @@ export default function AccountPage() {
             <Mail className="w-3 h-3 inline mr-1" />
             Sign-in address
           </label>
-          <p className="text-sm text-ink-900 font-mono break-all">{me?.email}</p>
+          <p className="text-sm text-ink-900 break-all">{me?.email}</p>
 
           {pendingEmail ? (
             <div className="rounded-lg bg-warn-50 border border-warn-200 p-3">
               <p className="text-xs text-warn-900 leading-relaxed">
-                Waiting for <span className="font-mono font-semibold">{pendingEmail}</span> to confirm. Until then this
+                Waiting for <span className="font-semibold">{pendingEmail}</span> to confirm. Until then this
                 address stays your sign-in. The link expires in an hour.
               </p>
             </div>
@@ -267,8 +267,8 @@ export default function AccountPage() {
                   key={v}
                   onClick={() => savePrefs({ ...prefs, density: v })}
                   className={`flex-1 sm:flex-none inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                    on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-                  }`}
+ on ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
                 >
                   <Icon className="w-4 h-4" /> {l}
                 </button>

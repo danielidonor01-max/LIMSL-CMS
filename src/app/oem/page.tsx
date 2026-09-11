@@ -293,7 +293,7 @@ export default function OemPage() {
                       <div>
                         <h3 className="text-sm font-semibold text-ink-900">{v.vendorName}</h3>
                         <p className="text-xs text-ink-500 mt-0.5">
-                          {v.equipmentName} · <span className="font-mono">{v.assetId}</span>
+                          {v.equipmentName} · <span className="">{v.assetId}</span>
                         </p>
                       </div>
                       {active ? (

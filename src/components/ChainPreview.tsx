@@ -37,7 +37,7 @@ export default function ChainPreview({
       <ol className="mt-3 space-y-2">
         {steps.map((step, i) => (
           <li key={`${step.role}-${i}`} className="flex items-start gap-3">
-            <span className="shrink-0 w-5 h-5 rounded-full bg-surface border border-ink-300 text-[11px] font-semibold text-ink-600 flex items-center justify-center tabular-nums mt-px">
+            <span className="shrink-0 w-5 h-5 rounded-full bg-surface border border-ink-300 text-xs font-semibold text-ink-600 flex items-center justify-center tabular-nums mt-px">
               {i + 1}
             </span>
             <span className="min-w-0 text-sm text-ink-700">
@@ -49,7 +49,7 @@ export default function ChainPreview({
           </li>
         ))}
       </ol>
-      {note && <p className="text-[11px] text-ink-500 mt-3 leading-relaxed">{note}</p>}
+      {note && <p className="text-xs text-ink-500 mt-3 leading-relaxed">{note}</p>}
     </div>
   );
 }

@@ -79,25 +79,25 @@ export default function WmsList() {
                     <div key={rec.id} className="p-5 hover:bg-ink-50 flex items-center justify-between transition-colors">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-ink-500 font-semibold">{rec.wmsNumber}</span>
+                          <span className="text-xs text-ink-500 font-semibold">{rec.wmsNumber}</span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                              isApproved
-                                ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
-                                : isUnderReview
-                                ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
-                                : "bg-ink-200 text-ink-500 border-ink-200"
-                            }`}
+                            className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+ isApproved
+ ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
+ : isUnderReview
+ ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
+ : "bg-ink-200 text-ink-500 border-ink-200"
+ }`}
                           >
                             {rec.status}
                           </span>
-                          <span className="text-[11px] text-ink-500 font-mono">Rev {rec.revision}</span>
+                          <span className="text-xs text-ink-500">Rev {rec.revision}</span>
                         </div>
                         <h3 className="text-base font-semibold text-ink-900">{rec.title}</h3>
                         <div className="flex flex-wrap gap-4 text-xs text-ink-500">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-ink-500" /> Prepared:{" "}
-                            <span className="font-mono">{rec.preparedDate}</span>
+                            <span className="">{rec.preparedDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <User className="w-3.5 h-3.5 text-ink-500" /> Prepared By: {rec.preparedByName}

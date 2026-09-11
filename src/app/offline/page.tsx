@@ -13,7 +13,7 @@ export default function OfflinePage() {
         <div className="w-14 h-14 rounded-2xl bg-warn-100 text-warn-700 grid place-items-center mx-auto">
           <WifiOff className="w-7 h-7" />
         </div>
-        <h1 className="text-lg font-bold text-ink-900">You&apos;re offline</h1>
+        <h1 className="text-xl font-bold text-ink-900">You&apos;re offline</h1>
         <p className="text-sm text-ink-600 leading-relaxed">
           This page hasn&apos;t been opened on this device before, so there&apos;s nothing saved to show you.
           Pages you have already visited will still open.

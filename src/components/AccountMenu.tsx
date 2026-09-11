@@ -56,15 +56,15 @@ export default function AccountMenu() {
         aria-expanded={open}
         aria-label={`Account, ${name}`}
         className={`flex items-center gap-2 pl-1 pr-1.5 min-h-10 rounded-lg transition-colors ${
-          open ? "bg-ink-100" : "hover:bg-ink-100"
-        }`}
+ open ? "bg-ink-100" : "hover:bg-ink-100"
+ }`}
       >
         <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-xs font-bold shrink-0">
           {initialsOf(name)}
         </span>
         <span className="hidden xl:block text-left leading-tight max-w-[10rem]">
           <span className="block text-xs font-semibold text-ink-900 truncate">{name}</span>
-          <span className="block text-[11px] text-ink-500 truncate">
+          <span className="block text-xs text-ink-500 truncate">
             {ROLE_LABELS[user.role ?? ""] ?? user.role}
           </span>
         </span>

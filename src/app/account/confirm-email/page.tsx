@@ -71,9 +71,9 @@ function Confirm() {
         {state === "done" && (
           <>
             <CheckCircle2 className="w-8 h-8 text-brand-600 mx-auto" />
-            <h1 className="text-lg font-bold text-ink-900">Address confirmed</h1>
+            <h1 className="text-xl font-bold text-ink-900">Address confirmed</h1>
             <p className="text-sm text-ink-600">
-              Sign in with <span className="font-mono">{message}</span> from now on.
+              Sign in with <span className="">{message}</span> from now on.
             </p>
             <Link
               href="/login"
@@ -87,7 +87,7 @@ function Confirm() {
         {state === "error" && (
           <>
             <AlertCircle className="w-8 h-8 text-danger-600 mx-auto" />
-            <h1 className="text-lg font-bold text-ink-900">Could not confirm</h1>
+            <h1 className="text-xl font-bold text-ink-900">Could not confirm</h1>
             <p className="text-sm text-ink-600">{message}</p>
             <p className="text-xs text-ink-500">
               Your sign-in address has not changed. Request the change again from your account page.

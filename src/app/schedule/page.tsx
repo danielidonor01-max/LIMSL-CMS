@@ -340,16 +340,16 @@ export default function SchedulePage() {
                 <button
                   onClick={() => setView("list")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    view === "list" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                  }`}
+ view === "list" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
                 >
                   <List className="w-3.5 h-3.5" /> List
                 </button>
                 <button
                   onClick={() => setView("calendar")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    view === "calendar" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
-                  }`}
+ view === "calendar" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+ }`}
                 >
                   <CalendarDays className="w-3.5 h-3.5" /> Calendar
                 </button>
@@ -523,7 +523,7 @@ export default function SchedulePage() {
                     <tr key={r.id} className="hover:bg-ink-50">
                       <td className="py-3.5 px-5 whitespace-nowrap">
                         <div className="tabular-nums text-ink-900">{formatDate(r.plannedDate)}</div>
-                        <div className="text-[11px] text-ink-500">
+                        <div className="text-xs text-ink-500">
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
                       </td>
@@ -531,7 +531,7 @@ export default function SchedulePage() {
                         <div className="font-medium text-ink-900 max-w-[220px] truncate">
                           {r.equipmentName}
                         </div>
-                        <div className="text-[11px] font-mono text-ink-500">
+                        <div className="text-xs text-ink-500">
                           {r.assetId ? (
                             <Link
                               href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
@@ -563,7 +563,7 @@ export default function SchedulePage() {
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
                         {r.status === "DEFERRED" && (
-                          <div className="mt-1.5 max-w-[280px] text-[11px] leading-relaxed text-ink-500">
+                          <div className="mt-1.5 max-w-[280px] text-xs leading-relaxed text-ink-500">
                             <span className="text-violet-700 font-medium">
                               {r.deferredByName ?? "-"}
                             </span>
@@ -731,7 +731,7 @@ export default function SchedulePage() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[11px] text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 Overdue and due-soon reminders go to this person directly. Leaving it unassigned means only the
                 managers hear about it.
               </p>

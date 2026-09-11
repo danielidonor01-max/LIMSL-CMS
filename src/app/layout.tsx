@@ -1,13 +1,36 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Manrope, Outfit } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import AppShell from "@/components/AppShell";
 import ServiceWorker from "@/components/ServiceWorker";
 
-const inter = Inter({
+// Self-hosted, not fetched from Google at runtime. next/font downloads the
+// files at build time and serves them from our own origin, which is what makes
+// them work on the workshop connection and inside the offline shell. A CDN
+// request here would be a blank page on a bad signal.
+//
+// Manrope carries the interface, Outfit carries display type. The pairing is
+// Giov's and it is the single biggest reason their screens do not read as
+// generated: system-ui is the default every generated interface reaches for,
+// and it is most of why ours did.
+const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+  // 500 is the workhorse here rather than 400. Manrope runs slightly lighter
+  // than Inter at the same nominal weight, and body text at 400 on a white
+  // card in daylight goes thin.
+  weight: ["400", "500", "600", "700", "800"],
+  fallback: ["ui-sans-serif", "system-ui", "Segoe UI", "Arial", "sans-serif"],
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["600", "700"],
+  fallback: ["ui-sans-serif", "system-ui", "Segoe UI", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -58,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${outfit.variable} h-full antialiased`}>
       <head>
         {IOS_SPLASH.map((s) => (
           <link

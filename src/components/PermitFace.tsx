@@ -53,14 +53,14 @@ function Checklist({
 }) {
   return (
     <div>
-      <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{title}</h4>
+      <h4 className="text-xs font-semibold text-ink-500 mb-2">{title}</h4>
       <ul className="border border-ink-200 rounded-lg divide-y divide-ink-100 overflow-hidden">
         {items.map((i) => (
           <li key={i.key} className="flex items-center justify-between gap-3 px-3 py-1.5">
             <span
               className={`text-xs ${
-                marks[i.key] === "YES" ? "text-ink-900" : "text-ink-500"
-              }`}
+ marks[i.key] === "YES" ? "text-ink-900" : "text-ink-500"
+ }`}
             >
               {i.label}
             </span>
@@ -115,7 +115,7 @@ export default function PermitFace({
           </p>
         </div>
         {permit.taskNo && (
-          <span className="text-[11px] font-mono text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
+          <span className="text-xs text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
             Task {permit.taskNo}
           </span>
         )}
@@ -161,7 +161,7 @@ export default function PermitFace({
 
       {permit.additionalRequirements && (
         <div className="pt-2">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">
+          <h4 className="text-xs font-semibold text-ink-500 mb-1">
             Additional requirements
           </h4>
           <p className="text-xs text-ink-700 whitespace-pre-line">{permit.additionalRequirements}</p>
@@ -174,7 +174,7 @@ export default function PermitFace({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-semibold text-ink-500">{label}</p>
       <p className="text-ink-800 mt-0.5">{value || "-"}</p>
     </div>
   );

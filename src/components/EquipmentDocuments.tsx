@@ -137,11 +137,11 @@ export default function EquipmentDocuments({
   return (
     <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-ink-900 uppercase tracking-wide flex items-center gap-2">
+        <h2 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-600" /> Documents
         </h2>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-ink-400 font-mono">{docs.length} records</span>
+          <span className="text-xs text-ink-400">{docs.length} records</span>
           {canUpload && (
             <Button
               size="sm"
@@ -186,7 +186,7 @@ export default function EquipmentDocuments({
               accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
               className="w-full text-xs text-ink-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-ink-200 file:text-ink-700 file:text-xs file:font-semibold"
             />
-            <p className="text-[11px] text-ink-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
+            <p className="text-xs text-ink-400">PDF, images, Office docs, CSV or text, up to 25 MB.</p>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 border border-ink-200 hover:bg-ink-100 text-ink-600 rounded-lg text-xs font-semibold">
@@ -215,7 +215,7 @@ export default function EquipmentDocuments({
                 )}
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-ink-900 truncate">{DOC_TYPE_LABELS[d.docType] ?? d.docType}</p>
-                  <p className="text-[11px] text-ink-400 truncate">
+                  <p className="text-xs text-ink-400 truncate">
                     {d.revision ? `${d.revision} · ` : ""}
                     {d.fileName ? `${d.fileName}` : d.expiryDate ? `expires ${formatDate(d.expiryDate)}` : d.title}
                   </p>

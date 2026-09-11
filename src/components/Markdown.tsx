@@ -51,7 +51,7 @@ export default function Markdown({ content }: { content: string }) {
         {items.map((it, i) => (
           <li
             key={i}
-            className="text-[13px] text-ink-700 leading-relaxed list-disc"
+            className="text-sm text-ink-700 leading-relaxed list-disc"
             style={{ marginLeft: 18 + it.indent * 16 }}
           >
             {renderInline(it.text, `li-${key}-${i}`)}
@@ -97,7 +97,7 @@ export default function Markdown({ content }: { content: string }) {
     } else if (line.startsWith("# ")) {
       blocks.push(<h2 key={`h-${key++}`} className="text-xl font-bold tracking-tight text-ink-900 mt-2 mb-3">{renderInline(line.slice(2), `h${key}`)}</h2>);
     } else {
-      blocks.push(<p key={`p-${key++}`} className="text-[13px] text-ink-700 leading-relaxed my-2">{renderInline(line, `p${key}`)}</p>);
+      blocks.push(<p key={`p-${key++}`} className="text-sm text-ink-700 leading-relaxed my-2">{renderInline(line, `p${key}`)}</p>);
     }
   }
   flushList();

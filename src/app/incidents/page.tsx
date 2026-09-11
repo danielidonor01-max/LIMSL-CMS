@@ -123,7 +123,7 @@ export default function IncidentsPage() {
                   >
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono font-semibold text-ink-600">
+                        <span className="text-xs font-semibold text-ink-600">
                           {r.incidentNumber}
                         </span>
                         <Badge className={INCIDENT_STATUS_BADGE[r.status] ?? INCIDENT_STATUS_BADGE.REPORTED}>

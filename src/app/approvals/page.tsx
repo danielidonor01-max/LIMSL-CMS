@@ -99,16 +99,16 @@ export default function ApprovalsPage() {
                   >
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">
+                        <span className="text-xs font-semibold tracking-[0.08em] text-ink-500">
                           {i.kind}
                         </span>
                         {i.code && (
-                          <span className="text-xs font-mono text-ink-500">{i.code}</span>
+                          <span className="text-xs text-ink-500">{i.code}</span>
                         )}
                         {/* A step addressed to one person is not something a
                             colleague can pick up, so it says so. */}
                         {i.personal && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
                             In your name
                           </span>
                         )}

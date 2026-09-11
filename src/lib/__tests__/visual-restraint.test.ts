@@ -61,13 +61,20 @@ const distinct = (source: string, re: RegExp) => new Set(source.match(re) ?? [])
 // Each is the measured value on 11 September 2026, the day before the rebuild.
 // Lower them as sweeps land. A failure here means the app grew a new way of
 // saying something it could already say.
+// Lowered after the first sweep. Uppercase, monospace and sub-12px type are
+// now ZERO on screen, so the ceiling is zero: there is no "a few is fine" here.
+// Each one was removed for a reason that does not stop applying to the next
+// instance somebody adds.
+//
+// Print keeps its own treatment and is excluded above — an A4 permit at 300dpi
+// is a different reading problem from a phone in a workshop.
 const CEILING = {
-  fontSizes: 13,
-  uppercase: 131,
-  mono: 152,
+  fontSizes: 6,
+  uppercase: 0,
+  mono: 0,
   radiusSteps: 7,
   shadowSteps: 6,
-  belowFloor: 21,
+  belowFloor: 0,
 };
 
 test("the app does not keep inventing new font sizes", () => {

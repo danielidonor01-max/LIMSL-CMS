@@ -250,8 +250,8 @@ export default function ContractorsPage() {
             onClick={() => setBlockedOnly((v) => !v)}
             aria-pressed={blockedOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-              blockedOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-            }`}
+ blockedOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
           >
             <AlertTriangle className="w-4 h-4" /> Blocked only
           </button>
@@ -299,8 +299,8 @@ export default function ContractorsPage() {
                 key={c.id}
                 data-list-card
                 className={`bg-white border rounded-xl p-4 space-y-3 ${
-                  c.eligibility.eligible ? "border-ink-200" : "border-danger-200"
-                }`}
+ c.eligibility.eligible ? "border-ink-200" : "border-danger-200"
+ }`}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
@@ -362,13 +362,13 @@ export default function ContractorsPage() {
 
                 <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-ink-100">
                   <div>
-                    <p className="font-semibold text-ink-500 uppercase tracking-wider">Insurance to</p>
+                    <p className="font-semibold text-ink-500">Insurance to</p>
                     <p className="text-ink-800 mt-0.5">
                       {c.insuranceExpiryDate ? formatDate(c.insuranceExpiryDate) : <span className="text-danger-600">Not recorded</span>}
                     </p>
                   </div>
                   <div>
-                    <p className="font-semibold text-ink-500 uppercase tracking-wider">Induction to</p>
+                    <p className="font-semibold text-ink-500">Induction to</p>
                     <p className="text-ink-800 mt-0.5">
                       {c.inductionValidUntil ? formatDate(c.inductionValidUntil) : <span className="text-danger-600">Not recorded</span>}
                     </p>

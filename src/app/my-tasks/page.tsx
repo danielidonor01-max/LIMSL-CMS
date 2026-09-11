@@ -110,10 +110,10 @@ export default function MyTasksPage() {
                         <div className="min-w-0 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             {t.code && (
-                              <span className="text-xs font-mono font-semibold text-ink-600">{t.code}</span>
+                              <span className="text-xs font-semibold text-ink-600">{t.code}</span>
                             )}
                             {t.assisting && (
-                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-ink-500/10 text-ink-600 border-ink-500/20">
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-ink-500/10 text-ink-600 border-ink-500/20">
                                 Assisting
                               </span>
                             )}

@@ -143,7 +143,7 @@ export default function NewWms() {
           backLabel="Work Method Statements"
         />
         <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
-          <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3 uppercase tracking-wide">
+          <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
             Create Work Method Statement (WMS)
           </h2>
 
@@ -165,7 +165,7 @@ export default function NewWms() {
                 </option>
               ))}
             </Select>
-            <p className="text-[11px] text-ink-500">
+            <p className="text-xs text-ink-500">
               Leave this if the job has not been raised yet. A method statement can be written
               before the work is authorised, and often should be, because the authorisation
               depends on knowing how the job will be done. The work order has to be approved
@@ -208,8 +208,8 @@ export default function NewWms() {
                     <label
                       key={eq.id}
                       className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer select-none transition-colors ${
-                        selected ? "bg-brand-50" : "hover:bg-ink-50"
-                      }`}
+ selected ? "bg-brand-50" : "hover:bg-ink-50"
+ }`}
                     >
                       <input
                         type="checkbox"
@@ -229,7 +229,7 @@ export default function NewWms() {
                 })}
               </div>
             )}
-            <p className="text-[11px] text-ink-500">
+            <p className="text-xs text-ink-500">
               {selectedEquipments.length === 0
                 ? "Select every machine the working party will be on or near."
                 : `${selectedEquipments.length} machine${selectedEquipments.length === 1 ? "" : "s"} in scope.`}
@@ -313,7 +313,7 @@ export default function NewWms() {
             <div className="space-y-2.5">
               {steps.map((step, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
-                  <span className="w-6 h-6 rounded bg-ink-100 border border-ink-200 text-ink-500 font-mono font-bold text-xs flex items-center justify-center">
+                  <span className="w-6 h-6 rounded bg-ink-100 border border-ink-200 text-ink-500 font-bold text-xs flex items-center justify-center">
                     {String.fromCharCode(65 + i)}
                   </span>
                   <input

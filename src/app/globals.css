@@ -134,6 +134,45 @@
   --shadow-raised: 0 4px 16px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
 }
 
+/* ── Type scale ────────────────────────────────────────────────────────────
+   Six steps, and the app had thirteen. Eleven, twelve and thirteen pixels were
+   all in use at once, which is not a hierarchy anybody perceives; it reads as
+   slightly wrong without saying why. Seventy-one per cent of all text sat at
+   12px or under.
+
+   Minimal does not mean small. Small and tight reads as cramped, so the floor
+   comes UP rather than down: 11px is gone entirely and 12 is now the smallest
+   thing on screen.
+
+   The scale keeps Tailwind's names rather than inventing new ones. There are
+   666 uses of text-xs and 270 of text-sm; renaming would mean editing a
+   thousand lines to land the same pixels, and every one of those edits is a
+   chance to break a layout nobody thinks to re-check. What changes is what the
+   names MEAN — the line heights below, and the removal of the five arbitrary
+   sizes that sat between them.
+
+   Removed: text-[9px], text-[10px], text-[11px], text-[13px], text-[2.6rem].
+   Kept: xs 12, sm 14, base 16, xl 20, 3xl 30, and one display step. */
+@theme {
+  /* Line heights ride with the size so a heading cannot pick its own and
+     drift. These are looser than Tailwind's defaults at small sizes, which is
+     most of what makes a dense register readable rather than merely compact. */
+  --text-xs--line-height: 1.45;
+  --text-sm--line-height: 1.55;
+  --text-base--line-height: 1.5;
+  --text-xl--line-height: 1.3;
+  --text-3xl--line-height: 1.15;
+
+  /* The one hero per screen. Scales with the viewport so it is large on a
+     monitor without wrapping to four lines on a phone. */
+  --text-display: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+  --text-display--line-height: 1.08;
+
+  /* Giov's display treatment, and most of why their headlines land. */
+  --tracking-display: -0.03em;
+  --tracking-title: -0.02em;
+}
+
 /* Light theme is the default. A dark theme will be added later as a toggle. */
 :root {
   --background: var(--color-canvas);
@@ -184,6 +223,22 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, Arial, Helvetica, sans-serif;
+  /* Manrope reads slightly lighter than Inter at the same nominal weight, so
+     body sits at 450 rather than 400. On a white card in workshop daylight the
+     difference between those two is the difference between readable and thin. */
+  font-weight: 450;
+  /* Figures line up in a column without having to reach for a monospace face.
+     161 monospace spans in this app were doing this job, and most of them were
+     wearing a costume to do it. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display type. One per screen, and it is the only place tracking goes
+   negative this hard. */
+.font-display {
+  font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: var(--tracking-display);
+  font-weight: 700;
 }
 
 /* Replace the raw native <select> chevron with a consistent custom one so

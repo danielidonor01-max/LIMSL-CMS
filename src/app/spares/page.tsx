@@ -278,8 +278,8 @@ function SparesRegister() {
             onClick={() => setRiskOnly((v) => !v)}
             aria-pressed={riskOnly}
             className={`inline-flex items-center gap-2 px-3 min-h-11 rounded-lg border text-xs font-semibold w-fit transition-colors ${
-              riskOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
-            }`}
+ riskOnly ? "bg-danger-50 border-danger-300 text-danger-700" : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+ }`}
           >
             <AlertTriangle className="w-4 h-4" />
             Below minimum only
@@ -337,7 +337,7 @@ function SparesRegister() {
                       <tr key={s.id} className="hover:bg-ink-50">
                         <td className="py-3.5 px-5">
                           <p className="font-semibold text-ink-900">{s.name}</p>
-                          <p className="font-mono text-[11px] text-ink-500 mt-0.5">
+                          <p className="text-xs text-ink-500 mt-0.5">
                             {s.partNumber}
                             {s.binLocation ? ` · bin ${s.binLocation}` : ""}
                           </p>
@@ -346,7 +346,7 @@ function SparesRegister() {
                           {s.equipmentName ? (
                             <>
                               <p className="text-ink-700">{s.equipmentName}</p>
-                              <p className="text-[11px] text-ink-500 mt-0.5">
+                              <p className="text-xs text-ink-500 mt-0.5">
                                 {s.assetId}
                                 {s.equipmentCriticality ? ` · ${CRITICALITY_SHORT[s.equipmentCriticality]}` : ""}
                               </p>
@@ -365,7 +365,7 @@ function SparesRegister() {
                             {STOCK_LEVEL_LABELS[s.risk?.level] ?? "-"}
                           </Badge>
                           {reorder > 0 && (
-                            <p className="text-[11px] text-ink-500 mt-1">
+                            <p className="text-xs text-ink-500 mt-1">
                               Order {reorder} {s.unit}
                               {s.onOrder ? " · on order" : ""}
                             </p>
@@ -428,7 +428,7 @@ function SparesRegister() {
           <form onSubmit={submitCreate} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Part number *" htmlFor="sp-num">
-                <input id="sp-num" value={form.partNumber} onChange={(e) => set("partNumber", e.target.value)} className={`${FIELD_CLASS} font-mono`} required />
+                <input id="sp-num" value={form.partNumber} onChange={(e) => set("partNumber", e.target.value)} className={`${FIELD_CLASS} `} required />
               </Field>
               <Field label="Description *" htmlFor="sp-name">
                 <input id="sp-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Spindle drive belt" className={FIELD_CLASS} required />
@@ -445,7 +445,7 @@ function SparesRegister() {
                   </option>
                 ))}
               </Select>
-              <p className="text-[11px] text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 Linking it to a machine is what lets the register grade the risk by that machine&apos;s criticality.
               </p>
             </div>
