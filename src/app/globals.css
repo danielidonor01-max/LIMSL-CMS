@@ -19,18 +19,38 @@
 
    Use the role, not the colour: bg-brand-600, never bg-emerald-600. */
 @theme {
-  /* Text, surfaces and lines. The workhorse ramp, two thirds of the app. */
-  --color-ink-50: var(--color-slate-50);
-  --color-ink-100: var(--color-slate-100);
-  --color-ink-200: var(--color-slate-200);
-  --color-ink-300: var(--color-slate-300);
-  --color-ink-400: var(--color-slate-400);
-  --color-ink-500: var(--color-slate-500);
-  --color-ink-600: var(--color-slate-600);
-  --color-ink-700: var(--color-slate-700);
-  --color-ink-800: var(--color-slate-800);
-  --color-ink-900: var(--color-slate-900);
-  --color-ink-950: var(--color-slate-950);
+  /* Text, surfaces and lines. The workhorse ramp, two thirds of the app.
+     WARM, not the blue-slate it used to be.
+     ─────────────────────────────────────────────────────────────────────────
+     The brand is emerald. A blue-grey beside green is two hue families
+     competing, and it is why the app read as slightly cold and generic no
+     matter what else changed. Giov's dashboard neutrals are a warm green-grey
+     for the same reason, and against a green accent they sit still.
+
+     The light steps are Giov's own measured values, because a background has
+     no contrast obligation and theirs are better chosen than anything I would
+     interpolate. The text steps are NOT theirs: their text-subtle #8a8e89
+     measures 3.33:1 on white and this app holds a 4.5:1 floor. Taking it
+     verbatim would have pushed every caption in the system under the line.
+
+     So the text steps keep the luminance of the slate values they replace and
+     move only in hue. Every existing text pairing therefore holds its old
+     contrast, and ink-500 is slightly better than it was: 4.87:1 on white
+     against the old 4.76:1, because it was pulled down far enough to clear the
+     floor on the canvas as well.
+
+     contrast.test.ts measures all of this rather than trusting the comment. */
+  --color-ink-50: #f7f7f5;   /* Giov canvas */
+  --color-ink-100: #f4f4f2;  /* Giov surface-subtle */
+  --color-ink-200: #dedfdb;  /* Giov border */
+  --color-ink-300: #c9cbc6;  /* Giov border-strong */
+  --color-ink-400: #9fa39f;  /* luminance of slate-400 */
+  --color-ink-500: #6f726e;  /* clears 4.5:1 on white AND canvas; theirs fails */
+  --color-ink-600: #515551;  /* luminance of slate-600 */
+  --color-ink-700: #3e413d;  /* luminance of slate-700 */
+  --color-ink-800: #272925;  /* luminance of slate-800 */
+  --color-ink-900: #181a19;  /* Giov text */
+  --color-ink-950: #040804;
 
   /* The primary action, and anything the eye should reach first. */
   --color-brand-50: var(--color-emerald-50);
@@ -91,39 +111,41 @@
   /* The three surfaces every page is built from, named so a page never has to
      remember which grey is the page and which is the card.
 
-     The canvas carries a trace of blue rather than being neutral grey. It is a
-     small change that does most of the work of making white cards read as
-     deliberate objects on a ground rather than as the page showing through.
+     The canvas is warm rather than the near-white with a trace of blue it used
+     to be. It still does the same job: white cards read as deliberate objects
+     sitting on a ground, rather than as the page showing through.
 
-     It is also deliberately not as dark as it wants to be. Secondary text is
-     ink-500, which measures 4.55:1 on the old near-white and 4.32:1 on the
-     darker ground the reference uses, i.e. the reskin would have quietly pushed
-     the app's most common muted text under the 4.5:1 floor. Text sitting
-     directly on the canvas uses ink-600, and the canvas stops here. */
-  --color-canvas: #f4f6fb;
+     It is deliberately not as dark as it wants to be. The app's commonest
+     muted text is ink-500, and that colour was chosen as the darkest step that
+     still clears 4.5:1 on BOTH white and this canvas, so a caption is legible
+     whichever of the two it lands on. Darkening the canvas further would break
+     that, and a rule that depends on remembering which ground you are on is a
+     rule that gets broken. */
+  --color-canvas: #f7f7f5;
   --color-surface: #ffffff;
-  --color-line: var(--color-slate-200);
+  --color-line: var(--color-ink-200);
 
   /* The navigation is the one dark surface in a light application. It gives the
      app a spine: the eye learns that the dark column is where you move between
-     places and the light field is where you work. Its greys are cooler and
-     deeper than the ink ramp, which is tuned for text on white and turns muddy
-     when inverted. */
-  --color-nav: #10131c;
-  --color-nav-raised: #171b26;
-  --color-nav-active: #1e2433;
-  --color-nav-line: #232937;
-  --color-nav-text: #8b93a7;
+     places and the light field is where you work. Its greys are deeper than
+     the ink ramp, which is tuned for text on white and turns muddy when
+     inverted, and warm like the rest of the app so the column does not read as
+     a different product bolted to the side. */
+  --color-nav: #111410;
+  --color-nav-raised: #191c18;
+  --color-nav-active: #222521;
+  --color-nav-line: #272a26;
+  --color-nav-text: #909490;
   --color-nav-text-active: #ffffff;
   /* Section labels are subordinate to the nav items but still have to be read.
      Dimming the nav grey to 70% opacity looked right and measured 3.58:1
      against the nav, under the 4.5:1 floor, so the step down is a chosen colour
-     rather than a transparency. This one measures 4.82:1. */
-  --color-nav-label: #7a8296;
-  /* The scroll thumb inside the dark column. Not nav-line (#232937), which
-     measures 1.29:1 against the nav and is therefore invisible; this one
-     measures 3.11:1, which is the contrast floor for a non-text control. */
-  --color-nav-scroll: #5a6377;
+     rather than a transparency. This one measures 4.82:1 against the nav. */
+  --color-nav-label: #7f837f;
+  /* The scroll thumb inside the dark column. Not nav-line, which measures
+     1.28:1 against the nav and is therefore invisible; this one measures
+     3.08:1, the contrast floor for a non-text control. */
+  --color-nav-scroll: #60645f;
 }
 
 /* Cards sit on the canvas with a hairline and the faintest lift, never a
