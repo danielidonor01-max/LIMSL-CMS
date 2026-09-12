@@ -23,8 +23,8 @@ export async function seedDatabase() {
       email: "daniel.idonor@limsl.com",
       role: "ADMIN" as const,
       department: "Electrical Maintenance",
-      phone: "",
-      whatsapp: "",
+      phone: "09167653581",
+      whatsapp: "09167653581",
       passwordHash: "", // set via auth setup
     },
     {

@@ -24,7 +24,12 @@ export const config = {
   // Alerts are always recorded (outbox + in-app inbox); WhatsApp delivery
   // happens on top when configured. Email is a later phase.
   whatsappEnabled: process.env.WHATSAPP_ENABLED === "true",
-  whatsappProvider: (process.env.WHATSAPP_PROVIDER || "META").toUpperCase(), // META | TWILIO
+  whatsappProvider: (process.env.WHATSAPP_PROVIDER || "OPENWA").toUpperCase(), // OPENWA | META | TWILIO
+  // OpenWA Gateway (Self-hosted REST API wrapper)
+  openwaBaseUrl: process.env.OPENWA_BASE_URL || "http://localhost:3000",
+  openwaSessionId: process.env.OPENWA_SESSION_ID || "dispatch-main",
+  openwaApiKey: process.env.OPENWA_API_KEY || "",
+  openwaPrimaryPhone: process.env.OPENWA_PRIMARY_PHONE || "2349167653581",
   // Meta WhatsApp Cloud API
   whatsappToken: process.env.WHATSAPP_TOKEN || "",
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
@@ -94,6 +99,10 @@ export function ingestionReady(): { ready: boolean; reason?: string } {
 // as sent.
 export function whatsappReady(): { ready: boolean; reason?: string } {
   if (!config.whatsappEnabled) return { ready: false, reason: "WHATSAPP_ENABLED is not set to true" };
+  if (config.whatsappProvider === "OPENWA") {
+    if (!config.openwaBaseUrl) return { ready: false, reason: "OPENWA_BASE_URL is not set" };
+    return { ready: true };
+  }
   if (config.whatsappProvider === "META") {
     if (!config.whatsappToken) return { ready: false, reason: "WHATSAPP_TOKEN is not set" };
     if (!config.whatsappPhoneNumberId) return { ready: false, reason: "WHATSAPP_PHONE_NUMBER_ID is not set" };

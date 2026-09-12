@@ -26,7 +26,7 @@ export async function seedRolesAndSignoff() {
   // recipient resolution works in demo; replace with real numbers in the user
   // admin screen before enabling WhatsApp delivery.
   const remap: Record<string, { role: string; department: string; jobTitle: string; whatsapp: string }> = {
-    "daniel.idonor@limsl.com": { role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "System Owner / Maintenance Technician", whatsapp: "+2348030000001" },
+    "daniel.idonor@limsl.com": { role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "System Owner / Maintenance Technician", whatsapp: "+2349167653581" },
     "kingsley.iworah@limsl.com": { role: "MAINTENANCE_MANAGER", department: "MAINTENANCE", jobTitle: "Electrical Maintenance Supervisor", whatsapp: "+2348030000002" },
     "marcel.imadojiemu@limsl.com": { role: "TECHNICIAN", department: "MAINTENANCE", jobTitle: "Welding Machine Technician", whatsapp: "+2348030000003" },
     "godspower.michael@limsl.com": { role: "TECHNICIAN", department: "MAINTENANCE", jobTitle: "CNC / AC Technician", whatsapp: "+2348030000004" },

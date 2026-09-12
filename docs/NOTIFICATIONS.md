@@ -112,11 +112,65 @@ To add a trigger: `import { notify } from "@/lib/notifications"` and call it wit
 `event`, `title`, `body`, optional `linkPath`, and the recipient `roles` / `userIds`.
 It resolves recipients, records rows, and delivers — all best-effort.
 
-## Turning on WhatsApp delivery (Meta WhatsApp Cloud API)
+## Turning on WhatsApp delivery
 
-Set these in **`.env.local`** (gitignored — never commit them):
+LIMSL CMS supports three WhatsApp delivery providers:
+1. **OpenWA Gateway (Recommended)** — Self-hosted, 100% free, sends dynamic free-text messages to technicians and supervisors with zero per-message cost and no template pre-approvals.
+2. **Meta Cloud API** — Official Meta WhatsApp Business Cloud API (requires pre-approved templates).
+3. **Twilio** — Cloud messaging provider (useful for testing in sandbox).
 
+### 1. OpenWA Gateway (Self-Hosted REST Gateway — Recommended)
+
+OpenWA is a self-hosted REST API wrapper around WhatsApp Web. It connects to your corporate or workshop dispatch phone via a one-time QR scan and delivers instant notifications to technicians.
+
+**Primary Workshop Dispatch Number:** `09167653581` (`+2349167653581`)
+
+#### Configuration (`.env.local`):
+```bash
+WHATSAPP_ENABLED=true
+WHATSAPP_PROVIDER=OPENWA
+OPENWA_BASE_URL=http://localhost:3000
+OPENWA_SESSION_ID=dispatch-main
+OPENWA_API_KEY=your_secret_api_key          # optional, leave blank if no key required
+OPENWA_PRIMARY_PHONE=2349167653581
 ```
+
+#### How it sends:
+LIMSL normalizes stored Nigerian phone numbers (e.g. `09167653581` or `+2349167653581`) to standard international digits and issues a `POST` request to:
+```http
+POST /api/sessions/dispatch-main/messages/send-text
+Content-Type: application/json
+X-API-Key: your_secret_api_key
+
+{
+  "chatId": "2349167653581@c.us",
+  "text": "LIMSL CMS: Urgent PTW authorization requested for Hot Work on LEE/PE/1904. Review at ..."
+}
+```
+
+#### Running OpenWA via Docker:
+Run the OpenWA gateway container on your local workshop server or docker host:
+```bash
+docker run -d \
+  --name openwa-gateway \
+  -p 3000:3000 \
+  -v openwa_data:/app/sessions \
+  -e API_KEY=your_secret_api_key \
+  rmyndharis/openwa:latest
+```
+Open `http://localhost:3000` in a browser, scan the pairing QR code with the dispatch phone (`09167653581`), and OpenWA persists the session automatically.
+
+#### Operational Safety & Anti-Ban Rules:
+1. **Staff Only**: LIMSL CMS only dispatches to registered employees, technicians, and supervisors.
+2. **Save Contact**: Ensure every technician saves the dispatch number `09167653581` in their phone contacts as **"Lee Machinery Safety Desk"** or **"LIMSL Dispatch"**. When messages come from a saved contact, WhatsApp does not flag the account as spam.
+
+---
+
+### 2. Meta WhatsApp Cloud API (Alternative)
+
+Set these in **`.env.local`**:
+
+```bash
 WHATSAPP_ENABLED=true
 WHATSAPP_PROVIDER=META
 WHATSAPP_TOKEN=<permanent access token from Meta>
@@ -126,35 +180,22 @@ WHATSAPP_TEMPLATE_LANG=en
 WHATSAPP_API_VERSION=v21.0
 ```
 
-Steps:
-1. Create a Meta Business app with the **WhatsApp** product; get a phone number id
-   and a **permanent** access token (a system-user token, not the 24h test one).
-2. **Approve a message template** — this is the part people miss. Meta does **not**
-   allow proactive free-text messages; a business-initiated message must use a
-   pre-approved template. Create one (category *Utility*) whose body is a single
-   parameter, e.g.:
+1. Create a Meta Business app with the **WhatsApp** product; get a phone number id and a **permanent** access token.
+2. **Approve a message template** with category *Utility* and one parameter `{{1}}`:
    > `*LIMSL CMS*: {{1}}`
+3. Put each staff member's real WhatsApp number (E.164, e.g. `+2349167653581`) in the user admin screen.
 
-   Name it `limsl_alert` (or set `WHATSAPP_TEMPLATE` to whatever you named it). We
-   send the alert text as that one `{{1}}` parameter.
-3. Put each staff member's real WhatsApp number (E.164, e.g. `+2348030000001`) in
-   the user admin screen. The seed ships **placeholder** `+23480300000xx` numbers so
-   the demo works — replace them.
-4. Set the env vars above and restart. `whatsappReady()` gates delivery; if anything
-   is missing, alerts stay `QUEUED` and in-app still works.
+---
 
-### Alternative: Twilio
+### 3. Twilio (Alternative)
 
-```
+```bash
 WHATSAPP_ENABLED=true
 WHATSAPP_PROVIDER=TWILIO
 TWILIO_ACCOUNT_SID=...
 TWILIO_AUTH_TOKEN=...
 TWILIO_WHATSAPP_FROM=whatsapp:+14155238886   # your Twilio WhatsApp sender
 ```
-
-Twilio's sandbox lets you send free-form text while testing (recipients must join
-the sandbox first). Production still routes through Meta's template rules.
 
 ## Overdue escalations
 

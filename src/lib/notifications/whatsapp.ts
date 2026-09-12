@@ -10,14 +10,52 @@ import { config } from "@/lib/config";
 
 export type SendResult = { ok: boolean; messageId?: string; error?: string };
 
-// Normalise a stored number to E.164 digits (no +, no spaces) for the API.
-function toMsisdn(raw: string): string {
-  return raw.replace(/[^\d]/g, "");
+// Normalise a stored number to international E.164 digits (no +, no spaces) for the API.
+// Handles local Nigerian formats starting with '0' (e.g. 09167653581 -> 2349167653581).
+export function toMsisdn(raw: string): string {
+  let cleaned = raw.replace(/[^\d]/g, "");
+  if (cleaned.startsWith("0") && cleaned.length === 11) {
+    cleaned = "234" + cleaned.slice(1);
+  }
+  return cleaned;
 }
 
 export async function sendWhatsApp(to: string, text: string): Promise<SendResult> {
+  if (config.whatsappProvider === "OPENWA") return sendViaOpenWa(to, text);
   if (config.whatsappProvider === "TWILIO") return sendViaTwilio(to, text);
   return sendViaMeta(to, text);
+}
+
+async function sendViaOpenWa(to: string, text: string): Promise<SendResult> {
+  const baseUrl = config.openwaBaseUrl.replace(/\/+$/, "");
+  const url = `${baseUrl}/api/sessions/${config.openwaSessionId}/messages/send-text`;
+  const msisdn = toMsisdn(to);
+  const payload = {
+    chatId: `${msisdn}@c.us`,
+    text,
+  };
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (config.openwaApiKey) {
+    headers["X-API-Key"] = config.openwaApiKey;
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data?.message || data?.error || `HTTP ${res.status}` };
+    }
+    return { ok: true, messageId: data?.id || data?.messageId || data?.response?.id };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
 }
 
 async function sendViaMeta(to: string, text: string): Promise<SendResult> {

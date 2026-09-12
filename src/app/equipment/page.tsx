@@ -344,25 +344,20 @@ export default function EquipmentList() {
             {/* Desktop */}
             <div className="hidden md:block bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-sm border-collapse">
                   <thead>
                     <tr className="border-b border-ink-200 bg-ink-50 text-ink-500 font-semibold select-none">
-                      <th className="py-3.5 px-4 cursor-pointer hover:text-ink-900" onClick={() => handleSort("name")}>
+                      <th className="py-2.5 px-4 cursor-pointer hover:text-ink-900" onClick={() => handleSort("name")}>
                         <div className="flex items-center gap-1">
-                          Name <SortIcon active={sortField} direction={sortDirection} field="name" />
+                          Machine <SortIcon active={sortField} direction={sortDirection} field="name" />
                         </div>
                       </th>
-                      <th className="py-3.5 px-4 cursor-pointer hover:text-ink-900" onClick={() => handleSort("assetId")}>
-                        <div className="flex items-center gap-1">
-                          Asset ID <SortIcon active={sortField} direction={sortDirection} field="assetId" />
-                        </div>
-                      </th>
-                      <th className="py-3.5 px-4">Category</th>
-                      <th className="py-3.5 px-4">OEM / Vendor</th>
-                      <th className="py-3.5 px-4">Location</th>
-                      <th className="py-3.5 px-4">Status</th>
-                      <th className="py-3.5 px-4">Criticality</th>
-                      <th className="py-3.5 px-4 text-right">Actions</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">Category</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">OEM / Vendor</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">Location</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">Status</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">Criticality</th>
+                      <th className="py-2.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
@@ -370,26 +365,33 @@ export default function EquipmentList() {
                       const urlParam = (eq.assetId || "").replace(/\//g, "-");
                       return (
                         <tr key={eq.id} className="hover:bg-ink-50 text-ink-600 transition-colors">
-                          <td className="py-3.5 px-4 font-semibold text-ink-900">
-                            <Link href={`/equipment/${urlParam}`} className="hover:text-brand-600">
+                          <td className="py-2.5 px-4">
+                            <Link href={`/equipment/${urlParam}`} className="font-medium text-ink-900 hover:text-brand-600">
                               {eq.name}
                             </Link>
+                            {eq.assetId && (
+                              <span className="block text-xs text-ink-500 tabular-nums">{eq.assetId}</span>
+                            )}
                           </td>
-                          <td className="py-3.5 px-4 text-ink-500">{eq.assetId}</td>
-                          <td className="py-3.5 px-4">
+                          {/* Category is a fixed vocabulary, so it never needs
+                              to wrap. "Measuring Instruments" breaking onto two
+                              lines here was setting the height of most rows in
+                              the register while OEM and Location sat with
+                              visible slack beside it. */}
+                          <td className="py-2.5 px-4 text-ink-600 whitespace-nowrap">
                             {EQUIPMENT_CATEGORY_LABELS[eq.category] ?? eq.category?.replaceAll("_", " ")}
                           </td>
-                          <td className="py-3.5 px-4">{eq.oem || "-"}</td>
-                          <td className="py-3.5 px-4 text-ink-500">{eq.location || "-"}</td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-2.5 px-4 whitespace-nowrap">{eq.oem || "-"}</td>
+                          <td className="py-2.5 px-4 text-ink-600 whitespace-nowrap">{eq.location || "-"}</td>
+                          <td className="py-2.5 px-4">
                             <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>
                               {EQUIPMENT_STATUS_LABELS[eq.status] ?? eq.status}
                             </Badge>
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-2.5 px-4">
                             <Criticality value={eq.criticality} />
                           </td>
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-2.5 px-4 text-right">
                             <div className="flex justify-end">
                               <KebabMenu ariaLabel={`Actions for ${eq.name}`} items={rowActions(eq)} />
                             </div>
