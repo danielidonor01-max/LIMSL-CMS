@@ -2,6 +2,7 @@
 "use client";
 
 import MetricPanel from "@/components/MetricPanel";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
@@ -105,7 +106,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl w-full mx-auto space-y-8">
+    <div className={PAGE_MAIN.register}>
       <PageHeader
         title="Document Register"
         subtitle="Schematics, manuals, SOPs, calibration and load-test reports held against each machine"

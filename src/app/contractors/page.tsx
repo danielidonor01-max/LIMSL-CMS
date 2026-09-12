@@ -2,6 +2,7 @@
 "use client";
 
 import MetricPanel from "@/components/MetricPanel";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -178,7 +179,7 @@ export default function ContractorsPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-5">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Contractors"
           subtitle="Insurance and site induction, checked before a permit is issued"

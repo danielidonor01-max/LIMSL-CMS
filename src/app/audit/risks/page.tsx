@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { pageMain } from "@/lib/page-shell";
 import { ShieldCheck, Search } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
@@ -58,7 +59,7 @@ export default function RiskRegister() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className={pageMain("register", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
         <div className="lg:col-span-3">
           <PageHeader
             title="Maintenance Risk Log"

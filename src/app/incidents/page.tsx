@@ -7,6 +7,7 @@
 "use client";
 
 import Link from "next/link";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useMemo } from "react";
 import { ChevronRight, Siren, Plus } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
@@ -53,7 +54,7 @@ export default function IncidentsPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.detail}>
         <PageHeader
           title="Incidents & near misses"
           subtitle="Every event where somebody was hurt, or nearly was, with its investigation"

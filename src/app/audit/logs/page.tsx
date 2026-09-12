@@ -5,6 +5,7 @@
 "use client";
 
 import DateField from "@/components/DateField";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -178,7 +179,7 @@ export default function AuditTrailLogs() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="System Audit Log"
           subtitle="Every recorded change: who, when, and to which record"

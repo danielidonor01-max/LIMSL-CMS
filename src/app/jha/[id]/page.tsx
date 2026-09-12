@@ -2,6 +2,7 @@
 "use client";
 
 import DocumentSeal from "@/components/DocumentSeal";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -134,7 +135,7 @@ export default function JhaDetailPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.detail}>
         <Link
           href="/jha"
           className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 no-print"

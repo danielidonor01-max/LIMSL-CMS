@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -214,7 +215,7 @@ export default function PermitDetail() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-4xl w-full mx-auto">
+      <main className={PAGE_MAIN.detail}>
         {/* The filed document. A printed screenshot of this page would not be
             the same paper the pad produces, and the two have to be readable
             side by side. */}

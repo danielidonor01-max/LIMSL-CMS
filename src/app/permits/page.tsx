@@ -2,6 +2,7 @@
 "use client";
 
 import MetricPanel from "@/components/MetricPanel";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
 import { useState, useEffect } from "react";
@@ -87,7 +88,7 @@ export default function PermitsList() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Permits to Work"
           subtitle="Every permit is signed and approved before work begins"

@@ -2,6 +2,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
+import PageHeader from "@/components/PageHeader";
 import { useSession } from "next-auth/react";
 import { Database, Download, Upload, Loader2, ShieldAlert, CheckCircle2, AlertTriangle, Copy, Check, Cloud, X, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
@@ -161,16 +163,11 @@ export default function DataImportPage() {
   const active = TABS.find((t) => t.key === tab)!;
 
   return (
-    <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-          <Database className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-ink-900">Data Import</h2>
-          <p className="text-xs text-ink-500">Super Admin · go-live register import (CSV / Excel)</p>
-        </div>
-      </div>
+    <div className={PAGE_MAIN.register}>
+      <PageHeader
+        title="Data Import"
+        subtitle="Super Admin · go-live register import (CSV / Excel)"
+      />
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">

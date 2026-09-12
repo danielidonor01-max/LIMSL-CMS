@@ -44,6 +44,23 @@ const PAGES = [
   ["emergency", "/emergency"],
   ["spares", "/spares"],
   ["notifications", "/notifications"],
+  ["settings", "/settings"],
+  ["settings-users", "/settings/users"],
+  ["settings-import", "/settings/import"],
+  ["account", "/account"],
+  ["incidents", "/incidents"],
+  ["documents", "/documents"],
+  ["training", "/training"],
+  ["calibration", "/calibration"],
+  ["contractors", "/contractors"],
+  ["audit-logs", "/audit/logs"],
+  ["audit-risks", "/audit/risks"],
+  ["audit-non-conformity", "/audit/non-conformity"],
+  ["jha", "/jha"],
+  ["procedure", "/procedure"],
+  ["oem", "/oem"],
+  ["verify", "/verify"],
+  ["wms", "/wms"],
 ];
 
 mkdirSync(OUT, { recursive: true });
@@ -60,6 +77,7 @@ const page = await browser.newPage();
 // The service worker caches the app shell and will happily serve a stale page
 // over a fresh build. It has already made two screenshots lie in this project.
 await page.setBypassServiceWorker(true);
+await page.setCacheEnabled(false);
 
 console.log("signing in…");
 await page.goto(`${BASE}/login`, { waitUntil: "networkidle2" });

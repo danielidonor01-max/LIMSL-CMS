@@ -2,6 +2,7 @@
 "use client";
 
 import { useApi } from "@/lib/api-cache";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import MetricPanel from "@/components/MetricPanel";
@@ -23,7 +24,7 @@ export default function WmsList() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Work Method Statements"
           subtitle="How each job is to be carried out safely, drafted, reviewed and approved"

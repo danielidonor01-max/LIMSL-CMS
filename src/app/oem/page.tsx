@@ -2,6 +2,7 @@
 "use client";
 
 import MetricPanel from "@/components/MetricPanel";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -192,7 +193,7 @@ export default function OemPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="OEM & Warranty Management"
           subtitle="Machine suppliers, what is still under warranty, and how fast they respond"

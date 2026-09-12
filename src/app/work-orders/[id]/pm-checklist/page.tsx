@@ -2,6 +2,7 @@
 "use client";
 
 import Button from "@/components/Button";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -245,7 +246,7 @@ export default function PMChecklistPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       
-      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-5">
+      <main className={PAGE_MAIN.form}>
         <Link href={`/work-orders/${id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to {wo.workOrderNumber}
         </Link>

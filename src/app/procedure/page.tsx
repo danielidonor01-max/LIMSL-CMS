@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
@@ -106,7 +107,7 @@ export default function ProcedurePage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl w-full mx-auto space-y-8">
+    <div className={PAGE_MAIN.detail}>
       {/* Header (hidden on print) */}
       <div className="no-print">
         <PageHeader

@@ -7,6 +7,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2, Save, Lock } from "lucide-react";
@@ -116,7 +117,7 @@ export default function IncidentDetail({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-6">
+      <main className={PAGE_MAIN.detail}>
         <PageHeader
           title={INCIDENT_TYPE_LABEL[record.type] ?? record.type}
           subtitle={`Reported by ${record.reportedByName ?? "unknown"} on ${formatDate(String(record.reportedAt).slice(0, 10))}`}

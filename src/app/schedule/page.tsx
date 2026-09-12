@@ -2,6 +2,7 @@
 "use client";
 
 import MetricPanel from "@/components/MetricPanel";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
 import { useMemo, useState } from "react";
@@ -329,7 +330,7 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Annual Maintenance Schedule"
           subtitle={`Planned preventive work for ${new Date().getFullYear()}, with due dates and adherence`}

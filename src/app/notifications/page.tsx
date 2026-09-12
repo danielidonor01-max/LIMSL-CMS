@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -142,7 +143,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.detail}>
         <PageHeader
           title="Notifications"
           subtitle={`${unread > 0 ? `${unread} unread` : "All caught up"} · alerts are also sent to WhatsApp when configured`}

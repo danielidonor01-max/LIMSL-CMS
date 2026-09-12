@@ -2,6 +2,7 @@
 "use client";
 
 import Button from "@/components/Button";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -75,7 +76,7 @@ export default function EquipmentEditPage() {
   const label = "block text-xs font-semibold text-ink-500  mb-1.5";
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
+    <div className={PAGE_MAIN.form}>
       <Link href={`/equipment/${assetId}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to digital twin
       </Link>

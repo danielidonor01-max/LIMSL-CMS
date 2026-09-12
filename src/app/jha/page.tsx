@@ -2,6 +2,7 @@
 "use client";
 
 import Tabs from "@/components/Tabs";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useApi } from "@/lib/api-cache";
@@ -82,7 +83,7 @@ export default function JhaListPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Job Hazard Analysis"
           subtitle="Where safety takes the method apart, step by step, and says what could go wrong"

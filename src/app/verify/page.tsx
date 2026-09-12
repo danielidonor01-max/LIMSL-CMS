@@ -8,6 +8,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, ShieldAlert, Search, Loader2, FileQuestion } from "lucide-react";
@@ -75,7 +76,7 @@ function VerifyForm() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-2xl w-full mx-auto space-y-6">
+      <main className={PAGE_MAIN.form}>
         <PageHeader
           title="Check a document"
           subtitle="Type the code printed on a permit, hazard analysis or method statement to see whether it still matches the record it was signed against"

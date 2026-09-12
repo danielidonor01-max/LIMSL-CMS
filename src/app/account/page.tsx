@@ -5,6 +5,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -133,23 +135,12 @@ export default function AccountPage() {
     "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15";
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 border border-brand-200 flex items-center justify-center">
-          <UserCircle className="w-6 h-6" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight text-ink-900">{me?.name}</h2>
-            {me && <Badge className={ROLE_BADGE[me.role] ?? ""}>{me.roleLabel}</Badge>}
-          </div>
-          <p className="text-xs text-ink-500">
-            {me?.jobTitle ? `${me.jobTitle} · ` : ""}
-            {me?.department ?? ""}
-          </p>
-        </div>
-      </div>
+    <div className={PAGE_MAIN.form}>
+      <PageHeader
+        title={me?.name ?? "Your Account"}
+        subtitle={[me?.jobTitle, me?.department].filter(Boolean).join(" · ") || "Profile, password and personal preferences"}
+        actions={me ? <Badge className={ROLE_BADGE[me.role] ?? ""}>{me.roleLabel}</Badge> : undefined}
+      />
 
       {/* Profile */}
       <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">

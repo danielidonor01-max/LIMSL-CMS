@@ -2,6 +2,7 @@
 "use client";
 
 import Button from "@/components/Button";
+import { pageMain } from "@/lib/page-shell";
 import DateTimeField from "@/components/DateTimeField";
 import DateField from "@/components/DateField";
 import { useState, useEffect, use } from "react";
@@ -333,7 +334,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
         <div className="lg:col-span-3">
           <PageHeader
             title="Breakdown Record"

@@ -2,6 +2,7 @@
 "use client";
 
 import Select from "@/components/Select";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -135,7 +136,7 @@ export default function NewWms() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-3xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.form}>
         <PageHeader
           title="Draft a Work Method Statement"
           subtitle="Set out how the job will be done safely, step by step, for review and approval"

@@ -2,7 +2,9 @@
 "use client";
 
 import DateTimeField from "@/components/DateTimeField";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import TimeField from "@/components/TimeField";
+import PageHeader from "@/components/PageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -551,17 +553,11 @@ export default function AppSettingsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-5xl w-full mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-          <SlidersHorizontal className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-ink-900">App Settings</h2>
-          <p className="text-xs text-ink-500">Super Admin · organisation-wide configuration</p>
-        </div>
-      </div>
+    <div className={PAGE_MAIN.register}>
+      <PageHeader
+        title="App Settings"
+        subtitle="Super Admin · organisation-wide configuration"
+      />
 
       <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-8 lg:items-start space-y-4 lg:space-y-0">
         {/* Mobile: horizontal pills */}

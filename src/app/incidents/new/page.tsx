@@ -11,6 +11,7 @@
 "use client";
 
 import { useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Siren, Save, ChevronDown } from "lucide-react";
@@ -73,7 +74,7 @@ export default function ReportIncidentPage() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-2xl w-full mx-auto space-y-6">
+      <main className={PAGE_MAIN.form}>
         <PageHeader
           title="Report an event"
           subtitle="Three questions. Anyone can file this, and filing it early is the point."

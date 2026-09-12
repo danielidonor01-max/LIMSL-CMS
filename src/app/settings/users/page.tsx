@@ -2,6 +2,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
+import PageHeader from "@/components/PageHeader";
 import { useSession } from "next-auth/react";
 import {
   Users as UsersIcon,
@@ -409,29 +411,23 @@ export default function UsersAdminPage() {
   );
 
   return (
-    <div className="p-6 max-w-6xl w-full mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-            <UsersIcon className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-ink-900">User Management</h2>
-            <p className="text-xs text-ink-500">Super Admin · roles & access control</p>
-          </div>
-        </div>
-        {pageTab === "users" && (
-          <div className="flex gap-2">
-            <Button variant="secondary" icon={Trash2} onClick={openClearSeed}>
-              Clear seed accounts
-            </Button>
-            <Button icon={UserPlus} onClick={() => { setShowForm(true); setError(null); }}>
-              Add user
-            </Button>
-          </div>
-        )}
-      </div>
+    <div className={PAGE_MAIN.register}>
+      <PageHeader
+        title="User Management"
+        subtitle="Super Admin · roles & access control"
+        actions={
+          pageTab === "users" ? (
+            <div className="flex gap-2">
+              <Button variant="secondary" icon={Trash2} onClick={openClearSeed}>
+                Clear seed accounts
+              </Button>
+              <Button icon={UserPlus} onClick={() => { setShowForm(true); setError(null); }}>
+                Add user
+              </Button>
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-ink-200" role="tablist" aria-label="User management sections">

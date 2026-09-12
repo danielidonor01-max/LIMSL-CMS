@@ -2,6 +2,7 @@
 "use client";
 
 import DocumentSeal from "@/components/DocumentSeal";
+import { pageMain } from "@/lib/page-shell";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -75,7 +76,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
         <div className="lg:col-span-3">
           <PageHeader
             title="Work Method Statement"

@@ -2,6 +2,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2, Save, Loader2 } from "lucide-react";
@@ -119,7 +120,7 @@ function NewJhaForm() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className="flex-1 p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-8">
+      <main className={PAGE_MAIN.detail}>
         <PageHeader
           title="New Job Hazard Analysis"
           subtitle="Break the approved method into steps and state the hazard and control for each"

@@ -2,6 +2,7 @@
 "use client";
 
 import Button from "@/components/Button";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -214,7 +215,7 @@ export default function TroubleshootPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl w-full mx-auto space-y-8" aria-busy="true" aria-label="Loading diagnostic engine">
+      <div className={PAGE_MAIN.register} aria-busy="true" aria-label="Loading diagnostic engine">
         <div className="h-4 w-40 bg-ink-200 rounded-lg animate-pulse" />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-ink-200 animate-pulse" />
@@ -252,7 +253,7 @@ export default function TroubleshootPage() {
   const eq = meta.equipment;
 
   return (
-    <div className="p-6 max-w-6xl w-full mx-auto space-y-8">
+    <div className={PAGE_MAIN.register}>
       <Link href={`/equipment/${assetId}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to digital twin
       </Link>

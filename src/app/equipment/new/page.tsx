@@ -2,6 +2,7 @@
 "use client";
 
 import DateField from "@/components/DateField";
+import { PAGE_MAIN } from "@/lib/page-shell";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -108,7 +109,7 @@ export default function NewEquipmentPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl w-full mx-auto space-y-8">
+    <div className={PAGE_MAIN.form}>
       <PageHeader
         title="Add to the Asset Register"
         subtitle="What you are adding decides how it is numbered and maintained"
