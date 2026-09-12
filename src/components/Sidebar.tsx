@@ -207,7 +207,10 @@ export default function Sidebar({
         {/* The mark alone identifies the rail. Nothing here shrinks or ellipses
             to fit 64px: a wordmark cut in half is worse than no wordmark. */}
         <div className={narrow ? "lg:hidden" : ""}>
-          <h1 className="text-sm font-bold tracking-tight text-white leading-none">LIMSL CMS</h1>
+          {/* No tracking-tight. Manrope sets tighter than Inter did, and at this
+              size negative tracking closes the space between the two words so
+              the mark reads as "LIMSLCMS". */}
+          <h1 className="text-sm font-bold text-white leading-none">LIMSL CMS</h1>
           <p className="text-xs text-nav-text font-medium mt-0.5">
             Maintenance Portal
           </p>

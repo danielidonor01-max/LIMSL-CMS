@@ -16,9 +16,7 @@ import LoadError from "@/components/LoadError";
 import {
   WO_STATUS_BADGE,
   WO_STATUS_LABELS,
-  WO_TYPE_BADGE,
   WO_TYPE_LABELS,
-  PRIORITY_BADGE,
   PRIORITY_LABELS,
 } from "@/lib/constants";
 
@@ -79,7 +77,7 @@ export default function WorkOrdersPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
-        <PageHeader
+        <PageHeader
           title="Work Orders"
           subtitle={`${counts.OPEN ?? 0} open · ${counts.IN_PROGRESS ?? 0} in progress · ${counts.COMPLETED ?? 0} completed`}
           actions={
@@ -146,29 +144,29 @@ export default function WorkOrdersPage() {
             )
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-ink-200 text-ink-500">
-                    <th className="py-3.5 px-5 font-medium">WO #</th>
-                    <th className="py-3.5 px-5 font-medium">Equipment</th>
-                    <th className="py-3.5 px-5 font-medium">Type</th>
-                    <th className="py-3.5 px-5 font-medium">Priority</th>
-                    <th className="py-3.5 px-5 font-medium">Planned</th>
-                    <th className="py-3.5 px-5 font-medium">Technician</th>
-                    <th className="py-3.5 px-5 font-medium">Status</th>
+                  <tr className="border-b border-line text-ink-500 text-xs">
+                    <th className="py-2.5 px-5 font-medium">WO #</th>
+                    <th className="py-2.5 px-5 font-medium">Equipment</th>
+                    <th className="py-2.5 px-5 font-medium">Type</th>
+                    <th className="py-2.5 px-5 font-medium">Priority</th>
+                    <th className="py-2.5 px-5 font-medium">Planned</th>
+                    <th className="py-2.5 px-5 font-medium">Technician</th>
+                    <th className="py-2.5 px-5 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {filtered.map((r) => (
                     <tr key={r.id} className="hover:bg-ink-50 cursor-pointer">
-                      <td className="py-3.5 px-5">
+                      <td className="py-2.5 px-5 whitespace-nowrap">
                         <Link href={`/work-orders/${r.id}`} className="text-brand-600 hover:underline">
                           {r.workOrderNumber}
                         </Link>
                       </td>
-                      <td className="py-3.5 px-5">
+                      <td className="py-2.5 px-5">
                         <Link href={`/work-orders/${r.id}`} className="block">
-                          <div className="font-medium text-ink-900 max-w-[220px] truncate">
+                          <div className="font-medium text-ink-900">
                             {r.equipmentName}
                           </div>
                         </Link>
@@ -181,17 +179,31 @@ export default function WorkOrdersPage() {
                           </Link>
                         )}
                       </td>
-                      <td className="py-3.5 px-5">
-                        <Badge className={WO_TYPE_BADGE[r.type]}>{WO_TYPE_LABELS[r.type] ?? r.type}</Badge>
+                      {/* Type and priority read as plain text. They were both
+                          badges, which put three pills on every row: a badge
+                          means "this is a state worth noticing", and when
+                          everything is one, nothing is. Status keeps its badge
+                          because status is the thing being scanned for.
+
+                          Priority still carries colour, but only where it
+                          changes what somebody does about the row. */}
+                      <td className="py-2.5 px-5 text-ink-600 whitespace-nowrap">
+                        {WO_TYPE_LABELS[r.type] ?? r.type}
                       </td>
-                      <td className="py-3.5 px-5">
-                        <Badge className={PRIORITY_BADGE[r.priority]}>
+                      <td className="py-2.5 px-5 whitespace-nowrap">
+                        <span
+                          className={
+                            r.priority === "CRITICAL" || r.priority === "HIGH"
+                              ? "font-medium text-danger-700"
+                              : "text-ink-600"
+                          }
+                        >
                           {PRIORITY_LABELS[r.priority] ?? r.priority}
-                        </Badge>
+                        </span>
                       </td>
-                      <td className="py-3.5 px-5 tabular-nums text-ink-500">{formatDate(r.plannedDate)}</td>
-                      <td className="py-3.5 px-5 text-ink-700">{r.technicianName ?? "-"}</td>
-                      <td className="py-3.5 px-5">
+                      <td className="py-2.5 px-5 tabular-nums text-ink-600 whitespace-nowrap">{formatDate(r.plannedDate)}</td>
+                      <td className="py-2.5 px-5 text-ink-700 whitespace-nowrap">{r.technicianName ?? "-"}</td>
+                      <td className="py-2.5 px-5">
                         {r.approvalRetrospective && !r.approvedAt && (
                           <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20">
                             Unsigned emergency

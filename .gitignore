@@ -61,3 +61,6 @@ drizzle/
 # interface rebuild. The distilled tokens live in docs/giov_tokens_theme.json,
 # which is what the work is actually built from.
 docs/giov_stylesheet_main.css
+
+# Screenshots from scripts/shoot.mjs. Working output, not a deliverable.
+.tmp-shots/

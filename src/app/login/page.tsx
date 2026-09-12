@@ -47,7 +47,7 @@ function LoginForm() {
           <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-card">
             <Image src="/brand/logo-80.png" alt="" width={44} height={44} priority className="w-full h-full object-contain" />
           </div>
-          <p className="text-base font-bold tracking-tight leading-none">LIMSL CMS</p>
+          <p className="text-base font-bold leading-none">LIMSL CMS</p>
         </div>
 
         <div className="relative space-y-8 max-w-lg">
