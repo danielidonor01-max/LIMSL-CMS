@@ -207,6 +207,27 @@
   border-radius: 0.5rem;
 }
 
+/* The single exception to the rule above, kept here rather than in a component
+   so that anybody reading the rule also reads what escapes it.
+
+   The sign-in fields are borderless inputs inside one divided panel. An outline
+   with a 2px offset around a full-width borderless input draws a rounded box
+   floating in the middle of the cell, visually detached from the label it
+   belongs to, and the label is half of what the focused thing IS.
+
+   So the indicator moves out one level: AuthField puts an inset ring on the
+   cell, which encloses the input and its label together. That is a larger and
+   more legible focus target than the outline it replaces, which is the only
+   basis on which overriding a WCAG 2.4.7 control is defensible. A class plus a
+   pseudo-class outranks :where() plus a pseudo-class, so this wins on
+   specificity rather than on ordering.
+
+   src/lib/__tests__/focus-ring.test.ts fails if this class ever appears without
+   the replacement ring beside it. */
+.auth-field-input:focus-visible {
+  outline: none !important;
+}
+
 /* ── Touch input sizing ────────────────────────────────────────────────────
    iOS Safari auto-zooms any focused input under 16px and does not zoom back
    out, so a technician was pinching after every field. Applies only to touch

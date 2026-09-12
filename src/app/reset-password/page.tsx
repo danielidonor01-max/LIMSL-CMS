@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { AuthGroup, AuthField } from "@/components/AuthField";
 import { Loader2, KeyRound, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-reset";
 
@@ -79,9 +80,6 @@ function ResetForm() {
     }
   };
 
-  const field =
-    "w-full px-3.5 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15";
-
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-sm">
@@ -89,7 +87,7 @@ function ResetForm() {
           <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mb-3">
             <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-ink-900">Choose a new password</h1>
+          <h1 className="font-display text-xl text-ink-900">Choose a new password</h1>
         </div>
 
         {checking ? (
@@ -123,50 +121,41 @@ function ResetForm() {
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4">
-            <div>
-              <label htmlFor="rp-pass" className="block text-xs font-semibold text-ink-500 mb-1.5">
-                New password
-              </label>
-              <div className="relative">
-                <input
-                  id="rp-pass"
-                  type={show ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  autoFocus
-                  required
-                  className={`${field} pr-11`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShow((v) => !v)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-ink-400 hover:text-ink-700 hover:bg-ink-100"
-                  aria-label={show ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-ink-500 mt-1">
-                At least {MIN_PASSWORD_LENGTH} characters. Avoid your email address or anything guessable.
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="rp-confirm" className="block text-xs font-semibold text-ink-500 mb-1.5">
-                Confirm new password
-              </label>
-              <input
-                id="rp-confirm"
+            <AuthGroup>
+              <AuthField
+                label="New password"
+                hint={`${MIN_PASSWORD_LENGTH}+ characters`}
+                type={show ? "text" : "password"}
+                value={password}
+                onChange={setPassword}
+                autoComplete="new-password"
+                autoFocus
+                required
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShow((v) => !v)}
+                    className="shrink-0 p-1 -mr-1 rounded-md text-ink-400 hover:text-ink-700"
+                    aria-label={show ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
+              />
+              <AuthField
+                label="Confirm new password"
                 type={show ? "text" : "password"}
                 value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
+                onChange={setConfirm}
                 autoComplete="new-password"
                 required
-                className={field}
               />
-            </div>
+            </AuthGroup>
+
+            <p className="text-xs text-ink-500">
+              Avoid your email address or anything guessable.
+            </p>
 
             {error && (
               <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-danger-50 border border-danger-200 text-danger-700 text-xs" role="alert">

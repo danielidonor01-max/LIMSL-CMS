@@ -114,7 +114,7 @@ export default function ChangePasswordPage() {
           <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3">
             <KeyRound className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-ink-900">Change Password</h1>
+          <h1 className="font-display text-xl text-ink-900">Change Password</h1>
           <p className="text-xs text-ink-500 mt-0.5">LIMSL CMS Security</p>
         </div>
 

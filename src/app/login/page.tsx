@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { AuthGroup, AuthField } from "@/components/AuthField";
 import {
   Loader2, LogIn, Eye, EyeOff, Check, AlertCircle,
 } from "lucide-react";
@@ -37,9 +38,6 @@ function LoginForm() {
     router.push(callbackUrl);
     router.refresh();
   };
-
-  const field =
-    "w-full px-3.5 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition-all";
 
   return (
     <div className="min-h-screen bg-white lg:grid lg:grid-cols-2 font-sans">
@@ -98,56 +96,57 @@ function LoginForm() {
             <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mb-3">
               <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-ink-900">LIMSL CMS</h1>
+            <h1 className="font-display text-xl text-ink-900">LIMSL CMS</h1>
             <p className="text-xs text-ink-500">Maintenance Portal</p>
           </div>
 
           <div className="mb-6 hidden lg:block">
-            <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink-900">Every sign-off starts here.</h1>
+            <h1 className="font-display text-3xl text-ink-900">Every sign-off starts here.</h1>
             <p className="text-sm text-ink-600 mt-1.5">Sign in to pick up the work waiting on you.</p>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-ink-700 mb-1.5">Email</label>
-              <input
+            {/* One panel divided by hairlines, not two bordered boxes with a
+                gap. A sign-in form is a single thing to fill in, and reading
+                as one object is the whole of the difference. */}
+            <AuthGroup>
+              <AuthField
+                label="Email"
                 type="email"
+                inputMode="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
                 placeholder="you@leemachinery.net"
-                className={field}
                 autoComplete="username"
                 autoFocus
                 required
               />
-            </div>
-            <div>
-              <div className="flex items-baseline justify-between mb-1.5">
-                <label className="block text-sm font-medium text-ink-700">Password</label>
-                <Link href="/forgot-password" className="text-xs font-semibold text-brand-700 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className={`${field} pr-11`}
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-ink-400 hover:text-ink-700 hover:bg-ink-100"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              <AuthField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={setPassword}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                required
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="shrink-0 p-1 -mr-1 rounded-md text-ink-400 hover:text-ink-700"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
+              />
+            </AuthGroup>
+
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-xs font-semibold text-brand-700 hover:underline">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

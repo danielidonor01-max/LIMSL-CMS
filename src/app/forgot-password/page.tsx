@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { AuthGroup, AuthField } from "@/components/AuthField";
 import { Mail, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -43,7 +44,7 @@ export default function ForgotPasswordPage() {
           <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mb-3">
             <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-ink-900">Reset your password</h1>
+          <h1 className="font-display text-xl text-ink-900">Reset your password</h1>
         </div>
 
         {sent ? (
@@ -71,22 +72,19 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-ink-600 leading-relaxed">
               Enter the email address you sign in with and we&apos;ll send you a link to choose a new password.
             </p>
-            <div>
-              <label htmlFor="fp-email" className="block text-xs font-semibold text-ink-500 mb-1.5">
-                Email
-              </label>
-              <input
-                id="fp-email"
+            <AuthGroup>
+              <AuthField
+                label="Email"
                 type="email"
+                inputMode="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
                 placeholder="you@leemachinery.net"
                 autoComplete="username"
                 autoFocus
                 required
-                className="w-full px-3.5 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
               />
-            </div>
+            </AuthGroup>
 
             {error && (
               <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-danger-50 border border-danger-200 text-danger-700 text-xs" role="alert">
