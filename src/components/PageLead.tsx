@@ -62,7 +62,7 @@ export default function PageLead({
   return (
     <section
       aria-labelledby={headingId}
-      className="rounded-2xl border border-line bg-surface overflow-hidden shadow-card"
+      className="rounded-xl border border-line bg-surface overflow-hidden shadow-card"
     >
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 p-6 lg:p-8">
         <div className="min-w-0 max-w-2xl">

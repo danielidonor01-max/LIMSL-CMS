@@ -139,7 +139,7 @@ export default function PermitsList() {
           ]}
         />
 
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={4} />
           ) : records.length === 0 ? (

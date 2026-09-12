@@ -238,8 +238,8 @@ export default function EquipmentList() {
                 key={t}
                 onClick={() => setTypeTab(t)}
                 title={t === "ALL" ? undefined : ASSET_PREFIX_META[t].help}
-                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
- typeTab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+ typeTab === t ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
               >
                 {t === "ALL"
@@ -261,7 +261,7 @@ export default function EquipmentList() {
             <AlertTriangle className="w-4 h-4" />
             Needs attention
             <span
-              className={`px-1.5 py-0.5 rounded text-xs ${
+              className={`px-1.5 py-0.5 rounded-lg text-xs ${
  counts.attention ? "bg-danger-600 text-white" : "bg-ink-100 text-ink-500"
  }`}
             >
@@ -271,7 +271,7 @@ export default function EquipmentList() {
         </div>
 
         {/* Filters */}
-        <div className="p-4 bg-surface border border-line rounded-2xl shadow-card flex flex-col md:flex-row gap-3 md:items-center justify-between">
+        <div className="p-4 bg-surface border border-line rounded-xl shadow-card flex flex-col md:flex-row gap-3 md:items-center justify-between">
           <div className="relative w-full md:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
             <input
@@ -302,15 +302,15 @@ export default function EquipmentList() {
         </div>
 
         {error && !loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <LoadError what="the asset register" onRetry={refresh} />
           </div>
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={8} cols={7} />
           </div>
         ) : !sortedEquipment.length ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">{emptyState}</div>
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">{emptyState}</div>
         ) : (
           <>
             {/* Mobile, the register was table-only, unusable on the floor */}
@@ -318,7 +318,7 @@ export default function EquipmentList() {
               {sortedEquipment.map((eq) => {
                 const urlParam = (eq.assetId || "").replace(/\//g, "-");
                 return (
-                  <div key={eq.id} data-list-card className="bg-surface border border-line rounded-2xl shadow-card p-4">
+                  <div key={eq.id} data-list-card className="bg-surface border border-line rounded-xl shadow-card p-4">
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/equipment/${urlParam}`} className="min-w-0">
                         <p className="font-semibold text-ink-900 text-sm leading-snug">{eq.name}</p>
@@ -342,7 +342,7 @@ export default function EquipmentList() {
             </div>
 
             {/* Desktop */}
-            <div className="hidden md:block bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="hidden md:block bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>

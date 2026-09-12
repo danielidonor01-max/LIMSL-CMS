@@ -178,8 +178,8 @@ export default function DataImportPage() {
           <button
             key={t.key}
             onClick={() => switchTab(t.key)}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
- tab === t.key ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+ tab === t.key ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
           >
             {t.label}
@@ -188,7 +188,7 @@ export default function DataImportPage() {
       </div>
 
       {/* Uploader */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <p className="text-xs text-ink-500">{active.blurb}</p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -225,7 +225,7 @@ export default function DataImportPage() {
             <FileSpreadsheet className="w-4 h-4 text-info-600 shrink-0" />
             <span className="text-ink-800 font-medium">{spFile.name}</span>
             <span className="text-ink-400">from SharePoint{spFile.lastModified ? ` · updated ${spFile.lastModified.slice(0, 10)}` : ""}</span>
-            <button onClick={() => setSpFile(null)} className="p-1 rounded text-ink-400 hover:text-ink-700" aria-label="Clear SharePoint file">
+            <button onClick={() => setSpFile(null)} className="p-1 rounded-lg text-ink-400 hover:text-ink-700" aria-label="Clear SharePoint file">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -298,7 +298,7 @@ export default function DataImportPage() {
                 </p>
                 <div className="space-y-1">
                   {committed.credentials.map((c) => (
-                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs bg-white border border-ink-200 rounded px-2.5 py-1.5">
+                    <div key={c.email} className="flex items-center justify-between gap-2 text-xs bg-white border border-ink-200 rounded-lg px-2.5 py-1.5">
                       <span className="text-ink-700">{c.email}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-ink-900 font-semibold">{c.tempPassword}</span>

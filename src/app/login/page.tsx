@@ -44,7 +44,7 @@ function LoginForm() {
       {/* Brand / value panel, desktop only */}
       <div className="hidden lg:flex flex-col justify-between text-white p-12 relative overflow-hidden bg-[linear-gradient(150deg,#022c22_0%,#064e3b_45%,#0f3d3e_100%)]">
         <div className="relative flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm">
+          <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-card">
             <Image src="/brand/logo-80.png" alt="" width={44} height={44} priority className="w-full h-full object-contain" />
           </div>
           <p className="text-base font-bold tracking-tight leading-none">LIMSL CMS</p>
@@ -93,7 +93,7 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="flex flex-col items-center mb-8 lg:hidden">
-            <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mb-3">
+            <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-card mb-3">
               <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
             </div>
             <h1 className="font-display text-xl text-ink-900">LIMSL CMS</h1>
@@ -133,7 +133,7 @@ function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="shrink-0 p-1 -mr-1 rounded-md text-ink-400 hover:text-ink-700"
+                    className="shrink-0 p-1 -mr-1 rounded-lg text-ink-400 hover:text-ink-700"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     tabIndex={-1}
                   >

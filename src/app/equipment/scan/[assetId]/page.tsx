@@ -175,7 +175,7 @@ export default function MachinePassportPage({
             across a workshop, the same treatment the dashboard gives fleet
             availability. Everything below it stays quiet. */}
         <section
-          className={`rounded-2xl p-6 ${v.safe ? "bg-nav text-white" : "bg-danger-600 text-white"}`}
+          className={`rounded-xl p-6 ${v.safe ? "bg-nav text-white" : "bg-danger-600 text-white"}`}
           aria-live="polite"
         >
           {/* The icon sits above rather than beside. On a 390px phone a 24px
@@ -193,7 +193,7 @@ export default function MachinePassportPage({
         </section>
 
         {/* PPE. Chips, because it is a list of things to put on, not prose. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-5">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-5">
           <h3 className="text-base font-semibold">Wear this near the machine</h3>
           <div className="flex flex-wrap gap-2 mt-3">
             {safety.recommendedPPE.map((ppe) => (
@@ -213,7 +213,7 @@ export default function MachinePassportPage({
 
         {/* Contacts. Full-width dial buttons, because this is read one-handed by
             somebody who may already be dealing with the emergency. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-5">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-5">
           <h3 className="text-base font-semibold">If something goes wrong</h3>
           {contacts.length === 0 ? (
             <p className="text-sm text-ink-600 mt-2 leading-relaxed">
@@ -249,7 +249,7 @@ export default function MachinePassportPage({
 
         {/* The rest of the record, once there is a person behind the request. */}
         {details ? (
-          <section className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <h3 className="text-base font-semibold px-5 pt-5">Machine record</h3>
             <dl className="mt-3 divide-y divide-line">
               {[
@@ -275,7 +275,7 @@ export default function MachinePassportPage({
             </div>
           </section>
         ) : (
-          <section className="bg-surface border border-line rounded-2xl shadow-card p-5">
+          <section className="bg-surface border border-line rounded-xl shadow-card p-5">
             <div className="flex items-start gap-3">
               <Lock className="w-4 h-4 text-ink-400 shrink-0 mt-1" />
               <div className="min-w-0">

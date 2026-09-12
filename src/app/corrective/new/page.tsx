@@ -125,7 +125,7 @@ export default function NewCorrectiveRequest() {
           backHref="/corrective"
           backLabel="Corrective Maintenance"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-xl shadow-card space-y-8">
           <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
             Corrective Maintenance Request Form
           </h2>

@@ -258,15 +258,15 @@ export default function ContractorsPage() {
         </div>
 
         {error && !loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card">
+          <div className="bg-surface border border-line rounded-xl shadow-card">
             <LoadError what="the contractor register" onRetry={refresh} />
           </div>
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card">
+          <div className="bg-surface border border-line rounded-xl shadow-card">
             <TableSkeleton rows={4} cols={4} />
           </div>
         ) : !filtered.length ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card">
+          <div className="bg-surface border border-line rounded-xl shadow-card">
             {q.trim() || blockedOnly ? (
               <EmptyState
                 icon={Search}

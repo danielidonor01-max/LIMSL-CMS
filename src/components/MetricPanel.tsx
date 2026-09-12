@@ -89,7 +89,7 @@ export default function MetricPanel({
   return (
     <section
       aria-label={label ?? "Key measures"}
-      className={`grid grid-cols-1 ${cols} gap-px bg-line rounded-2xl border border-line overflow-hidden shadow-card`}
+      className={`grid grid-cols-1 ${cols} gap-px bg-line rounded-xl border border-line overflow-hidden shadow-card`}
     >
       {metrics.map((m) => {
         const Icon = m.icon;

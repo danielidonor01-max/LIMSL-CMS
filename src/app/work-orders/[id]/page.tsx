@@ -262,7 +262,7 @@ export default function WorkOrderDetailPage() {
         )}
 
         {/* Header card */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -366,7 +366,7 @@ export default function WorkOrderDetailPage() {
         </div>
 
         {/* People on the job */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
@@ -388,7 +388,7 @@ export default function WorkOrderDetailPage() {
 
         {/* Equipment card */}
         {eq && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6">
             <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
               <Wrench className="w-4 h-4 text-brand-600" /> Equipment
             </h3>
@@ -412,7 +412,7 @@ export default function WorkOrderDetailPage() {
             to repair used to be typed in at close-out from memory, days after
             the work. This is the same number with evidence behind it. */}
         {timeLog && (timeLog.sessions.length > 0 || (canWrite && !jobClosed)) && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
                 <Timer className="w-4 h-4 text-brand-600" /> Time on the job
@@ -464,7 +464,7 @@ export default function WorkOrderDetailPage() {
             re-attributed itself to the current revision would be the kind of
             record an auditor samples for precisely because it cannot be wrong. */}
         {procedureLabel(wo.procedureCode, wo.procedureRevision) && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6">
             <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
               <BookText className="w-4 h-4 text-brand-600" /> Carried out under
             </h3>
@@ -492,7 +492,7 @@ export default function WorkOrderDetailPage() {
 
         {/* Completed checklist view */}
         {checklist && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-brand-600" /> PM Checklist. Signed Off
             </h3>
@@ -705,7 +705,7 @@ function SignatureView({ label, name, sig }: { label: string; name: string | nul
     <div>
       <p className="text-xs font-semibold text-ink-500 mb-1">{label}</p>
       {sig ? (
-        <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-ink-100 rounded border border-ink-200" unoptimized />
+        <Image src={sig} alt={`${label} signature`} width={200} height={60} className="h-14 w-auto bg-ink-100 rounded-lg border border-ink-200" unoptimized />
       ) : (
         <div className="h-14 flex items-center text-xs text-ink-500 italic">No signature</div>
       )}

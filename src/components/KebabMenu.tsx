@@ -91,7 +91,7 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
           ref={menuRef}
           style={{ position: "fixed", top: pos.top, left: pos.left, width: 176 }}
           role="menu"
-          className="z-[100] bg-white border border-ink-200 rounded-lg shadow-lg overflow-hidden py-1"
+          className="z-[100] bg-white border border-ink-200 rounded-lg shadow-raised overflow-hidden py-1"
         >
           {items.map((item, i) => {
             const Icon = item.icon;

@@ -116,7 +116,7 @@ export default function NewEquipmentPage() {
         backLabel="Back to registry"
       />
 
-      <form onSubmit={submit} className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
+      <form onSubmit={submit} className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
         {/* What kind of asset, decided first, because it drives everything below */}
         <fieldset>
           <legend className={LABEL_CLASS}>What are you adding?</legend>
@@ -137,7 +137,7 @@ export default function NewEquipmentPage() {
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={` text-xs font-bold px-1.5 py-0.5 rounded ${
+                      className={` text-xs font-bold px-1.5 py-0.5 rounded-lg ${
  active ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-500"
  }`}
                     >

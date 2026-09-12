@@ -28,15 +28,15 @@ const SIZES: Record<ButtonSize, string> = {
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand-600 hover:bg-brand-500 text-white shadow-sm shadow-brand-950/10",
+  primary: "bg-brand-600 hover:bg-brand-500 text-white shadow-card shadow-brand-950/10",
   secondary: "bg-surface border border-line text-ink-700 hover:bg-ink-100 hover:border-ink-300",
-  danger: "bg-danger-600 hover:bg-danger-500 text-white shadow-sm shadow-danger-950/10",
+  danger: "bg-danger-600 hover:bg-danger-500 text-white shadow-card shadow-danger-950/10",
   ghost: "text-ink-600 hover:text-ink-900 hover:bg-ink-100",
   subtle: "bg-ink-100 hover:bg-ink-200 text-ink-700 border border-line",
   // Matches the navigation rather than the brand. For the one lead action on a
   // page that already has brand-coloured controls, where a second green button
   // would compete with them instead of leading them.
-  dark: "bg-nav hover:bg-nav-active text-white shadow-sm",
+  dark: "bg-nav hover:bg-nav-active text-white shadow-card",
 };
 
 type CommonProps = {

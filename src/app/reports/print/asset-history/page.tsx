@@ -160,11 +160,11 @@ function AssetHistoryDossier() {
       </div>
 
       <main className="max-w-5xl w-full mx-auto p-6 print:p-0 print:max-w-none">
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-8">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-8">
           {/* Letterhead */}
           <div className="flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-ink-900 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-ink-900 flex items-center justify-center">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
               <div>

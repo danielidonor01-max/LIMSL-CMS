@@ -164,7 +164,7 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded border ${meta.ring} ${meta.color}`}>
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-lg border ${meta.ring} ${meta.color}`}>
                           {meta.label}
                         </span>
                         {ev.source === "MANUAL" && <span className="text-xs text-ink-400">manual</span>}

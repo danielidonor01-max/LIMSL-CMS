@@ -13,7 +13,7 @@
 "use client";
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-ink-100 rounded animate-pulse ${className}`} />;
+  return <div className={`bg-ink-100 rounded-lg animate-pulse ${className}`} />;
 }
 
 // The header every page renders: back link, icon, title, subtitle, actions.
@@ -40,7 +40,7 @@ function HeaderSkeleton() {
 
 function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-3">
       <Skeleton className="h-4 w-40" />
       {Array.from({ length: lines }).map((_, i) => (
         // Ragged widths so it reads as prose rather than a grid.
@@ -115,7 +115,7 @@ export default function PageSkeleton({
         )}
 
         {variant === "form" && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5 max-w-3xl">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5 max-w-3xl">
             <div className="space-y-2">
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-11 rounded-lg" />
@@ -138,7 +138,7 @@ export default function PageSkeleton({
         {variant === "list" && (
           <>
             <Skeleton className="h-16 rounded-xl" />
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-3">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-4 space-y-3">
               {Array.from({ length: 7 }).map((_, r) => (
                 <div key={r} className="flex gap-4 items-center">
                   <Skeleton className="h-4 w-1/4" />

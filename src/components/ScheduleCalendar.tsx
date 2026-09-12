@@ -94,7 +94,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
   const selectedRows = selected ? byDay.get(selected) ?? [] : [];
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+    <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-ink-200">
         <div className="flex items-center gap-2">
@@ -117,8 +117,8 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all ${
- view === v ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
+ view === v ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
             >
               {v}
@@ -176,7 +176,7 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
                   </div>
                   <p className="text-xs text-ink-500">{r.assetId}</p>
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-600">
-                    <span className="px-1.5 py-0.5 rounded bg-ink-100 font-bold">{r.activityType}</span>
+                    <span className="px-1.5 py-0.5 rounded-lg bg-ink-100 font-bold">{r.activityType}</span>
                     <span>{r.status}</span>
                     {r.responsiblePersonName && <span>· {r.responsiblePersonName}</span>}
                   </div>
@@ -248,7 +248,7 @@ function DayCell({
   return (
     <button
       onClick={() => onPick(key)}
-      className={`relative border border-ink-100 rounded-md text-left transition-colors hover:bg-brand-50 ${
+      className={`relative border border-ink-100 rounded-lg text-left transition-colors hover:bg-brand-50 ${
  compact ? "h-9 p-1" : "min-h-[76px] p-1.5"
  } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
     >

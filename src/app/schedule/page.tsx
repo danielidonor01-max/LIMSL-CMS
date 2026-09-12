@@ -339,16 +339,16 @@ export default function SchedulePage() {
               <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1">
                 <button
                   onClick={() => setView("list")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
- view === "list" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+ view === "list" ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
                 >
                   <List className="w-3.5 h-3.5" /> List
                 </button>
                 <button
                   onClick={() => setView("calendar")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
- view === "calendar" ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+ view === "calendar" ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
                 >
                   <CalendarDays className="w-3.5 h-3.5" /> Calendar
@@ -459,7 +459,7 @@ export default function SchedulePage() {
         </div>
 
         {/* Table */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {error && !loading ? (
             <LoadError what="the maintenance schedule" onRetry={refresh} />
           ) : loading ? (

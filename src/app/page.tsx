@@ -195,7 +195,7 @@ export default function Home() {
         {attention.length > 0 && (
           <section
             aria-labelledby="attention-heading"
-            className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden"
+            className="rounded-xl border border-line bg-surface shadow-card overflow-hidden"
           >
             <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-warn-600" />
@@ -235,7 +235,7 @@ export default function Home() {
         {/* Your jobs, the technician's dashboard used to be an executive KPI
             board with an empty approver's card. This is their actual work. */}
         {myJobs.length > 0 && (
-          <div className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
+          <div className="rounded-xl border border-line bg-surface shadow-card overflow-hidden">
             <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2 flex-wrap">
               <ClipboardList className="w-4 h-4 text-brand-600" />
               <h3 className="text-base font-semibold text-ink-900">Your jobs</h3>
@@ -364,7 +364,7 @@ export default function Home() {
 
         {/* Critical machinery + recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="lg:col-span-2 p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-ink-900">Critical Machinery Status</h3>
               <Link href="/equipment" className="text-xs text-brand-600 hover:underline">View All Assets</Link>
@@ -402,7 +402,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-ink-900">Recent Activity</h3>
               {mounted && canAccessPath(role ?? "", "/audit/logs") && (

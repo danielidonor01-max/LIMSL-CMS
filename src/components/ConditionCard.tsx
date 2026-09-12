@@ -89,7 +89,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
 
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <Activity className="w-4 h-4 text-indigo-600" />
@@ -152,7 +152,7 @@ export default function ConditionCard({ equipmentId, canWrite }: { equipmentId: 
 
                 {/* The number worth the whole feature. */}
                 {p.trend.projectedAlarmDate && (
-                  <p className="text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded p-2">
+                  <p className="text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded-lg p-2">
                     At this rate it reaches the alarm level around{" "}
                     <strong>{formatDate(p.trend.projectedAlarmDate)}</strong>, every reading so far is still within
                     limits.

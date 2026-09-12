@@ -118,7 +118,7 @@ export default function MeterCard({
   };
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <Gauge className="w-4 h-4 text-cyan-600" />

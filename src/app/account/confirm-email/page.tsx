@@ -57,7 +57,7 @@ function Confirm() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-sm text-center space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mx-auto">
+        <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-card mx-auto">
           <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
         </div>
 

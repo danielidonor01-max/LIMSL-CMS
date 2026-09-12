@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-sm mb-3">
+          <div className="w-12 h-12 rounded-xl bg-white border border-ink-200 flex items-center justify-center p-2 shadow-card mb-3">
             <Image src="/brand/logo-80.png" alt="" width={48} height={48} priority className="w-full h-full object-contain" />
           </div>
           <h1 className="font-display text-xl text-ink-900">Reset your password</h1>

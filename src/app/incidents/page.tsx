@@ -69,7 +69,7 @@ export default function IncidentsPage() {
         {error ? (
           <LoadError onRetry={refresh} />
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={4} cols={4} />
           </div>
         ) : (
@@ -114,7 +114,7 @@ export default function IncidentsPage() {
                 actionHref="/incidents/new"
               />
             ) : (
-              <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden divide-y divide-line">
+              <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden divide-y divide-line">
                 {rows!.map((r) => (
                   <Link
                     key={r.id}

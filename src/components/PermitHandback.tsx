@@ -112,7 +112,7 @@ export default function PermitHandback({
   };
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
       <h3 className="text-sm font-semibold text-ink-900">Handover, handback and acceptance</h3>
 
       {/* Handover of work */}

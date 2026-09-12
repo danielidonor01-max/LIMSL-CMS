@@ -88,7 +88,7 @@ export default function PermitRenewalGrid({
   const existing = open ? marks[open] : null;
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+    <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
       <div className="px-6 py-4 border-b border-ink-200 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">

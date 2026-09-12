@@ -346,7 +346,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-8">
           {/* Fault Specifications Card */}
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900">Breakdown Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
@@ -374,7 +374,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
             <div className="text-xs space-y-1">
               <span className="text-xs text-ink-500 block">Reported Fault Description</span>
-              <p className="bg-ink-100 p-3 rounded border border-ink-200 text-ink-700 leading-relaxed">
+              <p className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-ink-700 leading-relaxed">
                 {record.faultDescription}
               </p>
             </div>
@@ -399,10 +399,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           )}
 
           {/* Root Cause Analysis (RCA) Card */}
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-5">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-5">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-semibold text-ink-900">Root Cause Analysis (RCA)</h2>
-              <span className="px-2 py-0.5 rounded bg-ink-100 border border-ink-200 text-xs font-semibold text-ink-500">
+              <span className="px-2 py-0.5 rounded-lg bg-ink-100 border border-ink-200 text-xs font-semibold text-ink-500">
                 {rcaTool === "FIVE_WHYS" ? "5 Whys" : rcaTool.replace(/_/g, " ")}
               </span>
             </div>
@@ -544,7 +544,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-8">
           {/* Corrective Actions Tracking Log (CATL) */}
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900">Corrective Action Log</h2>
 
             {/* Existing actions list */}
@@ -565,7 +565,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                     <button
                       type="button"
                       onClick={() => toggleActionStatus(i)}
-                      className={`px-1.5 py-0.5 rounded text-xs font-bold border ${
+                      className={`px-1.5 py-0.5 rounded-lg text-xs font-bold border ${
  act.status === "COMPLETED"
  ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
  : "bg-ink-200 text-ink-500 border-ink-200"
@@ -608,7 +608,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Closeout & Approvals */}
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900">Completion Sign-off</h2>
 
             {record.status === "CLOSED" ? (

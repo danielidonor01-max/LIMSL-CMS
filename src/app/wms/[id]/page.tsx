@@ -105,7 +105,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-8">
           {/* Main Document Details */}
-          <div className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+          <div className="p-6 bg-surface border border-line rounded-xl shadow-card space-y-8">
             <div className="border-b border-ink-200 pb-4">
               <h2 className="text-xl font-bold text-ink-900">{wms.title}</h2>
               <p className="text-xs text-ink-500 mt-1">Revision: {wms.revision} | Prepared by: {wms.preparedByName}</p>
@@ -152,7 +152,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               <div className="space-y-3">
                 {procedureSteps.map((step: unknown, i: number) => (
                   <div key={i} className="flex gap-3 text-xs leading-relaxed">
-                    <span className="w-5 h-5 rounded bg-ink-100 border border-ink-200 text-ink-500 flex items-center justify-center font-bold">
+                    <span className="w-5 h-5 rounded-lg bg-ink-100 border border-ink-200 text-ink-500 flex items-center justify-center font-bold">
                       {(step as { step?: string })?.step ?? String.fromCharCode(65 + i)}
                     </span>
                     <p className="text-ink-700 flex-1">{asText(step)}</p>
@@ -177,7 +177,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
         {/* Right Side: authorisation status + sign-off chain */}
         <div className="space-y-8">
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
               WMS Document Status
             </h2>

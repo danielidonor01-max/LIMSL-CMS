@@ -59,7 +59,7 @@ export default function Dropdown({
       {open && (
         <div
           role="listbox"
-          className={`absolute z-50 mt-1 min-w-[11rem] max-h-64 overflow-y-auto bg-white border border-ink-200 rounded-lg shadow-lg py-1 ${
+          className={`absolute z-50 mt-1 min-w-[11rem] max-h-64 overflow-y-auto bg-white border border-ink-200 rounded-lg shadow-raised py-1 ${
  align === "right" ? "right-0" : "left-0"
  }`}
         >

@@ -59,7 +59,7 @@ export default function MyTasksPage() {
         {error ? (
           <LoadError onRetry={refresh} />
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={4} cols={3} />
           </div>
         ) : (
@@ -100,7 +100,7 @@ export default function MyTasksPage() {
                     {BUCKET_LABEL[b]}{" "}
                     <span className="text-ink-400 font-normal tabular-nums">({grouped[b].length})</span>
                   </h2>
-                  <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden divide-y divide-line">
+                  <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden divide-y divide-line">
                     {grouped[b].map((t) => (
                       <Link
                         key={`${t.kind}-${t.id}`}

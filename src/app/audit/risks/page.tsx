@@ -69,7 +69,7 @@ export default function RiskRegister() {
         </div>
         {/* Risk Register List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card">
+          <div className="p-4 bg-surface border border-line rounded-xl shadow-card">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
@@ -82,7 +82,7 @@ export default function RiskRegister() {
             </div>
           </div>
 
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : filteredRisks.length === 0 ? (
@@ -120,7 +120,7 @@ export default function RiskRegister() {
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-brand-600 font-semibold">{risk.riskNumber}</span>
                           <span
-                            className={`px-1.5 py-0.5 rounded text-xs font-bold border ${
+                            className={`px-1.5 py-0.5 rounded-lg text-xs font-bold border ${
  isHigh
  ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
  : "bg-brand-500/10 text-brand-600 border-brand-500/20"
@@ -142,7 +142,7 @@ export default function RiskRegister() {
 
         {/* Right Side: Risk Assessment Details */}
         <div className="space-y-8">
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-8">
             <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
               Risk Mitigation & Controls
             </h2>

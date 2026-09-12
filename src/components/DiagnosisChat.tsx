@@ -370,7 +370,7 @@ function MessageBubble({
   if (m.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-brand-600 text-white rounded-2xl rounded-br-sm px-3.5 py-2">
+        <div className="max-w-[85%] bg-brand-600 text-white rounded-xl rounded-br-sm px-3.5 py-2">
           <p className="text-sm whitespace-pre-wrap break-words">{m.text}</p>
           {m.imageKeys && m.imageKeys.length > 0 ? (
             <div className="flex gap-1.5 mt-1.5">
@@ -397,7 +397,7 @@ function MessageBubble({
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[92%] bg-white border border-ink-200 rounded-2xl rounded-bl-sm px-3.5 py-2.5 space-y-2 w-full">
+      <div className="max-w-[92%] bg-white border border-ink-200 rounded-xl rounded-bl-sm px-3.5 py-2.5 space-y-2 w-full">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-violet-500" />
           <span className="text-xs font-semibold text-violet-600">AI assistant</span>
@@ -460,7 +460,7 @@ function MessageBubble({
             {m.components.map((c) => (
               <span
                 key={c.tag}
-                className={`text-xs px-2 py-0.5 rounded border ${
+                className={`text-xs px-2 py-0.5 rounded-lg border ${
  c.verified ? "bg-ink-50 border-ink-200 text-ink-700" : "bg-danger-50 border-danger-200 text-danger-700"
  }`}
                 title={c.verified ? "In the component registry" : "NOT in the component registry, unverified"}

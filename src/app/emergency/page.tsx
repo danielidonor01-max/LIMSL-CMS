@@ -324,8 +324,8 @@ export default function EmergencyPage() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
- tab === t ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+ tab === t ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
               >
                 {t === "register"
@@ -363,7 +363,7 @@ export default function EmergencyPage() {
 
         {/* ── Equipment register ── */}
         {tab === "register" && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             {error && !loading ? (
               <LoadError what="the emergency register" onRetry={refresh} />
             ) : loading ? (
@@ -468,7 +468,7 @@ export default function EmergencyPage() {
         {tab === "contacts" && <EmergencyContacts canWrite={canWrite} />}
 
         {tab === "drills" && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={4} cols={4} />
             ) : !data?.drills.length ? (

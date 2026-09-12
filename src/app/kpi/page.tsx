@@ -253,7 +253,7 @@ export default function KpiPage() {
         />
 
         {loading || !data ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
@@ -376,7 +376,7 @@ export default function KpiPage() {
                 reference table, so nobody could tell that the top row is the
                 machine costing the most production. */}
             {data.perEquipment.length > 0 && (
-              <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+              <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
                 <div className="px-6 py-4 border-b border-ink-200">
                   <h3 className="text-sm font-semibold text-ink-900">
                     Worst-performing assets, last 6 months
@@ -455,7 +455,7 @@ function ChartCard({
   data?: Record<string, string | number>[];
 }) {
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-5">
       <h3 className="text-sm font-semibold text-ink-900 mb-4">{title}</h3>
       <div role="img" aria-label={`${title}. The same figures are given in the table below.`}>
         {children}

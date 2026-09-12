@@ -106,7 +106,7 @@ export default function PermitFace({
   if (types.length === 0 && anyMarks === 0) return null;
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">The permit face</h3>
@@ -115,7 +115,7 @@ export default function PermitFace({
           </p>
         </div>
         {permit.taskNo && (
-          <span className="text-xs text-ink-500 border border-ink-200 rounded px-2 py-1 shrink-0">
+          <span className="text-xs text-ink-500 border border-ink-200 rounded-lg px-2 py-1 shrink-0">
             Task {permit.taskNo}
           </span>
         )}

@@ -142,7 +142,7 @@ export default function JhaDetailPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> Back to hazard analyses
         </Link>
 
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-6">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -215,7 +215,7 @@ export default function JhaDetailPage() {
           </div>
         </div>
 
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           <div className="px-6 py-4 border-b border-ink-200">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-brand-600" /> Job steps, hazards and controls
@@ -259,7 +259,7 @@ export default function JhaDetailPage() {
         </div>
 
         {(ppe.length > 0 || jha.emergencyArrangements) && (
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
             {ppe.length > 0 && (
               <div>
                 <h3 className="text-xs font-semibold text-ink-500 mb-2">

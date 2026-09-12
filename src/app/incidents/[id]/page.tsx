@@ -131,7 +131,7 @@ export default function IncidentDetail({ params }: { params: Promise<{ id: strin
         />
 
         {/* What was reported. Read-only, permanently. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 text-ink-400" />
             <h2 className="text-sm font-semibold text-ink-900">What was reported</h2>
@@ -174,7 +174,7 @@ export default function IncidentDetail({ params }: { params: Promise<{ id: strin
         </section>
 
         {/* The investigation. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-5">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
           <h2 className="text-sm font-semibold text-ink-900">Investigation</h2>
 
           {!canInvestigate ? (

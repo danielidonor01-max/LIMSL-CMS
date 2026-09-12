@@ -278,7 +278,7 @@ export default function PermitDetail() {
         )}
 
         {/* Permit header */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -344,7 +344,7 @@ export default function PermitDetail() {
               <h3 className="text-xs font-semibold text-ink-500 mb-2">Required PPE</h3>
               <div className="flex flex-wrap gap-2">
                 {ppe.map((p) => (
-                  <span key={p} className="px-2 py-1 rounded-md bg-ink-100 border border-ink-200 text-xs text-ink-700 capitalize">
+                  <span key={p} className="px-2 py-1 rounded-lg bg-ink-100 border border-ink-200 text-xs text-ink-700 capitalize">
                     {p.replace(/([A-Z])/g, " $1")}
                   </span>
                 ))}

@@ -206,7 +206,7 @@ export default function CalibrationPage() {
         />
 
         {loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={7} />
           </div>
         ) : (
@@ -252,7 +252,7 @@ export default function CalibrationPage() {
               ]}
             />
 
-            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>

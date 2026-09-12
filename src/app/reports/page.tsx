@@ -139,7 +139,7 @@ export default function ReportsPage() {
     router.push(`/reports/print/asset-history?${qs.toString()}`);
   };
 
-  const reportCard = "bg-surface border border-line rounded-2xl shadow-card p-5";
+  const reportCard = "bg-surface border border-line rounded-xl shadow-card p-5";
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -155,7 +155,7 @@ export default function ReportsPage() {
         />
 
         {loading || !kpi ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={4} />
           </div>
         ) : (

@@ -142,7 +142,7 @@ export default function NewWms() {
           backHref="/wms"
           backLabel="Work Method Statements"
         />
-        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+        <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-xl shadow-card space-y-8">
           <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
             Create Work Method Statement (WMS)
           </h2>
@@ -215,7 +215,7 @@ export default function NewWms() {
                         type="checkbox"
                         checked={selected}
                         onChange={() => toggleEquipmentSelect(eq.id)}
-                        className="rounded border-ink-300 accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
+                        className="rounded-lg border-ink-300 accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
                       />
                       <span className="min-w-0">
                         <span className="block text-sm font-medium text-ink-900 truncate">{eq.name}</span>
@@ -313,7 +313,7 @@ export default function NewWms() {
             <div className="space-y-2.5">
               {steps.map((step, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
-                  <span className="w-6 h-6 rounded bg-ink-100 border border-ink-200 text-ink-500 font-bold text-xs flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-lg bg-ink-100 border border-ink-200 text-ink-500 font-bold text-xs flex items-center justify-center">
                     {String.fromCharCode(65 + i)}
                   </span>
                   <input

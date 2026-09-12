@@ -236,10 +236,10 @@ export default function PMChecklistPage() {
   }
 
   const eq = wo.equipment;
-  const sectionCls = "bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4";
+  const sectionCls = "bg-surface border border-line rounded-xl shadow-card p-6 space-y-4";
   const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
-    <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>;
+    <span className="w-5 h-5 rounded-lg bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>;
   const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
 
   return (
@@ -486,7 +486,7 @@ export default function PMChecklistPage() {
               type="checkbox"
               checked={attested}
               onChange={(e) => setAttested(e.target.checked)}
-              className="mt-0.5 rounded border-ink-300 accent-brand-600"
+              className="mt-0.5 rounded-lg border-ink-300 accent-brand-600"
             />
             <span>
               I confirm the above safety controls were <strong>actually carried out and signed off</strong>, and this
@@ -534,9 +534,9 @@ function ChecklistEditor({
   onChange: (idx: number, patch: Partial<Item>) => void;
 }) {
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-3">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-3">
       <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-        <span className="w-5 h-5 rounded bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>
+        <span className="w-5 h-5 rounded-lg bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>
         {title}
       </h3>
       <div className="space-y-2">

@@ -131,7 +131,7 @@ export default function EmergencyContacts({ canWrite }: { canWrite: boolean }) {
           onAction={canWrite ? () => setOpen(true) : undefined}
         />
       ) : (
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden divide-y divide-line">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden divide-y divide-line">
           {rows.map((c) => (
             <div key={c.id} className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="min-w-0">

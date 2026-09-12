@@ -163,8 +163,8 @@ export default function NotificationsPage() {
               <button
                 key={c}
                 onClick={() => setFilter(c)}
-                className={`px-3 min-h-9 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
- filter === c ? "bg-white text-brand-600 shadow-sm" : "text-ink-500 hover:text-ink-900"
+                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+ filter === c ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
  }`}
               >
                 {c === "ALL" ? "All" : CATEGORY_LABEL[c]}{" "}
@@ -174,7 +174,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                       </div>
                       {/* The reason was recorded and shown to nobody. */}
                       {n.deliveryStatus === "FAILED" && n.deliveryError && (
-                        <p className="mt-1.5 text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded px-2 py-1 leading-relaxed">
+                        <p className="mt-1.5 text-xs text-danger-700 bg-danger-50 border border-danger-200 rounded-lg px-2 py-1 leading-relaxed">
                           {n.deliveryError}
                         </p>
                       )}

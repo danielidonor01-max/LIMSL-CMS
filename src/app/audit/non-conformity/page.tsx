@@ -104,7 +104,7 @@ export default function NonConformityRegister() {
         </div>
         {/* Left Side: Filter and Registry List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-4 bg-surface border border-line rounded-2xl shadow-card flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 bg-surface border border-line rounded-xl shadow-card flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-xs">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-ink-500" />
               <input
@@ -128,7 +128,7 @@ export default function NonConformityRegister() {
             </div>
           </div>
 
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             {loading ? (
               <TableSkeleton rows={6} cols={3} />
             ) : (
@@ -193,7 +193,7 @@ export default function NonConformityRegister() {
 
         {/* Right Side: NC Action Log & Resolution */}
         <div className="space-y-8">
-          <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-8">
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-8">
             <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
               Non-Conformity Action Center
             </h2>
@@ -202,7 +202,7 @@ export default function NonConformityRegister() {
               <div className="space-y-4">
                 <div className="space-y-1 text-xs">
                   <span className={LABEL_CLASS}>NC Description</span>
-                  <p className="bg-ink-100 p-3 rounded border border-ink-200 text-ink-600 leading-relaxed font-semibold">
+                  <p className="bg-ink-100 p-3 rounded-lg border border-ink-200 text-ink-600 leading-relaxed font-semibold">
                     {activeNc.description}
                   </p>
                 </div>

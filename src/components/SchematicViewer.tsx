@@ -283,7 +283,7 @@ export default function SchematicViewer({
   return (
     <div className="fixed inset-0 z-50 bg-ink-900/60 flex items-center justify-center p-4 sm:p-8" onClick={onClose}>
       <div
-        className="bg-white rounded-xl border border-ink-200 shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-xl border border-ink-200 shadow-raised w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -442,19 +442,19 @@ export default function SchematicViewer({
                   />
                   {focusRect && (
                     <div
-                      className="absolute border-2 border-brand-500 bg-brand-400/20 rounded pointer-events-none animate-pulse"
+                      className="absolute border-2 border-brand-500 bg-brand-400/20 rounded-lg pointer-events-none animate-pulse"
                       style={focusRect}
                     />
                   )}
                   {zoneRect && current.page === (ref.sheet ?? current.page) && (
-                    <div className="absolute border-2 border-brand-500 bg-brand-400/15 rounded pointer-events-none" style={zoneRect} />
+                    <div className="absolute border-2 border-brand-500 bg-brand-400/15 rounded-lg pointer-events-none" style={zoneRect} />
                   )}
                   {reviewing &&
                     pagesCandidates.map((c) => (
                       <div
                         key={c.tag}
                         title={`${c.tag} · ${c.name}`}
-                        className={`absolute border rounded-sm pointer-events-none ${
+                        className={`absolute border rounded-lg pointer-events-none ${
  c.include ? "border-info-500 bg-info-400/25" : "border-ink-300 bg-ink-200/20"
  }`}
                         style={ptsToPct(c.bbox, current)}
@@ -502,7 +502,7 @@ export default function SchematicViewer({
                       <input
                         value={c.name}
                         onChange={(e) => setCandidates((cs) => cs.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                        className="flex-1 min-w-0 bg-ink-50 border border-ink-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500/40"
+                        className="flex-1 min-w-0 bg-ink-50 border border-ink-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-brand-500/40"
                       />
                       <Select
                         value={c.type}

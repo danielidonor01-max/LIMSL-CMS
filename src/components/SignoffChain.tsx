@@ -158,7 +158,7 @@ export default function SignoffChain({
   const summary = chainSummary(chain);
 
   return (
-    <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-brand-600" /> {title}
@@ -231,7 +231,7 @@ export default function SignoffChain({
                           nobody should have to compare two role fields to
                           notice that somebody else signed this step. */}
                       {step.isOverride && (
-                        <div className="mt-1.5 rounded-md bg-warn-50 border border-warn-200 px-2 py-1.5">
+                        <div className="mt-1.5 rounded-lg bg-warn-50 border border-warn-200 px-2 py-1.5">
                           <p className="text-xs font-semibold text-warn-900">
                             Signed in place of {ROLE_LABELS[step.role] ?? step.role} by{" "}
                             {ROLE_LABELS[step.signedByRole ?? ""] ?? step.signedByRole}
@@ -254,7 +254,7 @@ export default function SignoffChain({
                         width={90}
                         height={32}
                         unoptimized
-                        className="h-8 w-auto bg-ink-50 rounded border border-ink-200"
+                        className="h-8 w-auto bg-ink-50 rounded-lg border border-ink-200"
                       />
                     )}
                     {canSign && !isOpen && (

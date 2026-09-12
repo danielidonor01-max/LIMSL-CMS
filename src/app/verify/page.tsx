@@ -83,7 +83,7 @@ function VerifyForm() {
           backLabel="Dashboard"
         />
 
-        <form onSubmit={check} className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+        <form onSubmit={check} className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
           <div className="space-y-2">
             <label htmlFor="code" className={LABEL_CLASS}>
               Document code
@@ -106,7 +106,7 @@ function VerifyForm() {
         </form>
 
         {result && tone && Icon && (
-          <div className={`rounded-2xl border p-6 space-y-3 ${tone.box}`}>
+          <div className={`rounded-xl border p-6 space-y-3 ${tone.box}`}>
             <div className="flex items-start gap-3">
               <Icon className="w-6 h-6 shrink-0 mt-0.5" />
               <div className="min-w-0">

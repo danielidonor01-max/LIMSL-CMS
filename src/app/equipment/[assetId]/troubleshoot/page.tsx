@@ -78,7 +78,7 @@ function Snippet({ text }: { text: string }) {
     <span>
       {parts.map((p, i) =>
         i % 2 === 1 ? (
-          <mark key={i} className="bg-warn-100 text-ink-900 rounded px-0.5">{p}</mark>
+          <mark key={i} className="bg-warn-100 text-ink-900 rounded-lg px-0.5">{p}</mark>
         ) : (
           <span key={i}>{p}</span>
         ),
@@ -215,26 +215,26 @@ export default function TroubleshootPage() {
   if (loading) {
     return (
       <div className="p-6 max-w-6xl w-full mx-auto space-y-8" aria-busy="true" aria-label="Loading diagnostic engine">
-        <div className="h-4 w-40 bg-ink-200 rounded animate-pulse" />
+        <div className="h-4 w-40 bg-ink-200 rounded-lg animate-pulse" />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-ink-200 animate-pulse" />
           <div className="space-y-2">
-            <div className="h-4 w-48 bg-ink-200 rounded animate-pulse" />
-            <div className="h-3 w-64 bg-ink-100 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-ink-200 rounded-lg animate-pulse" />
+            <div className="h-3 w-64 bg-ink-100 rounded-lg animate-pulse" />
           </div>
         </div>
-        <div className="h-28 bg-surface border border-line rounded-2xl shadow-card p-5">
-          <div className="h-3 w-56 bg-ink-100 rounded animate-pulse mb-3" />
+        <div className="h-28 bg-surface border border-line rounded-xl shadow-card p-5">
+          <div className="h-3 w-56 bg-ink-100 rounded-lg animate-pulse mb-3" />
           <div className="h-11 bg-ink-100 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="h-12 bg-ink-100 rounded-xl animate-pulse" />
-            <div className="h-40 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
+            <div className="h-40 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
           </div>
           <div className="space-y-4">
-            <div className="h-32 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
-            <div className="h-48 bg-surface border border-line rounded-2xl shadow-card animate-pulse" />
+            <div className="h-32 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
+            <div className="h-48 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
           </div>
         </div>
       </div>
@@ -270,7 +270,7 @@ export default function TroubleshootPage() {
       </div>
 
       {/* Symptom input */}
-      <div className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
+      <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-3">
         <label className="text-sm font-medium text-ink-700">
           Describe the fault, symptom, or error code
         </label>
@@ -303,7 +303,7 @@ export default function TroubleshootPage() {
               <button
                 key={k.id}
                 onClick={() => runDiagnosis(k.errorCode ? `${k.symptom} ${k.errorCode}` : k.symptom)}
-                className="px-2.5 py-2 rounded-md text-xs font-medium bg-ink-100 text-ink-600 hover:bg-brand-50 hover:text-brand-700 border border-ink-200"
+                className="px-2.5 py-2 rounded-lg text-xs font-medium bg-ink-100 text-ink-600 hover:bg-brand-50 hover:text-brand-700 border border-ink-200"
               >
                 {k.errorCode ? `[${k.errorCode}] ` : ""}{k.symptom}
               </button>
@@ -331,7 +331,7 @@ export default function TroubleshootPage() {
                   aria-selected={active}
                   onClick={() => setPanel(t.key)}
                   className={`flex-1 min-h-[44px] px-2 sm:px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors ${
- active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+ active ? "bg-white text-ink-900 shadow-card" : "text-ink-500 hover:text-ink-800"
  }`}
                 >
                   <Icon className={`w-4 h-4 ${t.key === "ai" ? "text-violet-500" : active ? "text-brand-600" : ""}`} />
@@ -348,11 +348,11 @@ export default function TroubleshootPage() {
           </div>
 
           {panel === "engine" && (!result ? (
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
               Enter a symptom and run the engine to see ranked probable causes.
             </div>
           ) : result.diagnoses.length === 0 ? (
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
               No confident match found. Resolve the fault, then record the outcome so the engine learns it.
               {meta.aiReady && (
                 <div className="mt-3">
@@ -370,7 +370,7 @@ export default function TroubleshootPage() {
             </div>
           ) : (
             result.diagnoses.map((d) => (
-              <div key={d.rank} className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+              <div key={d.rank} className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
@@ -380,7 +380,7 @@ export default function TroubleshootPage() {
                       <div>
                         <p className="text-sm font-semibold text-ink-900">{d.cause}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded border ${SOURCE_BADGE[d.source]}`}>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-lg border ${SOURCE_BADGE[d.source]}`}>
                             {d.source === "GUIDE" ? <BookOpen className="w-2.5 h-2.5 inline mr-1" /> : d.source === "HISTORY" ? <HistoryIcon className="w-2.5 h-2.5 inline mr-1" /> : <Sparkles className="w-2.5 h-2.5 inline mr-1" />}
                             {SOURCE_LABEL[d.source]}
                           </span>
@@ -505,7 +505,7 @@ export default function TroubleshootPage() {
               />
             </div>
           ) : (
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
               No AI provider is configured. Add an API key in{" "}
               <Link href="/settings?tab=ai" className="text-brand-600 hover:underline">App Settings → AI Providers</Link> to enable the assistant.
             </div>
@@ -513,13 +513,13 @@ export default function TroubleshootPage() {
 
           {/* Manuals & procedure passages (FTS over document_chunks) */}
           {panel === "docs" && (!result || (result.passages?.length ?? 0) === 0 ? (
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-10 text-center text-sm text-ink-400">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
               {!result
                 ? "Run a diagnosis first, matching manual and procedure passages appear here."
                 : "No documentation passages matched this symptom."}
             </div>
           ) : (
-            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-info-600" />
                 <h3 className="text-sm font-semibold text-ink-900">Relevant documentation</h3>
@@ -551,7 +551,7 @@ export default function TroubleshootPage() {
 
         {/* Schematics + component sidebar */}
         <div className="space-y-4">
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4 text-brand-600" /> Schematics to consult
             </h3>
@@ -593,7 +593,7 @@ export default function TroubleshootPage() {
           </div>
 
           {pastSessions.length > 0 && (
-            <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
+            <div className="bg-surface border border-line rounded-xl shadow-card p-5">
               <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
                 <HistoryIcon className="w-4 h-4 text-violet-600" /> Past AI diagnoses
               </h3>
@@ -632,7 +632,7 @@ export default function TroubleshootPage() {
             </div>
           )}
 
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-5">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
               <Cpu className="w-4 h-4 text-brand-600" /> Component registry (BOM)
             </h3>
@@ -642,7 +642,7 @@ export default function TroubleshootPage() {
                   <div key={c.componentTag} className="text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-ink-900">{c.componentTag}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded border ${c.status === "FAULTY" ? "bg-danger-50 text-danger-700 border-danger-200" : "bg-brand-50 text-brand-700 border-brand-200"}`}>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-lg border ${c.status === "FAULTY" ? "bg-danger-50 text-danger-700 border-danger-200" : "bg-brand-50 text-brand-700 border-brand-200"}`}>
                         {c.status ?? "-"}
                       </span>
                     </div>

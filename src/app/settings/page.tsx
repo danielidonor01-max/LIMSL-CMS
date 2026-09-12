@@ -588,7 +588,7 @@ export default function AppSettingsPage() {
               onClick={() => switchTab(id)}
               aria-current={tab === id ? "page" : undefined}
               className={`w-full text-left rounded-lg px-3 py-2.5 border transition-colors ${
- tab === id ? "bg-white border-brand-200 shadow-sm" : "border-transparent hover:bg-white hover:border-ink-200"
+ tab === id ? "bg-white border-brand-200 shadow-card" : "border-transparent hover:bg-white hover:border-ink-200"
  }`}
             >
               <span className="flex items-center gap-2">
@@ -621,7 +621,7 @@ export default function AppSettingsPage() {
       </div>
 
       {/* Working hours */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-5">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-600" /> Daily Working Window
         </h3>
@@ -654,7 +654,7 @@ export default function AppSettingsPage() {
       </section>
 
       {/* Working days */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-brand-600" /> Production Days
         </h3>
@@ -688,7 +688,7 @@ export default function AppSettingsPage() {
       </section>
 
       {/* Live downtime preview */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-ink-900">Downtime Preview</h3>
         <p className="text-xs text-ink-500">Test the current (unsaved) settings against any outage window.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -718,7 +718,7 @@ export default function AppSettingsPage() {
       {tab === "ai" && (
       <div className="space-y-8">
       {/* AI provider API keys */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-brand-600" /> AI Provider API Keys
         </h3>
@@ -792,8 +792,8 @@ export default function AppSettingsPage() {
               <button
                 key={c.provider}
                 onClick={() => setAiTab(c.provider)}
-                className={`px-3 py-2 rounded-md text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 transition-colors ${
- active ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+                className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 transition-colors ${
+ active ? "bg-white text-ink-900 shadow-card" : "text-ink-500 hover:text-ink-800"
  }`}
               >
                 {c.label}
@@ -843,7 +843,7 @@ export default function AppSettingsPage() {
       {tab === "sharepoint" && (
       <div className="space-y-8">
       {/* SharePoint (Microsoft 365) connection */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <Cloud className="w-4 h-4 text-brand-600" /> SharePoint Connection
@@ -962,7 +962,7 @@ export default function AppSettingsPage() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-4 bg-surface border border-line rounded-2xl shadow-card p-4 hover:border-brand-300 hover:shadow-sm transition-all group"
+            className="flex items-center gap-4 bg-surface border border-line rounded-xl shadow-card p-4 hover:border-brand-300 hover:shadow-card transition-all group"
           >
             <div className="p-2.5 rounded-lg bg-brand-50 text-brand-600 border border-brand-100 shrink-0">
               <Icon className="w-5 h-5" />
@@ -978,7 +978,7 @@ export default function AppSettingsPage() {
         </div>
 
         {/* Database maintenance, self-service migration for the deployed DB. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-2.5">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-brand-600" />
             <h3 className="text-sm font-semibold text-ink-900">Database maintenance</h3>
@@ -1022,7 +1022,7 @@ export default function AppSettingsPage() {
         {/* Office AC units and calibrated instruments, transcribed from the
             LIMSL servicing sheets. Data, not schema, so it is deliberately not
             part of the maintenance button above. */}
-        <section className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-2.5">
+        <section className="bg-surface border border-line rounded-xl shadow-card p-4 space-y-2.5">
           <div className="flex items-center gap-2">
             <Snowflake className="w-4 h-4 text-brand-600" />
             <h3 className="text-sm font-semibold text-ink-900">Office AC units and instruments</h3>
@@ -1073,7 +1073,7 @@ export default function AppSettingsPage() {
       {tab === "notifications" && (
       <div className="space-y-8">
       {/* Email delivery */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-600" /> Email Delivery
@@ -1093,7 +1093,7 @@ export default function AppSettingsPage() {
             <button
               onClick={loadEmailStatus}
               title="Re-check after redeploying"
-              className="p-1 rounded-md text-ink-400 hover:text-brand-600 hover:bg-brand-50"
+              className="p-1 rounded-lg text-ink-400 hover:text-brand-600 hover:bg-brand-50"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -1302,7 +1302,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       </section>
 
       {/* Overdue escalations */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <BellRing className="w-4 h-4 text-brand-600" /> Maintenance Reminders &amp; Escalations
         </h3>
@@ -1439,7 +1439,7 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       </section>
 
       {/* Notification routing, who gets what */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <BellRing className="w-4 h-4 text-brand-600" /> Notification Routing

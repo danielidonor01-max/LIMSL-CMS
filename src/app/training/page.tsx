@@ -222,7 +222,7 @@ export default function TrainingPage() {
         />
 
         {loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={6} />
           </div>
         ) : (
@@ -265,7 +265,7 @@ export default function TrainingPage() {
             />
 
             {/* Competency Matrix */}
-            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="px-6 py-4 border-b border-ink-200 flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-ink-900">Competency Matrix</h3>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -349,7 +349,7 @@ export default function TrainingPage() {
             </div>
 
             {/* Training Register */}
-            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <CalendarClock className="w-4 h-4 text-brand-600" />
                 <h3 className="text-sm font-semibold text-ink-900">Training Register</h3>

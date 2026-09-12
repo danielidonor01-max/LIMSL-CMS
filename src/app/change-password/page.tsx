@@ -24,7 +24,7 @@ function Reveal({ show, onToggle }: { show: boolean; onToggle: () => void }) {
     <button
       type="button"
       onClick={onToggle}
-      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-ink-400 hover:text-ink-700 hover:bg-ink-100"
+      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-ink-100"
       aria-label={show ? "Hide passwords" : "Show passwords"}
       tabIndex={-1}
     >
@@ -111,14 +111,14 @@ export default function ChangePasswordPage() {
     <div className="min-h-screen bg-canvas flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center shadow-raised shadow-brand-500/20 mb-3">
             <KeyRound className="w-6 h-6 text-white" />
           </div>
           <h1 className="font-display text-xl text-ink-900">Change Password</h1>
           <p className="text-xs text-ink-500 mt-0.5">LIMSL CMS Security</p>
         </div>
 
-        <div className="bg-white border border-ink-200 rounded-2xl p-6 shadow-sm space-y-8">
+        <div className="bg-white border border-ink-200 rounded-xl p-6 shadow-card space-y-8">
           {mustChange && (
             <div className="p-3.5 rounded-xl bg-warn-50 border border-warn-200 flex gap-3 text-warn-800">
               <ShieldAlert className="w-5 h-5 shrink-0 text-warn-600 mt-0.5" />

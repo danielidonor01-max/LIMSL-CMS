@@ -83,7 +83,7 @@ export default function QRPrintPage({ params }: { params: Promise<{ assetId: str
       {/* Label Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 space-y-8">
         {/* Printable Card */}
-        <div className="bg-white text-ink-900 p-8 rounded-2xl border-4 border-ink-300 shadow-2xl flex flex-col items-center text-center space-y-8 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
+        <div className="bg-white text-ink-900 p-8 rounded-xl border-4 border-ink-300 shadow-raised flex flex-col items-center text-center space-y-8 max-w-sm w-full print:border-4 print:border-black print:shadow-none print:my-0">
           {/* Letterhead. The company mark, not a generic tool glyph: this label
               is stuck to a machine and is the only thing on it saying whose
               asset it is. An <img> also survives printing, where the tinted box

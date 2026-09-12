@@ -137,7 +137,7 @@ export default function GlobalSearch() {
         <Loader2 className="w-3.5 h-3.5 text-ink-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
       ) : (
         // Discoverability: the shortcut is worthless if nobody knows it exists.
-        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border border-ink-300 bg-white px-1.5 py-0.5 text-xs font-medium text-ink-500 pointer-events-none">
+        <kbd className="hidden md:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded-lg border border-ink-300 bg-white px-1.5 py-0.5 text-xs font-medium text-ink-500 pointer-events-none">
           {isMac ? "⌘" : "Ctrl"} K
         </kbd>
       )}
@@ -147,7 +147,7 @@ export default function GlobalSearch() {
           id="global-search-results"
           role="listbox"
           aria-label="Search results"
-          className="absolute top-full mt-2 w-full bg-surface border border-line rounded-2xl shadow-card shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto"
+          className="absolute top-full mt-2 w-full bg-surface border border-line rounded-xl shadow-card shadow-raised overflow-hidden z-50 max-h-96 overflow-y-auto"
         >
           {results.length === 0 && !loading ? (
             <div className="px-4 py-6 text-center text-xs text-ink-500">No matches for “{q}”.</div>
@@ -166,7 +166,7 @@ export default function GlobalSearch() {
  }`}
                 >
                   <span
-                    className={`text-xs font-semibold px-1.5 py-0.5 rounded shrink-0 ${
+                    className={`text-xs font-semibold px-1.5 py-0.5 rounded-lg shrink-0 ${
  TYPE_COLOR[r.type] ?? "text-ink-600 bg-ink-100"
  }`}
                   >

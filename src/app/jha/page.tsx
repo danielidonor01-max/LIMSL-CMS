@@ -147,7 +147,7 @@ export default function JhaListPage() {
           </div>
         </div>
 
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {error ? (
             <LoadError onRetry={refresh} />
           ) : loading ? (

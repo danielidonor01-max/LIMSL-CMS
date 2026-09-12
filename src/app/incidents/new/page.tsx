@@ -81,7 +81,7 @@ export default function ReportIncidentPage() {
           backLabel="Incidents & near misses"
         />
 
-        <form onSubmit={submit} className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-6">
+        <form onSubmit={submit} className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-6">
           <div className="space-y-2">
             <label className={LABEL_CLASS}>What kind of event was it?</label>
             <Select value={type} onChange={setType} ariaLabel="Type of event" className="w-full">

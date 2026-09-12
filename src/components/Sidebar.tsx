@@ -185,7 +185,7 @@ export default function Sidebar({
         className={`${narrow ? "lg:w-16" : "w-60"} w-60 shrink-0 h-screen bg-nav flex flex-col z-50 transition-[width] duration-200
  fixed inset-y-0 left-0 transform transition-transform duration-200 ease-out
  lg:static lg:z-auto lg:translate-x-0 lg:sticky lg:top-0
- ${mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
+ ${mobileOpen ? "translate-x-0 shadow-raised" : "-translate-x-full lg:translate-x-0"}`}
       >
       <Link
         href="/"
@@ -225,7 +225,7 @@ export default function Sidebar({
  narrow ? "px-3 lg:px-0 lg:justify-center" : "px-3"
  }`}
         >
-          <span className="w-7 h-7 rounded-md bg-brand-600 text-white grid place-items-center text-xs font-bold shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center text-xs font-bold shrink-0">
             {String(user.name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")}
           </span>
           {/* sr-only rather than hidden. The rail shows initials, which a

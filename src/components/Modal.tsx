@@ -107,7 +107,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-xl bg-white border border-ink-200 shadow-2xl my-auto outline-none"
+        className="w-full max-w-lg rounded-xl bg-white border border-ink-200 shadow-raised my-auto outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">

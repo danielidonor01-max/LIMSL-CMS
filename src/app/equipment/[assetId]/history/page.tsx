@@ -75,7 +75,7 @@ export default function EquipmentHistoryPage() {
         </div>
       </div>
 
-      <div className="bg-surface border border-line rounded-2xl shadow-card p-5 sm:p-6">
+      <div className="bg-surface border border-line rounded-xl shadow-card p-5 sm:p-6">
         <EquipmentLog assetId={assetId} canWrite={canWrite} />
       </div>
     </div>

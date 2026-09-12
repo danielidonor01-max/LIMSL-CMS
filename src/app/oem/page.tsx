@@ -224,7 +224,7 @@ export default function OemPage() {
         />
 
         {loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : (
@@ -267,7 +267,7 @@ export default function OemPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {vendors.length === 0 && (
-                <div className="lg:col-span-2 bg-surface border border-line rounded-2xl shadow-card">
+                <div className="lg:col-span-2 bg-surface border border-line rounded-xl shadow-card">
                   <EmptyState
                     icon={Building2}
                     title="No vendors registered"
@@ -288,7 +288,7 @@ export default function OemPage() {
                 const days = daysUntil(v.warrantyEnd);
                 const active = !!v.warrantyActive && (v.warrantyEnd ?? "") >= TODAY;
                 return (
-                  <div key={v.id} className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-3">
+                  <div key={v.id} className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-sm font-semibold text-ink-900">{v.vendorName}</h3>
@@ -328,7 +328,7 @@ export default function OemPage() {
             </div>
 
             {/* Interventions */}
-            <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-warn-600" />
                 <h3 className="text-sm font-semibold text-ink-900">OEM Intervention Log</h3>
@@ -496,7 +496,7 @@ export default function OemPage() {
               <input name="responseTimeHrs" type="number" step="0.5" className={FIELD_CLASS} />
             </div>
             <label className="flex items-center gap-2 text-xs text-ink-600 self-end pb-2">
-              <input name="closed" type="checkbox" className="rounded border-ink-300 accent-brand-600" /> Already resolved
+              <input name="closed" type="checkbox" className="rounded-lg border-ink-300 accent-brand-600" /> Already resolved
             </label>
           </div>
           <div>

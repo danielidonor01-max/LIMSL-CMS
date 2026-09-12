@@ -193,7 +193,7 @@ export default function AuditTrailLogs() {
         />
 
         {/* Filter bar */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card p-4 space-y-3">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-xs font-semibold text-ink-500">From</span>
@@ -264,15 +264,15 @@ export default function AuditTrailLogs() {
         </div>
 
         {error ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card">
+          <div className="bg-surface border border-line rounded-xl shadow-card">
             <LoadError what="the audit trail" onRetry={() => setReloadKey((k) => k + 1)} />
           </div>
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={8} cols={5} />
           </div>
         ) : rows.length === 0 ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card">
+          <div className="bg-surface border border-line rounded-xl shadow-card">
             {filtered ? (
               <EmptyState
                 icon={Search}
@@ -292,7 +292,7 @@ export default function AuditTrailLogs() {
         ) : (
           <>
             {/* Desktop table */}
-            <div className="hidden md:block bg-surface border border-line rounded-2xl shadow-card">
+            <div className="hidden md:block bg-surface border border-line rounded-xl shadow-card">
               <div className="overflow-x-auto rounded-xl">
                 <table className="w-full text-left text-xs">
                   <thead>
@@ -349,7 +349,7 @@ export default function AuditTrailLogs() {
               {rows.map((log) => {
                 const t = stamp(log.timestamp);
                 return (
-                  <div key={log.id} className="bg-surface border border-line rounded-2xl shadow-card p-4">
+                  <div key={log.id} className="bg-surface border border-line rounded-xl shadow-card p-4">
                     <div className="flex items-start justify-between gap-3">
                       <Badge className={ACTION_BADGE[log.action] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
                         {titleise(log.action)}

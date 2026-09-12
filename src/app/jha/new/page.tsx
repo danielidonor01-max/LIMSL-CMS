@@ -128,7 +128,7 @@ function NewJhaForm() {
         />
 
         <form onSubmit={submit} className="space-y-8">
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
             <div>
               <label className={LABEL_CLASS}>Approved Work Method Statement</label>
               <Select value={wmsId} onChange={setWmsId} className="w-full">
@@ -180,7 +180,7 @@ function NewJhaForm() {
             </div>
           </div>
 
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-ink-900">Job steps</h3>
@@ -268,7 +268,7 @@ function NewJhaForm() {
             </div>
           </div>
 
-          <div className="bg-surface border border-line rounded-2xl shadow-card p-6 space-y-4">
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
             <div>
               <label className={LABEL_CLASS}>PPE required</label>
               <div className="flex flex-wrap gap-1.5 mt-1.5">

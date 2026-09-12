@@ -92,7 +92,7 @@ export default function TriStateChecklist({
                       aria-pressed={on}
                       aria-label={`${item.label}: ${o.label}`}
                       title={o.label}
-                      className={`w-7 h-7 rounded-md border flex items-center justify-center transition-colors disabled:opacity-50 ${
+                      className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors disabled:opacity-50 ${
  on ? o.on : "bg-white border-ink-200 text-ink-400 hover:border-ink-300"
  }`}
                     >

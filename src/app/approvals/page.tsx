@@ -51,7 +51,7 @@ export default function ApprovalsPage() {
         {error ? (
           <LoadError onRetry={refresh} />
         ) : loading ? (
-          <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={4} cols={3} />
           </div>
         ) : (
@@ -90,7 +90,7 @@ export default function ApprovalsPage() {
                 message="When a document reaches a step you can sign, it appears here."
               />
             ) : (
-              <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden divide-y divide-line">
+              <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden divide-y divide-line">
                 {items!.map((i) => (
                   <Link
                     key={i.signoffId}

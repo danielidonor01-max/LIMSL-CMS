@@ -135,7 +135,7 @@ export default function EquipmentDocuments({
     "w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs text-ink-900 focus:outline-none";
 
   return (
-    <div className="p-5 bg-surface border border-line rounded-2xl shadow-card space-y-4">
+    <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-600" /> Documents

@@ -70,7 +70,7 @@ export default function CorrectiveMaintenanceList() {
         />
 
         {/* Breakdown Records List */}
-        <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {error && !loading ? (
             <LoadError what="breakdown records" onRetry={refresh} />
           ) : loading ? (

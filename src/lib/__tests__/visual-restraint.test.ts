@@ -58,22 +58,30 @@ const countAll = (source: string, re: RegExp) => (source.match(re) ?? []).length
 const distinct = (source: string, re: RegExp) => new Set(source.match(re) ?? []);
 
 // ── The ceilings ──────────────────────────────────────────────────────────────
-// Each is the measured value on 11 September 2026, the day before the rebuild.
-// Lower them as sweeps land. A failure here means the app grew a new way of
-// saying something it could already say.
-// Lowered after the first sweep. Uppercase, monospace and sub-12px type are
-// now ZERO on screen, so the ceiling is zero: there is no "a few is fine" here.
-// Each one was removed for a reason that does not stop applying to the next
-// instance somebody adds.
+// A failure here means the app grew a new way of saying something it could
+// already say. Lower them as sweeps land; never raise one.
 //
-// Print keeps its own treatment and is excluded above — an A4 permit at 300dpi
-// is a different reading problem from a phone in a workshop.
+// Where they stand, and why each is where it is:
+//
+//   fontSizes   6   xs, sm, base, xl, 3xl and the display step.
+//   uppercase   0   Zero, not "a few is fine". Every one was removed for a
+//   mono        0   reason that does not stop applying to the next instance.
+//   belowFloor  0   Nothing on screen goes under 12px.
+//   radiusSteps 4   lg for anything you click, xl for cards and panels, full
+//                   for pills. The fourth is bare `rounded`, which survives
+//                   only in the side-specific radii on the split date and time
+//                   controls.
+//   shadowSteps 2   card for the hairline lift under every panel, raised for
+//                   what genuinely floats above the page.
+//
+// Two, four and six pixels apart is not a distinction anybody perceives. It
+// just means cards disagree with each other about how round they are.
 const CEILING = {
   fontSizes: 6,
   uppercase: 0,
   mono: 0,
-  radiusSteps: 7,
-  shadowSteps: 6,
+  radiusSteps: 4,
+  shadowSteps: 2,
   belowFloor: 0,
 };
 

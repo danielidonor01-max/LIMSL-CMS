@@ -152,7 +152,7 @@ export default function AccountPage() {
       </div>
 
       {/* Profile */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-4">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
             <UserCircle className="w-4 h-4 text-brand-600" /> Profile
@@ -225,7 +225,7 @@ export default function AccountPage() {
       </section>
 
       {/* Preferences */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5 space-y-5">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-5">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-brand-600" /> Preferences
           {savingPrefs ? (
@@ -333,7 +333,7 @@ export default function AccountPage() {
       </section>
 
       {/* Security */}
-      <section className="bg-surface border border-line rounded-2xl shadow-card p-5">
+      <section className="bg-surface border border-line rounded-xl shadow-card p-5">
         <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2 mb-3">
           <KeyRound className="w-4 h-4 text-brand-600" /> Security
         </h3>

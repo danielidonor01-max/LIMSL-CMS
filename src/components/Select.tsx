@@ -130,7 +130,7 @@ export default function Select({
         <div
           ref={listRef}
           role="listbox"
-          className="absolute z-50 mt-1 left-0 right-0 min-w-[10rem] max-h-64 overflow-y-auto bg-white border border-ink-200 rounded-lg shadow-lg py-1"
+          className="absolute z-50 mt-1 left-0 right-0 min-w-[10rem] max-h-64 overflow-y-auto bg-white border border-ink-200 rounded-lg shadow-raised py-1"
         >
           {opts.map((o, i) => {
             const selected = o.value === value;
