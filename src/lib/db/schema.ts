@@ -52,6 +52,21 @@ export const equipment = pgTable("equipment", {
   decommissionedByName: text("decommissioned_by_name"),
   requiresCalibration: boolean("requires_calibration").default(false),
   requiresPremob: boolean("requires_premob").default(false),
+  // Off the register, but not gone. A machine that is sold, scrapped or retired
+  // leaves the default view and keeps everything: its work orders, permits,
+  // calibration certificates and incidents are still evidence of what happened
+  // while it was in service, and an auditor sampling last year's permits does
+  // not care that the machine has since left the building.
+  //
+  // Deliberately not a status. DECOMMISSIONED already exists as a sticky manual
+  // status and means "retired but still ours"; these columns mean "no longer on
+  // the register at all", which is a different question and has to survive
+  // status being derived from open work. See src/lib/equipment/removal.ts.
+  removedAt: text("removed_at"),
+  removedReason: text("removed_reason"), // DECOMMISSIONED | SOLD | DAMAGED | LOST | OTHER
+  removedNote: text("removed_note"),
+  removedById: text("removed_by_id"),
+  removedByName: text("removed_by_name"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 }, (t) => [index("equipment_asset_id_idx").on(t.assetId)]);

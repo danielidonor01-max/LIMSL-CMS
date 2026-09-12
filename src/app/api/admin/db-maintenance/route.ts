@@ -79,6 +79,7 @@ const INDEXES: [string, string][] = [
   ["corrective_maintenance.restoration_and_assignment", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS expected_restoration_at text, ADD COLUMN IF NOT EXISTS assigned_to_id text, ADD COLUMN IF NOT EXISTS assigned_to_name text, ADD COLUMN IF NOT EXISTS rca_target_date text"],
   ["corrective_maintenance.signer_ids", "ALTER TABLE corrective_maintenance ADD COLUMN IF NOT EXISTS technician_id text, ADD COLUMN IF NOT EXISTS supervisor_id text"],
   ["work_orders.governing_procedure", "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS procedure_revision_id text, ADD COLUMN IF NOT EXISTS procedure_code text, ADD COLUMN IF NOT EXISTS procedure_revision integer"],
+  ["equipment.removal", "ALTER TABLE equipment ADD COLUMN IF NOT EXISTS removed_at text, ADD COLUMN IF NOT EXISTS removed_reason text, ADD COLUMN IF NOT EXISTS removed_note text, ADD COLUMN IF NOT EXISTS removed_by_id text, ADD COLUMN IF NOT EXISTS removed_by_name text"],
   [
     "work_order_time_logs",
     `CREATE TABLE IF NOT EXISTS work_order_time_logs (

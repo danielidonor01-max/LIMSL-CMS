@@ -18,6 +18,9 @@ import {
   Stethoscope,
   AlertTriangle,
   Download,
+  ArchiveX,
+  Trash2,
+  Undo2,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
@@ -36,6 +39,11 @@ import {
 import { parseAssetId, ASSET_PREFIXES, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
 import { downloadCSV } from "@/lib/export";
 import LoadError from "@/components/LoadError";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { isSuperAdmin } from "@/lib/roles";
+import { RemoveFromRegisterModal, DeleteAssetModal } from "@/components/AssetRemoval";
 
 // An asset in one of these states is not doing its job. The register's whole
 // purpose is answering "what needs me today", which the old flat list buried.
@@ -62,6 +70,20 @@ export default function EquipmentList() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeTab, setTypeTab] = useState<TypeTab>("ALL");
   const [attentionOnly, setAttentionOnly] = useState(false);
+  // Removed assets are off the register by default. They are still reachable,
+  // because "where did that machine go" is a question somebody asks, and the
+  // answer has to be findable rather than only in the audit log.
+  const [showRemoved, setShowRemoved] = useState(false);
+  const [removing, setRemoving] = useState<any>(null);
+  const [deleting, setDeleting] = useState<any>(null);
+  // Deferred past mount: the session resolves client-side only, and rendering
+  // a role-dependent menu item during SSR is the hydration trap AGENTS.md
+  // records as a real past bug.
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const canPurge = mounted && isSuperAdmin((session?.user as { role?: string })?.role);
+
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
 
@@ -84,15 +106,26 @@ export default function EquipmentList() {
   // Counted per prefix rather than "SYS or else a machine". The old shape
   // silently folded any new series into the machine count, so the 19 office AC
   // units would have been reported as machines on the register everyone quotes.
+  // Removed assets are excluded from every count. The header reads "56 assets:
+  // 37 machines, 19 office units" and that is the number quoted in meetings, so
+  // it has to mean what is on the register rather than what the table holds.
   const counts = useMemo(() => {
     const byPrefix = Object.fromEntries(ASSET_PREFIXES.map((p) => [p, 0])) as Record<AssetPrefix, number>;
     let attention = 0;
+    let total = 0;
     for (const eq of equipmentList) {
+      if (eq.removedAt) continue;
+      total++;
       byPrefix[prefixOf(eq)]++;
       if (NEEDS_ATTENTION.has(eq.status)) attention++;
     }
-    return { byPrefix, attention, total: equipmentList.length };
+    return { byPrefix, attention, total };
   }, [equipmentList]);
+
+  const removedCount = useMemo(
+    () => equipmentList.filter((e) => e.removedAt).length,
+    [equipmentList],
+  );
 
   // Names only the series that are actually present. A register holding nothing
   // but machines should not announce "0 office and facility".
@@ -117,8 +150,12 @@ export default function EquipmentList() {
     const matchesStatus = statusFilter === "ALL" || eq.status === statusFilter;
     const matchesType = typeTab === "ALL" || prefixOf(eq) === typeTab;
     const matchesAttention = !attentionOnly || NEEDS_ATTENTION.has(eq.status);
+    const matchesRemoved = showRemoved ? !!eq.removedAt : !eq.removedAt;
 
-    return matchesSearch && matchesCategory && matchesStatus && matchesType && matchesAttention;
+    return (
+      matchesSearch && matchesCategory && matchesStatus && matchesType && matchesAttention &&
+      matchesRemoved
+    );
   });
 
   const sortedEquipment = [...filteredEquipment].sort((a: any, b: any) => {
@@ -182,7 +219,28 @@ export default function EquipmentList() {
       { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
       { label: "Edit", icon: Pencil, href: `/equipment/${urlParam}/edit` },
       { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${urlParam}` },
+      ...(eq.removedAt
+        ? [{ label: "Put back on the register", icon: Undo2, onClick: () => restore(eq) }]
+        : [{ label: "Remove from register", icon: ArchiveX, onClick: () => setRemoving(eq) }]),
+      // Super Admin only. The route checks this again and the password on top;
+      // hiding the item is so nobody is offered a control they cannot use.
+      ...(canPurge
+        ? [{ label: "Delete permanently", icon: Trash2, onClick: () => setDeleting(eq), danger: true }]
+        : []),
     ];
+  };
+
+  const restore = async (eq: any) => {
+    const res = await fetch(`/api/equipment/${(eq.assetId || "").replace(/\//g, "-")}/removal`, {
+      method: "PATCH",
+    });
+    if (res.ok) {
+      toast.success(`${eq.name} is back on the register.`);
+      refresh();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      toast.error(d.error || "Could not restore the asset.");
+    }
   };
 
   const emptyState = filtersActive ? (
@@ -268,6 +326,24 @@ export default function EquipmentList() {
               {counts.attention}
             </span>
           </button>
+
+          {removedCount > 0 && (
+            <button
+              onClick={() => setShowRemoved((v) => !v)}
+              aria-pressed={showRemoved}
+              className={`inline-flex items-center gap-2 px-3 min-h-9 rounded-lg border text-xs font-semibold transition-colors w-fit ${
+                showRemoved
+                  ? "bg-ink-100 border-ink-300 text-ink-800"
+                  : "bg-white border-ink-200 text-ink-600 hover:border-ink-300"
+              }`}
+            >
+              <ArchiveX className="w-4 h-4" />
+              Removed
+              <span className="px-1.5 py-0.5 rounded-lg text-xs bg-ink-100 text-ink-500">
+                {removedCount}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -406,6 +482,13 @@ export default function EquipmentList() {
           </>
         )}
       </main>
+
+      <RemoveFromRegisterModal
+        asset={removing}
+        onClose={() => setRemoving(null)}
+        onDone={refresh}
+      />
+      <DeleteAssetModal asset={deleting} onClose={() => setDeleting(null)} onDone={refresh} />
     </div>
   );
 }
