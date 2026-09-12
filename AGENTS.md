@@ -230,10 +230,42 @@ app code slices/compares them as strings. Never destructively reset the DB.
 
 Two agents work this repo concurrently — **coordinate or you will clobber**.
 
-- `main` — Gemini's branch.
-- `phase-2` — Claude's branch.
-- Never force-push. Never push to a branch you don't own without agreeing first.
+```
+  phase-2  (Claude)  ─┐
+                      ├─►  combined  ──►  main
+  gemini   (Gemini)  ─┘    integrate      production
+                           and test
+```
+
+- **`main` is production.** Vercel deploys it. Nothing lands here that has not
+  been through `combined` first. No agent pushes to `main` directly.
+- **`combined` is where the two streams meet and get tested together.** Merge
+  your branch here, run the suite, drive the flow, and only then does it go to
+  `main`. A conflict is meant to surface here rather than in production.
+- **`phase-2` is Claude's. `gemini` is Gemini's.** Work on your own branch,
+  merge it into `combined` yourself, and say so.
+
+Claude may read, audit and correct anything on `gemini`; corrections go through
+`combined` like everything else, with a commit message saying what was changed
+and why.
+
+### Work in your own worktree
+
+`limsl-cms-phase2/` is Claude's checkout. `limsl-cms/` is Gemini's. Editing
+files in someone else's working directory is how work gets committed by the
+wrong agent under the wrong message — which has already happened once, when a
+WhatsApp notifications feature was swept into a commit about table columns
+because it was sitting uncommitted in the other agent's tree.
+
+If you find changes you did not make in your own working tree, **stop and say
+so** rather than committing them.
+
+### The rest
+
+- Never force-push. Never push to a branch you do not own.
 - If you stash, use a unique tag: `git stash push -u -m "<agent>-<purpose>"`
-  (the stash stack is shared).
+  (the stash stack is shared across worktrees).
 - Commit incrementally with real messages. Verify (build + drive the flow) before
-  pushing.
+  pushing. `scripts/dev-db.sh up` gives you a local database with real data, and
+  `scripts/shoot.mjs` signs in and screenshots the actual pages — there is no
+  longer an excuse for shipping a screen nobody has looked at.
