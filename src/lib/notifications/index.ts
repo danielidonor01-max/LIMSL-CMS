@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { notifications, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { whatsappReady, emailReady } from "@/lib/config";
+import { config, whatsappReady, emailReady } from "@/lib/config";
 import { parsePrefs } from "@/lib/user-prefs";
 import { sendWhatsApp } from "./whatsapp";
 import { sendEmail } from "./email";
@@ -118,10 +118,12 @@ export async function notify(input: NotifyInput) {
       .filter((c) => c.to)
       .map(async (c) => {
         try {
+          const appBase = (config.appUrl || "https://limslcms.vercel.app").replace(/\/+$/, "");
+          const waLink = input.linkPath ? `\n\nLink: ${appBase}${input.linkPath}` : "";
           const res =
             c.channel === "EMAIL"
               ? await sendEmail(c.to!, input.title, input.body, input.linkPath)
-              : await sendWhatsApp(c.to!, `*LIMSL CMS*\n${input.title}\n\n${input.body}`);
+              : await sendWhatsApp(c.to!, `*LIMSL CMS*\n${input.title}\n\n${input.body}${waLink}`);
           await db
             .update(notifications)
             .set({

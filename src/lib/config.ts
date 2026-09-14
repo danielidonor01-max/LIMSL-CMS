@@ -49,7 +49,7 @@ export const config = {
   // cPanel/webmail on leemachinery.net, or a transactional relay (Resend/SendGrid).
   emailEnabled: process.env.EMAIL_ENABLED === "true",
   emailFrom: process.env.EMAIL_FROM || "LIMSL CMS <no-reply@leemachinery.net>",
-  appUrl: process.env.APP_URL || "", // base URL for deep links in emails
+  appUrl: process.env.APP_URL || "https://limslcms.vercel.app", // base URL for deep links in emails and WhatsApp
   smtpHost: process.env.SMTP_HOST || "",
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpSecure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587/25 (STARTTLS)
