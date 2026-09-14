@@ -11,6 +11,7 @@ import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import Field, { FIELD_CLASS } from "@/components/Field";
 import { submitOrQueue } from "@/lib/offline/use-outbox";
+import { invalidateApi } from "@/lib/api-cache";
 
 export default function NewCorrectiveRequest() {
   const router = useRouter();
@@ -90,6 +91,8 @@ export default function NewCorrectiveRequest() {
         return;
       }
       toast.success("Fault logged. Maintenance leadership and HSE have been notified.");
+      invalidateApi("/api/corrective");
+      invalidateApi("/api/dashboard");
       router.push("/corrective");
     } catch {
       toast.error("Couldn't log the fault, check your connection and try again.");

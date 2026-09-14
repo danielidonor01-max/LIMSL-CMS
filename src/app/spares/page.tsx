@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale } from "lucide-react";
 import { toast } from "sonner";
-import { useApi } from "@/lib/api-cache";
+import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
@@ -148,6 +148,7 @@ function SparesRegister() {
         return;
       }
       toast.success(`${form.partNumber} added to the spares register.`);
+      invalidateApi("/api/spares");
       setShowCreate(false);
       setForm(emptyForm);
       refresh();
@@ -177,6 +178,7 @@ function SparesRegister() {
         return;
       }
       toast.success(`Stock updated: ${d.balanceAfter} ${movement.spare.unit ?? "ea"} on hand.`);
+      invalidateApi("/api/spares");
       setMovement(null);
       refresh();
     } catch {

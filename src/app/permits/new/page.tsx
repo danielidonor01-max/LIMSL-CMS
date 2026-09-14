@@ -27,6 +27,7 @@ import {
   missingMandatoryPrecautions,
 } from "@/lib/hse/permit-form";
 import { DEFAULT_PERMIT_VALIDITY_DAYS, expiryDateOf } from "@/lib/hse/permit-validity";
+import { invalidateApi } from "@/lib/api-cache";
 
 type Marks = Record<string, TriState>;
 
@@ -171,6 +172,7 @@ function NewPermitForm() {
         toast.error(d.error || "Could not raise the permit.");
         return;
       }
+      invalidateApi("/api/permits");
       toast.success(`${d.permitNumber} raised. It needs the full signature chain before work may begin.`);
       router.push(`/permits/${d.id}`);
     } finally {

@@ -163,7 +163,7 @@ export default function DataImportPage() {
   const active = TABS.find((t) => t.key === tab)!;
 
   return (
-    <div className={PAGE_MAIN.register}>
+    <main className={PAGE_MAIN.register}>
       <PageHeader
         title="Data Import"
         subtitle="Super Admin · go-live register import (CSV / Excel)"
@@ -358,7 +358,7 @@ export default function DataImportPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </main>
   );
 }
 

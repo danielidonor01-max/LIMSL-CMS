@@ -405,6 +405,9 @@ export async function seedDatabase() {
     await db.insert(diagnosticGuides).values(seedGuides).onConflictDoNothing();
     console.log(`✅ Inserted ${seedGuides.length} diagnostic guides`);
 
+    const { seedCriticalSpares } = await import("./seed-spares");
+    await seedCriticalSpares();
+
     console.log("🎉 Database seeding complete!");
   } catch (error) {
     console.error("❌ Seeding failed:", error);

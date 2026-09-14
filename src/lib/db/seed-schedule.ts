@@ -264,9 +264,11 @@ export async function seedSchedule() {
 }
 
 // Allow running directly: `npx tsx src/lib/db/seed-schedule.ts`
-seedSchedule()
-  .then(() => process.exit(0))
-  .catch((e) => {
-    console.error("❌ Schedule seed failed:", e);
-    process.exit(1);
-  });
+if (require.main === module) {
+  seedSchedule()
+    .then(() => process.exit(0))
+    .catch((e) => {
+      console.error("❌ Schedule seed failed:", e);
+      process.exit(1);
+    });
+}

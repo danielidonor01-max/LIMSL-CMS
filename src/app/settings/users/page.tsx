@@ -411,7 +411,7 @@ export default function UsersAdminPage() {
   );
 
   return (
-    <div className={PAGE_MAIN.register}>
+    <main className={PAGE_MAIN.register}>
       <PageHeader
         title="User Management"
         subtitle="Super Admin · roles & access control"
@@ -1079,6 +1079,6 @@ export default function UsersAdminPage() {
           )}
         </div>
       </Modal>
-    </div>
+    </main>
   );
 }

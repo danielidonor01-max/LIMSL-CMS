@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { HardHat, Plus, Search, AlertTriangle, Download, ShieldOff, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { useApi } from "@/lib/api-cache";
+import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import PageHeader from "@/components/PageHeader";
@@ -111,6 +111,7 @@ export default function ContractorsPage() {
         return false;
       }
       toast.success(ok);
+      invalidateApi("/api/contractors");
       refresh();
       return true;
     } finally {
@@ -133,6 +134,7 @@ export default function ContractorsPage() {
         return;
       }
       toast.success(`${suspend.c.companyName} suspended. No permit can be issued to them.`);
+      invalidateApi("/api/contractors");
       setSuspend(null);
       refresh();
     } finally {
@@ -156,6 +158,7 @@ export default function ContractorsPage() {
     } else {
       toast.success(`${c.companyName} reinstated.`);
     }
+    invalidateApi("/api/contractors");
     refresh();
   };
 

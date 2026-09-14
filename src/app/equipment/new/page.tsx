@@ -23,6 +23,7 @@ import {
 } from "@/lib/constants";
 import { ASSET_PREFIXES, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
 import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
+import { invalidateApi } from "@/lib/api-cache";
 
 const FREQUENCIES = ["MONTHLY", "BI_MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"];
 const CRITICALITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -104,6 +105,7 @@ export default function NewEquipmentPage() {
       toast.error(d.error || "Failed to create equipment.");
       return;
     }
+    invalidateApi("/api/equipment");
     toast.success(`Equipment ${form.assetId} added.`);
     router.push(`/equipment/${form.assetId.replace(/\//g, "-")}`);
   };

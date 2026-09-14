@@ -10,6 +10,7 @@ import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import ChainPreview from "@/components/ChainPreview";
 import { JHA_CHAIN } from "@/lib/signoff/chains";
+import { invalidateApi } from "@/lib/api-cache";
 import Select from "@/components/Select";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
@@ -112,6 +113,8 @@ function NewJhaForm() {
         return;
       }
       toast.success(`${d.jhaNumber} raised and sent for approval.`);
+      invalidateApi("/api/jha");
+      invalidateApi("/api/dashboard");
       router.push(`/jha/${d.id}`);
     } finally {
       setSaving(false);

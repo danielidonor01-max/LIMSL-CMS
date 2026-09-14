@@ -553,7 +553,7 @@ export default function AppSettingsPage() {
   ];
 
   return (
-    <div className={PAGE_MAIN.register}>
+    <main className={PAGE_MAIN.register}>
       <PageHeader
         title="App Settings"
         subtitle="Super Admin · organisation-wide configuration"
@@ -1497,6 +1497,6 @@ APP_URL=https://<your-app>.vercel.app`}</pre>
       )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

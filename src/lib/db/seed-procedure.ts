@@ -51,9 +51,11 @@ export async function seedProcedure() {
   console.log(`✅ Procedure Rev ${REVISION} seeded (APPROVED), ${CONTENT.length} chars.`);
 }
 
-seedProcedure()
-  .then(() => process.exit(0))
-  .catch((e) => {
-    console.error("❌ Procedure seed failed:", e);
-    process.exit(1);
-  });
+if (require.main === module) {
+  seedProcedure()
+    .then(() => process.exit(0))
+    .catch((e) => {
+      console.error("❌ Procedure seed failed:", e);
+      process.exit(1);
+    });
+}

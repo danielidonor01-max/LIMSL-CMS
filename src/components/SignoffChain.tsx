@@ -13,6 +13,7 @@ import { canSignStep, ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
 import { isStepUnlocked, chainSummary } from "@/lib/signoff/chains";
 import { validatePin, PIN_LENGTH } from "@/lib/signing-pin";
 import { toast } from "sonner";
+import { invalidateApi } from "@/lib/api-cache";
 
 type Step = {
   id: string;
@@ -152,6 +153,12 @@ export default function SignoffChain({
     setSig(null);
     setComments("");
     setOverrideReason("");
+    invalidateApi("/api/signoffs");
+    invalidateApi("/api/dashboard");
+    invalidateApi("/api/work-orders");
+    invalidateApi("/api/permits");
+    invalidateApi("/api/jha");
+    invalidateApi("/api/corrective");
     load();
   };
 

@@ -16,6 +16,7 @@ import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { REMOVAL_REASONS } from "@/lib/equipment/removal";
+import { invalidateApi } from "@/lib/api-cache";
 
 type Asset = { id: string; assetId: string; name: string };
 
@@ -49,6 +50,7 @@ export function RemoveFromRegisterModal({
         toast.error(d.error || "Could not remove the asset.");
         return;
       }
+      invalidateApi("/api/equipment");
       toast.success(`${asset.name} is off the register. Its history is intact.`);
       onDone();
       onClose();
@@ -160,6 +162,7 @@ export function DeleteAssetModal({
         setRefusal(d.error || "Could not delete the asset.");
         return;
       }
+      invalidateApi("/api/equipment");
       toast.success(`${asset.assetId} deleted.`);
       onDone();
       close();

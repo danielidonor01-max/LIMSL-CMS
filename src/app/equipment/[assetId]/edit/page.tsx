@@ -15,6 +15,7 @@ import {
   EQUIPMENT_STATUS_LABELS,
   FREQUENCY_LABELS,
 } from "@/lib/constants";
+import { invalidateApi } from "@/lib/api-cache";
 
 const FREQUENCIES = ["MONTHLY", "BI_MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"];
 const CRITICALITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -50,6 +51,8 @@ export default function EquipmentEditPage() {
       setError("Failed to save changes.");
       return;
     }
+    invalidateApi("/api/equipment");
+    invalidateApi(`/api/equipment/${assetId}`);
     // Asset ID may have changed, navigate to its (possibly new) URL key.
     const newKey = String(form.assetId || "").replace(/\//g, "-");
     router.push(`/equipment/${newKey}`);

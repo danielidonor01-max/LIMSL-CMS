@@ -19,6 +19,7 @@ import {
 import { WORK_ORDER_ASSIGNEE_ROLES } from "@/lib/roles";
 import ChainPreview from "@/components/ChainPreview";
 import { WORK_ORDER_CHAIN } from "@/lib/signoff/chains";
+import { invalidateApi } from "@/lib/api-cache";
 
 type Equipment = { id: string; assetId: string; name: string; criticality: string | null };
 type User = { id: string; name: string; role: string };
@@ -127,6 +128,8 @@ function NewWorkOrderForm() {
         throw new Error(d.error || "Failed to create work order");
       }
       const wo = await res.json();
+      invalidateApi("/api/work-orders");
+      invalidateApi("/api/dashboard");
       router.push(`/work-orders/${wo.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create work order");

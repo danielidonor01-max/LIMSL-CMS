@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
+import { invalidateApi } from "@/lib/api-cache";
 import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import WorkOrderParts from "@/components/WorkOrderParts";
@@ -155,6 +156,8 @@ export default function WorkOrderDetailPage() {
         toast.error(d.error || "Update failed.");
         return false;
       }
+      invalidateApi("/api/work-orders");
+      invalidateApi("/api/dashboard");
       return true;
     } finally {
       setActing(false);
