@@ -400,7 +400,9 @@ export default function EquipmentList() {
                       <th className="py-2.5 px-4 whitespace-nowrap">Location</th>
                       <th className="py-2.5 px-4 whitespace-nowrap">Status</th>
                       <th className="py-2.5 px-4 whitespace-nowrap">Criticality</th>
-                      <th className="py-2.5 px-4 text-right">Actions</th>
+                      {/* w-px: the cell holds one kebab, so it should claim what that
+                          needs and no more. */}
+                      <th className="py-2.5 px-4 text-right w-px">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
@@ -408,12 +410,21 @@ export default function EquipmentList() {
                       const urlParam = (eq.assetId || "").replace(/\//g, "-");
                       return (
                         <tr key={eq.id} className="hover:bg-ink-50 text-ink-600 transition-colors">
-                          <td className="py-2.5 px-4">
-                            <Link href={`/equipment/${urlParam}`} className="font-medium text-ink-900 hover:text-brand-600">
+                          {/* max-w-0 with w-full is what makes truncate work in
+                              a table cell: without it the cell sizes to its
+                              content, the name never ellipses, and at 1280px it
+                              wrapped to three lines and pushed the row menu
+                              behind a horizontal scroll. */}
+                          <td className="py-2.5 px-4 max-w-0 w-full">
+                            <Link
+                              href={`/equipment/${urlParam}`}
+                              title={eq.name}
+                              className="block truncate font-medium text-ink-900 hover:text-brand-600"
+                            >
                               {eq.name}
                             </Link>
                             {eq.assetId && (
-                              <span className="block text-xs text-ink-500 tabular-nums">{eq.assetId}</span>
+                              <span className="block truncate text-xs text-ink-500 tabular-nums">{eq.assetId}</span>
                             )}
                           </td>
                           {/* Category is a fixed vocabulary, so it never needs

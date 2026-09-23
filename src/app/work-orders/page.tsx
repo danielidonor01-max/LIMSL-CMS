@@ -339,14 +339,18 @@ export default function WorkOrdersPage() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-line text-ink-500 text-xs">
-                    <th className="py-2.5 px-4 font-medium">WO #</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">WO #</th>
                     <th className="py-2.5 px-4 font-medium">Equipment</th>
-                    <th className="py-2.5 px-4 font-medium">Type</th>
-                    <th className="py-2.5 px-4 font-medium">Priority</th>
-                    <th className="py-2.5 px-4 font-medium">Planned</th>
-                    <th className="py-2.5 px-4 font-medium">Technician</th>
-                    <th className="py-2.5 px-4 font-medium">Status</th>
-                    <th className="py-2.5 px-4 font-medium text-right min-w-[200px]">Actions</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Type</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Priority</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Planned</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Technician</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Status</th>
+                    {/* No min-width. This carried min-w-[200px] from when seven
+                        buttons lived in the cell; with one kebab it was 200px of
+                        reserved space pushing the whole table into a horizontal
+                        scroll. */}
+                    <th className="py-2.5 px-4 font-medium text-right w-px">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
@@ -361,9 +365,14 @@ export default function WorkOrdersPage() {
                             {r.workOrderNumber}
                           </Link>
                         </td>
-                        <td className="py-2.5 px-4">
-                          <Link href={`/work-orders/${r.id}`} className="block">
-                            <div className="font-medium text-ink-900 truncate max-w-[220px]">
+                        {/* The only column with unbounded content, so the only
+                            one that may take the slack. max-w-0 with w-full is
+                            what makes truncate work inside a table cell: without
+                            it the cell sizes to its content and the ellipsis
+                            never appears. */}
+                        <td className="py-2.5 px-4 max-w-0 w-full">
+                          <Link href={`/work-orders/${r.id}`} className="block min-w-0">
+                            <div className="font-medium text-ink-900 truncate">
                               {r.equipmentName}
                             </div>
                           </Link>
@@ -398,31 +407,43 @@ export default function WorkOrdersPage() {
                             <span className="text-ink-400 italic">Unassigned</span>
                           )}
                         </td>
+                        {/* One badge, and a single line of context under it.
+                            This column could stack four blocks, the longest of
+                            them "Your Sign-Off Needed" in bold, so the widest
+                            row in the table set the width of the column on
+                            every other row. The detail moves to a title, where
+                            it costs nothing until somebody wants it. */}
                         <td className="py-2.5 px-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1 items-start">
-                            {r.approvalRetrospective && !r.approvedAt && (
-                              <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20 text-xs">
-                                Unsigned emergency
-                              </Badge>
-                            )}
                             <Badge className={WO_STATUS_BADGE[r.status]}>
                               {WO_STATUS_LABELS[r.status] ?? r.status}
                             </Badge>
+                            {r.approvalRetrospective && !r.approvedAt && (
+                              <span
+                                className="text-xs text-warn-700 flex items-center gap-1"
+                                title="Emergency work order: it commenced immediately and its signatures are still being collected."
+                              >
+                                <AlertCircle className="w-3 h-3 shrink-0" /> Unsigned emergency
+                              </span>
+                            )}
                             {r.status === "PENDING_APPROVAL" && r.nextSignoffStep && (
                               <span
-                                className={`text-xs px-1.5 py-0.5 rounded-lg font-medium flex items-center gap-1 ${
-                                  canSign
-                                    ? "bg-brand-500/10 text-brand-700 border border-brand-500/30 animate-pulse font-bold"
-                                    : "bg-ink-100 text-ink-500 border border-ink-200"
+                                className={`text-xs flex items-center gap-1 ${
+                                  canSign ? "text-brand-700 font-semibold" : "text-ink-500"
                                 }`}
+                                title={
+                                  canSign
+                                    ? `You may sign the ${r.nextSignoffStep.roleLabel} step.`
+                                    : `Waiting on ${r.nextSignoffStep.roleLabel}.`
+                                }
                               >
-                                <Clock className="w-2.5 h-2.5" />
-                                {canSign ? "Your Sign-Off Needed" : `Awaiting ${r.nextSignoffStep.roleLabel.split(" ")[0]}`}
+                                <Clock className="w-3 h-3 shrink-0" />
+                                {canSign ? "Yours to sign" : `Awaiting ${r.nextSignoffStep.roleLabel.split(" ")[0]}`}
                               </span>
                             )}
                             {r.status === "REJECTED" && r.rejectedStep && (
                               <span className="text-xs text-danger-700 flex items-center gap-1">
-                                <AlertCircle className="w-2.5 h-2.5" /> Returned for edit
+                                <AlertCircle className="w-3 h-3 shrink-0" /> Returned for edit
                               </span>
                             )}
                           </div>

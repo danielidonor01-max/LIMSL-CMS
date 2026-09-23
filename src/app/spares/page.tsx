@@ -6,7 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
@@ -16,10 +16,11 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import LoadError from "@/components/LoadError";
+import KebabMenu from "@/components/KebabMenu";
 import { Badge } from "@/components/Badge";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { downloadCSV } from "@/lib/export";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, SPARES_DELETE_ROLES } from "@/lib/roles";
 import { CRITICALITY_SHORT } from "@/lib/constants";
 import {
   STOCK_LEVEL_LABELS,
@@ -33,6 +34,8 @@ type Spare = {
   id: string;
   partNumber: string;
   name: string;
+  brand: string | null;
+  model: string | null;
   equipmentId: string | null;
   equipmentName: string | null;
   assetId: string | null;
@@ -57,6 +60,8 @@ type Spare = {
 const emptyForm = {
   partNumber: "",
   name: "",
+  brand: "",
+  model: "",
   equipmentId: "",
   quantityOnHand: "0",
   minimumQuantity: "1",
@@ -86,6 +91,40 @@ function SparesRegister() {
   useEffect(() => setMounted(true), []);
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  // Issuing and receiving is everyday stores work. Taking the part off the
+  // register is not, so it sits with whoever owns what the register claims
+  // LIMSL holds. The route checks this again.
+  const canDelete = mounted && SPARES_DELETE_ROLES.includes(role ?? "");
+  const [deleting, setDeleting] = useState<Spare | null>(null);
+  const [deletingBusy, setDeletingBusy] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setDeletingBusy(true);
+    try {
+      const res = await fetch(`/api/spares/${deleting.id}`, { method: "DELETE" });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not remove the part.");
+        return;
+      }
+      toast.success(`${deleting.name} removed from the spares register.`);
+      setDeleting(null);
+      refresh();
+    } finally {
+      setDeletingBusy(false);
+    }
+  };
+
+  // One place deciding what a row offers.
+  const rowActions = (s: Spare, reorder: number) => [
+    { label: "Issue to a job", icon: ArrowUpFromLine, onClick: () => setMovement({ spare: s, type: "ISSUE", qty: "1", reason: "" }) },
+    { label: "Receive stock", icon: ArrowDownToLine, onClick: () => setMovement({ spare: s, type: "RECEIPT", qty: String(reorder || 1), reason: "" }) },
+    { label: "Correct after a stock count", icon: Scale, onClick: () => setMovement({ spare: s, type: "ADJUSTMENT", qty: String(s.quantityOnHand), reason: "" }) },
+    ...(canDelete
+      ? [{ label: "Remove from the register", icon: Trash2, onClick: () => setDeleting(s), danger: true }]
+      : []),
+  ];
 
   const { data: equipmentData } = useApi<{ id: string; assetId: string; name: string }[]>("/api/equipment", []);
   const equipmentList = Array.isArray(equipmentData) ? equipmentData : [];
@@ -94,6 +133,7 @@ function SparesRegister() {
   // spares rather than the whole register.
   const [q, setQ] = useState(searchParams.get("q") ?? "");
   const [riskOnly, setRiskOnly] = useState(false);
+  const [brandFilter, setBrandFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -106,9 +146,28 @@ function SparesRegister() {
   // committed to, spread across every machine with an absent critical spare.
   const exposureDays = spares.reduce((a, s) => a + (s.risk?.exposureDays ?? 0), 0);
 
+  // Recognition over recall, and the only defence against spelling drift that
+  // actually works: the brands are whatever is already on the register, so the
+  // person adding the ninth SKF bearing picks "SKF" from a list rather than
+  // typing it again and creating "Skf".
+  const brands = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const s of spares) {
+      const b = (s.brand ?? "").trim();
+      if (!b) continue;
+      // Keyed case-insensitively so one brand cannot appear twice; the first
+      // spelling seen is the one offered.
+      if (!seen.has(b.toLowerCase())) seen.set(b.toLowerCase(), b);
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }, [spares]);
+
   const filtered = useMemo(() => {
     let out = spares;
     if (riskOnly) out = out.filter((s) => s.risk?.atRisk);
+    if (brandFilter !== "ALL") {
+      out = out.filter((s) => (s.brand ?? "").trim().toLowerCase() === brandFilter.toLowerCase());
+    }
     if (q.trim()) {
       const term = q.toLowerCase();
       out = out.filter(
@@ -116,6 +175,8 @@ function SparesRegister() {
           s.partNumber.toLowerCase().includes(term) ||
           s.name.toLowerCase().includes(term) ||
           (s.equipmentName ?? "").toLowerCase().includes(term) ||
+          (s.brand ?? "").toLowerCase().includes(term) ||
+          (s.model ?? "").toLowerCase().includes(term) ||
           (s.binLocation ?? "").toLowerCase().includes(term),
       );
     }
@@ -127,7 +188,7 @@ function SparesRegister() {
         (b.risk?.exposureDays ?? 0) - (a.risk?.exposureDays ?? 0) ||
         a.partNumber.localeCompare(b.partNumber),
     );
-  }, [spares, q, riskOnly]);
+  }, [spares, q, riskOnly, brandFilter]);
 
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +254,8 @@ function SparesRegister() {
       `critical-spares-${new Date().toISOString().slice(0, 10)}`,
       filtered.map((s) => ({
         "Part number": s.partNumber,
+        Brand: s.brand ?? "",
+        Model: s.model ?? "",
         Name: s.name,
         "Held for": s.equipmentName ?? "General stock",
         "Asset ID": s.assetId ?? "",
@@ -213,7 +276,8 @@ function SparesRegister() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
-        <PageHeader
+        <PageHeader
+
           title="Critical Spares"
           subtitle="Parts held for the machines that stop production, and what an empty shelf costs"
           code="LIMSL-MAIN-SPR-016"
@@ -287,6 +351,21 @@ function SparesRegister() {
             <AlertTriangle className="w-4 h-4" />
             Below minimum only
           </button>
+          {/* Offered only once there is something to choose between. A filter
+              with one option is a control that does nothing. */}
+          {brands.length > 1 && (
+            <Select
+              value={brandFilter}
+              onChange={setBrandFilter}
+              ariaLabel="Filter by brand"
+              className="w-full sm:w-52"
+            >
+              <option value="ALL">All brands</option>
+              {brands.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </Select>
+          )}
         </div>
 
         <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
@@ -330,7 +409,7 @@ function SparesRegister() {
                     <th className="py-3.5 px-5 font-semibold text-center">Min</th>
                     <th className="py-3.5 px-5 font-semibold">Stock</th>
                     <th className="py-3.5 px-5 font-semibold">If it fails today</th>
-                    {canWrite && <th className="py-3.5 px-5 font-semibold text-right">Stock move</th>}
+                    {canWrite && <th className="py-3.5 px-5 font-semibold text-right">Action</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
@@ -340,6 +419,13 @@ function SparesRegister() {
                       <tr key={s.id} className="hover:bg-ink-50">
                         <td className="py-3.5 px-5">
                           <p className="font-semibold text-ink-900">{s.name}</p>
+                          {/* What a storeman says out loud is "the SKF 6205",
+                              not the catalogue number, so it reads first. */}
+                          {(s.brand || s.model) && (
+                            <p className="text-xs text-ink-700 mt-0.5">
+                              {[s.brand, s.model].filter(Boolean).join(" ")}
+                            </p>
+                          )}
                           <p className="text-xs text-ink-500 mt-0.5">
                             {s.partNumber}
                             {s.binLocation ? ` · bin ${s.binLocation}` : ""}
@@ -386,29 +472,14 @@ function SparesRegister() {
                           )}
                         </td>
                         {canWrite && (
+                          /* Three unlabelled icons in a row, each explained only
+                             by a tooltip, in a column headed "Stock move" —
+                             which named the mechanism rather than the choice.
+                             Every other table in the app puts row actions
+                             behind one kebab with words on them. */
                           <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                            <div className="inline-flex gap-1">
-                              <button
-                                onClick={() => setMovement({ spare: s, type: "ISSUE", qty: "1", reason: "" })}
-                                title="Issue to a job"
-                                className="p-2 rounded-lg text-ink-500 hover:text-danger-600 hover:bg-danger-50"
-                              >
-                                <ArrowUpFromLine className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setMovement({ spare: s, type: "RECEIPT", qty: String(reorder || 1), reason: "" })}
-                                title="Receive stock"
-                                className="p-2 rounded-lg text-ink-500 hover:text-brand-600 hover:bg-brand-50"
-                              >
-                                <ArrowDownToLine className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setMovement({ spare: s, type: "ADJUSTMENT", qty: String(s.quantityOnHand), reason: "" })}
-                                title="Correct after a stock count"
-                                className="p-2 rounded-lg text-ink-500 hover:text-info-600 hover:bg-info-50"
-                              >
-                                <Scale className="w-4 h-4" />
-                              </button>
+                            <div className="flex justify-end">
+                              <KebabMenu ariaLabel={`Actions for ${s.name}`} items={rowActions(s, reorder)} />
                             </div>
                           </td>
                         )}
@@ -437,6 +508,44 @@ function SparesRegister() {
                 <input id="sp-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Spindle drive belt" className={FIELD_CLASS} required />
               </Field>
             </div>
+
+            {/* Recognition over recall. The brand box is a plain text input with
+                a list attached, so an existing brand is chosen from a menu and a
+                genuinely new one can still be typed. A Select would have made
+                the first SKF part impossible to add; a bare input would have
+                given us "SKF", "Skf" and "skf " within a month. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field
+                label="Brand"
+                htmlFor="sp-brand"
+                help={brands.length ? "Pick one already in use, or type a new one." : undefined}
+              >
+                <input
+                  id="sp-brand"
+                  list="spare-brands"
+                  value={form.brand}
+                  onChange={(e) => set("brand", e.target.value)}
+                  placeholder="e.g. SKF"
+                  autoComplete="off"
+                  className={FIELD_CLASS}
+                />
+              </Field>
+              <Field label="Model" htmlFor="sp-model">
+                <input
+                  id="sp-model"
+                  value={form.model}
+                  onChange={(e) => set("model", e.target.value)}
+                  placeholder="e.g. 6205-2RS"
+                  autoComplete="off"
+                  className={FIELD_CLASS}
+                />
+              </Field>
+            </div>
+            <datalist id="spare-brands">
+              {brands.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
 
             <div>
               <label className={LABEL_CLASS}>Held for which machine?</label>
@@ -493,6 +602,40 @@ function SparesRegister() {
               </Button>
             </div>
           </form>
+        </Modal>
+
+        {/* Removing a part from the register.
+            The route refuses outright for any part with stock history, so this
+            says what it will and will not do rather than promising something
+            the server may decline. */}
+        <Modal
+          open={!!deleting}
+          onClose={() => setDeleting(null)}
+          title="Remove from the spares register"
+          subtitle={deleting ? `${deleting.partNumber} · ${deleting.name}` : undefined}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-ink-600 leading-relaxed">
+              <span className="font-semibold text-ink-900">{deleting?.name}</span> will be taken off the
+              register. This cannot be undone.
+            </p>
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-info-50 border border-info-200 text-sm text-info-900 leading-relaxed">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-info-600" />
+              <span>
+                If any stock has ever been issued, received or counted against this part, the removal will be
+                refused: those movements say what was fitted to which machine, and they are the stores audit
+                trail. Set the minimum to zero and leave it on the register instead.
+              </span>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setDeleting(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" icon={Trash2} loading={deletingBusy} onClick={confirmDelete}>
+                Remove the part
+              </Button>
+            </div>
+          </div>
         </Modal>
 
         {/* Stock movement */}

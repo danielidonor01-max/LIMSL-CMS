@@ -588,13 +588,13 @@ export default function SchedulePage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-ink-200 text-ink-500">
-                    <th className="py-3.5 px-5 font-medium">Planned</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Planned</th>
                     <th className="py-3.5 px-5 font-medium">Equipment</th>
-                    <th className="py-3.5 px-5 font-medium">Activity</th>
-                    <th className="py-3.5 px-5 font-medium">Freq.</th>
-                    <th className="py-3.5 px-5 font-medium">Responsible</th>
-                    <th className="py-3.5 px-5 font-medium">Status</th>
-                    <th className="py-3.5 px-5 font-medium">Work order</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Activity</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Freq.</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Responsible</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Status</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Work order</th>
                     <th className="py-3.5 px-5 font-medium text-right">Action</th>
                   </tr>
                 </thead>
@@ -607,8 +607,10 @@ export default function SchedulePage() {
                           {r.month ? MONTH_NAMES[r.month - 1] : ""} · Q{r.quarter}
                         </div>
                       </td>
-                      <td className="py-3.5 px-5">
-                        <div className="font-medium text-ink-900 max-w-[220px] truncate">
+                      {/* The one column with unbounded content, so the one
+                          that takes the slack. */}
+                      <td className="py-3.5 px-5 max-w-0 w-full">
+                        <div className="font-medium text-ink-900 truncate">
                           {r.equipmentName}
                         </div>
                         <div className="text-xs text-ink-500">
@@ -643,7 +645,7 @@ export default function SchedulePage() {
                           {SCHEDULE_STATUS_LABELS[r.status] ?? r.status}
                         </Badge>
                         {r.status === "DEFERRED" && (
-                          <div className="mt-1.5 max-w-[280px] text-xs leading-relaxed text-ink-500">
+                          <div className="mt-1.5 max-w-[220px] text-xs leading-relaxed text-ink-500">
                             <span className="text-violet-700 font-medium">
                               {r.deferredByName ?? "-"}
                             </span>

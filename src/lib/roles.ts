@@ -196,6 +196,18 @@ export const WORK_ASSIGN_ROLES = [
 // the second signature.
 export const PM_SUPERVISOR_ROLES = ["FOREMAN", "MAINTENANCE_MANAGER", "FACTORY_MANAGER"];
 
+// Who may take a spare part off the register entirely.
+//
+// Narrower than MAINTENANCE_WRITE_ROLES, which covers issuing and receiving
+// stock — the everyday stores work a technician does. Removing the part itself
+// is not stores work; it edits what the register says LIMSL holds, and the
+// route refuses it outright for any part with movement history.
+export const SPARES_DELETE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+];
+
 // Roles permitted to manage the training & competency records.
 export const TRAINING_WRITE_ROLES = [
   "SUPER_ADMIN",

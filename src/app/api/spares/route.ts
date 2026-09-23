@@ -18,6 +18,8 @@ export async function GET() {
         id: spareParts.id,
         partNumber: spareParts.partNumber,
         name: spareParts.name,
+        brand: spareParts.brand,
+        model: spareParts.model,
         description: spareParts.description,
         equipmentId: spareParts.equipmentId,
         quantityOnHand: spareParts.quantityOnHand,
@@ -73,6 +75,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A part number and a name are both required." }, { status: 400 });
     }
 
+    const tidy = (v: unknown) => {
+      const t = String(v ?? "").trim().replace(/\s+/g, " ");
+      return t || null;
+    };
+
     const num = (v: unknown, fallback = 0) => {
       const n = Number(v);
       return Number.isFinite(n) && n >= 0 ? n : fallback;
@@ -82,6 +89,11 @@ export async function POST(request: Request) {
       id: nanoid(),
       partNumber,
       name,
+      // Trimmed and collapsed, never title-cased. "SKF" must not become "Skf",
+      // and the picker in the UI is what stops "skf" and "SKF " becoming two
+      // brands — this only removes the difference nobody meant to type.
+      brand: tidy(body.brand),
+      model: tidy(body.model),
       description: body.description || null,
       equipmentId: body.equipmentId || null,
       quantityOnHand: num(body.quantityOnHand),

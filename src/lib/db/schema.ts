@@ -786,6 +786,12 @@ export const spareParts = pgTable("spare_parts", {
   id: text("id").primaryKey(),
   partNumber: text("part_number").notNull(),
   name: text("name").notNull(),
+  // Who made it and which model it is. A part number alone identifies a part
+  // only if you already know whose catalogue it came from, and two suppliers
+  // reuse the same digits often enough that the stores list could not be
+  // searched by the thing people actually say out loud: "the SKF bearing".
+  brand: text("brand"),
+  model: text("model"),
   description: text("description"),
   // The machine this part is held for. Null means a general workshop consumable.
   equipmentId: text("equipment_id").references(() => equipment.id),
