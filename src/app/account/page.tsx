@@ -22,6 +22,7 @@ import { ROLE_BADGE } from "@/lib/roles";
 import { useUserPrefs } from "@/components/PreferencesProvider";
 import { DEFAULT_PREFS, LANDING_OPTIONS, type UserPrefs } from "@/lib/user-prefs";
 import PageSkeleton from "@/components/Skeleton";
+import SigningPinSetting from "@/components/SigningPinSetting";
 
 type Me = {
   name: string; email: string; phone: string; whatsapp: string;
@@ -341,6 +342,8 @@ export default function AccountPage() {
           </div>
           <ChevronRight className="w-4 h-4 text-ink-400 group-hover:translate-x-0.5 transition-transform" />
         </Link>
+
+        <SigningPinSetting />
       </section>
     </div>
   );

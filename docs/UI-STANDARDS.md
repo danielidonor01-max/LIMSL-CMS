@@ -215,6 +215,7 @@ an older set and the two disagreed.
 | Page title row | `@/components/PageHeader` | Title + subtitle + optional code + actions. No icon chip; see the section on chrome. |
 | The one card that answers the page | `@/components/PageLead` | Headline that STATES the answer, one supporting sentence, the actions that follow from it, and a single dark panel with the figure worth reading across a room. Used by the dashboard, KPI and reports. A guard test keeps all three on it. |
 | Status pill | `@/components/Badge` | The `bg/text/border` tint formula. |
+| A given signature | `@/components/SignatureBlock` | Name, role signed as, and the moment. Typed, never drawn. Renders a historical drawn mark above the attribution when a record has one. |
 | Notifications | `sonner` `toast.*` | Success/error feedback. |
 
 **Native controls:** none. Use `Select` (forms and filters) or `Dropdown`

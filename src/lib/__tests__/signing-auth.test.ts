@@ -20,8 +20,13 @@ test("signing verifies the PIN against the stored hash", () => {
   // The first version of this passed against `if (false && !verifyPassword(…))`,
   // which is precisely the edit somebody makes to get past a failing check
   // locally and forgets to undo.
+  //
+  // The guard used to require `if (!verifyPassword(…))` exactly, from when the
+  // PIN was mandatory for everybody. It now reads the opt-in flag first, and
+  // the test below pins that the flag comes from the stored hash rather than
+  // from anything the client sent.
   assert.ok(
-    /if \(!verifyPassword\(String\(body\.signingPin/.test(ROUTE),
+    /&& !verifyPassword\(String\(body\.signingPin/.test(ROUTE),
     "the signing route no longer checks the PIN, so a tablet left logged in can sign as its owner",
   );
 });
@@ -36,11 +41,37 @@ test("the PIN is checked on the server, never trusted from the client", () => {
   );
 });
 
-test("a first-time signer is asked to set a PIN rather than refused", () => {
-  // Nobody has one the day this ships. Refusing outright stops every signature
-  // in the business at once.
-  assert.ok(/requiresPinSetup/.test(ROUTE), "the route no longer offers first-time PIN setup");
-  assert.ok(/needsPinSetup/.test(ROUTE), "the route no longer detects a missing PIN");
+test("a PIN the signer has set cannot be skipped by omitting the field", () => {
+  // The PIN is optional to ADOPT and mandatory once adopted. The dangerous
+  // shape is a route that only checks when the client sends something:
+  // `if (body.signingPin && !verifyPassword(...))` reads as a check and is a
+  // way to sign as somebody else by sending nothing at all.
+  //
+  // So the condition must be driven by what the SERVER knows about the signer,
+  // hasSigningPin() against the stored hash, and never by the presence of a
+  // field in the request.
+  assert.ok(
+    /signedWithPin = hasSigningPin\(signer\?\.signingPinHash\)/.test(ROUTE),
+    "the route no longer decides from the stored hash whether this signer uses a PIN",
+  );
+  assert.ok(
+    /if \(signedWithPin && !verifyPassword\(String\(body\.signingPin/.test(ROUTE),
+    "the PIN check is no longer gated on the signer having opted in",
+  );
+  assert.ok(
+    !/if \(body\.signingPin && /.test(ROUTE),
+    "the PIN is checked only when the client chooses to send one, which is not a check",
+  );
+});
+
+test("the signature records whether a PIN backed it", () => {
+  // "Signed" is not one claim. A signature resting on the session alone and one
+  // the holder protected with a PIN are different evidence, and an auditor must
+  // be able to tell them apart years later without reading this file.
+  assert.ok(
+    /SESSION\+PIN/.test(ROUTE) && /"SESSION"/.test(ROUTE),
+    "authMethod no longer distinguishes a PIN-backed signature from a session-only one",
+  );
 });
 
 test("nobody can set another person's PIN", () => {
@@ -71,7 +102,7 @@ test("the PIN is stored hashed and never returned", () => {
     (line) =>
       line.includes("NextResponse.json") &&
       line.includes("signingPinHash") &&
-      !line.includes("needsPinSetup"),
+      !line.includes("hasSigningPin"),
   );
   assert.deepEqual(leaks, [], `a response returns the stored PIN hash:\n${leaks.join("\n")}`);
 });

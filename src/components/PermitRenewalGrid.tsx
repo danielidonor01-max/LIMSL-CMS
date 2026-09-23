@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import { PenLine, CalendarDays } from "lucide-react";
 import Modal from "./Modal";
 import Button from "./Button";
-import SignaturePad from "./SignaturePad";
+import SignatureBlock from "./SignatureBlock";
+import { useSession } from "next-auth/react";
 import Select from "./Select";
 import { FIELD_CLASS, LABEL_CLASS } from "./Field";
 import type { RenewalDay, RenewalSummary } from "@/lib/hse/permit-validity";
@@ -42,7 +43,11 @@ export default function PermitRenewalGrid({
   const [open, setOpen] = useState<string | null>(null);
   const [status, setStatus] = useState<"WORKED" | "NOT_WORKED">("WORKED");
   const [time, setTime] = useState("08:00");
-  const [signature, setSignature] = useState<string | null>(null);
+  // Kept so the payload shape and older renewals are unchanged; nothing new
+  // draws one.
+  const signature = null;
+  const { data: session } = useSession();
+  const renewerName = (session?.user as { name?: string })?.name ?? "";
   const [amendReason, setAmendReason] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -50,7 +55,6 @@ export default function PermitRenewalGrid({
     const existing = marks[date];
     setStatus(existing?.status ?? "WORKED");
     setTime(existing?.time ?? "08:00");
-    setSignature(null);
     setAmendReason("");
     setOpen(date);
   };
@@ -230,7 +234,12 @@ export default function PermitRenewalGrid({
                 <label className={LABEL_CLASS}>Time work started</label>
                 <TimeField value={time} onChange={(v) => setTime(v)} />
               </div>
-              <SignaturePad label="Asset Holder Supervisor signature" onChange={setSignature} />
+              {/* Renewing a permit for another day is attested by name, not
+                  by a mark drawn on a phone at the machine. */}
+              <div className="rounded-lg border border-line bg-surface px-4 py-3">
+                <p className="text-sm font-medium text-ink-700 mb-1.5">Renewing as</p>
+                <SignatureBlock name={renewerName} signedAt={new Date().toISOString()} />
+              </div>
             </>
           )}
 

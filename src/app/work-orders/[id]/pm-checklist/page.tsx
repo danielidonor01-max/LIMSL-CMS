@@ -16,7 +16,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import SignaturePad from "@/components/SignaturePad";
+import SignatureBlock from "@/components/SignatureBlock";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import Field, { FIELD_CLASS } from "@/components/Field";
@@ -65,8 +65,11 @@ export default function PMChecklistPage() {
 
   const [technicianName, setTechnicianName] = useState("");
   const [supervisorName, setSupervisorName] = useState("");
-  const [technicianSignature, setTechnicianSignature] = useState<string | null>(null);
-  const [supervisorSignature, setSupervisorSignature] = useState<string | null>(null);
+  // Kept as nulls rather than removed from the payload: the API and the stored
+  // checklist still carry these columns, and older records have real values in
+  // them. Nothing new draws one.
+  const technicianSignature = null;
+  const supervisorSignature = null;
   const [showConfirm, setShowConfirm] = useState(false);
   const [attested, setAttested] = useState(false);
 
@@ -144,8 +147,8 @@ export default function PMChecklistPage() {
       setError("All safety pre-checks (PTW, LOTO, PPE, Area Safe) must be confirmed before completing PM.");
       return;
     }
-    if (!technicianName.trim() || !technicianSignature) {
-      setError("Technician name and signature are required.");
+    if (!technicianName.trim()) {
+      setError("Put the technician's name to this checklist before completing it.");
       return;
     }
     // Every task needs a deliberate answer. An unanswered item is not "OK",     // it is a task nobody performed, and filing it as complete would be a
@@ -418,7 +421,13 @@ export default function PMChecklistPage() {
                   className={field}
                 />
               </Field>
-              <SignaturePad label="Technician signature" required onChange={setTechnicianSignature} />
+              {/* The attestation, not a drawing.
+                  This used to ask for a mark scrawled with a fingertip, which
+                  could not be verified against anything and was stored as a
+                  PNG nobody ever compared to a second one. What a checklist
+                  needs is a person willing to put their name to it, so that is
+                  what it asks for and what it records. */}
+              <SignatureBlock name={technicianName || null} signedAt={new Date().toISOString()} />
             </div>
             <div className="space-y-3">
               <Field label="Supervisor" help="Optional. Leave blank if nobody countersigned.">
@@ -436,7 +445,11 @@ export default function PMChecklistPage() {
                     ))}
                 </Select>
               </Field>
-              <SignaturePad label="Supervisor signature" onChange={setSupervisorSignature} />
+              {supervisorName ? (
+                <SignatureBlock name={supervisorName} signedAt={new Date().toISOString()} />
+              ) : (
+                <p className="text-sm text-ink-500">Nobody has countersigned this checklist.</p>
+              )}
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Clock, ShieldCheck, Plus, Trash2, UserCheck } from "lucide-react";
-import SignaturePad from "@/components/SignaturePad";
+import SignatureBlock from "@/components/SignatureBlock";
 import SignoffChain from "@/components/SignoffChain";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
@@ -24,6 +24,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserName = (session?.user as { name?: string })?.name ?? "";
+  const currentUserRole = (session?.user as { role?: string })?.role ?? null;
   const resolvedParams = use(params);
   const recordId = resolvedParams.id;
 
@@ -50,9 +51,10 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [newResp, setNewResp] = useState("");
   const [newDate, setNewDate] = useState("");
 
-  // Signatures
-  const [techSign, setTechSign] = useState("");
-  const [superSign, setSuperSign] = useState("");
+  // The close-out no longer collects drawn marks. Kept as empty strings so the
+  // payload shape and older records are unchanged.
+  const techSign = "";
+  const superSign = "";
   const [supervisorComments, setSupervisorComments] = useState("");
 
   // Downtime window, production hours are derived from these against the
@@ -741,9 +743,16 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   )}
                 </div>
 
-                {/* Hand drawn Signatures */}
-                <SignaturePad label="Technician signature" onSave={setTechSign} />
-                <SignaturePad label="Supervisor approval signature" onSave={setSuperSign} />
+                {/* The close-out attestation.
+                    Two drawn marks used to sit here, one above the other, and
+                    neither could be verified against anything. Closing a
+                    breakdown is attested by the person doing it, under their
+                    own name, with the moment recorded — which is what the
+                    sign-off chain below this already does properly. */}
+                <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
+                  <p className="text-sm font-medium text-ink-700 mb-1.5">Closing this out as</p>
+                  <SignatureBlock name={currentUserName} role={currentUserRole} signedAt={new Date().toISOString()} />
+                </div>
 
                 <Button fullWidth variant="danger"
                   type="button"

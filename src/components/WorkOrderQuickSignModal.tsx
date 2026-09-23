@@ -1,13 +1,15 @@
 // src/components/WorkOrderQuickSignModal.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
-import SignaturePad from "@/components/SignaturePad";
+import SignatureBlock from "@/components/SignatureBlock";
+import { FIELD_CLASS } from "@/components/Field";
+import { useSession } from "next-auth/react";
 import SegmentedControl from "@/components/SegmentedControl";
-import { validatePin, PIN_LENGTH } from "@/lib/signing-pin";
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
+import { PIN_LENGTH } from "@/lib/signing-pin";
+import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { invalidateApi } from "@/lib/api-cache";
 
@@ -38,11 +40,23 @@ export default function WorkOrderQuickSignModal({
   onSuccess?: () => void;
 }) {
   const [action, setAction] = useState<"sign" | "reject">("sign");
-  const [sig, setSig] = useState<string | null>(null);
   const [pin, setPin] = useState("");
-  const [needsPin, setNeedsPin] = useState(false);
-  const [newPin, setNewPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
+  // Whether this signer has opted into a PIN. The server decides the same thing
+  // from the stored hash; asking keeps the dialog from showing a field that
+  // will be ignored, or hiding one that will be demanded.
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const { data: session } = useSession();
+  const userName = (session?.user as { name?: string })?.name ?? "You";
+
+  // Asked when the dialog opens, so the PIN field matches what the server will
+  // actually enforce for this signer.
+  useEffect(() => {
+    if (!open) return;
+    fetch("/api/account/signing-pin")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setHasPin(!!d?.hasPin))
+      .catch(() => setHasPin(false));
+  }, [open]);
   const [comments, setComments] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [saving, setSaving] = useState(false);
@@ -52,51 +66,11 @@ export default function WorkOrderQuickSignModal({
 
   const isOverride = userRole && userRole !== step.role && userRole !== "SUPER_ADMIN";
 
-  const handleSetupPin = async () => {
-    setError(null);
-    const check = validatePin(newPin);
-    if (!check.ok) {
-      setError(check.error);
-      return;
-    }
-    if (newPin !== confirmPin) {
-      setError("The two PINs do not match.");
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch("/api/account/signing-pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: newPin }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        setError(d.error || "Could not set your signing PIN.");
-        return;
-      }
-      setPin(newPin);
-      setNewPin("");
-      setConfirmPin("");
-      setNeedsPin(false);
-      toast.success("Signing PIN set.");
-      if (sig) await handleSubmit("sign", newPin);
-    } catch {
-      setError("Failed to set signing PIN.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleSubmit = async (submitAction: "sign" | "reject", currentPin?: string) => {
     setError(null);
     if (submitAction === "sign") {
-      if (!sig) {
-        setError("Please draw your signature in the box.");
-        return;
-      }
       const pinToUse = currentPin || pin;
-      if (pinToUse.length !== PIN_LENGTH) {
+      if (hasPin && pinToUse.length !== PIN_LENGTH) {
         setError(`Enter your ${PIN_LENGTH}-digit signing PIN.`);
         return;
       }
@@ -118,7 +92,6 @@ export default function WorkOrderQuickSignModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: submitAction,
-          signatureData: submitAction === "sign" ? sig : undefined,
           signingPin: submitAction === "sign" ? (currentPin || pin) : undefined,
           comments: comments.trim() || undefined,
           overrideReason: overrideReason.trim() || undefined,
@@ -128,11 +101,6 @@ export default function WorkOrderQuickSignModal({
       const d = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        if (d.requiresPinSetup) {
-          setNeedsPin(true);
-          setError(d.error);
-          return;
-        }
         setError(d.error || `Failed to ${submitAction}.`);
         return;
       }
@@ -187,57 +155,33 @@ export default function WorkOrderQuickSignModal({
 
         {action === "sign" ? (
           <div className="space-y-3">
-            {needsPin ? (
-              <div className="p-3 bg-warn-50 border border-warn-200 rounded-lg space-y-2 text-xs">
-                <p className="font-semibold text-warn-900 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-warn-700" /> Set your signing PIN
-                </p>
-                <p className="text-warn-800">
-                  Set a {PIN_LENGTH}-digit PIN for your account to attest signatures. It is yours alone,
-                  it is not your login password, and it cannot be recovered.
-                </p>
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={PIN_LENGTH}
-                    placeholder={`New ${PIN_LENGTH}-digit PIN`}
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
-                    className="p-2 bg-white border border-warn-300 rounded-lg text-center tracking-widest text-sm focus:outline-none"
-                  />
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={PIN_LENGTH}
-                    placeholder="Confirm PIN"
-                    value={confirmPin}
-                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))}
-                    className="p-2 bg-white border border-warn-300 rounded-lg text-center tracking-widest text-sm focus:outline-none"
-                  />
-                </div>
-                <Button size="sm" onClick={handleSetupPin} loading={saving} className="w-full">
-                  Save PIN & Continue
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <SignaturePad label="Your signature" required onChange={setSig} />
-                </div>
+            {/* The signature. Typed and attributed rather than drawn: a
+                fingertip scrawl cannot be verified against anything, and what
+                carries the evidence is the name, the role, the moment and the
+                audit row — which are stored either way. */}
+            <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
+              <p className="text-sm font-medium text-ink-700 mb-1.5">You are about to sign as</p>
+              <SignatureBlock name={userName} role={step.role} signedAt={new Date().toISOString()} />
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-ink-700">Signing PIN ({PIN_LENGTH} digits) *</label>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={PIN_LENGTH}
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder="••••"
-                    className="w-full p-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-center tracking-widest text-ink-900 focus:outline-none focus:border-brand-500"
-                  />
-                </div>
+            {hasPin && (
+              <div className="space-y-1">
+                <label htmlFor="quick-sign-pin" className="block text-sm font-medium text-ink-700">
+                  Signing PIN
+                </label>
+                <input
+                  id="quick-sign-pin"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={PIN_LENGTH}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder={`${PIN_LENGTH} digits`}
+                  className={`${FIELD_CLASS} bg-surface w-40 tracking-[0.3em]`}
+                />
+                <p className="text-xs text-ink-500">Change or remove it in Account settings.</p>
+              </div>
+            )}
 
                 {isOverride && (
                   <div className="space-y-1 p-2.5 bg-ink-50 border border-ink-200 rounded-lg">
@@ -252,8 +196,6 @@ export default function WorkOrderQuickSignModal({
                     />
                   </div>
                 )}
-              </>
-            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="ghost" onClick={onClose} disabled={saving}>
@@ -262,7 +204,6 @@ export default function WorkOrderQuickSignModal({
               <Button
                 onClick={() => handleSubmit("sign")}
                 loading={saving}
-                disabled={needsPin}
                 icon={CheckCircle2}
               >
                 Sign & Approve

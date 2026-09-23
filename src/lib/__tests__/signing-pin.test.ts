@@ -1,7 +1,7 @@
 // src/lib/__tests__/signing-pin.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validatePin, needsPinSetup, PIN_LENGTH } from "@/lib/signing-pin";
+import { validatePin, hasSigningPin, PIN_LENGTH } from "@/lib/signing-pin";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 test("a PIN is exactly six digits", () => {
@@ -48,13 +48,14 @@ test("a refusal always explains itself", () => {
   }
 });
 
-test("nobody is locked out on the day this ships", () => {
-  // Every existing user has no PIN. Requiring one outright would stop every
-  // signature in the business at once, so this flags setup rather than refusal.
-  assert.equal(needsPinSetup(null), true);
-  assert.equal(needsPinSetup(undefined), true);
-  assert.equal(needsPinSetup(""), true);
-  assert.equal(needsPinSetup("salt:hash"), false);
+test("having no PIN is a supported state, not an unfinished one", () => {
+  // The PIN is optional and per person. Both halves — the dialog deciding
+  // whether to ask, and the route deciding whether to check — read this one
+  // function, so they cannot disagree about whether a given signer has one.
+  assert.equal(hasSigningPin(null), false);
+  assert.equal(hasSigningPin(undefined), false);
+  assert.equal(hasSigningPin(""), false);
+  assert.equal(hasSigningPin("salt:hash"), true);
 });
 
 test("the PIN is stored hashed, and never recoverable", () => {

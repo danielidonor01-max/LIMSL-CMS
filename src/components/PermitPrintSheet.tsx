@@ -281,18 +281,38 @@ export default function PermitPrintSheet({
                 <tbody>
                   {chain.map((step) => (
                     <tr key={step.roleLabel}>
+                      {/* The printed signature block.
+                          It used to reserve 26pt for a drawn mark and print the
+                          name underneath in 7.5pt. A fingertip scrawl reproduced
+                          at 24pt on a laser printer is a grey smudge, and the
+                          name — the part an inspector can actually act on — was
+                          the smallest thing in the cell.
+                          The name leads now, at a size meant to be read, with
+                          the date under it. A historical drawn mark still
+                          prints above it; an unsigned block still prints the
+                          ruled line, because a blank permit is a form people
+                          fill in by hand. */}
                       <td style={{ minHeight: "40pt" }}>
                         <div style={{ fontSize: "7.5pt" }}>{step.roleLabel}</div>
-                        <div style={{ minHeight: "26pt" }}>
-                          {step.signatureData && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={step.signatureData} alt="" style={{ height: "24pt" }} />
-                          )}
-                        </div>
-                        <div style={{ fontSize: "7.5pt" }}>
-                          {step.signedByName ?? "Name/Sign/Date"}
-                          {step.signedAt ? ` · ${dmy(step.signedAt)}` : ""}
-                        </div>
+                        {step.signatureData && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={step.signatureData} alt="" style={{ height: "20pt", display: "block" }} />
+                        )}
+                        {step.signedByName ? (
+                          <>
+                            <div style={{ fontSize: "9.5pt", fontWeight: 700, lineHeight: 1.2 }}>
+                              {step.signedByName}
+                            </div>
+                            <div style={{ fontSize: "7.5pt" }}>
+                              Signed {step.signedAt ? dmy(step.signedAt) : ""}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ minHeight: "20pt", borderBottom: "1px solid #000" }} />
+                            <div style={{ fontSize: "7.5pt" }}>Name / Sign / Date</div>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

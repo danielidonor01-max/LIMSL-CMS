@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canSignStep } from "@/lib/roles";
 import { verifyPassword } from "@/lib/password";
-import { needsPinSetup } from "@/lib/signing-pin";
+import { hasSigningPin } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { sealDocument } from "@/lib/signoff/seal";
@@ -28,6 +28,10 @@ export async function POST(
     const { id } = await params;
     const body = await request.json();
     const action = body.action === "reject" ? "reject" : "sign";
+    // Declared out here so the row written further down can record it. Whether
+    // a PIN was checked is part of the evidence, not an implementation detail
+    // of the branch that checked it.
+    let signedWithPin = false;
 
     const [step] = await db.select().from(signoffs).where(eq(signoffs.id, id)).limit(1);
     if (!step) return NextResponse.json({ error: "Sign-off step not found" }, { status: 404 });
@@ -82,29 +86,22 @@ export async function POST(
           { status: 409 },
         );
       }
-      if (!body.signatureData) {
-        return NextResponse.json({ error: "A drawn signature is required." }, { status: 400 });
-      }
-
       // ── Who is actually here ──────────────────────────────────────────
-      // The drawn signature is an image and proves nothing on its own. This is
-      // the check that says the person signing is the account holder AT THIS
-      // MOMENT, rather than whoever picked up a tablet somebody left logged in.
+      // No drawn mark is required any more. A signature made with a fingertip
+      // on a tablet is not comparable to anything and cannot be verified; what
+      // carries the evidence is this record — the authenticated user id, the
+      // name, the role signed as, the timestamp and the audit row — and it is
+      // written below whether or not anybody drew a squiggle.
+      //
+      // The PIN is the one check that says the person signing is the account
+      // holder AT THIS MOMENT rather than whoever picked up a tablet somebody
+      // left logged in. It is each signer's own choice, made in Account
+      // settings. Where one is set it is ENFORCED: opting in is a decision, and
+      // a signing request may not skip it by omitting the field.
       const [signer] = await db.select().from(users).where(eq(users.id, user.id ?? "")).limit(1);
+      signedWithPin = hasSigningPin(signer?.signingPinHash);
 
-      // Nobody has a PIN the day this ships, so refusing outright would stop
-      // every signature in the business at once. The client sets one inline on
-      // first use; this tells it to.
-      if (needsPinSetup(signer?.signingPinHash)) {
-        return NextResponse.json(
-          {
-            error: "Set your signing PIN before you sign. It takes a moment and it is yours alone.",
-            requiresPinSetup: true,
-          },
-          { status: 428 },
-        );
-      }
-      if (!verifyPassword(String(body.signingPin ?? ""), signer?.signingPinHash)) {
+      if (signedWithPin && !verifyPassword(String(body.signingPin ?? ""), signer?.signingPinHash)) {
         return NextResponse.json(
           { error: "That is not your signing PIN.", requiresPin: true },
           { status: 403 },
@@ -160,10 +157,13 @@ export async function POST(
         signedByRole: user.role ?? null,
         isOverride,
         overrideReason: isOverride ? overrideReason.slice(0, 500) : null,
-        signatureData: action === "sign" ? body.signatureData : null,
+        // Only ever set by a historical drawn signature; new ones are typed.
+        signatureData: action === "sign" ? body.signatureData ?? null : null,
         // What was verified, not the secret itself. An auditor asking "how do
-        // you know this was them" reads this column.
-        authMethod: action === "sign" ? "PIN" : null,
+        // you know this was them" reads this column — and it must distinguish
+        // a signature the signer protected with a PIN from one resting on the
+        // session alone, because those are not the same claim.
+        authMethod: action === "sign" ? (signedWithPin ? "SESSION+PIN" : "SESSION") : null,
         comments: comments || null,
         signedAt: new Date().toISOString(),
       })

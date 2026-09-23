@@ -14,17 +14,15 @@
 
 import Button from "@/components/Button";
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { Check, Lock, Loader2, PenLine, ShieldCheck, Undo2, X } from "lucide-react";
-import SignaturePad from "@/components/SignaturePad";
+import SignatureBlock from "@/components/SignatureBlock";
 import { Badge } from "@/components/Badge";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 import { canSignStep, ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
 import { isStepUnlocked, chainSummary } from "@/lib/signoff/chains";
-import { validatePin, PIN_LENGTH } from "@/lib/signing-pin";
-import { toast } from "sonner";
+import { PIN_LENGTH } from "@/lib/signing-pin";
 import { invalidateApi } from "@/lib/api-cache";
 
 type Step = {
@@ -57,15 +55,16 @@ export default function SignoffChain({
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role;
   const userId = (session?.user as { id?: string })?.id;
+  const userName = (session?.user as { name?: string })?.name ?? "You";
   const [chain, setChain] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);
   const [openStep, setOpenStep] = useState<string | null>(null);
-  const [sig, setSig] = useState<string | null>(null);
+  // Whether THIS signer has chosen to protect their signature with a PIN.
+  // null while unknown, so the dialog never flashes a field it is about to
+  // remove or omits one it is about to need.
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
   const [comments, setComments] = useState("");
   const [pin, setPin] = useState("");
-  const [needsPin, setNeedsPin] = useState(false);
-  const [newPin, setNewPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,51 +78,22 @@ export default function SignoffChain({
 
   useEffect(load, [load]);
 
+  // Asked once, not per step. The answer decides whether the dialog shows a PIN
+  // field at all, and the server decides the same thing from the stored hash.
+  useEffect(() => {
+    fetch("/api/account/signing-pin")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setHasPin(!!d?.hasPin))
+      .catch(() => setHasPin(false));
+  }, []);
+
   const sign = async (stepId: string) => {
     setError(null);
-    if (!sig) {
-      setError("Please draw your signature.");
-      return;
-    }
-    if (pin.length !== PIN_LENGTH) {
+    if (hasPin && pin.length !== PIN_LENGTH) {
       setError(`Enter your ${PIN_LENGTH}-digit signing PIN.`);
       return;
     }
     await submit(stepId, "sign");
-  };
-
-  // First signature after this shipped. Rather than refusing and sending the
-  // person away to Settings, the dialog sets the PIN here and carries straight
-  // on to the signature they came to give.
-  const setupPin = async (stepId: string) => {
-    setError(null);
-    const check = validatePin(newPin);
-    if (!check.ok) {
-      setError(check.error);
-      return;
-    }
-    if (newPin !== confirmPin) {
-      setError("The two PINs do not match.");
-      return;
-    }
-    setSaving(true);
-    const res = await fetch("/api/account/signing-pin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin: newPin }),
-    });
-    setSaving(false);
-    if (!res.ok) {
-      const d = await res.json();
-      setError(d.error || "Could not set your signing PIN.");
-      return;
-    }
-    setPin(newPin);
-    setNewPin("");
-    setConfirmPin("");
-    setNeedsPin(false);
-    toast.success("Signing PIN set. It is yours alone, and it is not recoverable.");
-    if (sig) await submit(stepId, "sign");
   };
 
   // Sending it back. No signature is asked for, because a rejection is not
@@ -144,7 +114,6 @@ export default function SignoffChain({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action,
-        signatureData: action === "sign" ? sig : undefined,
         signingPin: action === "sign" ? pin : undefined,
         comments,
         overrideReason,
@@ -153,16 +122,11 @@ export default function SignoffChain({
     setSaving(false);
     if (!res.ok) {
       const d = await res.json();
-      if (d.requiresPinSetup) {
-        setNeedsPin(true);
-        setError(null);
-        return;
-      }
       setError(d.error || (action === "reject" ? "Failed to return" : "Failed to sign"));
       return;
     }
     setOpenStep(null);
-    setSig(null);
+    setPin("");
     setComments("");
     setOverrideReason("");
     invalidateApi("/api/signoffs");
@@ -294,23 +258,19 @@ export default function SignoffChain({
                   </div>
 
                   <div className="shrink-0 flex items-center gap-3">
-                    {signed && step.signatureData && (
-                      <figure className="hidden sm:block text-center">
-                        <Image
-                          src={step.signatureData}
-                          alt={`Signature of ${step.signedByName ?? "the signer"}`}
-                          width={96}
-                          height={34}
-                          unoptimized
-                          className="h-8 w-auto rounded-lg border border-line bg-surface"
-                        />
-                      </figure>
+                    {signed && (
+                      <SignatureBlock
+                        name={step.signedByName}
+                        role={step.signedByRole ?? step.role}
+                        signedAt={step.signedAt}
+                        drawn={step.signatureData}
+                        className="hidden sm:block max-w-[13rem]"
+                      />
                     )}
                     {canSign && !isOpen && (
                       <Button
                         onClick={() => {
                           setOpenStep(step.id);
-                          setSig(null);
                           setComments("");
                           setPin("");
                           setError(null);
@@ -348,7 +308,18 @@ export default function SignoffChain({
                       Sign as {ROLE_LABELS[step.role] ?? step.role}
                     </p>
 
-                    <SignaturePad label="Your signature" onChange={setSig} />
+                    {/* The signature itself.
+                        It is not drawn any more. A fingertip scrawl on a
+                        tablet is not comparable to a wet signature and cannot
+                        be verified against anything; what it did was make the
+                        act feel deliberate. So the act is deliberate in a way
+                        that also carries evidence: the signer reads back their
+                        own name, the role they are signing as, and the moment,
+                        and the record stores exactly that. */}
+                    <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
+                      <p className={LABEL_CLASS}>You are about to sign as</p>
+                      <SignatureBlock name={userName} role={step.role} signedAt={new Date().toISOString()} />
+                    </div>
 
                     {/* Signing a step your role does not name is an exception.
                         Asking for the reason here, before the signature, makes
@@ -370,51 +341,16 @@ export default function SignoffChain({
                       </div>
                     )}
 
-                    {/* The drawn mark above is what appears on the printed
-                        sheet. This is what proves the person holding the tablet
-                        is the account holder, right now. */}
-                    {needsPin ? (
-                      <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 space-y-3">
-                        <p className="text-sm font-semibold text-brand-900">Set your signing PIN</p>
-                        <p className="text-xs text-brand-900/90 leading-relaxed">
-                          You will enter it each time you sign. It is not your login password, and it cannot be
-                          recovered if you forget it.
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <Field label="New PIN" htmlFor={`new-pin-${step.id}`}>
-                            <input
-                              id={`new-pin-${step.id}`}
-                              value={newPin}
-                              onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
-                              inputMode="numeric"
-                              autoComplete="off"
-                              type="password"
-                              placeholder={`${PIN_LENGTH} digits`}
-                              className={`${FIELD_CLASS} bg-surface tracking-[0.3em]`}
-                            />
-                          </Field>
-                          <Field label="Confirm PIN" htmlFor={`confirm-pin-${step.id}`}>
-                            <input
-                              id={`confirm-pin-${step.id}`}
-                              value={confirmPin}
-                              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
-                              inputMode="numeric"
-                              autoComplete="off"
-                              type="password"
-                              placeholder="Again"
-                              className={`${FIELD_CLASS} bg-surface tracking-[0.3em]`}
-                            />
-                          </Field>
-                        </div>
-                        <Button size="sm" loading={saving} onClick={() => setupPin(step.id)}>
-                          Set PIN and sign
-                        </Button>
-                      </div>
-                    ) : (
-                      <div>
-                        <label htmlFor={`pin-${step.id}`} className={LABEL_CLASS}>
-                          Signing PIN
-                        </label>
+                    {/* Only for signers who have chosen one. The server decides
+                        the same thing from the stored hash, so this cannot ask
+                        for something that will be ignored, or omit something
+                        that will be demanded. */}
+                    {hasPin && (
+                      <Field
+                        label="Signing PIN"
+                        htmlFor={`pin-${step.id}`}
+                        help="Yours alone. Change or remove it in Account settings."
+                      >
                         <input
                           id={`pin-${step.id}`}
                           value={pin}
@@ -425,7 +361,7 @@ export default function SignoffChain({
                           placeholder={`${PIN_LENGTH} digits`}
                           className={`${FIELD_CLASS} bg-surface w-40 tracking-[0.3em]`}
                         />
-                      </div>
+                      </Field>
                     )}
 
                     {/* A textarea, not a single line. The field is asked to
@@ -463,7 +399,7 @@ export default function SignoffChain({
                       <Button size="sm" variant="secondary" onClick={() => reject(step.id)} loading={saving} icon={Undo2}>
                         Return with comment
                       </Button>
-                      <Button size="sm" onClick={() => sign(step.id)} disabled={!sig} loading={saving} icon={Check}>
+                      <Button size="sm" onClick={() => sign(step.id)} loading={saving} icon={Check}>
                         Confirm sign-off
                       </Button>
                     </div>

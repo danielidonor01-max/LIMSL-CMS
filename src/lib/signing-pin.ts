@@ -1,19 +1,24 @@
 // src/lib/signing-pin.ts
 // The PIN entered at the moment of signing.
 //
-// A drawn signature is an image. It proves nothing on its own; its evidential
-// weight comes from the record around it, the authenticated session, the user
-// id, the timestamp and the audit log. The PIN is what actually authenticates:
-// it says the person at the keyboard is the account holder AT THE MOMENT OF
-// SIGNING, rather than whoever picked up a tablet somebody left logged in.
+// OPTIONAL, and per person. A signature's evidential weight comes from the
+// record around it — the authenticated session, the user id, the role, the
+// timestamp and the audit row — and that record exists whether or not a PIN
+// was typed. What the PIN adds is one specific thing: it says the person at
+// the keyboard is the account holder AT THE MOMENT OF SIGNING, rather than
+// whoever picked up a tablet somebody left logged in.
 //
-// It is deliberately not the login password. On a shared workshop tablet a
-// login password typed a dozen times a shift in front of colleagues becomes a
-// short password, and then a shared one. A separate short PIN is entered often
-// and by design unlocks nothing except attribution.
+// Whether that risk is worth an extra six digits per signature is a judgement
+// about where you work, so it belongs to the person signing. A foreman on a
+// shared workshop tablet will want it. Somebody signing from their own laptop
+// reasonably will not. It is set, changed and removed in Account settings, and
+// where one is set it is enforced — turning it on is a decision, and it is not
+// one a signing dialog may quietly skip.
 //
-// The drawn signature stays. It is the visible mark on the printed permit and
-// the thing that makes signing a deliberate act rather than a click.
+// It is deliberately not the login password. On a shared tablet a login
+// password typed a dozen times a shift in front of colleagues becomes a short
+// password, and then a shared one. A separate short PIN is entered often and
+// by design unlocks nothing except attribution.
 
 export const PIN_LENGTH = 6;
 
@@ -59,12 +64,13 @@ export function validatePin(raw: unknown): PinCheck {
 }
 
 /**
- * Whether this user must set a PIN before they can sign anything.
+ * Whether this user has chosen to protect their signature with a PIN.
  *
- * Nobody has one the day this ships, so requiring it outright would stop every
- * signature in the business at once. The signing dialog sets it inline on first
- * use instead: no lockout, and everyone has one within a shift.
+ * The single question both halves ask: the signing dialog, to decide whether to
+ * show the field, and the route, to decide whether to check it. One function so
+ * the page cannot ask for something the server ignores, or skip something the
+ * server demands.
  */
-export function needsPinSetup(signingPinHash: string | null | undefined): boolean {
-  return !signingPinHash;
+export function hasSigningPin(signingPinHash: string | null | undefined): boolean {
+  return !!signingPinHash;
 }

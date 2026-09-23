@@ -120,6 +120,26 @@ approval flow per module.
 To add approvals to a new module: add a chain to `chains.ts` and render
 `<SignoffChain />`. That's it.
 
+### What a signature IS here
+
+Typed and attributed, not drawn. `<SignatureBlock />` renders the signer's
+name, the role they signed as, and the moment — the Adobe convention — and that
+is exactly what the row stores. A mark scrawled with a fingertip on a tablet
+cannot be verified against anything and was never the evidence; the record
+around it always was.
+
+Drawn signatures already in the database still render, above the attribution.
+A record signed in August must look the same in five years as it did on the
+day, so nothing migrates them.
+
+**The signing PIN is OPTIONAL and per person**, set in Account settings. Both
+halves ask `hasSigningPin()` about the stored hash — the dialog to decide
+whether to show the field, the route to decide whether to check it — so they
+cannot disagree. Where a signer has one it is ENFORCED: opting in is a
+decision, and a request may not skip it by omitting the field. `authMethod`
+records which it was, `SESSION` or `SESSION+PIN`, because those are not the
+same claim.
+
 ## 6a. The safety-chain order (do not "fix" this back)
 
 ```
