@@ -5,6 +5,7 @@ import { useState } from "react";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import SignaturePad from "@/components/SignaturePad";
+import SegmentedControl from "@/components/SegmentedControl";
 import { validatePin, PIN_LENGTH } from "@/lib/signing-pin";
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -164,27 +165,18 @@ export default function WorkOrderQuickSignModal({
       subtitle={workOrderTitle}
     >
       <div className="space-y-4">
-        {/* Action Toggle */}
-        <div className="grid grid-cols-2 p-1 bg-ink-100 rounded-lg text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => { setAction("sign"); setError(null); }}
-            className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
-              action === "sign" ? "bg-white text-brand-700 shadow-card" : "text-ink-600 hover:text-ink-900"
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" /> Sign Approval
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAction("reject"); setError(null); }}
-            className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
-              action === "reject" ? "bg-white text-danger-700 shadow-card" : "text-ink-600 hover:text-ink-900"
-            }`}
-          >
-            <XCircle className="w-3.5 h-3.5" /> Reject / Request Revision
-          </button>
-        </div>
+        {/* Sign, or send it back. One shared control rather than a fifth
+            hand-rolled pill strip. */}
+        <SegmentedControl
+          ariaLabel="What you are about to do"
+          value={action}
+          onChange={(v) => { setAction(v); setError(null); }}
+          className="w-full"
+          options={[
+            { value: "sign" as const, label: "Sign approval", icon: CheckCircle2 },
+            { value: "reject" as const, label: "Return for revision", icon: XCircle },
+          ]}
+        />
 
         {error && (
           <div className="p-3 bg-danger-500/10 border border-danger-500/20 text-danger-700 rounded-lg text-xs flex items-start gap-2">
@@ -201,14 +193,15 @@ export default function WorkOrderQuickSignModal({
                   <ShieldCheck className="w-4 h-4 text-warn-700" /> Set your signing PIN
                 </p>
                 <p className="text-warn-800">
-                  Set a 4-digit PIN for your account to attest signatures. It is yours alone.
+                  Set a {PIN_LENGTH}-digit PIN for your account to attest signatures. It is yours alone,
+                  it is not your login password, and it cannot be recovered.
                 </p>
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <input
                     type="password"
                     inputMode="numeric"
                     maxLength={PIN_LENGTH}
-                    placeholder="New 4-digit PIN"
+                    placeholder={`New ${PIN_LENGTH}-digit PIN`}
                     value={newPin}
                     onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
                     className="p-2 bg-white border border-warn-300 rounded-lg text-center tracking-widest text-sm focus:outline-none"
@@ -230,7 +223,7 @@ export default function WorkOrderQuickSignModal({
             ) : (
               <>
                 <div>
-                  <SignaturePad label="Drawn Signature *" onChange={setSig} />
+                  <SignaturePad label="Your signature" required onChange={setSig} />
                 </div>
 
                 <div className="space-y-1">

@@ -24,7 +24,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const API = join(process.cwd(), "src", "app", "api");
+const SRC = join(process.cwd(), "src");
+const API = join(SRC, "app", "api");
 const read = (...p: string[]) => readFileSync(join(API, ...p), "utf8");
 
 const WMS = read("wms", "route.ts");
@@ -82,12 +83,41 @@ test("an emergency work order can still get its permit", () => {
   // An emergency commences immediately and collects signatures afterwards, so
   // it sits at OPEN with approvalRetrospective set. Blocking anything that is
   // not fully approved would leave a breakdown crew unable to raise the permit
-  // their own isolation depends on. Only PENDING_APPROVAL may block.
+  // their own isolation depends on.
+  //
+  // So the blocked set is closed on purpose, and it is exactly the three states
+  // that mean "this job is not authorised": nobody has decided (PENDING_
+  // APPROVAL), somebody decided no (REJECTED), or it was withdrawn (CANCELLED).
+  //
+  // This assertion previously read ["CANCELLED", "PENDING_APPROVAL"] and it was
+  // right when it was written. REJECTED arrived later with the work-order
+  // lifecycle actions, as a state a work order RESTS in until somebody
+  // resubmits it, and nothing connected the two: the gate stayed open on the
+  // one status it should refuse hardest. A closed set is the correct shape for
+  // this test — what it could not do was notice a new member of the enum, and
+  // that is the failure worth naming here rather than loosening the rule.
   const gate = PERMITS.slice(PERMITS.indexOf("Management authorisation"));
   const blocked = [...gate.matchAll(/permitWo\.status === "(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(
     blocked.sort(),
-    ["CANCELLED", "PENDING_APPROVAL"],
-    `the permit gate blocks on ${blocked.join(", ")}; only PENDING_APPROVAL and CANCELLED may block`,
+    ["CANCELLED", "PENDING_APPROVAL", "REJECTED"],
+    `the permit gate blocks on ${blocked.join(", ")}; it must block exactly the unauthorised states`,
+  );
+});
+
+test("every work-order status that means 'not authorised' is refused a permit", () => {
+  // The guard above pins the gate's own source. This one pins the other half of
+  // the pair: every status the app can PUT a work order into is considered, so
+  // adding a sixth to constants.ts fails here until somebody decides whether a
+  // permit may be raised against it.
+  const CONSTANTS = readFileSync(join(SRC, "lib", "constants.ts"), "utf8");
+  const block = CONSTANTS.slice(CONSTANTS.indexOf("WO_STATUS_LABELS"));
+  const statuses = [...block.slice(0, block.indexOf("}")).matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+
+  assert.deepEqual(
+    statuses.sort(),
+    ["CANCELLED", "COMPLETED", "IN_PROGRESS", "OPEN", "PENDING_APPROVAL", "REJECTED"],
+    `work-order statuses changed (${statuses.join(", ")}). Decide for each whether a permit may be ` +
+      `raised against it, update the gate in src/app/api/permits/route.ts, then update this list.`,
   );
 });

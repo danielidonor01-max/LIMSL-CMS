@@ -161,7 +161,7 @@ export default function ProcedurePage() {
             <Clock className="w-4 h-4" />
             Revision {pending.revision} is pending sign-off. It becomes effective once QA/QC, Maintenance Manager, Factory Manager and COO have signed.
           </div>
-          <SignoffChain entityType="PROCEDURE" entityId={pending.id} title="Procedure Revision Sign-off" />
+          <SignoffChain entityType="PROCEDURE" entityId={pending.id} title="Procedure revision sign-off" />
         </div>
       )}
 

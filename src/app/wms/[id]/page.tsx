@@ -5,11 +5,12 @@ import DocumentSeal from "@/components/DocumentSeal";
 import { pageMain } from "@/lib/page-shell";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Loader2, ShieldCheck, Biohazard } from "lucide-react";
 import Button from "@/components/Button";
 import SignoffChain from "@/components/SignoffChain";
 import PageHeader from "@/components/PageHeader";
+import { Badge } from "@/components/Badge";
+import { WMS_STATUS_BADGE, WMS_STATUS_LABELS } from "@/lib/constants";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -37,8 +38,8 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500 text-xs gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-600" /> Loading WMS document...
+      <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500 text-sm gap-2">
+        <Loader2 className="w-5 h-5 animate-spin text-brand-600" /> Loading the method statement…
       </div>
     );
   }
@@ -46,8 +47,8 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   if (!wms) {
     return (
       <div className="min-h-screen bg-canvas flex flex-col items-center justify-center gap-3 text-ink-500 text-sm">
-        <p>Work Method Statement not found.</p>
-        <Link href="/wms" className="text-brand-600 hover:underline">Back to WMS library</Link>
+        <p>This work method statement could not be found.</p>
+        <Link href="/wms" className="text-brand-600 hover:underline">Back to the WMS library</Link>
       </div>
     );
   }
@@ -105,122 +106,149 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         </div>
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Document Details */}
-          <div className="p-6 bg-surface border border-line rounded-xl shadow-card space-y-8">
-            <div className="border-b border-ink-200 pb-4">
-              <h2 className="text-xl font-bold text-ink-900">{wms.title}</h2>
-              <p className="text-xs text-ink-500 mt-1">Revision: {wms.revision} | Prepared by: {wms.preparedByName}</p>
+          {/* The document read as seven green captions over grey 12px prose:
+              every heading the same weight as the last, and the body set two
+              steps below what a person reads a procedure at. Headings are
+              section headings now and the prose is body text, because this is
+              the document somebody follows while doing the job. */}
+          <article className="bg-surface border border-line rounded-xl shadow-card">
+            <header className="px-6 py-5 border-b border-line">
+              <h2 className="text-xl font-semibold text-ink-900 leading-snug">{wms.title}</h2>
+              <p className="text-sm text-ink-500 mt-1.5">
+                Revision {wms.revision} · prepared by {wms.preparedByName ?? "—"}
+              </p>
+            </header>
+
+            <div className="px-6 py-6 space-y-8">
+              <Section n={1} heading="Purpose and scope">
+                <Prose value={wms.purpose} />
+                {wms.scope && <p>{wms.scope}</p>}
+              </Section>
+
+              {wms.mobilization && (
+                <Section n={2} heading="Mobilisation and preparation">
+                  <Prose value={wms.mobilization} />
+                </Section>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Section n={3} heading="Equipment and tools">
+                  <ItemList items={tools} asText={asText} empty="No tools listed." />
+                </Section>
+                <Section n={4} heading="Materials required">
+                  <ItemList items={materials} asText={asText} empty="No materials listed." />
+                </Section>
+              </div>
+
+              <Section n={5} heading="Detailed work procedure">
+                {procedureSteps.length === 0 ? (
+                  <p className="text-ink-500">No procedure steps recorded.</p>
+                ) : (
+                  <ol className="space-y-3 mt-1">
+                    {procedureSteps.map((step: unknown, i: number) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="w-6 h-6 shrink-0 rounded-full bg-ink-100 border border-line text-ink-600 grid place-items-center text-xs font-semibold">
+                          {(step as { step?: string })?.step ?? String.fromCharCode(65 + i)}
+                        </span>
+                        <p className="flex-1 text-sm text-ink-700 leading-relaxed">{asText(step)}</p>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </Section>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2 border-t border-line">
+                <Section n={6} heading="HSE controls">
+                  <Prose value={wms.hseRequirements} />
+                </Section>
+                <Section n={7} heading="Quality assurance">
+                  <Prose value={wms.qualityControlRequirements} />
+                </Section>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        {/* Right side: what state the document is in, and why. */}
+        <div className="space-y-6">
+          <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-ink-900">Document status</h2>
+              <Badge className={WMS_STATUS_BADGE[wms.status] ?? "bg-ink-500/10 text-ink-600 border-ink-500/20"}>
+                {WMS_STATUS_LABELS[wms.status] ?? String(wms.status).toLowerCase().replace(/_/g, " ")}
+              </Badge>
             </div>
 
-            {/* Scope / Purpose */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold text-brand-600">1. Purpose & Scope</h3>
-              <p className="text-xs text-ink-600 leading-relaxed">{wms.purpose}</p>
-              <p className="text-xs text-ink-600 leading-relaxed mt-2">{wms.scope}</p>
-            </div>
-
-            {/* Mobilization */}
-            {wms.mobilization && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-brand-600">2. Mobilization & Prep</h3>
-                <p className="text-xs text-ink-600 leading-relaxed">{wms.mobilization}</p>
-              </div>
-            )}
-
-            {/* Tools & Materials */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-brand-600">3. Equipment & Tools</h3>
-                <ul className="list-disc pl-4 text-xs text-ink-600 space-y-1">
-                  {tools.map((t: unknown, i: number) => (
-                    <li key={i}>{asText(t)}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-brand-600">4. Materials Required</h3>
-                <ul className="list-disc pl-4 text-xs text-ink-600 space-y-1">
-                  {materials.map((m: unknown, i: number) => (
-                    <li key={i}>{asText(m)}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Work Procedure steps */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-brand-600">5. Detailed Work Procedure</h3>
-              <div className="space-y-3">
-                {procedureSteps.map((step: unknown, i: number) => (
-                  <div key={i} className="flex gap-3 text-xs leading-relaxed">
-                    <span className="w-5 h-5 rounded-lg bg-ink-100 border border-ink-200 text-ink-500 flex items-center justify-center font-bold">
-                      {(step as { step?: string })?.step ?? String.fromCharCode(65 + i)}
-                    </span>
-                    <p className="text-ink-700 flex-1">{asText(step)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* HSE & QAQC */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-ink-200">
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-brand-600">6. HSE Controls</h3>
-                <p className="text-xs text-ink-600 leading-relaxed">{wms.hseRequirements}</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-brand-600">7. Quality Assurance</h3>
-                <p className="text-xs text-ink-600 leading-relaxed">{wms.qualityControlRequirements}</p>
-              </div>
+            <div className="px-6 py-4 flex items-start gap-2.5 text-sm text-ink-600 leading-relaxed">
+              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-brand-600" />
+              <p>
+                The status is set by the authorisation chain below. It becomes{" "}
+                <strong className="text-ink-900">approved</strong> only once every required signature is captured.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Right Side: authorisation status + sign-off chain */}
-        <div className="space-y-8">
-          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
-            <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
-              WMS Document Status
-            </h2>
-
-            <div className="flex justify-between items-center bg-ink-100 border border-ink-200 p-3 rounded-lg text-xs">
-              <span className="text-ink-500">Document Status</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
- wms.status === "APPROVED"
- ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
- : wms.status === "UNDER_REVIEW"
- ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
- : wms.status === "REJECTED"
- ? "bg-danger-500/10 text-danger-600 border-danger-500/20"
- : "bg-ink-200 text-ink-500 border-ink-200"
- }`}
-              >
-                {wms.status}
-              </span>
-            </div>
-
-            <div className="flex items-start gap-2 text-xs text-ink-500">
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-600" />
-              <span>
-                Status is set by the sign-off chain below, it becomes <strong>APPROVED</strong> only when all four
-                signatures are captured. Prepared by {wms.preparedByName ?? "-"}.
-              </span>
-            </div>
-          </div>
-
-          {/* WMS authorisation: Foreman → Maintenance Manager → HSE → Factory Manager (final) */}
-          <div className="lg:col-span-3">
-            <SignoffChain
-              entityType="WMS"
-              entityId={wmsId}
-              title="WMS Authorisation (Foreman → Maintenance Manager → HSE → Factory Manager)"
-            />
-            {/* Prints with the page, and only once the statement is approved. */}
-            <DocumentSeal entityType="WMS" entityId={wmsId} />
-          </div>
+        {/* The chain runs the full width, under both columns.
+            It was in the right-hand third, where a step called "Reviewed by
+            (Maintenance Manager)" wrapped onto four lines with its status
+            squeezed alongside. This is the object an auditor opens the page to
+            read, and it was the narrowest thing on it. */}
+        <div className="lg:col-span-3 space-y-6">
+          <SignoffChain
+            entityType="WMS"
+            entityId={wmsId}
+            title="Method statement authorisation"
+          />
+          {/* Prints with the page, and only once the statement is approved. */}
+          <DocumentSeal entityType="WMS" entityId={wmsId} />
         </div>
       </main>
     </div>
+  );
+}
+
+// A numbered section of the statement. The number sits with the heading rather
+// than in a coloured chip: it is an index into a controlled document, which is
+// exactly the kind of thing a printed procedure sets in plain type.
+function Section({ n, heading, children }: { n: number; heading: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h3 className="text-base font-semibold text-ink-900">
+        <span className="text-ink-400 tabular-nums">{n}.</span>{" "}
+        {heading}
+      </h3>
+      <div className="space-y-2 text-sm text-ink-700 leading-relaxed">{children}</div>
+    </section>
+  );
+}
+
+// An empty field says so. A heading with nothing under it reads as something
+// that failed to render.
+function Prose({ value }: { value?: string | null }) {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return <p className="text-ink-500">Not recorded.</p>;
+  return <p>{text}</p>;
+}
+
+function ItemList({
+  items,
+  asText,
+  empty,
+}: {
+  items: unknown[];
+  asText: (v: unknown) => string;
+  empty: string;
+}) {
+  if (items.length === 0) return <p className="text-ink-500">{empty}</p>;
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it, i) => (
+        <li key={i} className="flex gap-2.5">
+          <span className="mt-2 w-1 h-1 rounded-full bg-ink-300 shrink-0" aria-hidden="true" />
+          <span className="flex-1">{asText(it)}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

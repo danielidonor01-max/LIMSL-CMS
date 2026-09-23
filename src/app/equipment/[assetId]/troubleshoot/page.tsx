@@ -8,8 +8,12 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import SchematicViewer from "@/components/SchematicViewer";
 import DiagnosisChat from "@/components/DiagnosisChat";
+import PageHeader from "@/components/PageHeader";
+import Tabs from "@/components/Tabs";
+import EmptyState from "@/components/EmptyState";
+import Field, { FIELD_CLASS } from "@/components/Field";
+import { Badge } from "@/components/Badge";
 import {
-  ArrowLeft,
   Stethoscope,
   Search,
   FileText,
@@ -89,15 +93,47 @@ function Snippet({ text }: { text: string }) {
 }
 
 const SOURCE_BADGE: Record<string, string> = {
-  GUIDE: "bg-info-50 text-info-700 border-info-200",
-  HISTORY: "bg-violet-50 text-violet-700 border-violet-200",
-  "GUIDE+HISTORY": "bg-brand-50 text-brand-700 border-brand-200",
+  GUIDE: "bg-info-500/10 text-info-700 border-info-500/20",
+  HISTORY: "bg-violet-500/10 text-violet-700 border-violet-500/20",
+  "GUIDE+HISTORY": "bg-brand-500/10 text-brand-700 border-brand-500/20",
 };
 const SOURCE_LABEL: Record<string, string> = {
   GUIDE: "Guide",
   HISTORY: "Learned from history",
-  "GUIDE+HISTORY": "Guide + history",
+  "GUIDE+HISTORY": "Guide and history",
 };
+
+// The document kind was rendered by replacing underscores with spaces, so the
+// panel listed "ELECTRICAL SCHEMATIC" in shouting caps beside its own title.
+const DOC_KIND: Record<string, string> = {
+  ELECTRICAL_SCHEMATIC: "Schematic",
+  OPERATIONAL_MANUAL: "Manual",
+};
+
+const SESSION_BADGE: Record<string, string> = {
+  RESOLVED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  OPEN: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  ABANDONED: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+};
+const SESSION_LABEL: Record<string, string> = {
+  RESOLVED: "Resolved",
+  OPEN: "Open",
+  ABANDONED: "Abandoned",
+};
+
+// What the engine has to work with, said in a way that survives a zero. The
+// template it replaced produced "drawn from 0 guides and 3 past cases", which
+// advertises the emptiest half of the answer.
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+function learnedFrom(guides: number, history: number): string {
+  const parts: string[] = [];
+  if (guides > 0) parts.push(plural(guides, "guide", "guides"));
+  if (history > 0) parts.push(plural(history, "past case", "past cases"));
+  if (parts.length === 0) {
+    return "Nothing has been recorded against this machine yet, so the engine has nothing to rank. Record what you find and it will know next time.";
+  }
+  return `Ranked causes drawn from ${parts.join(" and ")} on this machine.`;
+}
 
 export default function TroubleshootPage() {
   const { assetId } = useParams<{ assetId: string }>();
@@ -216,24 +252,21 @@ export default function TroubleshootPage() {
   if (loading) {
     return (
       <div className={PAGE_MAIN.register} aria-busy="true" aria-label="Loading diagnostic engine">
-        <div className="h-4 w-40 bg-ink-200 rounded-lg animate-pulse" />
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-ink-200 animate-pulse" />
-          <div className="space-y-2">
-            <div className="h-4 w-48 bg-ink-200 rounded-lg animate-pulse" />
-            <div className="h-3 w-64 bg-ink-100 rounded-lg animate-pulse" />
-          </div>
+        <div className="h-3 w-40 bg-ink-200 rounded-lg animate-pulse" />
+        <div className="space-y-3">
+          <div className="h-8 w-72 bg-ink-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-96 max-w-full bg-ink-100 rounded-lg animate-pulse" />
         </div>
-        <div className="h-28 bg-surface border border-line rounded-xl shadow-card p-5">
-          <div className="h-3 w-56 bg-ink-100 rounded-lg animate-pulse mb-3" />
+        <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-3">
+          <div className="h-4 w-64 bg-ink-100 rounded-lg animate-pulse" />
           <div className="h-11 bg-ink-100 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="h-12 bg-ink-100 rounded-xl animate-pulse" />
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-10 border-b border-line animate-pulse" />
             <div className="h-40 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="h-32 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
             <div className="h-48 bg-surface border border-line rounded-xl shadow-card animate-pulse" />
           </div>
@@ -254,181 +287,173 @@ export default function TroubleshootPage() {
 
   return (
     <div className={PAGE_MAIN.register}>
-      <Link href={`/equipment/${assetId}`} className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to digital twin
-      </Link>
+      <PageHeader
+        title="Diagnostic engine"
+        subtitle={`${eq.name}. ${learnedFrom(meta.guideCount, meta.historyCount)}`}
+        code={eq.assetId}
+        backHref={`/equipment/${assetId}`}
+        backLabel="Back to the digital twin"
+      />
 
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-          <Stethoscope className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-ink-900">Diagnostic Engine</h2>
-          <p className="text-xs text-ink-500">
-            {eq.name} · {eq.assetId} · learns from {meta.guideCount} guides + {meta.historyCount} historical cases
-          </p>
-        </div>
-      </div>
-
-      {/* Symptom input */}
-      <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-3">
-        <label className="text-sm font-medium text-ink-700">
-          Describe the fault, symptom, or error code
-        </label>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              value={symptom}
-              onChange={(e) => setSymptom(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && runDiagnosis()}
-              placeholder="e.g. No motion X axis, error E-041"
-              className="w-full min-h-[44px] pl-9 pr-3 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-base sm:text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
-            />
+      {/* What the page is for, so it leads rather than sitting in a card among
+          cards. The symptom is the only thing that has to be entered, and
+          everything below it is a consequence of what goes in here. */}
+      <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
+        <Field
+          label="Describe the fault, symptom or error code"
+          htmlFor="symptom"
+          help="Plain words work as well as a code: “X axis will not move”, “E-041”, “bearing noise under load”."
+        >
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="symptom"
+                value={symptom}
+                onChange={(e) => setSymptom(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && runDiagnosis()}
+                placeholder="e.g. No motion X axis, error E-041"
+                className={`${FIELD_CLASS} min-h-11 pl-9`}
+              />
+            </div>
+            <Button
+              size="lg"
+              className="shrink-0"
+              onClick={() => runDiagnosis()}
+              disabled={symptom.trim().length < 2}
+              loading={diagnosing}
+              icon={Stethoscope}
+            >
+              Diagnose
+            </Button>
           </div>
-          <Button
-            size="lg"
-            className="shrink-0"
-            onClick={() => runDiagnosis()}
-            disabled={symptom.trim().length < 2}
-            loading={diagnosing}
-            icon={Sparkles}
-          >
-            Diagnose
-          </Button>
-        </div>
+        </Field>
+
         {meta.knownSymptoms.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1 items-center">
-            <span className="text-xs text-ink-400">Known:</span>
-            {meta.knownSymptoms.map((k) => (
-              <button
-                key={k.id}
-                onClick={() => runDiagnosis(k.errorCode ? `${k.symptom} ${k.errorCode}` : k.symptom)}
-                className="px-2.5 py-2 rounded-lg text-xs font-medium bg-ink-100 text-ink-600 hover:bg-brand-50 hover:text-brand-700 border border-ink-200"
-              >
-                {k.errorCode ? `[${k.errorCode}] ` : ""}{k.symptom}
-              </button>
-            ))}
+          <div className="pt-1 border-t border-line">
+            <p className="text-xs text-ink-500 pt-3">Already seen on this machine</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {meta.knownSymptoms.map((k) => (
+                <button
+                  key={k.id}
+                  onClick={() => runDiagnosis(k.errorCode ? `${k.symptom} ${k.errorCode}` : k.symptom)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-ink-50 text-ink-700 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 border border-line transition-colors"
+                >
+                  {k.errorCode ? `${k.errorCode} · ` : ""}{k.symptom}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* One content region, three views, segmented so the technician always
-            has a single focus instead of a long mixed scroll. */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center gap-1 bg-ink-100 rounded-xl p-1" role="tablist" aria-label="Diagnosis views">
-            {([
-              { key: "engine", label: "Engine results", short: "Engine", icon: Stethoscope, count: result?.diagnoses.length ?? null },
-              { key: "ai", label: "AI assistant", short: "AI", icon: Sparkles, count: null },
-              { key: "docs", label: "Documentation", short: "Docs", icon: BookOpen, count: result?.passages?.length ?? null },
-            ] as const).map((t) => {
-              const Icon = t.icon;
-              const active = panel === t.key;
-              return (
-                <button
-                  key={t.key}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setPanel(t.key)}
-                  className={`flex-1 min-h-[44px] px-2 sm:px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors ${
- active ? "bg-white text-ink-900 shadow-card" : "text-ink-500 hover:text-ink-800"
- }`}
-                >
-                  <Icon className={`w-4 h-4 ${t.key === "ai" ? "text-violet-500" : active ? "text-brand-600" : ""}`} />
-                  <span className="hidden sm:inline">{t.label}</span>
-                  <span className="sm:hidden">{t.short}</span>
-                  {t.count != null && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? "bg-brand-50 text-brand-700" : "bg-ink-200 text-ink-500"}`}>
-                      {t.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        {/* One content region, three views, so the technician always has a
+            single focus instead of a long mixed scroll. The pill strip these
+            used to be was a fourth way of drawing tabs in an app that had
+            already settled on one. */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs
+            ariaLabel="Diagnosis views"
+            value={panel}
+            onChange={setPanel}
+            items={[
+              { value: "engine", label: "Engine results", count: result?.diagnoses.length },
+              { value: "ai", label: "AI assistant" },
+              { value: "docs", label: "Documentation", count: result?.passages?.length },
+            ]}
+          />
 
           {panel === "engine" && (!result ? (
-            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
-              Enter a symptom and run the engine to see ranked probable causes.
+            <div className="bg-surface border border-line rounded-xl shadow-card">
+              <EmptyState
+                icon={Stethoscope}
+                title="Nothing diagnosed yet"
+                message="Describe the fault above and run the engine. It ranks probable causes from this machine's guides and its repair history."
+              />
             </div>
           ) : result.diagnoses.length === 0 ? (
-            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
-              No confident match found. Resolve the fault, then record the outcome so the engine learns it.
-              {meta.aiReady && (
-                <div className="mt-3">
-                  <button
-                    onClick={() => setPanel("ai")}
-                    className="inline-flex items-center gap-1.5 min-h-[44px] px-4 text-xs font-semibold text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-50"
-                  >
-                    <Sparkles className="w-4 h-4" /> Work it with the AI assistant instead
-                  </button>
-                </div>
-              )}
-              <div className="mt-4">
+            <div className="bg-surface border border-line rounded-xl shadow-card">
+              <EmptyState
+                icon={Stethoscope}
+                title="No confident match"
+                message={`Nothing in this machine's guides or history matches “${searchedSymptom}”. Work it through with the assistant, or record the cause once you find it so the engine knows it next time.`}
+                actionLabel={meta.aiReady ? "Work it with the AI assistant" : undefined}
+                onAction={meta.aiReady ? () => setPanel("ai") : undefined}
+              />
+              <div className="px-6 pb-6 -mt-4">
                 <NewGuideForm assetId={assetId} symptom={symptom} onDone={() => runDiagnosis()} />
               </div>
             </div>
           ) : (
             result.diagnoses.map((d) => (
               <div key={d.rank} className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
-                <div className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-ink-100 flex items-center justify-center text-sm font-bold text-ink-700 shrink-0">
+                <div className="px-6 py-5 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <span className="w-7 h-7 rounded-full bg-ink-100 border border-line grid place-items-center text-xs font-semibold text-ink-700 shrink-0">
                         {d.rank}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-ink-900">{d.cause}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-lg border ${SOURCE_BADGE[d.source]}`}>
-                            {d.source === "GUIDE" ? <BookOpen className="w-2.5 h-2.5 inline mr-1" /> : d.source === "HISTORY" ? <HistoryIcon className="w-2.5 h-2.5 inline mr-1" /> : <Sparkles className="w-2.5 h-2.5 inline mr-1" />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-base font-semibold text-ink-900 leading-snug">{d.cause}</p>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge className={SOURCE_BADGE[d.source]}>
+                            {d.source === "GUIDE" ? <BookOpen className="w-3.5 h-3.5" /> : d.source === "HISTORY" ? <HistoryIcon className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                             {SOURCE_LABEL[d.source]}
-                          </span>
+                          </Badge>
                           {d.errorCode && <span className="text-xs text-ink-500">{d.errorCode}</span>}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-xl font-bold text-brand-600">{d.confidence}%</div>
-                      <div className="w-16 h-1.5 bg-ink-100 rounded-full overflow-hidden mt-1">
+                    {/* A confidence figure is a measure, and a measure wants a
+                        label. It sat as a bare "72%" in brand green, which in
+                        a list of four reads as a score somebody is proud of
+                        rather than as how sure the engine is. */}
+                    <div className="text-right shrink-0 w-20">
+                      <div className="text-xl font-semibold text-ink-900 tabular-nums leading-none">
+                        {d.confidence}%
+                      </div>
+                      <div className="text-xs text-ink-500 mt-1">confident</div>
+                      <div className="h-1 bg-ink-200 rounded-full overflow-hidden mt-1.5">
                         <div className="h-full bg-brand-500 rounded-full" style={{ width: `${d.confidence}%` }} />
                       </div>
                     </div>
                   </div>
 
                   {/* Evidence */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {d.evidence.map((ev, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-ink-50 border border-ink-200 text-ink-600">
-                        {ev}
-                      </span>
-                    ))}
-                  </div>
+                  {d.evidence.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {d.evidence.map((ev, i) => (
+                        <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-ink-50 border border-line text-ink-600">
+                          {ev}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Implicated components + schematic refs */}
                   {d.components.length > 0 && (
-                    <div className="rounded-lg bg-ink-50 border border-ink-200 p-3 space-y-1.5">
-                      <p className="text-xs font-semibold text-ink-500 flex items-center gap-1">
-                        <Cpu className="w-3 h-3" /> Check these components
+                    <div className="rounded-lg bg-ink-50 border border-line p-4 space-y-2">
+                      <p className="text-sm font-semibold text-ink-700 flex items-center gap-1.5">
+                        <Cpu className="w-4 h-4 text-ink-400" /> Check these components
                       </p>
                       {d.components.map((c) => (
-                        <div key={c.componentTag} className="flex items-center justify-between text-xs">
-                          <span className="text-ink-700">
+                        <div key={c.componentTag} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="text-ink-700 min-w-0 truncate">
                             <span className="font-semibold text-ink-900">{c.componentTag}</span> · {c.name}
                           </span>
                           {c.schematicReference &&
                             (schematicDocs.length > 0 ? (
                               <button
                                 onClick={() => openOnSchematic(c)}
-                                className="text-xs text-brand-700 flex items-center gap-1 hover:underline"
+                                className="text-xs font-medium text-brand-700 flex items-center gap-1 hover:underline shrink-0"
                                 title="View on schematic"
                               >
-                                <MapPin className="w-3 h-3" /> {c.schematicReference}
+                                <MapPin className="w-3.5 h-3.5" /> {c.schematicReference}
                               </button>
                             ) : (
-                              <span className="text-xs text-brand-700 flex items-center gap-1">
-                                <MapPin className="w-3 h-3" /> {c.schematicReference}
+                              <span className="text-xs text-ink-500 flex items-center gap-1 shrink-0">
+                                <MapPin className="w-3.5 h-3.5" /> {c.schematicReference}
                               </span>
                             ))}
                         </div>
@@ -438,45 +463,47 @@ export default function TroubleshootPage() {
 
                   {/* Diagnostic steps */}
                   {d.steps.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-semibold text-ink-500">Diagnostic steps</p>
-                      {d.steps.map((s, i) => (
-                        <label key={i} className="flex items-start gap-2 text-xs text-ink-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={!!checked[d.rank]?.[i]}
-                            onChange={() => toggleStep(d.rank, i)}
-                            className="accent-brand-600 w-3.5 h-3.5 mt-0.5"
-                          />
-                          <span className={checked[d.rank]?.[i] ? "line-through text-ink-400" : ""}>{s}</span>
-                        </label>
-                      ))}
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-ink-700">Diagnostic steps</p>
+                      <div className="space-y-1.5">
+                        {d.steps.map((s, i) => (
+                          <label key={i} className="flex items-start gap-2.5 text-sm text-ink-700 cursor-pointer leading-relaxed">
+                            <input
+                              type="checkbox"
+                              checked={!!checked[d.rank]?.[i]}
+                              onChange={() => toggleStep(d.rank, i)}
+                              className="accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
+                            />
+                            <span className={checked[d.rank]?.[i] ? "line-through text-ink-400" : ""}>{s}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {d.resolution && (
-                    <p className="text-xs text-ink-600 bg-brand-50 border border-brand-200 rounded-lg px-3 py-2">
-                      <span className="font-semibold text-brand-700">Resolution:</span> {d.resolution}
+                    <p className="text-sm text-ink-700 bg-brand-50 border border-brand-200 rounded-lg px-4 py-3 leading-relaxed">
+                      <span className="font-semibold text-brand-800">Resolution</span> · {d.resolution}
                     </p>
                   )}
 
                   {/* History refs */}
                   {d.historyRefs.length > 0 && (
-                    <div className="text-xs text-ink-400">
-                      History: {d.historyRefs.map((h) => `${h.cmrf}${h.parts ? ` (${h.parts})` : ""}`).join(" · ")}
-                    </div>
+                    <p className="text-xs text-ink-500">
+                      Seen before: {d.historyRefs.map((h) => `${h.cmrf}${h.parts ? ` (${h.parts})` : ""}`).join(" · ")}
+                    </p>
                   )}
                 </div>
 
                 {/* Learn / confirm */}
-                <div className="border-t border-ink-200 px-6 py-4 flex items-center justify-between bg-ink-50/50">
+                <div className="border-t border-line px-6 py-4 flex items-center justify-between gap-4 flex-wrap bg-ink-50">
                   {learned[d.rank] ? (
-                    <span className="text-xs text-brand-700 font-medium flex items-center gap-1.5">
+                    <span className="text-sm text-brand-700 font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" /> {learned[d.rank]}
                     </span>
                   ) : (
                     <>
-                      <span className="text-xs text-ink-500">Was this the cause? Confirm to teach the engine.</span>
+                      <span className="text-sm text-ink-600">Was this the cause? Confirming teaches the engine.</span>
                       <Button size="sm" onClick={() => resolveWith(d)} icon={CheckCircle2}>
                         This resolved it
                       </Button>
@@ -487,16 +514,22 @@ export default function TroubleshootPage() {
             ))
           ))}
 
-          {/* AI diagnosis, chat-style, evidence-grounded, guardrailed server-side */}
+          {/* AI diagnosis, chat-style, evidence-grounded, guardrailed server-side.
+              Violet is the AI identity accent and it stays on the identity:
+              the panel is a panel like any other, not a purple region of the
+              app, or the assistant starts to look like a different product. */}
           {panel === "ai" && (meta.aiReady ? (
-            <div className="bg-white border border-violet-200 rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-violet-100 bg-violet-50/50 flex items-center gap-2 flex-wrap">
-                <Sparkles className="w-4 h-4 text-violet-600" />
-                <h3 className="text-sm font-semibold text-ink-900">AI diagnosis</h3>
-                <span className="text-xs text-ink-400">chat with the assistant, step by step</span>
-                <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border bg-warn-500/10 text-warn-700 border-warn-500/20">
-                  Verify before acting
-                </span>
+            <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-line flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-violet-600 shrink-0" /> AI assistant
+                  </h3>
+                  <p className="text-xs text-ink-500 mt-1">
+                    Works the fault with you, one step at a time, grounded in this machine&apos;s own records.
+                  </p>
+                </div>
+                <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20">Verify before acting</Badge>
               </div>
               <DiagnosisChat
                 key={searchedSymptom || resumeSession || "chat"}
@@ -506,41 +539,52 @@ export default function TroubleshootPage() {
               />
             </div>
           ) : (
-            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
-              No AI provider is configured. Add an API key in{" "}
-              <Link href="/settings?tab=ai" className="text-brand-600 hover:underline">App Settings → AI Providers</Link> to enable the assistant.
+            <div className="bg-surface border border-line rounded-xl shadow-card">
+              <EmptyState
+                icon={Sparkles}
+                title="No AI provider is configured"
+                message="The assistant needs an API key before it can answer. A Super Admin adds one in App Settings."
+                blockedBy={{ label: "Open App Settings → AI providers", href: "/settings?tab=ai" }}
+              />
             </div>
           ))}
 
           {/* Manuals & procedure passages (FTS over document_chunks) */}
           {panel === "docs" && (!result || (result.passages?.length ?? 0) === 0 ? (
-            <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center text-sm text-ink-400">
-              {!result
-                ? "Run a diagnosis first, matching manual and procedure passages appear here."
-                : "No documentation passages matched this symptom."}
+            <div className="bg-surface border border-line rounded-xl shadow-card">
+              <EmptyState
+                icon={BookOpen}
+                title={!result ? "Nothing to show yet" : "No matching passages"}
+                message={
+                  !result
+                    ? "Run a diagnosis and the matching passages from this machine's manuals and the maintenance procedure appear here."
+                    : `Nothing in the manuals or the maintenance procedure matched “${searchedSymptom}”.`
+                }
+              />
             </div>
           ) : (
             <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-ink-200 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-info-600" />
-                <h3 className="text-sm font-semibold text-ink-900">Relevant documentation</h3>
-                <span className="text-xs text-ink-400">manuals &amp; maintenance procedure</span>
+              <div className="px-6 py-4 border-b border-line">
+                <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-info-600 shrink-0" /> Relevant documentation
+                </h3>
+                <p className="text-xs text-ink-500 mt-1">Manuals and the maintenance procedure</p>
               </div>
-              <div className="divide-y divide-ink-100">
+              <div className="divide-y divide-line">
                 {result.passages!.map((p) => (
-                  <div key={p.id} className="px-6 py-4 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-ink-700 truncate">
+                  <div key={p.id} className="px-6 py-4 space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-ink-900 truncate">
                         {p.sourceLabel}
-                        {p.heading ? <span className="text-ink-400 font-normal"> · {p.heading}</span> : null}
+                        {p.heading ? <span className="text-ink-500 font-normal"> · {p.heading}</span> : null}
                       </span>
                       {p.pageStart != null && (
-                        <span className="text-xs text-ink-400 shrink-0">
-                          p.{p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `-${p.pageEnd}` : ""}
+                        <span className="text-xs text-ink-500 shrink-0 tabular-nums">
+                          p. {p.pageStart}{p.pageEnd && p.pageEnd !== p.pageStart ? `–${p.pageEnd}` : ""}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-ink-600 leading-relaxed">
+                    <p className="text-sm text-ink-600 leading-relaxed">
                       <Snippet text={p.snippet} />
                     </p>
                   </div>
@@ -551,115 +595,105 @@ export default function TroubleshootPage() {
         </div>
 
         {/* Schematics + component sidebar */}
-        <div className="space-y-4">
-          <div className="bg-surface border border-line rounded-xl shadow-card p-5">
-            <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-brand-600" /> Schematics to consult
-            </h3>
+        <div className="space-y-6">
+          <SidePanel icon={FileText} title="Schematics to consult">
             {ctx && ctx.schematics.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {ctx.schematics.map((s) =>
                   s.type === "ELECTRICAL_SCHEMATIC" || s.type === "OPERATIONAL_MANUAL" ? (
                     <button
                       key={s.id}
                       onClick={() => setViewer({ docId: s.id, title: s.title })}
-                      className="w-full flex items-center justify-between p-2.5 rounded-lg border border-ink-200 hover:bg-ink-50 text-xs text-left"
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-line hover:bg-ink-50 hover:border-ink-300 text-left transition-colors"
                       title="Open tiled viewer"
                     >
-                      <span className="text-ink-700 truncate">{s.title}</span>
-                      <span className="text-xs text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                      <span className="text-sm text-ink-800 truncate">{s.title}</span>
+                      <span className="text-xs text-ink-500 shrink-0">{DOC_KIND[s.type] ?? "Document"}</span>
                     </button>
                   ) : (
                     s.fileUrl && !s.fileUrl.startsWith("#") ? (
                       <a
                         key={s.id}
                         href={s.fileUrl}
-                        className="flex items-center justify-between p-2.5 rounded-lg border border-ink-200 hover:bg-ink-50 text-xs"
+                        className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-line hover:bg-ink-50 hover:border-ink-300 transition-colors"
                       >
-                        <span className="text-ink-700 truncate">{s.title}</span>
-                        <span className="text-xs text-ink-400 shrink-0 ml-2">{s.type.replace(/_/g, " ")}</span>
+                        <span className="text-sm text-ink-800 truncate">{s.title}</span>
+                        <span className="text-xs text-ink-500 shrink-0">{DOC_KIND[s.type] ?? "Document"}</span>
                       </a>
                     ) : (
-                      <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg border border-ink-100 text-xs opacity-60">
-                        <span className="text-ink-500 truncate">{s.title}</span>
-                        <span className="text-xs text-ink-400 shrink-0 ml-2">no file</span>
+                      <div key={s.id} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-line">
+                        <span className="text-sm text-ink-500 truncate">{s.title}</span>
+                        <span className="text-xs text-ink-400 shrink-0">No file</span>
                       </div>
                     )
                   ),
                 )}
               </div>
             ) : (
-              <p className="text-xs text-ink-400">No schematics on file.</p>
+              <p className="text-sm text-ink-500">No schematics are on file for this machine.</p>
             )}
-          </div>
+          </SidePanel>
 
           {pastSessions.length > 0 && (
-            <div className="bg-surface border border-line rounded-xl shadow-card p-5">
-              <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
-                <HistoryIcon className="w-4 h-4 text-violet-600" /> Past AI diagnoses
-              </h3>
+            <SidePanel icon={HistoryIcon} title="Past AI diagnoses" iconClass="text-violet-600">
               <div className="space-y-1.5">
                 {pastSessions.slice(0, 8).map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setResumeSession(s.id)}
-                    className={`w-full text-left p-2.5 rounded-lg border transition-colors ${
- resumeSession === s.id ? "border-violet-300 bg-violet-50" : "border-ink-200 hover:bg-ink-50"
+                    className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors ${
+ resumeSession === s.id ? "border-violet-300 bg-violet-50" : "border-line hover:bg-ink-50 hover:border-ink-300"
  }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-ink-800 truncate">{s.symptom}</span>
-                      <span
-                        className={`text-xs font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${
- s.status === "RESOLVED"
- ? "bg-brand-500/10 text-brand-700 border-brand-500/20"
- : s.status === "OPEN"
- ? "bg-warn-500/10 text-warn-700 border-warn-500/20"
- : "bg-ink-100 text-ink-500 border-ink-200"
- }`}
-                      >
-                        {s.status}
-                      </span>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm text-ink-800 truncate">{s.symptom}</span>
+                      <Badge className={SESSION_BADGE[s.status] ?? "bg-ink-500/10 text-ink-600 border-ink-500/20"}>
+                        {SESSION_LABEL[s.status] ?? s.status.toLowerCase()}
+                      </Badge>
                     </div>
                     {s.resolvedCause && (
-                      <p className="text-xs text-ink-500 truncate mt-0.5">→ {s.resolvedCause}</p>
+                      <p className="text-xs text-ink-600 truncate mt-1">Cause: {s.resolvedCause}</p>
                     )}
-                    <p className="text-xs text-ink-400 mt-0.5">
-                      {s.startedByName ?? "-"} · {(s.createdAt ?? "").slice(0, 10)}
+                    <p className="text-xs text-ink-500 mt-0.5">
+                      {s.startedByName ?? "Unknown"} · {(s.createdAt ?? "").slice(0, 10)}
                     </p>
                   </button>
                 ))}
               </div>
-            </div>
+            </SidePanel>
           )}
 
-          <div className="bg-surface border border-line rounded-xl shadow-card p-5">
-            <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-brand-600" /> Component registry (BOM)
-            </h3>
+          <SidePanel icon={Cpu} title="Component registry">
             {ctx && ctx.components.length > 0 ? (
-              <div className="space-y-2">
+              <div className="divide-y divide-line -my-2">
                 {ctx.components.map((c) => (
-                  <div key={c.componentTag} className="text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-ink-900">{c.componentTag}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-lg border ${c.status === "FAULTY" ? "bg-danger-50 text-danger-700 border-danger-200" : "bg-brand-50 text-brand-700 border-brand-200"}`}>
-                        {c.status ?? "-"}
-                      </span>
+                  <div key={c.componentTag} className="py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-ink-900 truncate">{c.componentTag}</span>
+                      <Badge
+                        className={
+                          c.status === "FAULTY"
+                            ? "bg-danger-500/10 text-danger-700 border-danger-500/20"
+                            : "bg-brand-500/10 text-brand-700 border-brand-500/20"
+                        }
+                      >
+                        {(c.status ?? "unknown").toLowerCase()}
+                      </Badge>
                     </div>
-                    <p className="text-ink-500">{c.name}</p>
+                    <p className="text-sm text-ink-600 mt-0.5">{c.name}</p>
                     {c.schematicReference && (
-                      <p className="text-xs text-ink-400 flex items-center gap-1">
-                        <MapPin className="w-2.5 h-2.5" /> {c.schematicReference} · {c.location}
+                      <p className="text-xs text-ink-500 flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" /> {c.schematicReference}
+                        {c.location ? ` · ${c.location}` : ""}
                       </p>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-ink-400">No components registered.</p>
+              <p className="text-sm text-ink-500">No components have been registered for this machine.</p>
             )}
-          </div>
+          </SidePanel>
         </div>
       </div>
 
@@ -684,6 +718,29 @@ export default function TroubleshootPage() {
   );
 }
 
+// A panel in the right-hand column. Three of these were three copies of the
+// same header markup, which is how the headings had drifted to three weights.
+function SidePanel({
+  icon: Icon,
+  title,
+  iconClass = "text-brand-600",
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  iconClass?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+      <h3 className="px-5 py-3.5 border-b border-line text-base font-semibold text-ink-900 flex items-center gap-2">
+        <Icon className={`w-4 h-4 shrink-0 ${iconClass}`} /> {title}
+      </h3>
+      <div className="px-5 py-4">{children}</div>
+    </section>
+  );
+}
+
 // Inline form to record a brand-new resolution the engine hasn't seen.
 function NewGuideForm({ assetId, symptom, onDone }: { assetId: string; symptom: string; onDone: () => void }) {
   const [cause, setCause] = useState("");
@@ -703,24 +760,28 @@ function NewGuideForm({ assetId, symptom, onDone }: { assetId: string; symptom: 
   };
 
   return (
-    <div className="max-w-md mx-auto text-left space-y-2">
-      <input
-        value={cause}
-        onChange={(e) => setCause(e.target.value)}
-        placeholder="Verified root cause…"
-        className="w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40"
-      />
-      <input
-        value={resolution}
-        onChange={(e) => setResolution(e.target.value)}
-        placeholder="Resolution action…"
-        className="w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40"
-      />
-      <Button fullWidth
-        onClick={save}
-        disabled={saving || !cause.trim()}
-      >
-        {saving ? "Teaching…" : "Teach the engine this resolution"}
+    <div className="max-w-md mx-auto text-left space-y-3 rounded-lg border border-line bg-ink-50 p-4">
+      <p className="text-sm font-semibold text-ink-900">Teach the engine</p>
+      <Field label="Verified root cause" htmlFor="new-guide-cause" required>
+        <input
+          id="new-guide-cause"
+          value={cause}
+          onChange={(e) => setCause(e.target.value)}
+          placeholder="What it actually turned out to be"
+          className={`${FIELD_CLASS} bg-surface`}
+        />
+      </Field>
+      <Field label="Resolution action" htmlFor="new-guide-resolution">
+        <input
+          id="new-guide-resolution"
+          value={resolution}
+          onChange={(e) => setResolution(e.target.value)}
+          placeholder="What fixed it"
+          className={`${FIELD_CLASS} bg-surface`}
+        />
+      </Field>
+      <Button fullWidth onClick={save} loading={saving} disabled={saving || !cause.trim()}>
+        {saving ? "Teaching…" : "Save it as a guide"}
       </Button>
     </div>
   );

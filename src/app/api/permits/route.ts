@@ -195,12 +195,28 @@ export async function POST(request: Request) {
     if (!permitWo) {
       return NextResponse.json({ error: "The selected work order was not found." }, { status: 400 });
     }
-    // PENDING_APPROVAL is the only blocking state. An emergency work order is
-    // already OPEN with its signatures still being collected, and blocking that
-    // would leave a breakdown crew unable to raise the permit their own
-    // isolation depends on.
+    // Not-yet-decided, decided against, and withdrawn. Everything else passes:
+    // an emergency work order is already OPEN with its signatures still being
+    // collected, and blocking that would leave a breakdown crew unable to raise
+    // the permit their own isolation depends on.
     if (permitWo.status === "PENDING_APPROVAL") {
       return NextResponse.json({ error: approvalBlockMessage(permitWo.workOrderNumber) }, { status: 409 });
+    }
+    // REJECTED arrived with the work-order lifecycle actions and was not added
+    // here, which left the gate open on the one state it should refuse hardest.
+    // PENDING_APPROVAL means nobody has decided yet; REJECTED means somebody
+    // decided no. A rejected work order sits in that state until it is
+    // resubmitted, so without this a foreman whose job was refused by the
+    // Maintenance Manager could still raise the permit that lets work start.
+    if (permitWo.status === "REJECTED") {
+      return NextResponse.json(
+        {
+          error:
+            `${permitWo.workOrderNumber} was rejected and has not been resubmitted. ` +
+            `Revise it and send it back for approval before raising a permit.`,
+        },
+        { status: 409 },
+      );
     }
     if (permitWo.status === "CANCELLED") {
       return NextResponse.json(

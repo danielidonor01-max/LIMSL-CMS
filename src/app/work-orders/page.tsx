@@ -92,6 +92,15 @@ type WorkOrder = {
 export default function WorkOrdersPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // `userRole` was read in four places and declared in none, so this page did
+  // not compile and `next build` refused the branch. useSession was already
+  // imported for it; only the line that reads the role was missing.
+  //
+  // The mounted guard is deliberate and is the convention here (AGENTS.md §7):
+  // the session resolves client-side only, so deriving anything role-dependent
+  // during SSR is a hydration mismatch.
+  const { data: session } = useSession();
+  const userRole = mounted ? (session?.user as { role?: string })?.role : undefined;
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(userRole ?? "");
 
   const { data: rowsData, loading, error, refresh } = useApi<WorkOrder[]>("/api/work-orders", []);

@@ -13,6 +13,7 @@ import {
   CircleHelp, ClipboardCheck, ImageIcon,
 } from "lucide-react";
 import Button from "@/components/Button";
+import Field, { FIELD_CLASS } from "@/components/Field";
 import { useUserPrefs } from "@/components/PreferencesProvider";
 
 type Step = { action: string; expected?: string; ifNot?: string };
@@ -204,26 +205,42 @@ export default function DiagnosisChat({
   // ── Pre-session gate ────────────────────────────────────────────────────────
   if (!sessionId) {
     return (
-      <div className="p-5 space-y-3">
-        <p className="text-xs text-ink-600 leading-relaxed">
-          Continue with a guided, back-and-forth AI diagnosis. Every reply is grounded in this machine&apos;s
-          guides, history, manuals and component registry. You can attach photos of the panel or component.
+      <div className="px-6 py-6 space-y-4">
+        <p className="text-sm text-ink-700 leading-relaxed">
+          Work the fault through with the assistant, one step at a time. Every reply is grounded in this
+          machine&apos;s guides, history, manuals and component registry, and you can attach photos of the panel
+          or the component.
         </p>
-        <div className="flex items-start gap-2 text-xs text-warn-800 bg-warn-50 border border-warn-200 rounded-lg px-3 py-2">
-          <ShieldAlert className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>Starting logs this fault to the machine&apos;s history log. AI output is advisory, verify before acting and follow PTW/LOTO.</span>
+
+        {/* Starting is not a free action: it writes to the machine's history.
+            That has to be said before the button, not discovered after it. */}
+        <div className="flex items-start gap-2.5 text-sm text-warn-900 bg-warn-50 border border-warn-200 rounded-lg px-4 py-3 leading-relaxed">
+          <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0 text-warn-600" />
+          <span>
+            Starting logs this fault to the machine&apos;s history. The assistant is advisory: verify before
+            acting, and follow PTW and LOTO.
+          </span>
         </div>
-        {attachments.length > 0 && <AttachmentStrip attachments={attachments} onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))} />}
+
+        {attachments.length > 0 && (
+          <AttachmentStrip
+            attachments={attachments}
+            onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))}
+          />
+        )}
+
         <div className="flex flex-wrap items-center gap-2">
           <Button icon={Sparkles} loading={starting} disabled={symptom.trim().length < 3} onClick={start}>
-            {starting ? "Starting…" : "Log fault & start AI diagnosis"}
+            {starting ? "Starting…" : "Log the fault and start"}
           </Button>
           <Button variant="secondary" icon={Paperclip} onClick={() => fileRef.current?.click()}>
-            Attach photo
+            Attach a photo
           </Button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          {symptom.trim().length < 3 && <span className="text-xs text-ink-400">Enter a symptom above first.</span>}
         </div>
+        {symptom.trim().length < 3 && (
+          <p className="text-sm text-ink-500">Describe the fault in the box above first.</p>
+        )}
       </div>
     );
   }
@@ -231,7 +248,7 @@ export default function DiagnosisChat({
   // ── Active session ──────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col">
-      <div className="max-h-[32rem] overflow-y-auto px-4 py-4 space-y-3 bg-ink-50/40">
+      <div className="max-h-[34rem] overflow-y-auto px-5 py-5 space-y-4 bg-ink-50">
         {messages.map((m, i) => (
           <MessageBubble
             key={i}
@@ -242,34 +259,74 @@ export default function DiagnosisChat({
           />
         ))}
         {(sending || starting) && (
-          <div className="flex items-center gap-2 text-xs text-ink-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-500" /> Analyzing…
+          <div className="flex items-center gap-2 text-sm text-ink-500">
+            <Loader2 className="w-4 h-4 animate-spin text-violet-500" /> Thinking…
           </div>
         )}
         <div ref={endRef} />
       </div>
 
       {status !== "OPEN" ? (
-        <div className="border-t border-ink-200 px-4 py-3 bg-brand-50/60 text-xs text-brand-800 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4" />
-          {status === "RESOLVED" ? "Resolved, logged to machine history." : "Session closed."}
+        <div className="border-t border-line px-5 py-4 bg-brand-50 text-sm text-brand-900 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-600" />
+          {status === "RESOLVED" ? "Resolved, and logged to the machine's history." : "This session is closed."}
         </div>
       ) : (
-        <div className="border-t border-ink-200 p-3 space-y-2 bg-white">
-          {lastSteps.length > 0 && (
-            <button
-              onClick={reportSteps}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:text-brand-900"
-            >
-              <ClipboardCheck className="w-3.5 h-3.5" /> Report ticked steps
-            </button>
+        <div className="border-t border-line px-5 py-4 space-y-3 bg-surface">
+          {/* The two things you can do besides type. They were both plain green
+              links sitting under the composer at caption size, which is where
+              an interface hides what it does not want you to press. */}
+          <div className="flex flex-wrap items-center gap-2">
+            {lastSteps.length > 0 && (
+              <Button size="sm" variant="subtle" icon={ClipboardCheck} onClick={reportSteps}>
+                Report the ticked checks
+              </Button>
+            )}
+            {!resolving && (
+              <Button size="sm" variant="subtle" icon={CheckCircle2} onClick={() => setResolving(true)}>
+                This resolved the fault
+              </Button>
+            )}
+          </div>
+
+          {/* Closing the session writes the confirmed cause to the machine's
+              history and teaches the engine, so it asks for the cause in a
+              labelled field rather than a placeholder. */}
+          {resolving && (
+            <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 space-y-3">
+              <Field label="Confirmed root cause" htmlFor="resolve-cause" required>
+                <input
+                  id="resolve-cause"
+                  value={resolveCause}
+                  onChange={(e) => setResolveCause(e.target.value)}
+                  placeholder="What it actually turned out to be"
+                  className={`${FIELD_CLASS} bg-surface`}
+                />
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="ghost" onClick={() => setResolving(false)}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={resolve} disabled={!resolveCause.trim()} icon={CheckCircle2}>
+                  Mark resolved
+                </Button>
+              </div>
+            </div>
           )}
-          {attachments.length > 0 && <AttachmentStrip attachments={attachments} onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))} />}
+
+          {attachments.length > 0 && (
+            <AttachmentStrip
+              attachments={attachments}
+              onRemove={(i) => setAttachments((a) => a.filter((_, j) => j !== i))}
+            />
+          )}
+
           <div className="flex items-end gap-2">
             <button
               onClick={() => fileRef.current?.click()}
-              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center border border-ink-200 hover:bg-ink-50 text-ink-500 rounded-lg shrink-0"
-              title="Attach photo"
+              className="min-h-11 min-w-11 flex items-center justify-center border border-line hover:bg-ink-100 text-ink-500 hover:text-ink-900 rounded-lg shrink-0 transition-colors"
+              title="Attach a photo"
+              aria-label="Attach a photo"
             >
               <Paperclip className="w-4 h-4" />
             </button>
@@ -289,7 +346,8 @@ export default function DiagnosisChat({
               }}
               rows={2}
               placeholder="Report what you observed…"
-              className="flex-1 resize-none max-h-32 px-3 py-2.5 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
+              aria-label="Your reply to the assistant"
+              className={`${FIELD_CLASS} flex-1 resize-none max-h-32`}
             />
             <Button
               className="shrink-0"
@@ -301,36 +359,10 @@ export default function DiagnosisChat({
               aria-label="Send"
             />
           </div>
-          <p className="text-xs text-ink-400 text-right">
+          <p className="text-xs text-ink-500 text-right">
             {prefs.chatEnterToSend ? "Enter sends · Shift+Enter for a new line" : "Ctrl+Enter sends · Enter for a new line"}
-            <span className="text-ink-300"> · change in Account → Preferences</span>
+            <span className="text-ink-400"> · change this in Account → Preferences</span>
           </p>
-
-          {resolving ? (
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              <input
-                value={resolveCause}
-                onChange={(e) => setResolveCause(e.target.value)}
-                placeholder="Confirmed root cause…"
-                className="flex-1 px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm focus:outline-none focus:border-brand-500/40"
-              />
-              <div className="flex gap-2">
-                <Button onClick={resolve} disabled={!resolveCause.trim()}>
-                  Mark resolved
-                </Button>
-                <button onClick={() => setResolving(false)} className="px-3 py-2 border border-ink-200 text-ink-600 rounded-lg text-xs">
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setResolving(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:text-brand-900"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" /> This resolved the fault
-            </button>
-          )}
         </div>
       )}
     </div>
@@ -343,12 +375,13 @@ function AttachmentStrip({ attachments, onRemove }: { attachments: Attachment[];
       {attachments.map((a, i) => (
         <div key={i} className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={a.preview} alt={a.name} className="w-14 h-14 object-cover rounded-lg border border-ink-200" />
+          <img src={a.preview} alt={a.name} className="w-14 h-14 object-cover rounded-lg border border-line" />
           <button
             onClick={() => onRemove(i)}
-            className="absolute -top-1.5 -right-1.5 bg-ink-800 text-white rounded-full w-4 h-4 flex items-center justify-center"
+            aria-label={`Remove ${a.name}`}
+            className="absolute -top-2 -right-2 bg-ink-800 hover:bg-ink-900 text-white rounded-full w-5 h-5 flex items-center justify-center transition-colors"
           >
-            <X className="w-2.5 h-2.5" />
+            <X className="w-3 h-3" />
           </button>
         </div>
       ))}
@@ -370,10 +403,10 @@ function MessageBubble({
   if (m.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-brand-600 text-white rounded-xl rounded-br-sm px-3.5 py-2">
-          <p className="text-sm whitespace-pre-wrap break-words">{m.text}</p>
+        <div className="max-w-[85%] bg-brand-600 text-white rounded-xl rounded-br-lg px-4 py-2.5">
+          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{m.text}</p>
           {m.imageKeys && m.imageKeys.length > 0 ? (
-            <div className="flex gap-1.5 mt-1.5">
+            <div className="flex gap-1.5 mt-2">
               {m.imageKeys.map((k) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <a key={k} href={`/api/files/${k}`} target="_blank" rel="noreferrer">
@@ -386,8 +419,8 @@ function MessageBubble({
               ))}
             </div>
           ) : m.imageCount ? (
-            <p className="text-xs text-brand-100 mt-1 flex items-center gap-1">
-              <ImageIcon className="w-3 h-3" /> {m.imageCount} photo{m.imageCount > 1 ? "s" : ""} attached
+            <p className="text-xs text-brand-100 mt-1.5 flex items-center gap-1">
+              <ImageIcon className="w-3.5 h-3.5" /> {m.imageCount} photo{m.imageCount > 1 ? "s" : ""} attached
             </p>
           ) : null}
         </div>
@@ -397,85 +430,101 @@ function MessageBubble({
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[92%] bg-white border border-ink-200 rounded-xl rounded-bl-sm px-3.5 py-2.5 space-y-2 w-full">
+      <div className="max-w-[92%] w-full bg-surface border border-line rounded-xl rounded-bl-lg px-4 py-3.5 space-y-3">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-violet-500" />
-          <span className="text-xs font-semibold text-violet-600">AI assistant</span>
+          <Sparkles className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+          <span className="text-xs font-semibold text-violet-700">AI assistant</span>
           {m.confidence != null && m.confidence > 0 && (
-            <span className="text-xs text-ink-400 ml-auto">{m.confidence}% confident</span>
+            <span className="text-xs text-ink-500 ml-auto tabular-nums">{m.confidence}% confident</span>
           )}
         </div>
 
-        <p className="text-sm text-ink-800 whitespace-pre-wrap break-words">{m.text}</p>
+        <p className="text-sm text-ink-800 whitespace-pre-wrap break-words leading-relaxed">{m.text}</p>
 
         {m.likelyCause && (
-          <p className="text-xs text-ink-600 bg-violet-50 border border-violet-100 rounded-lg px-2.5 py-1.5">
-            <span className="font-semibold text-violet-700">Working hypothesis:</span> {m.likelyCause}
+          <p className="text-sm text-ink-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-2.5 leading-relaxed">
+            <span className="font-semibold text-violet-800">Working hypothesis</span> · {m.likelyCause}
           </p>
         )}
 
         {m.question && (
-          <p className="text-xs text-info-800 bg-info-50 border border-info-100 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5">
-            <CircleHelp className="w-3.5 h-3.5 mt-0.5 shrink-0" /> {m.question}
+          <p className="text-sm text-info-900 bg-info-50 border border-info-200 rounded-lg px-3 py-2.5 flex items-start gap-2 leading-relaxed">
+            <CircleHelp className="w-4 h-4 mt-0.5 shrink-0 text-info-600" /> {m.question}
           </p>
         )}
 
+        {/* Safety is the one thing in this bubble a person must not skim past,
+            so it is a banner rather than a row of chips among other rows of
+            chips. */}
         {m.safety && m.safety.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {m.safety.map((s, j) => (
-              <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-warn-500/10 border border-warn-500/20 text-warn-800 font-semibold">
-                ⚠ {s}
-              </span>
-            ))}
+          <div className="rounded-lg bg-warn-50 border border-warn-200 px-3 py-2.5 space-y-1">
+            <p className="text-xs font-semibold text-warn-900 flex items-center gap-1.5">
+              <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> Before you touch anything
+            </p>
+            <ul className="space-y-0.5">
+              {m.safety.map((s, j) => (
+                <li key={j} className="text-sm text-warn-900 leading-relaxed">{s}</li>
+              ))}
+            </ul>
           </div>
         )}
 
         {m.steps && m.steps.length > 0 && (
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-ink-500">Suggested checks</p>
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-ink-600">Suggested checks</p>
             {m.steps.map((s, j) => (
               <label
                 key={j}
-                className={`flex items-start gap-2 text-xs text-ink-700 ${isLastAssistant ? "cursor-pointer" : ""}`}
+                className={`flex items-start gap-2.5 text-sm text-ink-700 leading-relaxed ${isLastAssistant ? "cursor-pointer" : ""}`}
               >
                 <input
                   type="checkbox"
                   disabled={!isLastAssistant}
                   checked={!!stepChecks?.[j]}
                   onChange={() => onToggleStep(j)}
-                  className="accent-brand-600 w-3.5 h-3.5 mt-0.5 shrink-0"
+                  className="accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
                 />
                 <span className={stepChecks?.[j] ? "line-through text-ink-400" : ""}>
                   {s.action}
-                  {s.expected && <span className="text-ink-500">, expect: {s.expected}</span>}
-                  {s.ifNot && <span className="text-ink-400"> (if not: {s.ifNot})</span>}
+                  {s.expected && <span className="text-ink-500">, expect {s.expected}</span>}
+                  {s.ifNot && <span className="text-ink-500"> (if not: {s.ifNot})</span>}
                 </span>
               </label>
             ))}
           </div>
         )}
 
+        {/* A tag the registry does not know is the assistant naming a part that
+            may not exist on this machine, which is the failure mode worth
+            catching. It says so rather than relying on a tooltip. */}
         {m.components && m.components.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {m.components.map((c) => (
               <span
                 key={c.tag}
-                className={`text-xs px-2 py-0.5 rounded-lg border ${
- c.verified ? "bg-ink-50 border-ink-200 text-ink-700" : "bg-danger-50 border-danger-200 text-danger-700"
+                className={`text-xs px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
+ c.verified
+ ? "bg-ink-50 border-line text-ink-700"
+ : "bg-danger-500/10 border-danger-500/20 text-danger-700"
  }`}
-                title={c.verified ? "In the component registry" : "NOT in the component registry, unverified"}
+                title={c.verified ? "In the component registry" : "Not in the component registry, unverified"}
               >
                 {c.tag}
-                {!c.verified && " ⚠"}
+                {!c.verified && <span className="font-semibold">· unverified</span>}
               </span>
             ))}
           </div>
         )}
 
         {m.evidence && m.evidence.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-ink-500">Drawn from</span>
             {m.evidence.map((ev) => (
-              <span key={ev.id} className="text-xs px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700" title={ev.id}>
+              <span
+                key={ev.id}
+                className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-700"
+                title={ev.id}
+              >
                 {ev.label}
               </span>
             ))}
@@ -483,8 +532,8 @@ function MessageBubble({
         )}
 
         {m.resolved && (
-          <p className="text-xs text-brand-700 font-medium flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> The assistant believes this fault is resolved.
+          <p className="text-sm text-brand-700 font-medium flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 shrink-0" /> The assistant believes this fault is resolved.
           </p>
         )}
       </div>

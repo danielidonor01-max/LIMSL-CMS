@@ -91,7 +91,8 @@ export default function NonConformityRegister() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={pageMain("register", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
         <div className="lg:col-span-3">
-          <PageHeader
+          <PageHeader
+
             title="Non-Conformity Registry"
             subtitle="Where the system fell short of the standard, and what was done about it"
             backHref="/"
@@ -264,7 +265,7 @@ export default function NonConformityRegister() {
                 <SignoffChain
                   entityType={activeNc.type === "SAFETY_INCIDENT" ? "SAFETY_INCIDENT" : "NON_CONFORMITY"}
                   entityId={activeNc.id}
-                  title={activeNc.type === "SAFETY_INCIDENT" ? "Incident Investigation Sign-off" : "Corrective Action Sign-off"}
+                  title={activeNc.type === "SAFETY_INCIDENT" ? "Incident investigation sign-off" : "Corrective action sign-off"}
                 />
               </div>
             ) : (

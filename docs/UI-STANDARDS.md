@@ -55,7 +55,7 @@ and it is why the canvas is not as dark as the reference product's.
 
 ### Cards
 
-`bg-surface border border-line rounded-2xl shadow-card`. The shadow is a
+`bg-surface border border-line rounded-xl shadow-card`. The shadow is a
 1px hairline lift, never a drop shadow: on a dense compliance screen a real
 shadow under every card turns the page into gravel.
 
@@ -197,7 +197,9 @@ Do **not** use `w-4.5` or other off-scale sizes (normalised out).
 See **Density** above for the current values; this section previously carried
 an older set and the two disagreed.
 
-- Radius: `rounded-lg` for controls, `rounded-2xl` for cards, `rounded-full` for pills.
+- Radius: `rounded-lg` for controls, `rounded-xl` for cards and panels,
+  `rounded-full` for pills. Three steps, and `visual-restraint.test.ts` holds
+  the ceiling at four — adding `rounded-2xl` fails the build.
 
 ## Components (use these, don't reinvent)
 
@@ -207,6 +209,8 @@ an older set and the two disagreed.
 | Dialog / form modal | `@/components/Modal` | Centered, scrim, close button. Never a native dialog. |
 | Any dropdown/picker in a form or filter bar | `@/components/Select` | **Native `<select>` is banned.** Select renders a styled field trigger + popover (no browser-drawn menu) and accepts the same `<option>` children; `onChange` gets the plain value. |
 | Compact inline picker (tables, badges) | `@/components/Dropdown` | Trigger styled by the call site; popover menu. |
+| Moving between views of a page | `@/components/Tabs` | Underline tabs. A real tablist: arrows move, only the selected tab is in the tab order. |
+| A filter or display mode beside a toolbar | `@/components/SegmentedControl` | Pill-in-a-track. A real radiogroup. **Never hand-roll one** — six pages did, and the guard could not see them because it matched on class order. |
 | Boolean setting (enable/disable) | `@/components/Toggle` | Switch, not a checkbox. Real checkboxes remain **only** for genuine tick-marks: checklist steps and signed attestations. |
 | Page title row | `@/components/PageHeader` | Title + subtitle + optional code + actions. No icon chip; see the section on chrome. |
 | The one card that answers the page | `@/components/PageLead` | Headline that STATES the answer, one supporting sentence, the actions that follow from it, and a single dark panel with the figure worth reading across a room. Used by the dashboard, KPI and reports. A guard test keeps all three on it. |

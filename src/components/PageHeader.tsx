@@ -55,8 +55,11 @@ export default function PageHeader({
             <p className="text-sm text-ink-600 mt-2 leading-relaxed">
               {subtitle}
               {code && (
+                // A separator, not a space. Run together, the sentence and the
+                // document number read as one clause: "…with its quality plan
+                // and approvals WMS-2026-0002".
                 <span className="text-ink-500">
-                  {subtitle ? " " : ""}
+                  {subtitle ? " · " : ""}
                   {code}
                 </span>
               )}

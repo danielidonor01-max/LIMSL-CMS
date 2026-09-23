@@ -12,12 +12,15 @@ import { Trash2 } from "lucide-react";
 // callback(s) are provided; clearing emits "" (onSave) and null (onChange).
 interface SignaturePadProps {
   label: string;
+  /** Marked the way Field marks it, so a required signature reads the same as
+   *  a required text field rather than as an asterisk somebody typed. */
+  required?: boolean;
   onSave?: (base64Data: string) => void;
   onChange?: (dataUrl: string | null) => void;
   savedData?: string;
 }
 
-export default function SignaturePad({ label, onSave, onChange, savedData }: SignaturePadProps) {
+export default function SignaturePad({ label, required, onSave, onChange, savedData }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawing, setHasDrawing] = useState(false);
@@ -37,9 +40,14 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.strokeStyle = "#10b981"; // Emerald line
+    // Ink, not brand green. A signature is a mark made with a pen, and drawing
+    // it in the accent colour made the one legally-weighted thing on the page
+    // read as a decorative flourish. This is --color-ink-900; it cannot be a
+    // token class because the canvas is painted, not styled.
+    ctx.strokeStyle = "#181a19";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     // Render a pre-existing signature if supplied (edit/review flows)
     if (savedData) {
@@ -99,21 +107,28 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-xs font-bold text-ink-500">{label}</span>
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-baseline gap-3">
+        <span className="text-sm font-medium text-ink-700">
+          {label}
+          {required && <span className="text-danger-500 ml-0.5" aria-hidden="true">*</span>}
+        </span>
         {hasDrawing && (
           <button
             type="button"
             onClick={clear}
-            className="text-xs text-danger-600 hover:text-danger-700 flex items-center gap-1 transition-all"
+            className="text-xs font-medium text-ink-500 hover:text-danger-600 flex items-center gap-1.5 transition-colors"
           >
-            <Trash2 className="w-3.5 h-3.5" /> Clear Signature
+            <Trash2 className="w-3.5 h-3.5" /> Clear
           </button>
         )}
       </div>
 
-      <div className="border border-ink-200 rounded-lg overflow-hidden bg-ink-100 relative">
+      {/* White, like paper. It used to be a grey field, which reads as a
+          disabled input rather than as somewhere to make a mark. The ruled
+          line is what tells you where to sign, so the placeholder does not
+          have to shout it in tracked-out capitals. */}
+      <div className="border border-ink-200 rounded-lg overflow-hidden bg-surface relative">
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}
@@ -126,8 +141,9 @@ export default function SignaturePad({ label, onSave, onChange, savedData }: Sig
           className="cursor-crosshair w-full block h-[120px] touch-none"
         />
         {!hasDrawing && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-ink-500 text-xs tracking-widest">
-            Sign here
+          <div className="absolute inset-x-6 bottom-8 pointer-events-none">
+            <div className="border-b border-ink-200" />
+            <p className="text-xs text-ink-400 mt-1.5">Sign here</p>
           </div>
         )}
       </div>

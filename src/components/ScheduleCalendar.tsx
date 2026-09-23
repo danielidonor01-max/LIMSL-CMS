@@ -11,6 +11,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react";
 import Modal from "@/components/Modal";
 import { MONTH_NAMES } from "@/lib/constants";
+import SegmentedControl from "@/components/SegmentedControl";
 
 type Row = {
   id: string;
@@ -112,19 +113,19 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
             Today
           </button>
         </div>
-        <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1">
-          {(["week", "month", "quarter", "year"] as View[]).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
- view === v ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
+        {/* `capitalize` was doing the work of a label here, which is fine
+            until a view is called something that is not one lowercase word. */}
+        <SegmentedControl
+          ariaLabel="Calendar range"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: "week" as View, label: "Week" },
+            { value: "month" as View, label: "Month" },
+            { value: "quarter" as View, label: "Quarter" },
+            { value: "year" as View, label: "Year" },
+          ]}
+        />
       </div>
 
       <div className="p-4">

@@ -8,6 +8,8 @@ import PageHeader from "@/components/PageHeader";
 import MetricPanel from "@/components/MetricPanel";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
+import { Badge } from "@/components/Badge";
+import { WMS_STATUS_BADGE, WMS_STATUS_LABELS } from "@/lib/constants";
 import {
   FileText,
   User,
@@ -25,7 +27,7 @@ export default function WmsList() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
-        <PageHeader
+        <PageHeader
           title="Work Method Statements"
           subtitle="How each job is to be carried out safely, drafted, reviewed and approved"
           backHref="/"
@@ -74,41 +76,33 @@ export default function WmsList() {
             <div className="divide-y divide-ink-200">
               {records.length > 0 ? (
                 records.map((rec) => {
-                  const isApproved = rec.status === "APPROVED";
-                  const isUnderReview = rec.status === "UNDER_REVIEW";
                   return (
                     <div key={rec.id} className="p-5 hover:bg-ink-50 flex items-center justify-between transition-colors">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-ink-500 font-semibold">{rec.wmsNumber}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
- isApproved
- ? "bg-brand-500/10 text-brand-600 border-brand-500/20"
- : isUnderReview
- ? "bg-warn-500/10 text-warn-600 border-warn-500/20"
- : "bg-ink-200 text-ink-500 border-ink-200"
- }`}
+                          <Badge
+                            className={WMS_STATUS_BADGE[rec.status] ?? "bg-ink-500/10 text-ink-600 border-ink-500/20"}
                           >
-                            {rec.status}
-                          </span>
+                            {WMS_STATUS_LABELS[rec.status] ?? String(rec.status).toLowerCase().replace(/_/g, " ")}
+                          </Badge>
                           <span className="text-xs text-ink-500">Rev {rec.revision}</span>
                         </div>
                         <h3 className="text-base font-semibold text-ink-900">{rec.title}</h3>
                         <div className="flex flex-wrap gap-4 text-xs text-ink-500">
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-ink-500" /> Prepared:{" "}
-                            <span className="">{rec.preparedDate}</span>
+                            <Clock className="w-3.5 h-3.5 text-ink-500" /> Prepared{" "}
+                            <span className="tabular-nums">{rec.preparedDate}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <User className="w-3.5 h-3.5 text-ink-500" /> Prepared By: {rec.preparedByName}
+                            <User className="w-3.5 h-3.5 text-ink-500" /> by {rec.preparedByName}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex gap-2">
                         <Button variant="subtle" size="sm" href={`/wms/${rec.id}`} iconRight={ChevronRight}>
-                          View Document
+                          View
                         </Button>
                       </div>
                     </div>
@@ -119,7 +113,7 @@ export default function WmsList() {
                   icon={FileText}
                   title="No work method statements yet"
                   message="No method statements yet. Each one sets out how a job will be done, and must be approved before work starts."
-                  actionLabel="Draft New WMS"
+                  actionLabel="Draft a method statement"
                   actionHref="/wms/new"
                 />
               )}

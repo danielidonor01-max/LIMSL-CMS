@@ -38,6 +38,7 @@ import {
   type EmergencyEquipmentType,
   type DrillType,
 } from "@/lib/hse/emergency";
+import SegmentedControl from "@/components/SegmentedControl";
 
 type Item = {
   id: string;
@@ -244,7 +245,8 @@ export default function EmergencyPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
-        <PageHeader
+        <PageHeader
+
           title="Emergency Preparedness"
           subtitle="Fire, first-aid and rescue equipment, plus the drill programme"
           code="LIMSL-HSE-EMG-017"
@@ -320,23 +322,16 @@ export default function EmergencyPage() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {(["register", "drills", "contacts"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
- tab === t ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-              >
-                {t === "register"
-                  ? `Equipment (${items.length})`
-                  : t === "drills"
-                    ? `Drill log (${data?.drills.length ?? 0})`
-                    : "Who to call"}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            ariaLabel="Emergency preparedness sections"
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: "register" as const, label: "Equipment", count: items.length },
+              { value: "drills" as const, label: "Drill log", count: data?.drills.length ?? 0 },
+              { value: "contacts" as const, label: "Who to call" },
+            ]}
+          />
 
           {tab === "register" && (
             <div className="flex flex-col sm:flex-row gap-2">

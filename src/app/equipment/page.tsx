@@ -45,6 +45,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { isSuperAdmin } from "@/lib/roles";
 import { RemoveFromRegisterModal, DeleteAssetModal } from "@/components/AssetRemoval";
+import SegmentedControl from "@/components/SegmentedControl";
 
 // An asset in one of these states is not doing its job. The register's whole
 // purpose is answering "what needs me today", which the old flat list buried.
@@ -291,22 +292,17 @@ export default function EquipmentList() {
           {/* Wraps between tabs, never inside a label. A fourth series pushed
               this past a 375px phone, and the segment broke "Office & facility"
               across three lines rather than moving a whole tab down. */}
-          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {(["ALL", ...ASSET_PREFIXES] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTypeTab(t)}
-                title={t === "ALL" ? undefined : ASSET_PREFIX_META[t].help}
-                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
- typeTab === t ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-              >
-                {t === "ALL"
-                  ? `All (${counts.total})`
-                  : `${ASSET_PREFIX_META[t].tab} (${counts.byPrefix[t]})`}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            ariaLabel="Asset type"
+            value={typeTab}
+            onChange={setTypeTab}
+            options={(["ALL", ...ASSET_PREFIXES] as const).map((t) => ({
+              value: t,
+              label: t === "ALL" ? "All" : ASSET_PREFIX_META[t].tab,
+              count: t === "ALL" ? counts.total : counts.byPrefix[t],
+              title: t === "ALL" ? undefined : ASSET_PREFIX_META[t].help,
+            }))}
+          />
 
           <button
             onClick={() => setAttentionOnly((v) => !v)}

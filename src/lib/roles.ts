@@ -171,6 +171,26 @@ export const PROCEDURE_CONTROL_ROLES = ["SUPER_ADMIN", "QA_QC"];
 // approval chain sign off on itself.
 export const WORK_ORDER_ASSIGNEE_ROLES = ["TECHNICIAN", "FOREMAN"];
 
+// Who may put somebody ELSE's name against a job.
+//
+// MAINTENANCE_WRITE_ROLES includes TECHNICIAN, because a technician has to be
+// able to raise a work order, move a date they cannot meet, and record a
+// deferral against their own name. Assigning is not in that family: it decides
+// who carries the job, and therefore who carries the consequence, which is a
+// supervisory act at LIMSL and everywhere else.
+//
+// Left alone, the schedule offered every technician an "Assign" control that
+// reassigned the accountable person for any activity on the plan, and the route
+// behind it accepted the write, because both were reading the maintenance-write
+// list. That is the failure this list exists to prevent, and it is the one an
+// auditor finds rather than a user: nothing on screen said it was wrong.
+export const WORK_ASSIGN_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+];
+
 // Who may be named as the supervisor verifying a completed PM checklist. The
 // technician performs, somebody above him verifies, which is the whole point of
 // the second signature.

@@ -110,9 +110,7 @@ function ResetForm() {
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <p>{linkError}</p>
             </div>
-            <Button fullWidth
-              href="/forgot-password"
-            >
+            <Button href="/forgot-password" size="lg" fullWidth>
               Request a new link
             </Button>
             <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900">
@@ -164,11 +162,7 @@ function ResetForm() {
               </div>
             )}
 
-            <Button fullWidth
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+            <Button type="submit" size="lg" fullWidth loading={loading} icon={KeyRound}>
               {loading ? "Saving…" : "Set new password"}
             </Button>
           </form>

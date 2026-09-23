@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
+import SegmentedControl from "@/components/SegmentedControl";
 
 type EntityKey = "equipment" | "schedule" | "users" | "components";
 type LegacyTabKey = "legacy-register" | "legacy-history" | "legacy-schedule";
@@ -169,20 +170,12 @@ export default function DataImportPage() {
         subtitle="Super Admin · go-live register import (CSV / Excel)"
       />
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => switchTab(t.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
- tab === t.key ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        ariaLabel="Register to import"
+        value={tab}
+        onChange={switchTab}
+        options={TABS.map((t) => ({ value: t.key, label: t.label }))}
+      />
 
       {/* Uploader */}
       <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
