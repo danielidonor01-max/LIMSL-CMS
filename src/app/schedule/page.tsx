@@ -5,9 +5,10 @@ import MetricPanel from "@/components/MetricPanel";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
+import { useSession } from "next-auth/react";
 import {
   Calendar,
   ShieldCheck,
@@ -30,18 +31,20 @@ import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
 import AssignPeople from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import {
   ACTIVITY_TYPE_BADGE,
   ACTIVITY_TYPE_LABELS,
   SCHEDULE_STATUS_BADGE,
   SCHEDULE_STATUS_LABELS,
+  WO_STATUS_LABELS,
   EQUIPMENT_CATEGORY_LABELS,
   MONTH_NAMES,
   FREQUENCY_LABELS,
 } from "@/lib/constants";
 import { CalendarDays, List } from "lucide-react";
 import LoadError from "@/components/LoadError";
+import SegmentedControl from "@/components/SegmentedControl";
 
 const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "One-off (no recurrence)" },
@@ -69,6 +72,8 @@ type ScheduleRow = {
   status: string;
   completedDate: string | null;
   workOrderId: string | null;
+  workOrderNumber: string | null;
+  workOrderStatus: string | null;
   equipmentName: string | null;
   assetId: string | null;
   category: string | null;
@@ -107,6 +112,16 @@ const emptyCreate = {
 export default function SchedulePage() {
   const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
   const rows = Array.isArray(rowsData) ? rowsData : [];
+
+  // The session resolves client-side only; anything role-dependent has to wait
+  // past mount or the server HTML and the first paint disagree (AGENTS.md §7).
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  // Naming who does a job, and adding a job to the plan, are the same kind of
+  // decision and belong to the same hands.
+  const canAssign = mounted && WORK_ASSIGN_ROLES.includes(role ?? "");
   const [tab, setTab] = useState<"upcoming" | "all" | "deferred">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [q, setQ] = useState("");
@@ -331,33 +346,26 @@ export default function SchedulePage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
-        <PageHeader
+        <PageHeader
           title="Annual Maintenance Schedule"
           subtitle={`Planned preventive work for ${new Date().getFullYear()}, with due dates and adherence`}
           code="LIMSL-MAIN-PLN-013"
           actions={
             <>
-              <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1">
-                <button
-                  onClick={() => setView("list")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
- view === "list" ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-                >
-                  <List className="w-3.5 h-3.5" /> List
-                </button>
-                <button
-                  onClick={() => setView("calendar")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
- view === "calendar" ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-                >
-                  <CalendarDays className="w-3.5 h-3.5" /> Calendar
-                </button>
-              </div>
-              <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
-                Schedule PM
-              </Button>
+              <SegmentedControl
+                ariaLabel="Schedule view"
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: "list" as const, label: "List", icon: List },
+                  { value: "calendar" as const, label: "Calendar", icon: CalendarDays },
+                ]}
+              />
+              {canAssign && (
+                <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
+                  Schedule PM
+                </Button>
+              )}
               <Button href="/work-orders/new" icon={Plus}>
                 New Work Order
               </Button>
@@ -575,7 +583,13 @@ export default function SchedulePage() {
                       </td>
                       <td className="py-3.5 px-5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
-                          {r.status !== "COMPLETED" && (
+                          {/* Assigning names who carries the job. A technician
+                              may raise a work order, move a date and record a
+                              deferral, but not put somebody else's name on the
+                              work — the route refuses it either way, and a
+                              control that is always refused is worse than no
+                              control. */}
+                          {canAssign && r.status !== "COMPLETED" && (
                             <button
                               onClick={() => setAssign(r)}
                               className="text-ink-500 hover:text-ink-900 hover:underline"
@@ -621,17 +635,22 @@ export default function SchedulePage() {
                               Defer
                             </button>
                           )}
+                          {/* Every PM is discharged by a work order, and the
+                              plan row is where the trace starts. Naming the
+                              work order rather than linking to "View WO" is
+                              what makes it a trace rather than a jump. */}
                           {r.workOrderId ? (
                             <Link
                               href={`/work-orders/${r.workOrderId}`}
-                              className="text-brand-600 hover:underline"
+                              className="text-brand-700 font-medium hover:underline"
+                              title={r.workOrderStatus ? `Work order is ${WO_STATUS_LABELS[r.workOrderStatus] ?? r.workOrderStatus}` : undefined}
                             >
-                              View WO →
+                              {r.workOrderNumber ?? "View work order"}
                             </Link>
                           ) : (
                             <Link
                               href={`/work-orders/new?scheduleId=${r.id}`}
-                              className="text-info-600 hover:underline"
+                              className="text-info-700 font-medium hover:underline"
                             >
                               Raise WO
                             </Link>

@@ -447,7 +447,7 @@ export default function PermitDetail() {
         <SignoffChain
           entityType="PERMIT"
           entityId={permit.id}
-          title="Permit Authorisation, required before work begins"
+          title="Permit authorisation"
         />
 
         {/* Close-out chain, only exists once the permit is approved */}
@@ -455,7 +455,7 @@ export default function PermitDetail() {
           <SignoffChain
             entityType="PERMIT_CLOSEOUT"
             entityId={permit.id}
-            title="Close-out, work complete & isolation removed"
+            title="Permit close-out"
           />
         )}
         </div>

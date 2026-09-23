@@ -5,7 +5,7 @@ import { maintenanceSchedule, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { validateDeferral } from "@/lib/maintenance/deferral";
 import { notify } from "@/lib/notifications";
 
@@ -68,6 +68,25 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     if (typeof body.remarks === "string") set.remarks = body.remarks;
+
+    // ── Assignment ────────────────────────────────────────────────────────
+    // Deciding who does a job is a supervisory act, and this route was letting
+    // anybody with maintenance write access do it — which includes every
+    // technician. A technician may still raise a work order, reschedule and
+    // defer through this same route; naming somebody else is the one thing
+    // they may not do. Gated here rather than only in the page, because a page
+    // that hides a control the route still accepts is not a permission.
+    const touchesAssignment =
+      body.responsiblePersonId !== undefined ||
+      body.responsiblePersonName !== undefined ||
+      body.assistantIds !== undefined;
+    if (touchesAssignment && !WORK_ASSIGN_ROLES.includes(gate.actor?.role ?? "")) {
+      return NextResponse.json(
+        { error: "Assigning work to somebody else is done by a foreman or above." },
+        { status: 403 },
+      );
+    }
+
     if (body.responsiblePersonName !== undefined) set.responsiblePersonName = body.responsiblePersonName || null;
     // Reassignment has to move the ID too. The name alone is a label; the ID is
     // what escalations.ts uses to reach the person, and it skips any activity

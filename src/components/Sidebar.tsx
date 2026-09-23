@@ -36,7 +36,8 @@ import {
   ClipboardCheck,
   LifeBuoy,
 } from "lucide-react";
-import { isSuperAdmin, canAccessPath, ROLE_LABELS } from "@/lib/roles";
+import { isSuperAdmin, canAccessPath } from "@/lib/roles";
+import AccountMenu from "@/components/AccountMenu";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
 type NavSection = { section: string | null; items: NavItem[] };
@@ -192,7 +193,7 @@ export default function Sidebar({
         onClick={onClose}
         title={narrow ? "LIMSL CMS" : undefined}
         aria-label={narrow ? "LIMSL CMS" : undefined}
-        className={`flex items-center gap-2.5 h-14 shrink-0 ${
+        className={`flex items-center gap-2.5 h-16 shrink-0 ${
  narrow ? "px-5 lg:px-0 lg:justify-center" : "px-5"
  }`}
       >
@@ -216,35 +217,6 @@ export default function Sidebar({
           </p>
         </div>
       </Link>
-
-      {/* Who is signed in and where. The reference product carries a workspace
-          chip here and it is worth borrowing for a different reason: in a system
-          where every signature is attributable, the person should be able to see
-          whose name is about to go on the record without opening a menu. */}
-      {mounted && user?.name && (
-        <div
-          title={narrow ? `${user.name}, ${ROLE_LABELS[role ?? ""] ?? "LEE International"}` : undefined}
-          className={`mx-3 mb-2 flex items-center gap-2.5 rounded-lg bg-nav-raised py-2.5 ${
- narrow ? "px-3 lg:px-0 lg:justify-center" : "px-3"
- }`}
-        >
-          <span className="w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center text-xs font-bold shrink-0">
-            {String(user.name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")}
-          </span>
-          {/* sr-only rather than hidden. The rail shows initials, which a
-              screen reader announces as "DI", and this chip exists to say whose
-              name is about to go on the record. It leaves the layout without
-              leaving the accessible tree. */}
-          <span className={`min-w-0 ${narrow ? "lg:sr-only" : ""}`}>
-            <span className="block text-xs font-semibold text-white truncate leading-tight">
-              {user.name}
-            </span>
-            <span className="block text-xs text-nav-label truncate leading-tight mt-0.5">
-              {ROLE_LABELS[role ?? ""] ?? "LEE International"}
-            </span>
-          </span>
-        </div>
-      )}
 
       {/* The rail reserves the scroll gutter on both edges. Without it the
           scrollbar eats 10px from the right of a 64px column and every icon
@@ -298,19 +270,27 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <button
-        type="button"
-        onClick={toggleCollapsed}
-        aria-pressed={collapsed}
-        title={narrow ? "Expand sidebar" : undefined}
-        aria-label={narrow ? "Expand sidebar" : undefined}
-        className={`hidden lg:flex items-center gap-2.5 mx-3 mb-3 py-2 rounded-lg text-xs font-medium text-nav-label hover:text-white hover:bg-nav-raised transition-colors ${
+      {/* The foot of the column: who is signed in, what they are signed in as,
+          and everything that belongs to the account. In a system where every
+          signature is attributable, the name about to go on the record should
+          be readable without opening anything. */}
+      <div className="shrink-0 border-t border-nav-line pt-3 mt-1 mx-3 mb-3 space-y-1">
+        <AccountMenu narrow={narrow} onNavigate={onClose} />
+
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-pressed={collapsed}
+          title={narrow ? "Expand sidebar" : undefined}
+          aria-label={narrow ? "Expand sidebar" : undefined}
+          className={`hidden lg:flex w-full items-center gap-2.5 py-2 rounded-lg text-xs font-medium text-nav-label hover:text-white hover:bg-nav-raised transition-colors ${
  narrow ? "lg:justify-center lg:px-0" : "px-3"
  }`}
-      >
-        <ChevronLeft className={`w-4 h-4 shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} />
-        {!narrow && "Collapse sidebar"}
-      </button>
+        >
+          <ChevronLeft className={`w-4 h-4 shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+          {!narrow && "Collapse sidebar"}
+        </button>
+      </div>
 
       </aside>
     </>

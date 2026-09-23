@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
 import { Badge } from "@/components/Badge";
+import Field, { FIELD_CLASS } from "@/components/Field";
 import { ROLES, ROLE_LABELS, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import {
   productiveHoursPerDay,
@@ -20,6 +21,11 @@ import {
   type WorkSettings,
   DEFAULT_WORK_SETTINGS,
 } from "@/lib/worktime";
+
+// "Tried third" reads; "Failover priority 3" is the column heading wearing a
+// tooltip.
+const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
+const ordinal = (n: number) => ORDINALS[n - 1] ?? `${n}th`;
 
 // Display order Mon→Sun (JS weekday numbers, 0=Sun..6=Sat).
 const DAYS: { n: number; label: string }[] = [
@@ -713,122 +719,173 @@ export default function AppSettingsPage() {
 
       {tab === "ai" && (
       <div className="space-y-8">
-      {/* AI provider API keys */}
-      <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
-        <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-brand-600" /> AI Provider API Keys
-        </h3>
-        <p className="text-xs text-ink-500">
-          Keys power the AI layers of the troubleshooting module. Stored encrypted; only a masked hint is ever shown.
-          A platform environment variable overrides the key saved here.
-        </p>
-        <div className="flex items-start gap-2 text-xs text-info-800 bg-info-50 border border-info-100 rounded-lg px-3 py-2">
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>
-            Configured providers form a <strong>failover chain</strong> in the order below: every AI diagnosis tries
-            the first configured provider, and moves to the next automatically when one runs out of free quota or
-            errors. Add more than one key and an exhausted free tier never stops a diagnosis.
-          </span>
+      {/* The failover chain.
+          It was drawn twice: a table of providers you could click to select,
+          and immediately under it a pill strip of the same providers doing the
+          same selection. Two controls for one choice, and neither said it was
+          the selected one clearly. The table IS the control now, the selected
+          row stays open beneath the table as a detail panel, and the priority
+          number is the point of the table rather than an ornament in it. */}
+      <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+        <header className="px-6 py-4 border-b border-line">
+          <h3 className="text-base font-semibold text-ink-900 flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-brand-600 shrink-0" /> AI providers
+          </h3>
+          <p className="text-sm text-ink-500 mt-1 leading-relaxed">
+            Keys power the troubleshooting assistant. They are stored encrypted and only ever shown masked.
+          </p>
+        </header>
+
+        <div className="px-6 py-4 border-b border-line">
+          <div className="flex items-start gap-2.5 text-sm text-info-900 bg-info-50 border border-info-200 rounded-lg px-4 py-3 leading-relaxed">
+            <Info className="w-4 h-4 mt-0.5 shrink-0 text-info-600" />
+            <span>
+              Configured providers form a <strong>failover chain</strong> in the order below. Every diagnosis
+              tries the first configured provider and moves down automatically when one errors or runs out of
+              free quota, so a second key means an exhausted free tier never stops a diagnosis.
+            </span>
+          </div>
         </div>
-        {/* Summary table, the whole chain at a glance */}
-        <div className="overflow-x-auto border border-ink-200 rounded-lg">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-ink-50">
-              <tr className="text-ink-500 border-b border-ink-200">
-                <th className="py-2.5 px-3 font-medium w-10">#</th>
-                <th className="py-2.5 px-3 font-medium">Provider</th>
-                <th className="py-2.5 px-3 font-medium">Status</th>
-                <th className="py-2.5 px-3 font-medium">Key</th>
-                <th className="py-2.5 px-3 font-medium hidden md:table-cell">Saved by</th>
-                <th className="py-2.5 px-3 font-medium text-right">Actions</th>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-ink-50 border-b border-line text-ink-500">
+                <th className="py-3 px-5 font-medium w-16 text-xs">Order</th>
+                <th className="py-3 px-5 font-medium text-xs">Provider</th>
+                <th className="py-3 px-5 font-medium text-xs">Status</th>
+                <th className="py-3 px-5 font-medium text-xs">Key</th>
+                <th className="py-3 px-5 font-medium text-xs hidden lg:table-cell">Saved by</th>
+                <th className="py-3 px-5 font-medium text-xs text-right">Manage</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-100">
-              {creds.map((c, ci) => (
-                <tr
-                  key={c.provider}
-                  onClick={() => setAiTab(c.provider)}
-                  className={`cursor-pointer transition-colors ${(aiTab ?? creds[0]?.provider) === c.provider ? "bg-brand-50/50" : "hover:bg-ink-50"}`}
-                >
-                  <td className="py-2.5 px-3">
-                    <span className={`w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${c.configured ? "bg-brand-100 text-brand-700" : "bg-ink-100 text-ink-400"}`} title={`Failover priority ${ci + 1}`}>
-                      {ci + 1}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 font-semibold text-ink-900">{c.label}</td>
-                  <td className="py-2.5 px-3">
-                    {c.configured ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
-                        <CheckCircle2 className="w-3 h-3" /> Active · {c.source === "ENV" ? "env" : "saved"}
+            <tbody className="divide-y divide-line">
+              {creds.map((c, ci) => {
+                const selected = (aiTab ?? creds[0]?.provider) === c.provider;
+                return (
+                  <tr
+                    key={c.provider}
+                    onClick={() => setAiTab(c.provider)}
+                    aria-selected={selected}
+                    className={`cursor-pointer transition-colors ${selected ? "bg-brand-50" : "hover:bg-ink-50"}`}
+                  >
+                    <td className="py-3.5 px-5">
+                      {/* Priority in the chain, not a row number: it only means
+                          something for a provider that actually has a key. */}
+                      <span
+                        className={`w-6 h-6 rounded-full text-xs font-semibold grid place-items-center ${
+ c.configured ? "bg-brand-600 text-white" : "bg-ink-100 text-ink-400 border border-line"
+ }`}
+                        title={c.configured ? `Tried ${ordinal(ci + 1)}` : "Not in the chain until a key is saved"}
+                      >
+                        {ci + 1}
                       </span>
-                    ) : (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-ink-100 text-ink-500 border-ink-200">Not configured</span>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-3 text-ink-500">{c.keyHint ?? "-"}</td>
-                  <td className="py-2.5 px-3 text-ink-400 hidden md:table-cell">
-                    {c.updatedByName ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}` : "-"}
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <Button size="sm" variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={(e) => { e.stopPropagation(); testKey(c.provider); }}>
-                      Test
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3.5 px-5 font-semibold text-ink-900">{c.label}</td>
+                    <td className="py-3.5 px-5">
+                      {c.configured ? (
+                        <Badge dot className="bg-brand-500/10 text-brand-700 border-brand-500/20">
+                          {c.source === "ENV" ? "Active, from the server" : "Active"}
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-ink-500/10 text-ink-600 border-ink-500/20">Not configured</Badge>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-5 text-ink-600">{c.keyHint ?? "—"}</td>
+                    <td className="py-3.5 px-5 text-ink-500 hidden lg:table-cell">
+                      {c.updatedByName
+                        ? `${c.updatedByName}${c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleDateString()}` : ""}`
+                        : "—"}
+                    </td>
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          loading={credBusy === `${c.provider}:test`}
+                          onClick={(e) => { e.stopPropagation(); testKey(c.provider); }}
+                        >
+                          Test
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={selected ? "subtle" : "ghost"}
+                          onClick={(e) => { e.stopPropagation(); setAiTab(c.provider); }}
+                        >
+                          {selected ? "Open" : "Edit"}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Per-provider tabs, manage one key at a time */}
-        <div className="flex gap-1 bg-ink-100 rounded-lg p-1 overflow-x-auto">
-          {creds.map((c) => {
-            const active = (aiTab ?? creds[0]?.provider) === c.provider;
-            return (
-              <button
-                key={c.provider}
-                onClick={() => setAiTab(c.provider)}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 transition-colors ${
- active ? "bg-white text-ink-900 shadow-card" : "text-ink-500 hover:text-ink-800"
- }`}
-              >
-                {c.label}
-                <span className={`w-1.5 h-1.5 rounded-full ${c.configured ? "bg-brand-500" : "bg-ink-300"}`} />
-              </button>
-            );
-          })}
-        </div>
         {creds
           .filter((c) => c.provider === (aiTab ?? creds[0]?.provider))
           .map((c) => (
-            <div key={c.provider} className="rounded-lg border border-ink-200 p-4 space-y-3">
-              <p className="text-xs text-ink-500">{c.note}</p>
+            <div key={c.provider} className="border-t border-line bg-ink-50 px-6 py-5 space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-ink-900">{c.label}</h4>
+                <p className="text-sm text-ink-600 mt-1 leading-relaxed">{c.note}</p>
+              </div>
+
+              {c.source === "ENV" ? (
+                <p className="text-sm text-ink-600 bg-surface border border-line rounded-lg px-4 py-3 leading-relaxed">
+                  This key is set on the server as <strong>{c.provider}_API_KEY</strong> and cannot be changed from
+                  here. An environment variable always wins over a key saved in the app.
+                </p>
+              ) : (
+                <Field
+                  label={c.configured ? "Replace the saved key" : "API key"}
+                  htmlFor={`key-${c.provider}`}
+                  help={c.configured ? "Saving a new key replaces the one already stored." : undefined}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      id={`key-${c.provider}`}
+                      type="password"
+                      autoComplete="off"
+                      value={keyInput[c.provider] ?? ""}
+                      onChange={(e) => setKeyInput((k) => ({ ...k, [c.provider]: e.target.value }))}
+                      placeholder={c.configured ? "Paste a new key to replace the current one" : "Paste the API key"}
+                      className={`${FIELD_CLASS} bg-surface flex-1 min-w-56`}
+                    />
+                    <Button
+                      icon={Save}
+                      loading={credBusy === `${c.provider}:save`}
+                      onClick={() => saveKey(c.provider)}
+                      disabled={!(keyInput[c.provider] ?? "").trim()}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </Field>
+              )}
+
               <div className="flex flex-wrap items-center gap-2">
-                <input
-                  type="password"
-                  value={keyInput[c.provider] ?? ""}
-                  onChange={(e) => setKeyInput((k) => ({ ...k, [c.provider]: e.target.value }))}
-                  placeholder={c.configured ? "Paste a new key to replace…" : "Paste API key…"}
-                  className="flex-1 min-w-56 bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
-                  disabled={c.source === "ENV"}
-                />
-                <Button size="sm" icon={Save} loading={credBusy === `${c.provider}:save`} onClick={() => saveKey(c.provider)} disabled={c.source === "ENV"}>
-                  Save
-                </Button>
-                <Button size="sm" variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={() => testKey(c.provider)}>
-                  Test
+                <Button variant="secondary" loading={credBusy === `${c.provider}:test`} onClick={() => testKey(c.provider)}>
+                  Test this key
                 </Button>
                 {c.source === "DB" && (
-                  <Button size="sm" variant="ghost" icon={Trash2} loading={credBusy === `${c.provider}:remove`} onClick={() => removeKey(c.provider)}>
-                    Remove
+                  <Button
+                    variant="ghost"
+                    icon={Trash2}
+                    loading={credBusy === `${c.provider}:remove`}
+                    onClick={() => removeKey(c.provider)}
+                  >
+                    Remove the key
                   </Button>
                 )}
               </div>
-              {c.source === "ENV" && (
-                <p className="text-xs text-ink-400">Managed by the {c.provider}_API_KEY environment variable on the server.</p>
-              )}
+
               {c.updatedByName && c.source === "DB" && (
-                <p className="text-xs text-ink-400">Saved by {c.updatedByName}{c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}</p>
+                <p className="text-xs text-ink-500">
+                  Saved by {c.updatedByName}
+                  {c.updatedAt ? ` · ${new Date(c.updatedAt).toLocaleString()}` : ""}
+                </p>
               )}
             </div>
           ))}

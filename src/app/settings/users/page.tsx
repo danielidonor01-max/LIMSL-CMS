@@ -19,7 +19,6 @@ import {
   Phone,
   MessageCircle,
   Pencil,
-  Shield,
   Info,
   UserCog,
   Download,
@@ -34,6 +33,8 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import KebabMenu from "@/components/KebabMenu";
 import Select from "@/components/Select";
+import Tabs from "@/components/Tabs";
+import Field, { FIELD_CLASS } from "@/components/Field";
 import {
   ROLES,
   ROLE_LABELS,
@@ -96,10 +97,20 @@ const moduleLabel = (p: string) =>
   MODULE_LABELS[p] ??
   p.replace(/^\//, "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
+// Title-casing the raw column turned the HSE department into "Hse". QA/QC was
+// special-cased and HSE was not, which is what a rule with one exception
+// always becomes: a rule with two, found one at a time.
+const DEPARTMENT_LABELS: Record<string, string> = {
+  MANAGEMENT: "Management",
+  FACTORY: "Factory",
+  MAINTENANCE: "Maintenance",
+  QA_QC: "QA/QC",
+  HSE: "HSE",
+};
+
 const deptLabel = (d?: string | null) => {
-  if (!d || d === ", ") return null;
-  if (d === "QA_QC") return "QA/QC";
-  return d.charAt(0) + d.slice(1).toLowerCase();
+  if (!d) return null;
+  return DEPARTMENT_LABELS[d] ?? d.charAt(0) + d.slice(1).toLowerCase();
 };
 
 const AVATAR_TINTS = [
@@ -381,9 +392,7 @@ export default function UsersAdminPage() {
     );
   }
 
-  const field =
-    "w-full px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:border-brand-500/40";
-  const fieldLabel = "block text-xs font-semibold text-ink-500  mb-1.5";
+  const field = FIELD_CLASS;
 
   const statusBadge = (u: User) => (
     <Badge
@@ -429,27 +438,17 @@ export default function UsersAdminPage() {
         }
       />
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-ink-200" role="tablist" aria-label="User management sections">
-        {([
-          { id: "users", label: "Users", icon: UsersIcon },
-          { id: "roles", label: "Roles", icon: Shield },
-        ] as const).map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={pageTab === t.id}
-            onClick={() => setPageTab(t.id)}
-            className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors ${
- pageTab === t.id
- ? "border-brand-600 text-brand-700"
- : "border-transparent text-ink-500 hover:text-ink-900"
- }`}
-          >
-            <t.icon className="w-4 h-4" /> {t.label}
-          </button>
-        ))}
-      </div>
+      {/* The same underline tabs the rest of the app uses, rather than a
+          private copy of them that had drifted to caption-sized labels. */}
+      <Tabs
+        ariaLabel="User management sections"
+        value={pageTab}
+        onChange={setPageTab}
+        items={[
+          { value: "users", label: "Users", count: list.length || undefined },
+          { value: "roles", label: "Roles", count: ROLES.length },
+        ]}
+      />
 
       {pageTab === "users" && (
         <>
@@ -541,7 +540,7 @@ export default function UsersAdminPage() {
                           </Badge>
                         </td>
                         <td className="py-3.5 px-5 text-ink-600">
-                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">\u2014</span>}
+                          {deptLabel(u.department) ?? deptLabel(ROLE_DEPARTMENT[u.role]) ?? <span className="text-ink-300">&mdash;</span>}
                         </td>
                         <td className="py-3.5 px-5">
                           {u.phone || u.whatsapp ? (
@@ -558,7 +557,7 @@ export default function UsersAdminPage() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-ink-300">\u2014</span>
+                            <span className="text-ink-300">&mdash;</span>
                           )}
                         </td>
                         <td className="py-3.5 px-5">
@@ -721,19 +720,16 @@ export default function UsersAdminPage() {
               this thing", the direction an auditor reads, and the artefact they
               ask for by name. */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-              {(["cards", "matrix"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setRoleView(v)}
-                  className={`px-3 min-h-9 rounded-lg text-xs font-semibold transition-all ${
- roleView === v ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-                >
-                  {v === "cards" ? "By role" : "Permission matrix"}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              ariaLabel="Role view"
+              value={roleView}
+              onChange={setRoleView}
+              items={[
+                { value: "cards", label: "By role" },
+                { value: "matrix", label: "Permission matrix" },
+              ]}
+              className="flex-1"
+            />
             {roleView === "matrix" && (
               <div className="flex gap-2">
                 <Button variant="secondary" size="sm" icon={Download} onClick={exportMatrix}>
@@ -794,7 +790,7 @@ export default function UsersAdminPage() {
                                 {has ? (
                                   <Check className="w-4 h-4 text-brand-600 inline" aria-label="Yes" />
                                 ) : (
-                                  <span className="text-ink-300" aria-label="No">, </span>
+                                  <span className="text-ink-300" aria-label="No">&mdash;</span>
                                 )}
                               </td>
                             );
@@ -806,7 +802,8 @@ export default function UsersAdminPage() {
                 </table>
               </div>
               <p className="text-xs text-ink-500 px-4 py-3 border-t border-ink-200">
-                A tick is a <strong>write</strong> permission. A role with no ticks still participates through sign-off,                 QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
+                A tick is a <strong>write</strong> permission. A role with no ticks still participates through
+                sign-off: QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
                 <span className="text-warn-600 font-semibold">0 members</span> blocks every chain step that requires it.
               </p>
             </div>
@@ -897,34 +894,28 @@ export default function UsersAdminPage() {
       {/* Create user */}
       <Modal open={showForm} onClose={() => setShowForm(false)} title="Add user" subtitle="A temporary password is generated and shown once">
         <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={fieldLabel}>Full name</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={field} required />
-          </div>
-          <div>
-            <label className={fieldLabel}>Email</label>
-            <input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={field} required />
-          </div>
-          <div>
-            <label className={fieldLabel}>Role</label>
+          <Field label="Full name" htmlFor="new-user-name" required>
+            <input id="new-user-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={field} required />
+          </Field>
+          <Field label="Email" htmlFor="new-user-email" required>
+            <input id="new-user-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={field} required />
+          </Field>
+          <Field label="Role" help="What they may write, and which steps they may sign.">
             <Select value={form.role} onChange={(v) => setForm((f) => ({ ...f, role: v }))} className="w-full">
               {ROLES.filter((r) => r !== "VIEWER").map((r) => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>
               ))}
             </Select>
-          </div>
-          <div>
-            <label className={fieldLabel}>Job title (optional)</label>
-            <input value={form.jobTitle} onChange={(e) => setForm((f) => ({ ...f, jobTitle: e.target.value }))} className={field} />
-          </div>
-          <div>
-            <label className={fieldLabel}>Phone (optional)</label>
-            <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={field} />
-          </div>
-          <div>
-            <label className={fieldLabel}>WhatsApp (optional)</label>
-            <input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} className={field} />
-          </div>
+          </Field>
+          <Field label="Job title" htmlFor="new-user-jobtitle">
+            <input id="new-user-jobtitle" value={form.jobTitle} onChange={(e) => setForm((f) => ({ ...f, jobTitle: e.target.value }))} className={field} />
+          </Field>
+          <Field label="Phone" htmlFor="new-user-phone">
+            <input id="new-user-phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={field} />
+          </Field>
+          <Field label="WhatsApp" htmlFor="new-user-whatsapp" help="Used for urgent dispatch, if different from the phone number.">
+            <input id="new-user-whatsapp" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} className={field} />
+          </Field>
           {error && <p className="sm:col-span-2 text-xs text-danger-600">{error}</p>}
           <div className="sm:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
@@ -936,35 +927,30 @@ export default function UsersAdminPage() {
       {/* Edit user */}
       <Modal open={!!editUser} onClose={() => setEditUser(null)} title="Edit user" subtitle={editUser?.email}>
         <form onSubmit={saveEdit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={fieldLabel}>Full name</label>
-            <input value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className={field} required />
-          </div>
-          <div>
-            <label className={fieldLabel}>Role</label>
+          <Field label="Full name" htmlFor="edit-user-name" required>
+            <input id="edit-user-name" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className={field} required />
+          </Field>
+          <Field label="Role" help="Changing this is audit-logged.">
             <Select value={editForm.role} onChange={(v) => setEditForm((f) => ({ ...f, role: v }))} className="w-full">
               {ROLES.map((r) => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>
               ))}
             </Select>
-          </div>
-          <div>
-            <label className={fieldLabel}>Job title</label>
-            <input value={editForm.jobTitle} onChange={(e) => setEditForm((f) => ({ ...f, jobTitle: e.target.value }))} className={field} />
-          </div>
-          <div>
-            <label className={fieldLabel}>Department</label>
+          </Field>
+          <Field label="Job title" htmlFor="edit-user-jobtitle">
+            <input id="edit-user-jobtitle" value={editForm.jobTitle} onChange={(e) => setEditForm((f) => ({ ...f, jobTitle: e.target.value }))} className={field} />
+          </Field>
+          <Field label="Department">
             <Select value={editForm.department} onChange={(v) => setEditForm((f) => ({ ...f, department: v }))} className="w-full" placeholder="Not set">
               <option value="">Not set</option>
               {departments.map((d) => (
                 <option key={d} value={d}>{deptLabel(d) ?? d}</option>
               ))}
             </Select>
-          </div>
-          <div className="sm:col-span-2">
-            <label className={fieldLabel}>Phone</label>
-            <input value={editForm.phone} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))} className={field} />
-          </div>
+          </Field>
+          <Field label="Phone" htmlFor="edit-user-phone" className="sm:col-span-2">
+            <input id="edit-user-phone" value={editForm.phone} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))} className={field} />
+          </Field>
           <div className="sm:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setEditUser(null)}>Cancel</Button>
             <Button type="submit" icon={Check} loading={editSaving}>Save changes</Button>

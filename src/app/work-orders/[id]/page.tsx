@@ -545,7 +545,7 @@ export default function WorkOrderDetailPage() {
           <SignoffChain
             entityType="PM_CHECKLIST"
             entityId={checklist.id}
-            title="PM Approval & Sign-off"
+            title="PM approval & sign-off"
           />
         )}
         {/* Management authorising commencement. This is what the work order IS,
@@ -554,7 +554,7 @@ export default function WorkOrderDetailPage() {
           entityType="WORK_ORDER"
           entityId={String(id)}
           title={
-            wo.approvalRetrospective ? "Retrospective Approval, required" : "Approval to Commence"
+            wo.approvalRetrospective ? "Retrospective approval, required" : "Approval to commence"
           }
         />
       </main>

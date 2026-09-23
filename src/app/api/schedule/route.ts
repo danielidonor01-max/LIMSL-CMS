@@ -1,7 +1,7 @@
 // src/app/api/schedule/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { maintenanceSchedule, equipment, auditLog } from "@/lib/db/schema";
+import { maintenanceSchedule, equipment, workOrders, auditLog } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -32,6 +32,12 @@ export async function GET() {
         status: maintenanceSchedule.status,
         completedDate: maintenanceSchedule.completedDate,
         workOrderId: maintenanceSchedule.workOrderId,
+        // The plan row knew it had a work order but not which one, so the
+        // schedule could only offer "View WO" — a link with no name on it. A
+        // PM has to be traceable to the job that discharged it, and the number
+        // is what an auditor asks for.
+        workOrderNumber: workOrders.workOrderNumber,
+        workOrderStatus: workOrders.status,
         deferredReason: maintenanceSchedule.deferredReason,
         deferredByName: maintenanceSchedule.deferredByName,
         deferredAt: maintenanceSchedule.deferredAt,
@@ -44,6 +50,7 @@ export async function GET() {
       })
       .from(maintenanceSchedule)
       .leftJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id))
+      .leftJoin(workOrders, eq(maintenanceSchedule.workOrderId, workOrders.id))
       .orderBy(desc(maintenanceSchedule.plannedDate));
 
     return NextResponse.json(rows);

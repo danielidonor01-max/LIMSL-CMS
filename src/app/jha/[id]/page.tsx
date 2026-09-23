@@ -286,7 +286,7 @@ export default function JhaDetailPage() {
           </div>
         )}
 
-        <SignoffChain entityType="JHA" entityId={String(id)} title="Hazard Analysis Approval" />
+        <SignoffChain entityType="JHA" entityId={String(id)} title="Hazard analysis approval" />
 
         {/* Prints with the page. Nothing renders until the analysis is fully
             approved, so a draft never carries a code. */}

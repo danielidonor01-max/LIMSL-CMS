@@ -10,7 +10,6 @@ import OfflineBanner from "./OfflineBanner";
 import OutboxTray from "./OutboxTray";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
-import AccountMenu from "./AccountMenu";
 import QuickActions from "./QuickActions";
 import PlantStatus from "./PlantStatus";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
@@ -57,15 +56,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 min-w-0 flex flex-col">
         <OfflineBanner />
         <OutboxTray />
-        {/* Search anchors left, actions anchor right. Everything used to sit in
-            one left-hugging run with no spacer, so on a wide screen the content
-            clustered into the first third and the rest of the bar was void,             which is what read as disorganised. The right cluster is grouped and
-            separated from the passive indicator by a rule, so a primary action,
-            a notification and an account control are not three equal things. */}
         {/* Search takes the centre of the bar rather than hugging the left.
             The bar spans a wide screen, and a left-anchored run of controls
-            left two thirds of it empty, which is what read as unfinished. */}
-        <header className="no-print h-14 shrink-0 sticky top-0 z-30 border-b border-line bg-surface flex items-center gap-3 px-4 lg:px-6">
+            left two thirds of it empty, which is what read as unfinished.
+            The account control is NOT here: it lives at the foot of the
+            sidebar, which already carried the same name and role. Two controls
+            saying the same thing on one screen is not reinforcement, and this
+            bar was paying for it in the only space it has. */}
+        <header className="no-print h-16 shrink-0 sticky top-0 z-30 border-b border-line bg-surface flex items-center gap-4 px-4 lg:px-8">
           <button
             onClick={() => setNavOpen(true)}
             className="lg:hidden p-2 -ml-1 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100"
@@ -80,12 +78,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <PlantStatus />
             <QuickActions />
             <span className="hidden sm:block w-px h-6 bg-line" aria-hidden="true" />
             <NotificationBell />
-            <AccountMenu />
           </div>
         </header>
         <div id="main-content" tabIndex={-1} className="flex-1 min-w-0">

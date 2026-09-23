@@ -75,6 +75,11 @@ Exported permission sets — import these, don't re-derive them:
   direct maintenance writes.)
 - `PERMIT_WRITE_ROLES` — may issue/close a Permit-to-Work. Includes **HSE**.
 - `TRAINING_WRITE_ROLES` — may manage competency & training. Includes **QA/QC**.
+- `WORK_ASSIGN_ROLES` — may put somebody **else's** name against a job (the
+  schedule's Assign, and creating a planned activity). Foreman and above.
+  Deliberately narrower than `MAINTENANCE_WRITE_ROLES`, which includes
+  TECHNICIAN so a technician can raise a work order, reschedule and defer
+  against their own name. Deciding who carries a job is supervisory.
 - `ROLE_ALLOWED_PATHS` + `canAccessPath(role, pathname)` — drives **both** the
   sidebar nav and the page guard, so they can never disagree.
 - `canSignStep(userRole, stepRole)` — exact match, or a strictly more senior role,

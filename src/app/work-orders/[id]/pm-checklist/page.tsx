@@ -19,6 +19,7 @@ import {
 import SignaturePad from "@/components/SignaturePad";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
+import Field, { FIELD_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDraft } from "@/lib/use-draft";
@@ -241,7 +242,7 @@ export default function PMChecklistPage() {
   const heading = "text-sm font-semibold text-ink-900 flex items-center gap-2";
   const num = (n: number) =>
     <span className="w-5 h-5 rounded-lg bg-brand-500/15 text-brand-600 text-xs font-bold flex items-center justify-center">{n}</span>;
-  const field = "w-full px-3 py-2 bg-ink-100 border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40";
+  const field = FIELD_CLASS;
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -402,30 +403,40 @@ export default function PMChecklistPage() {
             </div>
           </div>
 
+          {/* Both names were labelled by their placeholder alone, which
+              disappears the moment anybody types and is not read as a label by
+              a screen reader at all. The required mark was an asterisk inside
+              that placeholder, so it disappeared with it. */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-            <div className="space-y-2">
-              <input
-                value={technicianName}
-                onChange={(e) => setTechnicianName(e.target.value)}
-                placeholder="Technician name *"
-                className={field}
-              />
-              <SignaturePad label="Technician Signature *" onChange={setTechnicianSignature} />
+            <div className="space-y-3">
+              <Field label="Technician name" htmlFor="pm-technician-name" required>
+                <input
+                  id="pm-technician-name"
+                  value={technicianName}
+                  onChange={(e) => setTechnicianName(e.target.value)}
+                  placeholder="Who carried out this checklist"
+                  className={field}
+                />
+              </Field>
+              <SignaturePad label="Technician signature" required onChange={setTechnicianSignature} />
             </div>
-            <div className="space-y-2">
-              <Select
-                value={supervisorName}
-                onChange={(v) => setSupervisorName(v)}
-                className="w-full"
-              >
-                <option value="">Supervisor (optional)…</option>
-                {users
-                  .filter((u) => PM_SUPERVISOR_ROLES.includes(u.role))
-                  .map((u) => (
-                    <option key={u.id} value={u.name}>{u.name}</option>
-                  ))}
-              </Select>
-              <SignaturePad label="Supervisor Signature" onChange={setSupervisorSignature} />
+            <div className="space-y-3">
+              <Field label="Supervisor" help="Optional. Leave blank if nobody countersigned.">
+                <Select
+                  value={supervisorName}
+                  onChange={(v) => setSupervisorName(v)}
+                  className="w-full"
+                  placeholder="Not countersigned"
+                >
+                  <option value="">Not countersigned</option>
+                  {users
+                    .filter((u) => PM_SUPERVISOR_ROLES.includes(u.role))
+                    .map((u) => (
+                      <option key={u.id} value={u.name}>{u.name}</option>
+                    ))}
+                </Select>
+              </Field>
+              <SignaturePad label="Supervisor signature" onChange={setSupervisorSignature} />
             </div>
           </div>
         </div>

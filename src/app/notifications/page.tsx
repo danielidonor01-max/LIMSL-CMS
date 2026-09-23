@@ -28,6 +28,7 @@ import {
 } from "@/lib/notifications/categories";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import SegmentedControl from "@/components/SegmentedControl";
 
 type Notif = {
   id: string;
@@ -144,7 +145,8 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 font-sans">
       <main className={PAGE_MAIN.detail}>
-        <PageHeader
+        <PageHeader
+
           title="Notifications"
           subtitle={`${unread > 0 ? `${unread} unread` : "All caught up"} · alerts are also sent to WhatsApp when configured`}
           actions={
@@ -159,20 +161,16 @@ export default function NotificationsPage() {
         {/* Categories, so a breakdown and a procedure revision are not the
             same thing at the same weight. Empty ones are not offered. */}
         {!loading && rows.length > 0 && (
-          <div className="flex flex-wrap gap-1 bg-ink-100 border border-ink-200 rounded-lg p-1 w-fit">
-            {CATEGORY_FILTERS.filter((c) => countFor(c) > 0).map((c) => (
-              <button
-                key={c}
-                onClick={() => setFilter(c)}
-                className={`px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
- filter === c ? "bg-white text-brand-600 shadow-card" : "text-ink-500 hover:text-ink-900"
- }`}
-              >
-                {c === "ALL" ? "All" : CATEGORY_LABEL[c]}{" "}
-                <span className="tabular-nums font-normal">({countFor(c)})</span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            ariaLabel="Notification category"
+            value={filter}
+            onChange={setFilter}
+            options={CATEGORY_FILTERS.filter((c) => countFor(c) > 0).map((c) => ({
+              value: c,
+              label: c === "ALL" ? "All" : CATEGORY_LABEL[c],
+              count: countFor(c),
+            }))}
+          />
         )}
 
         <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">

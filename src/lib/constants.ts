@@ -135,6 +135,26 @@ export const DOC_STATUS_LABELS: Record<string, string> = {
   REJECTED: "Rejected",
 };
 
+// ─── Work method statements ─────────────────────────────────────────────────
+// The record page and the library each drew their own pill and printed the raw
+// column value inside it, so the safety document that gates a permit announced
+// itself as "UNDER_REVIEW".
+export const WMS_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  UNDER_REVIEW: "Under review",
+  APPROVED: "Approved",
+  REJECTED: "Returned",
+  SUPERSEDED: "Superseded",
+};
+
+export const WMS_STATUS_BADGE: Record<string, string> = {
+  DRAFT: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  UNDER_REVIEW: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  APPROVED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  REJECTED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  SUPERSEDED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
+};
+
 // ─── Work orders ────────────────────────────────────────────────────────────
 export const WO_TYPE_LABELS: Record<string, string> = {
   PREVENTIVE: "Preventive",

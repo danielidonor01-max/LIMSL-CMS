@@ -13,7 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 
 const SRC = join(process.cwd(), "src");
 
@@ -26,16 +26,50 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const FILES = walk(SRC).filter((f) => !f.includes("__tests__"));
+const FILES = walk(SRC).filter(
+  (f) =>
+    !f.includes("__tests__") &&
+    // The one place the pattern is allowed to exist, because it is the shared
+    // control every other file is supposed to reach for.
+    !f.endsWith(`components${sep}SegmentedControl.tsx`),
+);
 
 test("no page builds its own pill-in-a-track tab strip", () => {
-  // The exact shape both list pages had grown independently: a row of buttons
+  // The exact shape the list pages kept growing independently: a row of buttons
   // in a grey rounded track, the active one filled.
-  const offenders = FILES.filter((f) => /bg-ink-100[^"'`]*p-1[^"'`]*rounded-lg/.test(readFileSync(f, "utf8")));
+  //
+  // This was written to expect the classes in the order the first offender
+  // happened to write them — `p-1` before `rounded-lg` — and every one of the
+  // six that appeared afterwards wrote `rounded-lg p-1`. The guard read clean
+  // for months while the pattern spread to the register, notifications, the
+  // schedule, the calendar, data import and emergency preparedness. A guard
+  // that depends on class ORDER is a guard against one author's habit, not
+  // against a pattern, so it matches either order now.
+  const offenders = FILES.filter((f) => {
+    const src = readFileSync(f, "utf8");
+    return (
+      /bg-ink-100[^"'`]*\bp-1\b[^"'`]*rounded-(?:lg|xl)/.test(src) ||
+      /bg-ink-100[^"'`]*rounded-(?:lg|xl)[^"'`]*\bp-1\b/.test(src)
+    );
+  });
   assert.deepEqual(
     offenders.map((f) => f.replace(SRC, "src")),
     [],
-    "use the shared Tabs component rather than a private pill strip",
+    "use Tabs (moving between views of a page) or SegmentedControl (a filter or display mode) rather than a private pill strip",
+  );
+});
+
+test("SegmentedControl is a real radiogroup, not a row of buttons that look like one", () => {
+  // Same reasoning as Tabs: the value of one component is that the keyboard
+  // behaviour is written once and correct. Exactly one option is always
+  // chosen, which is a radiogroup rather than a tablist.
+  const src = readFileSync(join(SRC, "components", "SegmentedControl.tsx"), "utf8");
+  for (const needed of ['role="radiogroup"', 'role="radio"', "aria-checked", "ArrowRight", "ArrowLeft"]) {
+    assert.ok(src.includes(needed), `SegmentedControl no longer provides ${needed}`);
+  }
+  assert.ok(
+    /tabIndex=\{active \? 0 : -1\}/.test(src),
+    "SegmentedControl must keep unselected segments out of the tab order",
   );
 });
 

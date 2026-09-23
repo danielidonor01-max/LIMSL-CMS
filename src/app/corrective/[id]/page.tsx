@@ -336,7 +336,9 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
         <div className="lg:col-span-3">
-          <PageHeader
+          <PageHeader
+
+
             title="Breakdown Record"
             subtitle="Fault report, root-cause analysis and close-out"
             code={record.cmrfNumber}
@@ -740,8 +742,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 </div>
 
                 {/* Hand drawn Signatures */}
-                <SignaturePad label="Technician Signature (Drawn)" onSave={setTechSign} />
-                <SignaturePad label="Supervisor Approval Signature (Drawn)" onSave={setSuperSign} />
+                <SignaturePad label="Technician signature" onSave={setTechSign} />
+                <SignaturePad label="Supervisor approval signature" onSave={setSuperSign} />
 
                 <Button fullWidth variant="danger"
                   type="button"
@@ -759,7 +761,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             <SignoffChain
               entityType="CORRECTIVE"
               entityId={recordId}
-              title="Corrective Maintenance Sign-off (Technician → Foreman → HSE → Maint. Manager → Factory Manager)"
+              title="Corrective maintenance sign-off"
             />
           </div>
         </div>
