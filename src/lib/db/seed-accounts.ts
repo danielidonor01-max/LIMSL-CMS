@@ -32,8 +32,13 @@ export const FOUNDING_ACCOUNTS: SeedAccount[] = [
     whatsapp: "+2349167653581",
   },
   {
+    // The account actually signed in with. It was NOT on this list when the
+    // list was written from the seed file, and the seed is not the authority
+    // on who works here — the live table is. A prune built from the seed alone
+    // would have deactivated the only enabled Super Admin in production and
+    // locked the organisation out of its own system.
     name: "Daniel Idonor",
-    email: "dsmartfootwears@gmail.com",
+    email: "danielidonor01@gmail.com",
     role: "SUPER_ADMIN",
     department: "MANAGEMENT",
     jobTitle: "Super Admin",

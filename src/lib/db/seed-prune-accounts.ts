@@ -28,7 +28,7 @@
 //   DATABASE_URL=postgresql://... npx tsx src/lib/db/seed-prune-accounts.ts
 //   DATABASE_URL=... npx tsx src/lib/db/seed-prune-accounts.ts --dry-run
 import { db } from "./index";
-import { users, auditLog } from "./schema";
+import { users, auditLog, notifications } from "./schema";
 import { inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { isFoundingAccount, FOUNDING_ACCOUNTS } from "./seed-accounts";
@@ -67,10 +67,30 @@ async function columnsReferencingUsers(): Promise<{ table: string; column: strin
 
 export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean } = {}) {
   const all = await db.select().from(users);
+  const doomed = all.filter((u) => !isFoundingAccount(u.email)).map((u) => u.id);
+
+  // A notification is not evidence.
+  //
+  // In production, six of the eight demo accounts were pinned in place by
+  // nothing but unread in-app messages — "PM due", "permit expiring" — sent to
+  // people who cannot sign in to read them. Treating those the same as a
+  // signature is what left the register full of disabled ghosts: the rule said
+  // "has activity, keep for the audit trail", and the activity was a stale
+  // toast.
+  //
+  // So they are cleared first, and only then is the question asked. Nothing an
+  // auditor would look for lives here; the work orders, permits, signatures and
+  // audit rows are all still checked below and still protect their owners.
+  if (doomed.length && !dryRun) {
+    await db.delete(notifications).where(inArray(notifications.userId, doomed));
+  }
 
   const refs = await columnsReferencingUsers();
   const referenced = new Set<string>();
   for (const { table, column } of refs) {
+    // Modelled, not skipped: a dry run that counted notifications would preview
+    // a different outcome from the run it is previewing.
+    if (table === "notifications") continue;
     const res = await db.execute(
       sql`select distinct ${sql.identifier(column)} as id from ${sql.identifier(table)} where ${sql.identifier(column)} is not null`,
     );
@@ -96,6 +116,10 @@ export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean }
       toDeactivate.push(brief);
       continue;
     }
+    // Deliberately NOT skipped when already inactive. Production had the demo
+    // staff switched off but still sitting in the register, which is the state
+    // this exists to clear: "disabled" is a person who might come back, and
+    // these are not people. If they have no activity, they go.
     toDelete.push(brief);
   }
 
