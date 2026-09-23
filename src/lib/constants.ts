@@ -158,6 +158,7 @@ export const WO_STATUS_LABELS: Record<string, string> = {
   PENDING_APPROVAL: "Pending Approval",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
+  REJECTED: "Rejected",
 };
 
 export const WO_STATUS_BADGE: Record<string, string> = {
@@ -166,6 +167,7 @@ export const WO_STATUS_BADGE: Record<string, string> = {
   PENDING_APPROVAL: "bg-violet-500/10 text-violet-700 border-violet-500/20",
   COMPLETED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
   CANCELLED: "bg-ink-500/10 text-ink-500 border-ink-500/20",
+  REJECTED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
 };
 
 export const PRIORITY_LABELS: Record<string, string> = {

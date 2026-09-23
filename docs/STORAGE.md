@@ -18,7 +18,7 @@ exposed as guessable public links.
 
 1. Client uploads to `POST /api/files` (multipart, `file` field). Gated to
    maintenance-write roles. Validates type (PDF, images, Office, CSV, text) and
-   size (25 MB default). Returns `{ key, name, mimeType, size, url }`.
+   size (40 MB default). Returns `{ key, name, mimeType, size, url }`.
 2. Client records the file against an entity — e.g. `POST /api/documents` with the
    `fileKey`. The document's `fileUrl` becomes `/api/files/<key>`.
 3. Anyone authenticated opens it via that link.
@@ -33,7 +33,7 @@ Local (default) needs nothing. To tune or go cloud:
 # Local
 STORAGE_PROVIDER=LOCAL
 STORAGE_LOCAL_DIR=storage/uploads     # relative to project root, or an absolute path
-STORAGE_MAX_BYTES=26214400            # 25 MB
+STORAGE_MAX_BYTES=41943040            # 40 MB
 
 # Cloud (Supabase Storage — REST, no SDK)
 STORAGE_PROVIDER=SUPABASE

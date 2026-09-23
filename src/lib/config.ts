@@ -66,7 +66,7 @@ export const config = {
   // storage, right for a hosted/multi-site deploy. Same interface either way.
   storageProvider: (process.env.STORAGE_PROVIDER || "LOCAL").toUpperCase(), // LOCAL | SUPABASE
   storageLocalDir: process.env.STORAGE_LOCAL_DIR || "storage/uploads",
-  storageMaxBytes: Number(process.env.STORAGE_MAX_BYTES || 26_214_400), // 25 MB
+  storageMaxBytes: Number(process.env.STORAGE_MAX_BYTES || 41_943_040), // 40 MB
   // Supabase Storage (cloud), REST, no SDK needed.
   supabaseUrl: process.env.SUPABASE_URL || "",
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || "",

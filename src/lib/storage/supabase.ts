@@ -24,6 +24,7 @@ export async function saveFile(
   const res = await fetch(objectUrl(key), {
     method: "POST",
     headers: {
+      apikey: config.supabaseServiceKey,
       Authorization: `Bearer ${config.supabaseServiceKey}`,
       "Content-Type": meta.mimeType || "application/octet-stream",
       "x-upsert": "true",
@@ -45,6 +46,7 @@ export async function serveFile(key: string): Promise<ServeResult> {
     {
       method: "POST",
       headers: {
+        apikey: config.supabaseServiceKey,
         Authorization: `Bearer ${config.supabaseServiceKey}`,
         "Content-Type": "application/json",
       },
@@ -61,6 +63,9 @@ export async function deleteFile(key: string): Promise<void> {
   ensureReady();
   await fetch(objectUrl(key), {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${config.supabaseServiceKey}` },
+    headers: {
+      apikey: config.supabaseServiceKey,
+      Authorization: `Bearer ${config.supabaseServiceKey}`,
+    },
   }).catch(() => {});
 }

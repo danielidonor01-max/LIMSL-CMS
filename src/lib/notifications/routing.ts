@@ -36,6 +36,7 @@ export const NOTIFY_EVENTS: Array<{
   { event: "WMS_SIGN_REQUEST", label: "WMS sign-off requests", desc: "A Work Method Statement step is ready for signature", personal: false, defaultRoles: null },
   { event: "PM_SIGN_REQUEST", label: "PM sign-off requests", desc: "A PM checklist approval step is ready", personal: false, defaultRoles: null },
   { event: "PROCEDURE_SIGN_REQUEST", label: "Procedure sign-off requests", desc: "A procedure revision step is ready", personal: false, defaultRoles: null },
+  { event: "WO_SIGN_REQUEST", label: "Work order sign-off requests", desc: "Approval to commence or raise a work order", personal: false, defaultRoles: null },
   { event: "GENERAL", label: "General & assignments", desc: "Work-order assignments, rejections and other direct notices", personal: true, defaultRoles: null },
 ];
 

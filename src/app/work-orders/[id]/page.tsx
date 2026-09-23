@@ -25,6 +25,8 @@ import {
   BookText,
   Timer,
   Square,
+  RotateCcw,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
@@ -182,6 +184,26 @@ export default function WorkOrderDetailPage() {
     }
   };
 
+  const handleResubmit = async () => {
+    setActing(true);
+    try {
+      const res = await fetch(`/api/work-orders/${id}/resubmit`, { method: "POST" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || "Could not resubmit work order.");
+        return;
+      }
+      toast.success("Work order sign-off chain reset and resubmitted for approval.");
+      invalidateApi("/api/work-orders");
+      invalidateApi("/api/signoffs");
+      load();
+    } catch {
+      toast.error("Could not resubmit work order.");
+    } finally {
+      setActing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-500">
@@ -248,6 +270,33 @@ export default function WorkOrderDetailPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
         </Link>
 
+        {/* Rejection / revision required banner */}
+        {wo.status === "REJECTED" && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-danger-300 bg-danger-50 text-danger-900">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-danger-600" />
+              <div>
+                <p className="text-sm font-bold">Work order returned for revision</p>
+                <p className="text-xs mt-0.5 text-danger-800">
+                  This work order was rejected during sign-off review. See comments in the approval chain below.
+                  Once revised, resubmit to restart approval.
+                </p>
+              </div>
+            </div>
+            {canWrite && (
+              <Button
+                size="sm"
+                variant="danger"
+                icon={RotateCcw}
+                onClick={handleResubmit}
+                loading={acting}
+              >
+                Revise & Resubmit
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* An emergency that started before it was signed for. This has to be
             loud: the exception is only defensible while it is visible. */}
         {isAwaitingRetrospectiveApproval(wo) && (
@@ -287,6 +336,16 @@ export default function WorkOrderDetailPage() {
 
             {/* Actions */}
             <div className="flex flex-col gap-2 shrink-0">
+              {wo.status === "REJECTED" && canWrite && (
+                <Button
+                  variant="secondary"
+                  icon={RotateCcw}
+                  onClick={handleResubmit}
+                  loading={acting}
+                >
+                  Resubmit for Approval
+                </Button>
+              )}
               {wo.status === "PENDING_APPROVAL" && (
                 <span className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink-100 border border-ink-200 text-ink-500 rounded-lg text-xs font-semibold">
                   <Lock className="w-4 h-4" /> Awaiting approval

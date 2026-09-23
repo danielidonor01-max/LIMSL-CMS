@@ -5,6 +5,7 @@ import DateField from "@/components/DateField";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Loader2, Save } from "lucide-react";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
@@ -27,6 +28,10 @@ type User = { id: string; name: string; role: string };
 function NewWorkOrderForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const { data: session } = useSession();
+  const currentUser = session?.user as { id?: string; name?: string; role?: string } | undefined;
+  const isTechnician = currentUser?.role === "TECHNICIAN";
+
   const scheduleId = params.get("scheduleId");
   const presetEquipmentId = params.get("equipmentId");
 
@@ -42,7 +47,7 @@ function NewWorkOrderForm() {
     priority: "MEDIUM",
     title: "",
     plannedDate: new Date().toISOString().slice(0, 10),
-    technicianId: "",
+    technicianId: isTechnician ? currentUser?.id || "" : "",
     description: "",
     scheduleId: scheduleId || "",
   });
@@ -72,6 +77,9 @@ function NewWorkOrderForm() {
               plannedDate: item.plannedDate,
               title: `${item.activityType === "INS" ? "Inspection" : "PM"}, ${item.equipmentName}`,
               description: item.taskDescription || "",
+              technicianId: isTechnician
+                ? currentUser?.id || f.technicianId || ""
+                : item.responsiblePersonId || f.technicianId || "",
             }));
           }
         } else if (presetEquipmentId) {
@@ -81,7 +89,10 @@ function NewWorkOrderForm() {
               ...f,
               equipmentId: eq.id,
               title: `PM, ${eq.name}`,
+              technicianId: isTechnician ? currentUser?.id || f.technicianId || "" : f.technicianId,
             }));
+        } else if (isTechnician && currentUser?.id) {
+          setForm((f) => ({ ...f, technicianId: currentUser.id || "" }));
         }
       } catch {
         setError("Failed to load form data");
@@ -113,13 +124,15 @@ function NewWorkOrderForm() {
     }
     setSaving(true);
     try {
-      const tech = users.find((u) => u.id === form.technicianId);
+      const techId = isTechnician && currentUser?.id ? currentUser.id : form.technicianId;
+      const techName = isTechnician && currentUser?.name ? currentUser.name : (users.find((u) => u.id === techId)?.name || null);
       const res = await fetch("/api/work-orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          technicianName: tech?.name || null,
+          technicianId: techId || null,
+          technicianName: techName,
           // creator is stamped from the session server-side
         }),
       });
@@ -224,18 +237,30 @@ function NewWorkOrderForm() {
               </div>
               <div>
                 <label className={LABEL_CLASS}>Assigned Technician</label>
-                <Select
-                  value={form.technicianId}
-                  onChange={(v) => setForm((f) => ({ ...f, technicianId: v }))}
-                  className="w-full"
-                >
-                  <option value="">Unassigned</option>
-                  {users
-                    .filter((u) => WORK_ORDER_ASSIGNEE_ROLES.includes(u.role))
-                    .map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                </Select>
+                {isTechnician ? (
+                  <div className="p-2.5 bg-ink-100 border border-ink-200 rounded-lg text-xs font-medium text-ink-800 flex items-center justify-between">
+                    <span>{currentUser?.name || "You (Technician)"}</span>
+                    <span className="text-xs text-ink-600 bg-ink-200 px-2 py-0.5 rounded-lg font-semibold">Assigned to you</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={form.technicianId}
+                    onChange={(v) => setForm((f) => ({ ...f, technicianId: v }))}
+                    className="w-full"
+                  >
+                    <option value="">Unassigned</option>
+                    {users
+                      .filter((u) => WORK_ORDER_ASSIGNEE_ROLES.includes(u.role))
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                  </Select>
+                )}
+                {isTechnician && (
+                  <p className="text-[11px] text-ink-500 mt-1">
+                    Auto-assigned to you and not editable because you are creating this work order as the assigned technician.
+                  </p>
+                )}
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 // src/app/api/signoffs/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signoffs, auditLog, users } from "@/lib/db/schema";
+import { signoffs, auditLog, users, workOrders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
@@ -177,6 +177,38 @@ export async function POST(
         const after = await getSignoffChain(step.entityType, step.entityId);
         if (chainSummary(after).complete) {
           await sealDocument(step.entityType, step.entityId);
+
+          if (step.entityType === "WORK_ORDER") {
+            const [wo] = await db.select().from(workOrders).where(eq(workOrders.id, step.entityId)).limit(1);
+            if (wo) {
+              await db
+                .update(workOrders)
+                .set({
+                  status: wo.status === "PENDING_APPROVAL" ? "OPEN" : wo.status,
+                  approvedById: user.id ?? null,
+                  approvedByName: user.name ?? null,
+                  approvedAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                })
+                .where(eq(workOrders.id, wo.id));
+
+              if (wo.technicianId) {
+                try {
+                  await notify({
+                    event: "GENERAL",
+                    title: `Work order approved to commence, ${wo.workOrderNumber}`,
+                    body: `${wo.title}. Management approval has been signed. You may now commence work.`,
+                    linkPath: `/work-orders/${wo.id}`,
+                    relatedEntityType: "work_order",
+                    relatedEntityId: wo.id,
+                    userIds: [wo.technicianId],
+                  });
+                } catch (err) {
+                  console.warn("signoff: notify technician of approval failed", err);
+                }
+              }
+            }
+          }
         }
       } catch (err) {
         // A seal is evidence ABOUT a signature, never a condition of it. Losing
@@ -212,6 +244,13 @@ export async function POST(
       }
     } else {
       try {
+        if (step.entityType === "WORK_ORDER") {
+          await db
+            .update(workOrders)
+            .set({ status: "REJECTED", updatedAt: new Date().toISOString() })
+            .where(eq(workOrders.id, step.entityId));
+        }
+
         const fresh = await getSignoffChain(step.entityType, step.entityId);
         const preparer = fresh.find((s) => s.stepOrder === 1);
         if (preparer) {
@@ -221,6 +260,7 @@ export async function POST(
             body:
               `${user.name ?? "A signer"} rejected the sign-off${body.comments ? `: "${String(body.comments).slice(0, 200)}"` : "."} ` +
               `Revise the document and resubmit for approval.`,
+            linkPath: step.entityType === "WORK_ORDER" ? `/work-orders/${step.entityId}` : undefined,
             relatedEntityType: step.entityType,
             relatedEntityId: step.entityId,
             roles: [preparer.role],

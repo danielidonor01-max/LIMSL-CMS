@@ -21,6 +21,7 @@ export type NotifyEvent =
   | "PROCEDURE_SIGN_REQUEST"
   | "PM_SIGN_REQUEST"
   | "CORRECTIVE_SIGN_REQUEST"
+  | "WO_SIGN_REQUEST"
   | "BREAKDOWN"
   | "ESCALATION"
   | "GENERAL";
@@ -153,6 +154,7 @@ const ENTITY_LABEL: Record<string, string> = {
   PROCEDURE: "Maintenance Procedure",
   PM_CHECKLIST: "PM checklist",
   CORRECTIVE: "Corrective record",
+  WORK_ORDER: "Work Order",
 };
 const ENTITY_EVENT: Record<string, NotifyEvent> = {
   PERMIT: "PTW_SIGN_REQUEST",
@@ -161,6 +163,7 @@ const ENTITY_EVENT: Record<string, NotifyEvent> = {
   PROCEDURE: "PROCEDURE_SIGN_REQUEST",
   PM_CHECKLIST: "PM_SIGN_REQUEST",
   CORRECTIVE: "CORRECTIVE_SIGN_REQUEST",
+  WORK_ORDER: "WO_SIGN_REQUEST",
 };
 const ENTITY_LINK: Record<string, (id: string) => string> = {
   PERMIT: (id) => `/permits/${id}`,
@@ -168,6 +171,7 @@ const ENTITY_LINK: Record<string, (id: string) => string> = {
   WMS: (id) => `/wms/${id}`,
   PROCEDURE: (id) => `/procedure/${id}`,
   CORRECTIVE: (id) => `/corrective/${id}`,
+  WORK_ORDER: (id) => `/work-orders/${id}`,
 };
 
 // Notify whoever must sign the next pending step of a sign-off chain. Called when

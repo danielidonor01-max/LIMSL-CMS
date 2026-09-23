@@ -21,30 +21,14 @@ const PASSWORD = "limsl2026";
 export async function seedRolesAndSignoff() {
   console.log("👥 Aligning roles + backfilling sign-off chains...");
 
-  // ── 1. Remap existing users to canonical roles ──────────────────────────
-  // whatsapp numbers are PLACEHOLDERS (valid +234 format) so notification
-  // recipient resolution works in demo; replace with real numbers in the user
-  // admin screen before enabling WhatsApp delivery.
-  const remap: Record<string, { role: string; department: string; jobTitle: string; whatsapp: string }> = {
-    "daniel.idonor@limsl.com": { role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "System Owner / Maintenance Technician", whatsapp: "+2349167653581" },
-    "kingsley.iworah@limsl.com": { role: "MAINTENANCE_MANAGER", department: "MAINTENANCE", jobTitle: "Electrical Maintenance Supervisor", whatsapp: "+2348030000002" },
-    "marcel.imadojiemu@limsl.com": { role: "TECHNICIAN", department: "MAINTENANCE", jobTitle: "Welding Machine Technician", whatsapp: "+2348030000003" },
-    "godspower.michael@limsl.com": { role: "TECHNICIAN", department: "MAINTENANCE", jobTitle: "CNC / AC Technician", whatsapp: "+2348030000004" },
-    "kenneth.aloziem@limsl.com": { role: "FACTORY_MANAGER", department: "FACTORY", jobTitle: "Factory Coordinator", whatsapp: "+2348030000005" },
-    "osaghale.ikpea@limsl.com": { role: "COO", department: "MANAGEMENT", jobTitle: "Chief Operating Officer", whatsapp: "+2348030000006" },
-  };
-  for (const [email, v] of Object.entries(remap)) {
-    await db.update(users).set(v).where(eq(users.email, email));
-  }
-
-  // ── 2. Add Foreman / QA-QC / HSE officers ───────────────────────────────
-  const newUsers = [
-    { name: "Sunday Okoro", email: "sunday.okoro@limsl.com", role: "FOREMAN", department: "MAINTENANCE", jobTitle: "Maintenance Foreman", whatsapp: "+2348030000007" },
-    { name: "Blessing Ade", email: "blessing.ade@limsl.com", role: "QA_QC", department: "QA_QC", jobTitle: "QA/QC Officer", whatsapp: "+2348030000008" },
-    { name: "Tunde Bello", email: "tunde.bello@limsl.com", role: "HSE", department: "HSE", jobTitle: "HSE Officer", whatsapp: "+2348030000009" },
+  // ── 1. Ensure Super Admins have canonical roles ──────────────────────────
+  const superAdmins = [
+    { name: "Daniel Idonor", email: "daniel.idonor@limsl.com", role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "Super Admin", whatsapp: "+2349167653581" },
+    { name: "Daniel Idonor", email: "dsmartfootwears@gmail.com", role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "Super Admin", whatsapp: "+2349167653581" },
+    { name: "Ajayi Oluwadamilola", email: "ajayioluwadamilola527@gmail.com", role: "SUPER_ADMIN", department: "MANAGEMENT", jobTitle: "Super Admin", whatsapp: "" },
   ];
   const hash = hashPassword(PASSWORD);
-  for (const u of newUsers) {
+  for (const u of superAdmins) {
     const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, u.email)).limit(1);
     if (existing) {
       await db.update(users).set({ role: u.role, department: u.department, jobTitle: u.jobTitle, whatsapp: u.whatsapp }).where(eq(users.id, existing.id));
@@ -52,7 +36,7 @@ export async function seedRolesAndSignoff() {
       await db.insert(users).values({ id: nanoid(), ...u, passwordHash: hash, isActive: true, mustChangePassword: false });
     }
   }
-  console.log(`✅ 6 users remapped, ${newUsers.length} officers ensured (default password: "${PASSWORD}")`);
+  console.log(`✅ Super Admins ensured (default password: "${PASSWORD}")`);
 
   // ── 3. Mark schematic PDF kinds (most text-selectable, some image-only) ──
   const docs = await db.select().from(equipmentDocuments);

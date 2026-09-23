@@ -12,6 +12,7 @@ import {
   procedureRevisions,
   correctiveMaintenance,
   pmChecklists,
+  workOrders,
 } from "@/lib/db/schema";
 import { auth } from "@/auth";
 import { isStepUnlocked } from "@/lib/signoff/chains";
@@ -23,6 +24,7 @@ const LABEL: Record<string, string> = {
   PROCEDURE: "Maintenance Procedure",
   PM_CHECKLIST: "PM checklist",
   CORRECTIVE: "Corrective / RCA",
+  WORK_ORDER: "Work Order",
 };
 
 export async function GET() {
@@ -75,18 +77,20 @@ export async function GET() {
 
     // Batch-load referenced entities for friendly labels + deep links.
     const need = (t: string) => mine.some((m) => m.entityType === t);
-    const [permitRows, wmsRows, procRows, cmRows, pmRows] = await Promise.all([
+    const [permitRows, wmsRows, procRows, cmRows, pmRows, woRows] = await Promise.all([
       need("PERMIT") || need("PERMIT_CLOSEOUT") ? db.select().from(permits) : [],
       need("WMS") ? db.select().from(wmsDocuments) : [],
       need("PROCEDURE") ? db.select().from(procedureRevisions) : [],
       need("CORRECTIVE") ? db.select().from(correctiveMaintenance) : [],
       need("PM_CHECKLIST") ? db.select().from(pmChecklists) : [],
+      need("WORK_ORDER") ? db.select().from(workOrders) : [],
     ]);
     const permitById = new Map(permitRows.map((r) => [r.id, r]));
     const wmsById = new Map(wmsRows.map((r) => [r.id, r]));
     const procById = new Map(procRows.map((r) => [r.id, r]));
     const cmById = new Map(cmRows.map((r) => [r.id, r]));
     const pmById = new Map(pmRows.map((r) => [r.id, r]));
+    const woById = new Map(woRows.map((r) => [r.id, r]));
 
     const items = mine.map((m) => {
       let reference = "";
@@ -121,6 +125,12 @@ export async function GET() {
           const pm = pmById.get(m.entityId);
           reference = "PM checklist";
           link = pm?.workOrderId ? `/work-orders/${pm.workOrderId}` : "/work-orders";
+          break;
+        }
+        case "WORK_ORDER": {
+          const wo = woById.get(m.entityId);
+          reference = wo?.workOrderNumber ?? "Work Order";
+          link = `/work-orders/${m.entityId}`;
           break;
         }
       }

@@ -7,7 +7,9 @@ import {
   maintenanceSchedule,
   auditLog,
   procedureRevisions,
+  signoffs,
 } from "@/lib/db/schema";
+import { isStepUnlocked } from "@/lib/signoff/chains";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -37,9 +39,15 @@ export async function GET() {
         approvedAt: workOrders.approvedAt,
         priority: workOrders.priority,
         title: workOrders.title,
+        description: workOrders.description,
         plannedDate: workOrders.plannedDate,
+        startDate: workOrders.startDate,
         completionDate: workOrders.completionDate,
+        actualDuration: workOrders.actualDuration,
+        rejectedReason: workOrders.rejectedReason,
+        technicianId: workOrders.technicianId,
         technicianName: workOrders.technicianName,
+        assistantIds: workOrders.assistantIds,
         equipmentId: workOrders.equipmentId,
         scheduleId: workOrders.scheduleId,
         createdAt: workOrders.createdAt,
@@ -52,7 +60,41 @@ export async function GET() {
       .leftJoin(equipment, eq(workOrders.equipmentId, equipment.id))
       .orderBy(desc(workOrders.createdAt));
 
-    return NextResponse.json(rows);
+    const allSignoffs = await db
+      .select()
+      .from(signoffs)
+      .where(eq(signoffs.entityType, "WORK_ORDER"));
+
+    const signoffsByEntity = new Map<string, typeof allSignoffs>();
+    for (const s of allSignoffs) {
+      const arr = signoffsByEntity.get(s.entityId);
+      if (arr) arr.push(s);
+      else signoffsByEntity.set(s.entityId, [s]);
+    }
+
+    const enriched = rows.map((r) => {
+      const chain = (signoffsByEntity.get(r.id) ?? []).sort((a, b) => a.stepOrder - b.stepOrder);
+      const pendingStep = chain.find((s) => s.required && s.status === "PENDING" && isStepUnlocked(chain, s.stepOrder)) ?? null;
+      const rejectedStep = chain.find((s) => s.status === "REJECTED") ?? null;
+      return {
+        ...r,
+        chain,
+        nextSignoffStep: pendingStep ? {
+          id: pendingStep.id,
+          stepOrder: pendingStep.stepOrder,
+          role: pendingStep.role,
+          roleLabel: pendingStep.roleLabel,
+        } : null,
+        rejectedStep: rejectedStep ? {
+          id: rejectedStep.id,
+          roleLabel: rejectedStep.roleLabel,
+          comments: rejectedStep.comments,
+          signedByName: rejectedStep.signedByName,
+        } : null,
+      };
+    });
+
+    return NextResponse.json(enriched);
   } catch (error) {
     console.error("Failed to fetch work orders:", error);
     return NextResponse.json(
@@ -135,6 +177,10 @@ export async function POST(request: Request) {
       body.plannedDate || new Date().toISOString().slice(0, 10),
     );
 
+    const isTechCreator = gate.actor?.role === "TECHNICIAN";
+    const assignedTechId = isTechCreator ? (gate.actor?.id ?? null) : (body.technicianId || inherited.technicianId);
+    const assignedTechName = isTechCreator ? (gate.actor?.name ?? null) : (body.technicianName || inherited.technicianName);
+
     const newWo = {
       id,
       workOrderNumber,
@@ -150,8 +196,8 @@ export async function POST(request: Request) {
       title: body.title,
       description: body.description || "",
       plannedDate: body.plannedDate || null,
-      technicianId: body.technicianId || inherited.technicianId,
-      technicianName: body.technicianName || inherited.technicianName,
+      technicianId: assignedTechId,
+      technicianName: assignedTechName,
       assistantIds: inherited.assistantIds,
       supervisorId: body.supervisorId || null,
       procedureRevisionId: governing?.id ?? null,
