@@ -10,9 +10,10 @@
 //
 // Two rules make it safe to run against a live database:
 //
-//   1. THE FOUNDING ACCOUNTS ARE NEVER TOUCHED. They come from
-//      seed-accounts.ts, the same list the seed creates from, so this can never
-//      delete an account the seed would put straight back.
+//   1. IT ONLY EVER TOUCHES ACCOUNTS IT NAMES. seed-accounts.ts holds a
+//      DENY-list of the demo staff, not a keep-list of the real ones. A
+//      keep-list would delete every person LIMSL hires after the day it was
+//      written, because they are all "everything else".
 //
 //   2. NOTHING THAT HAS DONE ANYTHING IS DELETED. A user id appears on
 //      signatures, audit rows, work orders, permits and schedule assignments.
@@ -31,7 +32,7 @@ import { db } from "./index";
 import { users, auditLog, notifications } from "./schema";
 import { inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { isFoundingAccount, FOUNDING_ACCOUNTS } from "./seed-accounts";
+import { isPrunable, DEMO_ACCOUNTS } from "./seed-accounts";
 
 type Brief = { id: string; name: string; email: string };
 
@@ -67,7 +68,7 @@ async function columnsReferencingUsers(): Promise<{ table: string; column: strin
 
 export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean } = {}) {
   const all = await db.select().from(users);
-  const doomed = all.filter((u) => !isFoundingAccount(u.email)).map((u) => u.id);
+  const doomed = all.filter((u) => isPrunable(u.email)).map((u) => u.id);
 
   // A notification is not evidence.
   //
@@ -99,20 +100,27 @@ export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean }
   }
   console.log(`Checked ${refs.length} column(s) referencing users.id across the schema.`);
 
-  const kept: Brief[] = [];
+  const untouched: Brief[] = [];
   const toDelete: Brief[] = [];
   const toDeactivate: Brief[] = [];
+  // Targets that cannot go: they hold a work order, a permit or a schedule
+  // assignment, and they are already switched off. Reported rather than passed
+  // over in silence, because "done" and "refused" must not look the same.
+  const heldByRecords: Brief[] = [];
 
   for (const u of all) {
     const brief = { id: u.id, name: u.name, email: u.email };
-    if (isFoundingAccount(u.email)) {
-      kept.push(brief);
+    if (!isPrunable(u.email)) {
+      untouched.push(brief);
       continue;
     }
     if (referenced.has(u.id)) {
-      // Already dealt with on a previous run; leave it alone so the summary
-      // does not claim work it did not do.
-      if (u.isActive === false) continue;
+      // Already switched off, and pinned in place by something real. Nothing
+      // more can be done to it without destroying the record that pins it.
+      if (u.isActive === false) {
+        heldByRecords.push(brief);
+        continue;
+      }
       toDeactivate.push(brief);
       continue;
     }
@@ -123,16 +131,23 @@ export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean }
     toDelete.push(brief);
   }
 
-  console.log(`\nKeeping ${kept.length} founding account(s):`);
-  kept.forEach((u) => console.log(`   • ${u.name} <${u.email}>`));
-  console.log(`\nDeleting ${toDelete.length} account(s) with no activity recorded:`);
+  console.log(`\nNot touched, ${untouched.length} account(s) this never targets:`);
+  untouched.forEach((u) => console.log(`   • ${u.name} <${u.email}>`));
+  console.log(`\nDeleting ${toDelete.length} demo account(s) with no records attached:`);
   toDelete.forEach((u) => console.log(`   • ${u.name} <${u.email}>`));
-  console.log(`\nDeactivating ${toDeactivate.length} account(s) that have signed or raised something:`);
+  console.log(`\nDeactivating ${toDeactivate.length} demo account(s) that have signed or raised something:`);
   toDeactivate.forEach((u) => console.log(`   • ${u.name} <${u.email}>`));
+  if (heldByRecords.length) {
+    console.log(
+      `\nLeft disabled, ${heldByRecords.length} demo account(s) that CANNOT be deleted — a work order,` +
+        ` permit or schedule assignment still names them, and removing the account would orphan it:`,
+    );
+    heldByRecords.forEach((u) => console.log(`   • ${u.name} <${u.email}>`));
+  }
 
   if (dryRun) {
     console.log("\n--dry-run: nothing was written.\n");
-    return { kept, deleted: 0, deactivated: 0 };
+    return { untouched, heldByRecords, deleted: 0, deactivated: 0 };
   }
 
   if (toDelete.length) {
@@ -156,29 +171,29 @@ export async function pruneSeedAccounts({ dryRun = false }: { dryRun?: boolean }
       entityDescription:
         `Demo accounts pruned: ${toDelete.length} deleted, ${toDeactivate.length} deactivated ` +
         `(they have activity, so their records stay attributable). ` +
-        `${kept.length} founding account(s) kept.`,
+        `${heldByRecords.length} left disabled because a record still names them.`,
     });
   }
 
   console.log(
-    `\n✅ Done. ${toDelete.length} deleted, ${toDeactivate.length} deactivated, ${kept.length} kept.\n`,
+    `\n✅ Done. ${toDelete.length} deleted, ${toDeactivate.length} deactivated, ` +
+      `${heldByRecords.length} left disabled, ${untouched.length} untouched.\n`,
   );
-  return { kept, deleted: toDelete.length, deactivated: toDeactivate.length };
+  return { untouched, heldByRecords, deleted: toDelete.length, deactivated: toDeactivate.length };
 }
 
-// Refuses to run against a database that holds none of the founding accounts.
-// That is not the LIMSL database, and on an unseeded one this would delete
-// every account there is.
+// Says so plainly when there is nothing here it targets, rather than reporting
+// "0 removed" against the wrong DATABASE_URL and being believed.
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const all = await db.select({ email: users.email }).from(users);
-  const founding = all.filter((u) => isFoundingAccount(u.email)).length;
-  if (founding === 0) {
-    console.error(
-      `\n❌ Refusing to run: none of the ${FOUNDING_ACCOUNTS.length} founding accounts are in this ` +
-        `database (${all.length} users found). Check DATABASE_URL points where you think it does.\n`,
+  const targets = all.filter((u) => isPrunable(u.email)).length;
+  if (targets === 0) {
+    console.log(
+      `\nNothing to do: none of the ${DEMO_ACCOUNTS.length} demo accounts are in this database ` +
+        `(${all.length} users found). If that is a surprise, check DATABASE_URL.\n`,
     );
-    process.exit(1);
+    process.exit(0);
   }
   await pruneSeedAccounts({ dryRun });
 }

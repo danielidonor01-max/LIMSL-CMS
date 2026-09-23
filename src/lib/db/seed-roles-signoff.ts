@@ -15,18 +15,18 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { hashPassword } from "../password";
 import { PM_CHAIN, CM_CHAIN } from "../signoff/chains";
-import { FOUNDING_ACCOUNTS } from "./seed-accounts";
+import { SEED_ACCOUNTS } from "./seed-accounts";
 
 const PASSWORD = "limsl2026";
 
 export async function seedRolesAndSignoff() {
   console.log("👥 Aligning roles + backfilling sign-off chains...");
 
-  // ── 1. Ensure the founding accounts have canonical roles ────────────────
-  // The list is in seed-accounts.ts because the prune reads the same one. Two
-  // copies is a day when the prune deletes what the seed just created.
+  // ── 1. Ensure the Super Admin accounts exist ────────────────────────────
+  // A seed creates administrators and nothing else. Real staff are added
+  // through the user admin screen, where they get their own password.
   const hash = hashPassword(PASSWORD);
-  for (const u of FOUNDING_ACCOUNTS) {
+  for (const u of SEED_ACCOUNTS) {
     const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, u.email)).limit(1);
     if (existing) {
       await db.update(users).set({ role: u.role, department: u.department, jobTitle: u.jobTitle, whatsapp: u.whatsapp }).where(eq(users.id, existing.id));
@@ -34,7 +34,7 @@ export async function seedRolesAndSignoff() {
       await db.insert(users).values({ id: nanoid(), ...u, passwordHash: hash, isActive: true, mustChangePassword: false });
     }
   }
-  console.log(`✅ ${FOUNDING_ACCOUNTS.length} founding accounts ensured (default password: "${PASSWORD}")`);
+  console.log(`✅ ${SEED_ACCOUNTS.length} Super Admin account(s) ensured (default password: "${PASSWORD}")`);
 
   // ── 3. Mark schematic PDF kinds (most text-selectable, some image-only) ──
   const docs = await db.select().from(equipmentDocuments);
