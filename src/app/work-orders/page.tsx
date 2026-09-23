@@ -6,6 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi, invalidateApi } from "@/lib/api-cache";
+import KebabMenu from "@/components/KebabMenu";
 import {
   ClipboardList,
   Plus,
@@ -19,7 +20,7 @@ import {
   ClipboardCheck,
   AlertCircle,
   Clock,
-  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
@@ -116,8 +117,6 @@ export default function WorkOrdersPage() {
   const [completeNotes, setCompleteNotes] = useState("");
   const [completeHours, setCompleteHours] = useState("");
   const [completing, setCompleting] = useState(false);
-  const [startingId, setStartingId] = useState<string | null>(null);
-  const [resubmittingId, setResubmittingId] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {
@@ -131,6 +130,40 @@ export default function WorkOrdersPage() {
     rows.forEach((r) => (c[r.status] = (c[r.status] ?? 0) + 1));
     return c;
   }, [rows]);
+
+  // One place deciding what a row offers, so the menu cannot drift from the
+  // status rules the buttons used to carry inline.
+  const rowActions = (r: WorkOrder, canSign: boolean, isPreventive: boolean) => [
+    { label: "Quick review", icon: Eye, onClick: () => setQuickViewWo(r) },
+    ...(canSign
+      ? [
+          { label: "Sign approval", icon: PenLine, onClick: () => setQuickSignWo(r) },
+          { label: "Return for revision", icon: XCircle, onClick: () => setQuickSignWo(r), danger: true },
+        ]
+      : []),
+    ...(r.status === "OPEN" && canWrite
+      ? [{ label: "Start work", icon: Play, onClick: () => handleStartWork(r) }]
+      : []),
+    ...(r.status === "IN_PROGRESS" && canWrite
+      ? isPreventive
+        ? [{ label: "Fill PM checklist", icon: ClipboardCheck, href: `/work-orders/${r.id}/pm-checklist` }]
+        : [
+            {
+              label: "Complete work order",
+              icon: CheckCircle2,
+              onClick: () => {
+                setCompleteWo(r);
+                setCompleteNotes("");
+                setCompleteHours("");
+              },
+            },
+          ]
+      : []),
+    ...(r.status === "REJECTED" && canWrite
+      ? [{ label: "Revise & resubmit", icon: RotateCcw, onClick: () => handleResubmit(r) }]
+      : []),
+    { label: "Open full record", icon: ExternalLink, href: `/work-orders/${r.id}` },
+  ];
 
   const filtered = useMemo(() => {
     let out = rows;
@@ -158,7 +191,6 @@ export default function WorkOrdersPage() {
   };
 
   const handleStartWork = async (wo: WorkOrder) => {
-    setStartingId(wo.id);
     try {
       const res = await fetch(`/api/work-orders/${wo.id}`, {
         method: "PATCH",
@@ -176,8 +208,6 @@ export default function WorkOrdersPage() {
       if (quickViewWo?.id === wo.id) setQuickViewWo(null);
     } catch {
       toast.error("Could not start work order.");
-    } finally {
-      setStartingId(null);
     }
   };
 
@@ -218,7 +248,6 @@ export default function WorkOrdersPage() {
   };
 
   const handleResubmit = async (wo: WorkOrder) => {
-    setResubmittingId(wo.id);
     try {
       const res = await fetch(`/api/work-orders/${wo.id}/resubmit`, {
         method: "POST",
@@ -234,8 +263,6 @@ export default function WorkOrdersPage() {
       if (quickViewWo?.id === wo.id) setQuickViewWo(null);
     } catch {
       toast.error("Could not resubmit work order.");
-    } finally {
-      setResubmittingId(null);
     }
   };
 
@@ -400,113 +427,21 @@ export default function WorkOrdersPage() {
                             )}
                           </div>
                         </td>
-                        {/* Actions column */}
+                        {/* Actions column.
+                            Seven controls of five different weights used to sit
+                            in this cell — an icon button, two filled buttons,
+                            an outlined one, a tinted one, a link — and which of
+                            them appeared depended on the row's status, so the
+                            column changed shape line by line and the eye had
+                            nowhere to rest. The register and every other table
+                            in the app put row actions behind one kebab; this
+                            one now does too. */}
                         <td className="py-2.5 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Quick Review Modal trigger */}
-                            <button
-                              type="button"
-                              onClick={() => setQuickViewWo(r)}
-                              className="p-1.5 rounded-lg border border-ink-200 text-ink-600 hover:text-ink-900 hover:bg-ink-100 transition-colors"
-                              title="Quick Review"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* Quick Sign button when user is eligible */}
-                            {canSign && (
-                              <button
-                                type="button"
-                                onClick={() => setQuickSignWo(r)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-all animate-pulse hover:animate-none"
-                                title="Sign Approval"
-                              >
-                                <PenLine className="w-3.5 h-3.5" /> Sign
-                              </button>
-                            )}
-
-                            {/* Quick Reject button when user is eligible */}
-                            {canSign && (
-                              <button
-                                type="button"
-                                onClick={() => setQuickSignWo(r)}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg border border-danger-200 text-danger-600 hover:bg-danger-50 transition-colors"
-                                title="Reject / Request Revision"
-                              >
-                                <XCircle className="w-3.5 h-3.5" /> Reject
-                              </button>
-                            )}
-
-                            {/* Start Work button when approved */}
-                            {r.status === "OPEN" && canWrite && (
-                              <button
-                                type="button"
-                                onClick={() => handleStartWork(r)}
-                                disabled={startingId === r.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-info-50 text-info-700 border border-info-200 hover:bg-info-100 transition-colors"
-                                title="Start Work"
-                              >
-                                {startingId === r.id ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                  <Play className="w-3.5 h-3.5" />
-                                )}
-                                Start
-                              </button>
-                            )}
-
-                            {/* Complete Work button when in progress */}
-                            {r.status === "IN_PROGRESS" && canWrite && (
-                              isPreventive ? (
-                                <Link
-                                  href={`/work-orders/${r.id}/pm-checklist`}
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 transition-colors"
-                                  title="Fill PM Checklist"
-                                >
-                                  <ClipboardCheck className="w-3.5 h-3.5" /> Checklist
-                                </Link>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCompleteWo(r);
-                                    setCompleteNotes("");
-                                    setCompleteHours("");
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 transition-colors"
-                                  title="Complete Work Order"
-                                >
-                                  <CheckCircle2 className="w-3.5 h-3.5" /> Complete
-                                </button>
-                              )
-                            )}
-
-                            {/* Resubmit button if rejected */}
-                            {r.status === "REJECTED" && canWrite && (
-                              <button
-                                type="button"
-                                onClick={() => handleResubmit(r)}
-                                disabled={resubmittingId === r.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-warn-50 text-warn-800 border border-warn-300 hover:bg-warn-100 transition-colors"
-                                title="Revise & Resubmit"
-                              >
-                                {resubmittingId === r.id ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                  <RotateCcw className="w-3.5 h-3.5" />
-                                )}
-                                Resubmit
-                              </button>
-                            )}
-
-                            {/* Full page link */}
-                            <Link
-                              href={`/work-orders/${r.id}`}
-                              className="text-xs text-ink-500 hover:text-brand-600 hover:underline px-1 py-1"
-                              title="View full record"
-                            >
-                              Details
-                            </Link>
+                          <div className="flex justify-end">
+                            <KebabMenu
+                              ariaLabel={`Actions for ${r.workOrderNumber}`}
+                              items={rowActions(r, canSign, isPreventive)}
+                            />
                           </div>
                         </td>
                       </tr>

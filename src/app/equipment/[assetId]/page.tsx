@@ -4,6 +4,7 @@
 import { use, useState, useEffect } from "react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Wrench,
   CheckCircle2,
@@ -21,6 +22,9 @@ import {
   ClipboardList,
   PackageSearch,
   Archive,
+  ArchiveX,
+  Undo2,
+  Trash2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Button from "@/components/Button";
@@ -30,7 +34,9 @@ import EquipmentDocuments from "@/components/EquipmentDocuments";
 import EquipmentLog from "@/components/EquipmentLog";
 import MeterCard from "@/components/MeterCard";
 import ConditionCard from "@/components/ConditionCard";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, isSuperAdmin } from "@/lib/roles";
+import { RemoveFromRegisterModal, DeleteAssetModal } from "@/components/AssetRemoval";
+import { toast } from "sonner";
 import { EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 import PageSkeleton from "@/components/Skeleton";
 
@@ -60,12 +66,38 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   const [guides, setGuides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("specs");
+  const router = useRouter();
 
   // Session resolves client-side only, defer role reads past mount.
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes((session?.user as { role?: string })?.role ?? "");
+  // Super Admin only. The route checks this again and asks for a password on
+  // top; hiding the item is so nobody is offered a control they cannot use.
+  const canPurge = mounted && isSuperAdmin((session?.user as { role?: string })?.role);
+
+  // Taking the asset off the register, and deleting it outright, moved here
+  // from the register's row menu. On a list of fifty-six machines the only
+  // thing identifying which one you are about to destroy is the row the
+  // pointer is resting on; here the name, the tag, the status and the service
+  // history are all on screen while the choice is made.
+  const [removing, setRemoving] = useState<any>(null);
+  const [deleting, setDeleting] = useState<any>(null);
+
+  const restore = async () => {
+    const res = await fetch(`/api/equipment/${assetIdKey}/removal`, { method: "PATCH" });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      toast.error(d.error || "Could not put the asset back on the register.");
+      return;
+    }
+    toast.success(`${eq?.name ?? "The asset"} is back on the register.`);
+    fetch(`/api/equipment/${assetIdKey}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setEq(d))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     // All three fetches fly in parallel, and the page unblocks as soon as the
@@ -205,6 +237,12 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   { label: "Raise Work Order", icon: ClipboardList, href: `/work-orders/new?equipmentId=${eq.id}` },
                   { label: "Edit Details", icon: Pencil, href: `/equipment/${assetIdKey}/edit` },
                   { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${assetIdKey}` },
+                  ...(eq.removedAt
+                    ? [{ label: "Put back on the register", icon: Undo2, onClick: restore }]
+                    : [{ label: "Remove from register", icon: ArchiveX, onClick: () => setRemoving(eq) }]),
+                  ...(canPurge
+                    ? [{ label: "Delete permanently", icon: Trash2, onClick: () => setDeleting(eq), danger: true }]
+                    : []),
                 ]}
               />
             </>
@@ -501,6 +539,24 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         {activeTab !== "history" && <EquipmentDocuments assetId={assetIdKey} />}
       </main>
 
+      <RemoveFromRegisterModal
+        asset={removing}
+        onClose={() => setRemoving(null)}
+        onDone={() => {
+          setRemoving(null);
+          fetch(`/api/equipment/${assetIdKey}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => d && setEq(d))
+            .catch(() => {});
+        }}
+      />
+      {/* Deleting leaves nothing to come back to, so it returns to the
+          register rather than to a record that no longer exists. */}
+      <DeleteAssetModal
+        asset={deleting}
+        onClose={() => setDeleting(null)}
+        onDone={() => router.push("/equipment")}
+      />
     </div>
   );
 }

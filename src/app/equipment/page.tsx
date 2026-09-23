@@ -20,8 +20,6 @@ import {
   AlertTriangle,
   Download,
   ArchiveX,
-  Trash2,
-  Undo2,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import Button from "@/components/Button";
@@ -40,11 +38,6 @@ import {
 import { parseAssetId, ASSET_PREFIXES, ASSET_PREFIX_META, type AssetPrefix } from "@/lib/asset-id";
 import { downloadCSV } from "@/lib/export";
 import LoadError from "@/components/LoadError";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { isSuperAdmin } from "@/lib/roles";
-import { RemoveFromRegisterModal, DeleteAssetModal } from "@/components/AssetRemoval";
 import SegmentedControl from "@/components/SegmentedControl";
 
 // An asset in one of these states is not doing its job. The register's whole
@@ -76,16 +69,6 @@ export default function EquipmentList() {
   // because "where did that machine go" is a question somebody asks, and the
   // answer has to be findable rather than only in the audit log.
   const [showRemoved, setShowRemoved] = useState(false);
-  const [removing, setRemoving] = useState<any>(null);
-  const [deleting, setDeleting] = useState<any>(null);
-  // Deferred past mount: the session resolves client-side only, and rendering
-  // a role-dependent menu item during SSR is the hydration trap AGENTS.md
-  // records as a real past bug.
-  const { data: session } = useSession();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const canPurge = mounted && isSuperAdmin((session?.user as { role?: string })?.role);
-
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
 
@@ -221,28 +204,15 @@ export default function EquipmentList() {
       { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
       { label: "Edit", icon: Pencil, href: `/equipment/${urlParam}/edit` },
       { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${urlParam}` },
-      ...(eq.removedAt
-        ? [{ label: "Put back on the register", icon: Undo2, onClick: () => restore(eq) }]
-        : [{ label: "Remove from register", icon: ArchiveX, onClick: () => setRemoving(eq) }]),
-      // Super Admin only. The route checks this again and the password on top;
-      // hiding the item is so nobody is offered a control they cannot use.
-      ...(canPurge
-        ? [{ label: "Delete permanently", icon: Trash2, onClick: () => setDeleting(eq), danger: true }]
-        : []),
+      // Taking an asset off the register, and deleting it outright, are NOT
+      // here. They were two items among eight on a menu opened from a row in a
+      // list of fifty-six, where the only thing identifying the machine is the
+      // line the pointer happens to be on. Both live on the record itself now,
+      // where the name, the tag, the status and the service history are on
+      // screen while the choice is made. A destructive action should cost a
+      // click; that click is the one that proves you are looking at the right
+      // machine.
     ];
-  };
-
-  const restore = async (eq: any) => {
-    const res = await fetch(`/api/equipment/${(eq.assetId || "").replace(/\//g, "-")}/removal`, {
-      method: "PATCH",
-    });
-    if (res.ok) {
-      toast.success(`${eq.name} is back on the register.`);
-      refresh();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      toast.error(d.error || "Could not restore the asset.");
-    }
   };
 
   const emptyState = filtersActive ? (
@@ -480,12 +450,6 @@ export default function EquipmentList() {
         )}
       </main>
 
-      <RemoveFromRegisterModal
-        asset={removing}
-        onClose={() => setRemoving(null)}
-        onDone={refresh}
-      />
-      <DeleteAssetModal asset={deleting} onClose={() => setDeleting(null)} onDone={refresh} />
     </div>
   );
 }

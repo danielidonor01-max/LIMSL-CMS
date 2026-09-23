@@ -18,6 +18,11 @@ import {
   Plus,
   Search,
   CalendarPlus,
+  Users,
+  CalendarClock,
+  BellOff,
+  PauseCircle,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
@@ -29,6 +34,7 @@ import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
+import KebabMenu from "@/components/KebabMenu";
 import AssignPeople from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
 import { ROLE_LABELS, WORK_ASSIGN_ROLES } from "@/lib/roles";
@@ -303,6 +309,70 @@ export default function SchedulePage() {
     return { compliance, overdue, upcoming, completed };
   }, [rows]);
 
+  // Five controls of three different colours used to sit in this cell, and
+  // which of them appeared depended on the row's status, so the column changed
+  // shape line by line. The register and the work-order list put row actions
+  // behind one kebab; this does too.
+  //
+  // The work order goes in the menu rather than beside it, because it is
+  // reached the same way everything else here is. What the row still SAYS,
+  // in its own column, is whether one exists.
+  const rowActions = (r: ScheduleRow) => [
+    // Assigning names who carries the job. A technician may raise a work
+    // order, move a date and record a deferral, but not put somebody else's
+    // name on the work — the route refuses it either way, and a control that
+    // is always refused is worse than no control.
+    ...(canAssign && r.status !== "COMPLETED"
+      ? [{ label: "Assign people", icon: Users, onClick: () => setAssign(r) }]
+      : []),
+    ...(r.status !== "COMPLETED"
+      ? [
+          {
+            label: "Reschedule",
+            icon: CalendarClock,
+            onClick: () => setReschedule({ row: r, date: r.plannedDate }),
+          },
+        ]
+      : []),
+    ...(r.status === "OVERDUE"
+      ? [
+          {
+            label: "Quieten reminders",
+            icon: BellOff,
+            onClick: () =>
+              setSnooze({
+                row: r,
+                reason: "",
+                until: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10),
+              }),
+          },
+        ]
+      : []),
+    ...(r.status !== "COMPLETED" && r.status !== "DEFERRED"
+      ? [
+          {
+            label: "Defer with a reason",
+            icon: PauseCircle,
+            onClick: () =>
+              setDefer({
+                row: r,
+                reason: "",
+                reviewDate: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+              }),
+          },
+        ]
+      : []),
+    ...(r.workOrderId
+      ? [
+          {
+            label: r.workOrderNumber ? `Open ${r.workOrderNumber}` : "Open the work order",
+            icon: ClipboardList,
+            href: `/work-orders/${r.workOrderId}`,
+          },
+        ]
+      : [{ label: "Raise a work order", icon: Plus, href: `/work-orders/new?scheduleId=${r.id}` }]),
+  ];
+
   const filtered = useMemo(() => {
     let out = rows;
     if (tab === "upcoming") {
@@ -472,7 +542,7 @@ export default function SchedulePage() {
           {error && !loading ? (
             <LoadError what="the maintenance schedule" onRetry={refresh} />
           ) : loading ? (
-            <TableSkeleton rows={7} cols={7} />
+            <TableSkeleton rows={7} cols={8} />
           ) : filtered.length === 0 ? (
             filtersActive ? (
               <EmptyState
@@ -524,6 +594,7 @@ export default function SchedulePage() {
                     <th className="py-3.5 px-5 font-medium">Freq.</th>
                     <th className="py-3.5 px-5 font-medium">Responsible</th>
                     <th className="py-3.5 px-5 font-medium">Status</th>
+                    <th className="py-3.5 px-5 font-medium">Work order</th>
                     <th className="py-3.5 px-5 font-medium text-right">Action</th>
                   </tr>
                 </thead>
@@ -581,80 +652,33 @@ export default function SchedulePage() {
                           </div>
                         )}
                       </td>
+                      {/* Whether this PM has been discharged by a work order is
+                          a FACT about the row, not something you do to it, so
+                          it reads in its own column while the actions sit
+                          behind the menu. */}
+                      <td className="py-3.5 px-5 whitespace-nowrap">
+                        {r.workOrderId ? (
+                          <Link
+                            href={`/work-orders/${r.workOrderId}`}
+                            className="text-brand-700 font-medium hover:underline"
+                            title={
+                              r.workOrderStatus
+                                ? `Work order is ${WO_STATUS_LABELS[r.workOrderStatus] ?? r.workOrderStatus}`
+                                : undefined
+                            }
+                          >
+                            {r.workOrderNumber ?? "View"}
+                          </Link>
+                        ) : (
+                          <span className="text-ink-400">Not raised</span>
+                        )}
+                      </td>
                       <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-3">
-                          {/* Assigning names who carries the job. A technician
-                              may raise a work order, move a date and record a
-                              deferral, but not put somebody else's name on the
-                              work — the route refuses it either way, and a
-                              control that is always refused is worse than no
-                              control. */}
-                          {canAssign && r.status !== "COMPLETED" && (
-                            <button
-                              onClick={() => setAssign(r)}
-                              className="text-ink-500 hover:text-ink-900 hover:underline"
-                            >
-                              Assign
-                            </button>
-                          )}
-                          {r.status !== "COMPLETED" && (
-                            <button
-                              onClick={() => setReschedule({ row: r, date: r.plannedDate })}
-                              className="text-ink-500 hover:text-ink-900 hover:underline"
-                            >
-                              Reschedule
-                            </button>
-                          )}
-                          {r.status === "OVERDUE" && (
-                            <button
-                              onClick={() =>
-                                setSnooze({
-                                  row: r,
-                                  reason: "",
-                                  until: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10),
-                                })
-                              }
-                              className="text-ink-500 hover:text-ink-900 hover:underline"
-                            >
-                              Quieten
-                            </button>
-                          )}
-                          {r.status !== "COMPLETED" && r.status !== "DEFERRED" && (
-                            <button
-                              onClick={() =>
-                                setDefer({
-                                  row: r,
-                                  reason: "",
-                                  reviewDate: new Date(Date.now() + 30 * 864e5)
-                                    .toISOString()
-                                    .slice(0, 10),
-                                })
-                              }
-                              className="text-violet-600 hover:text-violet-700 hover:underline"
-                            >
-                              Defer
-                            </button>
-                          )}
-                          {/* Every PM is discharged by a work order, and the
-                              plan row is where the trace starts. Naming the
-                              work order rather than linking to "View WO" is
-                              what makes it a trace rather than a jump. */}
-                          {r.workOrderId ? (
-                            <Link
-                              href={`/work-orders/${r.workOrderId}`}
-                              className="text-brand-700 font-medium hover:underline"
-                              title={r.workOrderStatus ? `Work order is ${WO_STATUS_LABELS[r.workOrderStatus] ?? r.workOrderStatus}` : undefined}
-                            >
-                              {r.workOrderNumber ?? "View work order"}
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`/work-orders/new?scheduleId=${r.id}`}
-                              className="text-info-700 font-medium hover:underline"
-                            >
-                              Raise WO
-                            </Link>
-                          )}
+                        <div className="flex justify-end">
+                          <KebabMenu
+                            ariaLabel={`Actions for ${r.equipmentName ?? "this activity"} on ${r.plannedDate}`}
+                            items={rowActions(r)}
+                          />
                         </div>
                       </td>
                     </tr>
