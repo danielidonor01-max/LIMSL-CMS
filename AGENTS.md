@@ -236,31 +236,47 @@ app code slices/compares them as strings. Never destructively reset the DB.
 Two agents work this repo concurrently — **coordinate or you will clobber**.
 
 ```
-  phase-2  (Claude)  ─┐
-                      ├─►  combined  ──►  main
-  gemini   (Gemini)  ─┘    integrate      production
-                           and test
+  claude  (Claude)  ─┐
+                     ├─►  preview  ──►  main
+  gemini  (Gemini)  ─┘    integrate     production
+                          and test
 ```
 
 - **`main` is production.** Vercel deploys it. Nothing lands here that has not
-  been through `combined` first. No agent pushes to `main` directly.
-- **`combined` is where the two streams meet and get tested together.** Merge
+  been through `preview` first. No agent pushes to `main` directly.
+- **`preview` is where the two streams meet and get tested together.** Merge
   your branch here, run the suite, drive the flow, and only then does it go to
   `main`. A conflict is meant to surface here rather than in production.
-- **`phase-2` is Claude's. `gemini` is Gemini's.** Work on your own branch,
-  merge it into `combined` yourself, and say so.
+- **`claude` is Claude's. `gemini` is Gemini's.** Work on your own branch,
+  merge it into `preview` yourself, and say so.
 
 Claude may read, audit and correct anything on `gemini`; corrections go through
-`combined` like everything else, with a commit message saying what was changed
+`preview` like everything else, with a commit message saying what was changed
 and why.
+
+The branches were once `phase-2`, `combine`, `combined` and `gemini`. Two of
+those differed by one letter and one was named after a phase nobody was in any
+more, which is how real integration work ended up on `combine` while `combined`
+sat level with `main` doing nothing. The names are people and destinations now.
+`docs/BRANCHES.md` has the full account, including what moved where.
 
 ### Work in your own worktree
 
-`limsl-cms-phase2/` is Claude's checkout. `limsl-cms/` is Gemini's. Editing
-files in someone else's working directory is how work gets committed by the
-wrong agent under the wrong message — which has already happened once, when a
-WhatsApp notifications feature was swept into a commit about table columns
-because it was sitting uncommitted in the other agent's tree.
+One checkout per agent, and the branch name matches the folder:
+
+| Folder | Branch | Whose |
+|---|---|---|
+| `limsl-cms/` | `gemini` | Gemini's |
+| `limsl-cms-claude/` | `claude` | Claude's |
+
+`limsl-cms-phase2/` is retired. Editing files in someone else's working
+directory is how work gets committed by the wrong agent under the wrong message
+— which has happened twice. First a WhatsApp notifications feature was swept
+into a commit about table columns because it was sitting uncommitted in the
+other agent's tree. Then, during the September interface work, both agents were
+writing into `limsl-cms-phase2/` at the same time: eleven modified files and
+three new components appeared in it mid-session, and the only safe move was to
+stop, say so, and work from a separate checkout.
 
 If you find changes you did not make in your own working tree, **stop and say
 so** rather than committing them.

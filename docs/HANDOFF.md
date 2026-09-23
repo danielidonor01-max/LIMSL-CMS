@@ -9,6 +9,13 @@ This document is the *state of the world*: what exists, what's half-done, what's
 
 ## 1. Branch state
 
+> **Superseded, 2026-09-23.** The branch layout below is the July one and the
+> names in it no longer exist. The current layout is `claude` and `gemini`
+> working branches, meeting on `preview`, which goes to `main`. See
+> **`docs/BRANCHES.md`** — it is the live document and this section is kept
+> only because the reconciliation it describes is still the reason `main` looks
+> the way it does.
+
 **RECONCILED as of 2026-07-13.** `phase-2` was merged into `main` (`ade7366`).
 `main` is now the single source of truth and contains everything.
 
