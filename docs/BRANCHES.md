@@ -82,6 +82,33 @@ knowing about rather than discovering:
 - The quick-sign modal told first-time signers to set a **"4-digit PIN"** while
   `PIN_LENGTH` is 6. Read the constant rather than writing the number.
 
+## `Claude` and `claude` cannot both exist
+
+There is a branch on the remote called **`Claude`**, capital C, pointing at the
+work-order lifecycle commit. Mine is **`claude`**, lower case. On Windows —
+which is what this repo is checked out on — git stores remote-tracking branches
+as files, and the filesystem does not distinguish the two. Only one ref file
+survives a fetch, and git then answers questions about the other one with the
+wrong commit and no error:
+
+```
+$ git ls-remote --heads origin        # the truth
+a02ae39  claude
+2ab218d  Claude
+
+$ git rev-parse --short origin/Claude # what this checkout believes
+a02ae39                               # wrong, and it does not say so
+```
+
+That is worse than the `combine`/`combined` confusion this rename was meant to
+end, because at least those two were spelled differently. **Do not create a
+branch whose name differs from an existing one only by case.**
+
+Nothing is at risk right now: `2ab218d` is also on `gemini`, on `combine` and in
+`preview`, so `Claude` holds no unique work and can go whenever its owner says
+so. Until it does, run `git ls-remote --heads origin` rather than trusting
+`origin/claude` in a Windows checkout.
+
 ## Two things that will bite you
 
 **Line endings.** `.gitattributes` pins everything to LF. If your next pull
