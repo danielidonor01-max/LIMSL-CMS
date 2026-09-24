@@ -63,6 +63,7 @@ async function main() {
   }
   console.log(`\nApplying the standing-document schema…\n`);
   await applyStandingDocuments();
+  process.exit(0);
 }
 
 if (process.argv[1]?.includes("apply-standing-documents")) {
