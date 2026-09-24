@@ -17,6 +17,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
+import { permitReadiness } from "@/lib/hse/standing-documents";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
@@ -173,6 +174,18 @@ export async function POST(request: Request) {
     const wmsId = jhaDoc.wmsId ?? null;
     if (wmsId) {
       const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, wmsId)).limit(1);
+
+      // The method statement is a standing document and the analysis pins the
+      // revision it was written against. A machine joining the category revises
+      // the method, which means the hazards were assessed against work that has
+      // since changed — so the next permit waits for HSE to revise the analysis.
+      // Permits already live are untouched: stopping work that is already under
+      // way is a decision for a person, not a side effect of an edit.
+      const readiness = permitReadiness(wms, jhaDoc);
+      if (!readiness.ok) {
+        return NextResponse.json({ error: readiness.reason, blockedBy: readiness.blockedBy }, { status: 409 });
+      }
+
       if (wms && wms.status !== "APPROVED") {
         return NextResponse.json(
           {

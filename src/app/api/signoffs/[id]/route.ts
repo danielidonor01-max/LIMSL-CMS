@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signoffs, auditLog, users, workOrders } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canSignStep } from "@/lib/roles";
@@ -133,6 +133,42 @@ export async function POST(
       );
     }
 
+    // Signing in somebody's place is allowed once on any one document.
+    //
+    // One is a person being covered for. Several is a document that has stopped
+    // recording who agreed to the work and started recording who was at the
+    // keyboard, and a chain of five signatures from one account authorises
+    // nothing — it is one person's opinion wearing five hats.
+    //
+    // When more than one signature needs to move, that is what delegation is
+    // for: it hands the step to somebody who can actually sign it, and their
+    // signature is their own.
+    if (isOverride) {
+      const siblings = await db
+        .select({ id: signoffs.id, roleLabel: signoffs.roleLabel, by: signoffs.signedByName })
+        .from(signoffs)
+        .where(
+          and(
+            eq(signoffs.entityType, step.entityType),
+            eq(signoffs.entityId, step.entityId),
+            eq(signoffs.isOverride, true),
+          ),
+        );
+      const already = siblings.filter((x) => x.id !== step.id);
+      if (already.length > 0) {
+        return NextResponse.json(
+          {
+            error:
+              `${already[0].by ?? "Somebody"} has already signed the ${already[0].roleLabel} step in ` +
+              `another person's place on this document. One stand-in signature is allowed; a second ` +
+              `would mean the document no longer records who agreed to the work. ` +
+              `Delegate this step to somebody who can sign it themselves.`,
+            alreadyOverridden: true,
+          },
+          { status: 409 },
+        );
+      }
+    }
     // Returning something for revision without saying what is wrong sends the
     // author back to guess. The comment is what makes a rejection actionable,
     // so it is required rather than optional on this branch.

@@ -222,6 +222,61 @@ Each of those is a named act with its own gate and its own audit line, taken at
 - **The assigned person raises the work order.** A manager may do it on their
   behalf; another technician may not.
 
+### The WMS is a standing document, not a form (do not make it per-job again)
+
+How you service a CNC light-duty machine does not change because it is
+October rather than March. So a method statement is written ONCE for a
+CATEGORY, approved, and then it stands — every PM of those machines runs
+under it until somebody revises it. It is a controlled document, which is why
+QA/QC now sit in `WMS_CHAIN` as they do on the maintenance procedure.
+
+`wms_documents.category` is what makes it standing. A WMS with no category is
+a one-off: a breakdown repair on a single machine.
+
+The hazard analysis hangs off it and pins ONE number, `jha_documents.wms_revision`:
+the revision its hazards were assessed against. When a machine joins the
+category the method is revised, the old revision and its analysis both become
+SUPERSEDED, and `permitReadiness()` refuses the next permit until HSE has
+revised the analysis. **Permits already live are deliberately untouched** —
+stopping work that is already authorised and under way is a decision for a
+person, not a side effect of somebody editing a document.
+
+Permits are the exception to all of this and are raised fresh each PM cycle,
+because a permit has a start, a validity, an expiry and a hand-back. It
+authorises work in a window; it cannot span months the way a method can.
+
+The rules are pure in `src/lib/hse/standing-documents.ts` so the permit route
+and the screens cannot disagree about them.
+
+### Delegation, and signing in somebody's place
+
+Two different things, and the difference is the point.
+
+- **Delegation** (`POST /api/signoffs/[id]/delegate`) moves a PENDING step to
+  somebody who is actually here. It signs nothing; it changes who may sign,
+  and that person then signs under their own name. Allowed as often as people
+  are away, each with a reason, each in the audit log.
+- **Signing in somebody's place** is the `isOverride` path, and it is allowed
+  **once per document**. One is a person being covered for. Several is a
+  document that has stopped recording who agreed to the work — a chain of five
+  signatures from one account is one person's opinion wearing five hats.
+
+Delegating sets `signerUserId` to the delegate, which is why their signature
+is their own rather than an override: they are exactly who the step now names.
+
+### The register drives the plan
+
+A machine on the register that is not on the plan is a machine nobody will
+service. Adding one — or changing its interval — seeds the schedule from
+`maintenanceFrequency` via `syncPlanForEquipment()`, including for a category
+nothing has used before. It only ever ADDS missing dates: rows somebody
+rescheduled, deferred or completed are decisions, and overwriting them would
+erase those decisions silently.
+
+Counting runs from the machine's own anchor (commissioning, or last service),
+not the calendar quarter, because two machines bought six months apart really
+are due at different times.
+
 ### Assignment is a supervisory act, everywhere
 
 `MAINTENANCE_WRITE_ROLES` includes `TECHNICIAN`, so anything that lets a

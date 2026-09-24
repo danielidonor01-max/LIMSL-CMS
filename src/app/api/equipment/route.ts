@@ -5,6 +5,7 @@ import { equipment, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { syncPlanForEquipment } from "@/lib/maintenance/plan-sync";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
 import { normaliseAssetId } from "@/lib/asset-id";
@@ -77,7 +78,18 @@ export async function POST(request: Request) {
       entityDescription: `${newAsset.assetId} · ${newAsset.name} added to the asset register`,
     });
 
-    return NextResponse.json(newAsset, { status: 201 });
+    // A machine on the register that is not on the plan is a machine nobody
+    // is going to service. The register already records the interval, so the
+    // plan follows from it — including for a category nothing has used before.
+    // Best-effort: a plan that could not be written must not lose the asset.
+    let planned = { added: 0, dates: [] as string[] };
+    try {
+      planned = await syncPlanForEquipment(newAsset, { actor: gate.actor });
+    } catch (err) {
+      console.warn("equipment create: could not seed the maintenance plan", err);
+    }
+
+    return NextResponse.json({ ...newAsset, planned }, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create equipment:", error);
     return NextResponse.json({ error: "Failed to create equipment" }, { status: 500 });

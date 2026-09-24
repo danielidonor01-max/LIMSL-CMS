@@ -29,7 +29,16 @@ function NewWmsForm() {
   const [scope, setScope] = useState("");
   const [mobilization, setMobilization] = useState("");
   const [rawTools, setRawTools] = useState("");
-  const [rawMaterials, setRawMaterials] = useState("");
+  // Materials used to be a comma-separated box. Somebody typed "bearing, seal"
+  // and the spares register never heard about it, so the one number the
+  // register exists to produce — what is below its minimum — was guesswork.
+  // A method statement names parts that exist, by the number the storeman
+  // will look for.
+  const [spares, setSpares] = useState<any[]>([]);
+  const [pickedParts, setPickedParts] = useState<
+    { sparePartId: string; partNumber: string; name: string; quantity: string }[]
+  >([]);
+  const [partToAdd, setPartToAdd] = useState("");
   const [hseRequirements, setHseRequirements] = useState("");
   const [qualityControlRequirements, setQualityControlRequirements] = useState("");
   const [emergencyRequirements, setEmergencyRequirements] = useState("");
@@ -76,6 +85,10 @@ function NewWmsForm() {
   // signed the authorisation, so filtering to approved work orders here was
   // what created the deadlock.
   useEffect(() => {
+    fetch("/api/spares")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setSpares(Array.isArray(d) ? d : []))
+      .catch(() => {});
     fetch("/api/work-orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((d) =>
@@ -105,7 +118,12 @@ function NewWmsForm() {
     setSaving(true);
 
     const parsedTools = rawTools.split(",").map((s) => s.trim()).filter(Boolean);
-    const parsedMaterials = rawMaterials.split(",").map((s) => s.trim()).filter(Boolean);
+    const parsedMaterials = pickedParts.map((p) => ({
+      sparePartId: p.sparePartId,
+      partNumber: p.partNumber,
+      name: p.name,
+      quantity: Number(p.quantity) || 1,
+    }));
     const parsedSteps = steps.map((s) => s.trim()).filter(Boolean);
 
     // Determine machinery scope names based on selected IDs
@@ -323,14 +341,77 @@ function NewWmsForm() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-ink-700">Materials & Spares Needed</label>
-              <input
-                type="text"
-                placeholder="Material X, Spare Part Y (comma separated)..."
-                value={rawMaterials}
-                onChange={(e) => setRawMaterials(e.target.value)}
-                className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2.5 text-xs focus:outline-none"
-              />
+              <label className="text-sm font-medium text-ink-700">Materials &amp; spares needed</label>
+              <p className="text-xs text-ink-500">
+                Chosen from the spares register, so what this method needs and what the store holds are
+                the same list. Typed-in names were invisible to the below-minimum warning.
+              </p>
+              <div className="flex gap-2">
+                <Select
+                  value={partToAdd}
+                  onChange={(v) => {
+                    const part = spares.find((sp: any) => sp.id === v);
+                    if (!part) return;
+                    setPickedParts((cur) =>
+                      cur.some((c) => c.sparePartId === part.id)
+                        ? cur
+                        : [
+                            ...cur,
+                            {
+                              sparePartId: part.id,
+                              partNumber: part.partNumber,
+                              name: part.name,
+                              quantity: "1",
+                            },
+                          ],
+                    );
+                    setPartToAdd("");
+                  }}
+                  ariaLabel="Add a spare part"
+                  className="flex-1"
+                >
+                  <option value="">Add a part from the register…</option>
+                  {spares.map((sp: any) => (
+                    <option key={sp.id} value={sp.id}>
+                      {sp.partNumber} · {sp.name}
+                      {sp.brand ? ` · ${sp.brand}` : ""} ({sp.quantityOnHand} on hand)
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {pickedParts.length > 0 && (
+                <ul className="divide-y divide-ink-200 border border-ink-200 rounded-lg">
+                  {pickedParts.map((pp, i) => (
+                    <li key={pp.sparePartId} className="flex items-center gap-3 p-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-ink-900 truncate">{pp.name}</p>
+                        <p className="text-xs text-ink-500">{pp.partNumber}</p>
+                      </div>
+                      <input
+                        type="number"
+                        min="1"
+                        value={pp.quantity}
+                        onChange={(e) =>
+                          setPickedParts((cur) =>
+                            cur.map((c, j) => (j === i ? { ...c, quantity: e.target.value } : c)),
+                          )
+                        }
+                        className="w-20 bg-ink-100 border border-ink-200 rounded-lg p-1.5 text-xs text-center"
+                        aria-label={`Quantity of ${pp.name}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPickedParts((cur) => cur.filter((_, j) => j !== i))}
+                        className="text-ink-400 hover:text-danger-600"
+                        aria-label={`Remove ${pp.name}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 

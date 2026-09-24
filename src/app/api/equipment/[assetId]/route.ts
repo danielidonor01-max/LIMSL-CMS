@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { equipment } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
+import { syncPlanForEquipment } from "@/lib/maintenance/plan-sync";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 
@@ -105,6 +106,22 @@ export async function PATCH(
       .set(updates)
       .where(eq(equipment.id, before.id))
       .returning();
+
+    // Changing how often a machine is serviced changes what it is due, so the
+    // plan follows. Only the missing dates are added — anything already
+    // rescheduled, deferred or done is somebody's decision and stays.
+    // A decommissioned machine gets nothing new: it is not being serviced.
+    if (
+      body.maintenanceFrequency !== undefined &&
+      body.maintenanceFrequency !== before.maintenanceFrequency &&
+      (updated[0]?.status ?? before.status) !== "DECOMMISSIONED"
+    ) {
+      try {
+        await syncPlanForEquipment(updated[0] ?? before, { actor: gate.actor });
+      } catch (err) {
+        console.warn("equipment update: could not refresh the maintenance plan", err);
+      }
+    }
 
     // Log material lifecycle changes to the machine timeline.
     if (before) {

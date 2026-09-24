@@ -1,8 +1,8 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments, equipment, workOrders, pmBatches, auditLog } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { wmsDocuments, jhaDocuments, equipment, workOrders, pmBatches, auditLog } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { WMS_WRITE_ROLES } from "@/lib/roles";
@@ -41,6 +41,25 @@ export async function reconcileWmsStatus(wmsId: string) {
     set.approvedDate = (finalStep.signedAt ?? new Date().toISOString()).slice(0, 10);
   }
   await db.update(wmsDocuments).set(set).where(eq(wmsDocuments.id, wmsId));
+
+  // An approved revision retires the one it replaces, and takes its hazard
+  // analysis out of date with it. The analysis is NOT rejected or deleted —
+  // it was correct for the method it was written against, and that record is
+  // the evidence. It is marked superseded, which is what makes the permit
+  // route refuse the next permit until HSE has revised it.
+  if (status === "APPROVED") {
+    const [row] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, wmsId)).limit(1);
+    if (row?.supersedesId) {
+      await db
+        .update(wmsDocuments)
+        .set({ status: "SUPERSEDED" })
+        .where(eq(wmsDocuments.id, row.supersedesId));
+      await db
+        .update(jhaDocuments)
+        .set({ status: "SUPERSEDED" })
+        .where(eq(jhaDocuments.wmsId, row.supersedesId));
+    }
+  }
 }
 
 export async function GET() {
@@ -108,34 +127,83 @@ export async function POST(request: Request) {
       workOrderId = wo.id;
     }
 
-    // A batch method statement is the whole point of a batch: one document
-    // covering every machine due that day. The scope is read from the batch
-    // rather than taken from the request, because a WMS that covers four of
-    // the five machines on the permit is worse than no WMS at all.
+    // ── Scope ─────────────────────────────────────────────────────────────
+    // A standing method statement belongs to a CATEGORY, not to a job. How you
+    // service CNC light-duty machines does not change because it is October
+    // rather than March, so the method is written once for the category and
+    // revised thereafter. Every PM of those machines runs under it.
+    //
+    // The scope is therefore every machine in the category, read from the
+    // register rather than taken from the request. That is also what makes a
+    // new machine a REVISION: the moment it joins the category the method
+    // covers a machine it was not written for, and the document has to say so.
+    //
+    // A WMS with no category is a one-off — a breakdown repair on a single
+    // machine — and keeps the machines it was given.
+    let category: string | null = body.category ? String(body.category) : null;
     let batchId: string | null = null;
     let scopeIds: string[] = Array.isArray(body.equipmentIds) ? body.equipmentIds : [];
     let scopeNames: string[] = Array.isArray(body.machinesScope) ? body.machinesScope : [];
+
+    // Raised from a batch: the batch names the category, and the category
+    // decides the scope. The batch does not own the document.
     if (body.batchId) {
       const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, body.batchId)).limit(1);
       if (!batch) return NextResponse.json({ error: "PM batch not found." }, { status: 400 });
-      const covered = await db
-        .select({ equipmentId: workOrders.equipmentId, woId: workOrders.id, assetId: equipment.assetId, name: equipment.name })
-        .from(workOrders)
-        .leftJoin(equipment, eq(workOrders.equipmentId, equipment.id))
-        .where(eq(workOrders.batchId, batch.id));
-      if (covered.length === 0) {
+      batchId = batch.id;
+      category = category ?? batch.category;
+      if (!workOrderId) {
+        const [lead] = await db
+          .select({ id: workOrders.id })
+          .from(workOrders)
+          .where(eq(workOrders.batchId, batch.id))
+          .limit(1);
+        if (lead) workOrderId = lead.id;
+      }
+    }
+
+    let revision = Number(body.revision ?? 0) || 0;
+    let supersedesId: string | null = null;
+
+    if (category) {
+      const machines = await db
+        .select({ id: equipment.id, assetId: equipment.assetId, name: equipment.name })
+        .from(equipment)
+        .where(eq(equipment.category, category));
+      if (machines.length === 0) {
         return NextResponse.json(
-          { error: "That batch has no work orders yet, so there is nothing to write a method for." },
+          { error: "No machines are on the register under that category." },
           { status: 409 },
         );
       }
-      batchId = batch.id;
-      scopeIds = covered.map((c) => c.equipmentId);
-      scopeNames = covered.map((c) => [c.assetId, c.name].filter(Boolean).join(" "));
-      // The batch's work orders are all equally the job. The first is carried
-      // as the named one so the existing permit gate, which reads a single
-      // work order off the chain, still finds an authorisation to check.
-      if (!workOrderId) workOrderId = covered[0].woId;
+      scopeIds = machines.map((m) => m.id);
+      scopeNames = machines.map((m) => [m.assetId, m.name].filter(Boolean).join(" "));
+
+      // A revision continues the category's lineage rather than starting a new
+      // document, which is what makes 'which method was this job done under'
+      // answerable years later.
+      const [latest] = await db
+        .select()
+        .from(wmsDocuments)
+        .where(eq(wmsDocuments.category, category))
+        .orderBy(desc(wmsDocuments.revision))
+        .limit(1);
+      if (latest) {
+        if (latest.status !== "APPROVED" && latest.status !== "SUPERSEDED" && latest.status !== "REJECTED") {
+          return NextResponse.json(
+            {
+              error:
+                `${latest.wmsNumber} for this category is still being reviewed. ` +
+                `Finish or reject it before starting another revision.`,
+            },
+            { status: 409 },
+          );
+        }
+        revision = (latest.revision ?? 0) + 1;
+        supersedesId = latest.id;
+      } else {
+        revision = 1;
+      }
     }
     const wmsNumber = await nextDocNumber("WMS");
 
@@ -144,9 +212,12 @@ export async function POST(request: Request) {
       wmsNumber,
       title: body.title,
       workOrderId,
-      revision: body.revision || 0,
+      revision,
       machinesScope: JSON.stringify(scopeNames),
       batchId,
+      category,
+      supersedesId,
+      changeSummary: body.changeSummary || null,
       equipmentIds: JSON.stringify(scopeIds),
       purpose: body.purpose || "",
       scope: body.scope || "",

@@ -1,7 +1,7 @@
 // src/lib/maintenance/flow.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pmFlowState, cmFlowState, canTake, PM_FLOW, CM_FLOW } from "./flow";
+import { pmFlowState, cmFlowState, canTake, cmNeedsAuthorisation, PM_FLOW, CM_FLOW } from "./flow";
 
 test("a PM with nothing done is waiting on its batch", () => {
   const s = pmFlowState({});
@@ -146,4 +146,36 @@ test("every step says who it is for and why it exists", () => {
     assert.ok(step.because.trim().length > 0, `${step.key} has no reason`);
     assert.ok(step.label.trim().length > 0, `${step.key} has no label`);
   }
+});
+
+test("a reported fault always needs the Factory Manager", () => {
+  assert.equal(cmNeedsAuthorisation({ origin: "REPORTED" }), true);
+  assert.equal(cmNeedsAuthorisation({}), true, "unknown origin is treated as reported");
+});
+
+test("a foreman's scheduled repair does not, below the threshold", () => {
+  // Making him queue for a signature to do his own planned job is the kind of
+  // control that gets worked around rather than followed.
+  assert.equal(cmNeedsAuthorisation({ origin: "SCHEDULED", urgency: "MEDIUM" }), false);
+  assert.equal(cmNeedsAuthorisation({ origin: "SCHEDULED", urgency: "HIGH" }), false);
+});
+
+test("critical work goes up whatever its origin", () => {
+  assert.equal(cmNeedsAuthorisation({ origin: "SCHEDULED", urgency: "CRITICAL" }), true);
+  assert.equal(
+    cmNeedsAuthorisation({ origin: "SCHEDULED", urgency: "LOW", equipmentCriticality: "CRITICAL" }),
+    true,
+    "a critical machine raises the bar even for a low-urgency job",
+  );
+});
+
+test("a scheduled repair below the threshold starts at assignment", () => {
+  const s = cmFlowState({ origin: "SCHEDULED", urgency: "MEDIUM" });
+  assert.equal(s.current?.key, "ASSIGN");
+  assert.ok(s.done.includes("MOTION"));
+});
+
+test("a scheduled repair on a critical machine still waits for the Factory Manager", () => {
+  const s = cmFlowState({ origin: "SCHEDULED", urgency: "LOW", equipmentCriticality: "CRITICAL" });
+  assert.equal(s.current?.key, "MOTION");
 });

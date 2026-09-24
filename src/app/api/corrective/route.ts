@@ -5,7 +5,7 @@ import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES, BREAKDOWN_NOTIFY_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, BREAKDOWN_NOTIFY_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { notify } from "@/lib/notifications";
@@ -33,6 +33,18 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
+    // Corrective work arrives two ways. A breakdown is REPORTED by whoever
+    // found it — anyone who can write maintenance records. A repair a foreman
+    // has PLANNED is SCHEDULED, and planning somebody else's week is the same
+    // supervisory act as assigning it, so it sits behind the same gate.
+    const scheduled = String(body.origin ?? "REPORTED").toUpperCase() === "SCHEDULED";
+    if (scheduled && !WORK_ASSIGN_ROLES.includes(gate.actor?.role ?? "")) {
+      return NextResponse.json(
+        { error: "Scheduling corrective work is done by a foreman or above. Report the fault instead." },
+        { status: 403 },
+      );
+    }
+
     const cmrfNumber = await nextDocNumber("CMRF");
 
     const newCorrective = {
@@ -45,6 +57,10 @@ export async function POST(request: Request) {
       reportedDate: body.reportedDate || new Date().toISOString().split("T")[0],
       faultType: body.faultType || "UNKNOWN",
       urgency: body.urgency || "MEDIUM",
+      origin: scheduled ? "SCHEDULED" : "REPORTED",
+      plannedDate: scheduled ? (body.plannedDate || null) : null,
+      scheduledById: scheduled ? (gate.actor?.id ?? null) : null,
+      scheduledByName: scheduled ? (gate.actor?.name ?? null) : null,
       faultDescription: body.faultDescription || "",
       operatingStatusAtFailure: body.operatingStatusAtFailure || "RUNNING",
       observedFault: body.observedFault || "",

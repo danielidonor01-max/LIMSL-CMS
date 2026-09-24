@@ -42,10 +42,21 @@ export const CM_CHAIN: ChainStep[] = [
 //   Prepared (Foreman) → Reviewed (Maintenance Manager) → HSE safety sign-off →
 //   Factory Manager final approval. HSE signs, then it pushes to the Factory
 //   Manager for the final sign-off.
+// A method statement is a STANDING document: written once for a category of
+// machines and revised thereafter, not filled in per job. That makes it a
+// controlled document, and controlled documents pass through document
+// control — which is why QA/QC now sits in this chain, as they do on the
+// maintenance procedure.
+//
+// QA/QC come after the people who know the work and the hazards, and before
+// the Factory Manager. The order is deliberate: document control accepts a
+// method that has already been reviewed for correctness and for safety; it is
+// not their job to be the first reader.
 export const WMS_CHAIN: ChainStep[] = [
   { role: "FOREMAN", roleLabel: "Prepared by (Foreman)", required: true },
   { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
   { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
+  { role: "QA_QC", roleLabel: "Document control (QA/QC)", required: true },
   { role: "FACTORY_MANAGER", roleLabel: "Final approval (Factory Manager)", required: true },
 ];
 

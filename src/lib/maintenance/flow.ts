@@ -184,6 +184,26 @@ export const CM_FLOW: FlowStep[] = [
   },
 ];
 
+// Whether a corrective job needs the Factory Manager before anybody is put on it.
+//
+// A breakdown reported off the floor always does: somebody has to decide the
+// repair happens at all. A repair a Foreman has PLANNED is different — he has
+// already decided, and making him queue for a signature to do his own job is
+// the kind of control that gets worked around rather than followed.
+//
+// The exception is the work where being wrong is expensive: a critical fault,
+// or any fault on a machine the register calls critical. Those go up whatever
+// their origin.
+export function cmNeedsAuthorisation(input: {
+  origin?: string | null;
+  urgency?: string | null;
+  equipmentCriticality?: string | null;
+}): boolean {
+  if (String(input.urgency ?? "").toUpperCase() === "CRITICAL") return true;
+  if (String(input.equipmentCriticality ?? "").toUpperCase() === "CRITICAL") return true;
+  return String(input.origin ?? "REPORTED").toUpperCase() !== "SCHEDULED";
+}
+
 // What is known about a job so far. Every field is optional because the
 // earliest stages genuinely do not have most of them yet.
 export type FlowFacts = {
@@ -196,6 +216,10 @@ export type FlowFacts = {
   permitStatus?: string | null;
   /** CM only: the Factory Manager has moved it to the Foreman. */
   motionedAt?: string | null;
+  /** CM only: REPORTED off the floor, or SCHEDULED by a foreman. */
+  origin?: string | null;
+  urgency?: string | null;
+  equipmentCriticality?: string | null;
   completed?: boolean;
 };
 
@@ -257,6 +281,8 @@ export function cmFlowState(facts: FlowFacts): FlowState {
       case "REPORT":
         return true;
       case "MOTION":
+        // Scheduling it was the decision, unless it is above the threshold.
+        if (!cmNeedsAuthorisation(facts)) return true;
         return !!facts.motionedAt;
       case "ASSIGN":
         return !!facts.assignedToId;

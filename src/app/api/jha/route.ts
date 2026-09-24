@@ -189,6 +189,14 @@ export async function POST(request: Request) {
       // keeps a PM's permit attached to the same group of machines the
       // method was written for.
       batchId: wms.batchId ?? null,
+      // The category and the REVISION the hazards were assessed against.
+      // The revision is the important one: when a machine joins the category
+      // and the method is revised, this number is what proves this analysis
+      // covered the work as it was, and what stops a permit resting on it.
+      category: wms.category ?? null,
+      wmsRevision: wms.revision ?? 0,
+      changeSummary: body.changeSummary || null,
+      supersedesId: body.supersedesId || null,
       equipmentId: body.equipmentId || null,
       workArea: body.workArea || null,
       steps: JSON.stringify(steps),

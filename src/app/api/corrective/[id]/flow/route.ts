@@ -28,7 +28,7 @@ import { requireRoles } from "@/lib/authz";
 import { WORK_ASSIGN_ROLES, REPAIR_AUTHORISE_ROLES } from "@/lib/roles";
 import { notify } from "@/lib/notifications";
 import { raiseWorkOrder } from "@/lib/maintenance/raise-work-order";
-import { cmFlowState } from "@/lib/maintenance/flow";
+import { cmFlowState, cmNeedsAuthorisation } from "@/lib/maintenance/flow";
 
 
 async function documents(id: string, record: typeof correctiveMaintenance.$inferSelect) {
@@ -49,7 +49,15 @@ async function documents(id: string, record: typeof correctiveMaintenance.$infer
 
 async function facts(id: string, record: typeof correctiveMaintenance.$inferSelect) {
   const d = await documents(id, record);
+  const [machine] = await db
+    .select({ criticality: equipment.criticality })
+    .from(equipment)
+    .where(eq(equipment.id, record.equipmentId))
+    .limit(1);
   return {
+    origin: record.origin,
+    urgency: record.urgency,
+    equipmentCriticality: machine?.criticality ?? null,
     motionedAt: record.repairAuthorisedAt,
     assignedToId: record.assignedToId,
     workOrderCount: d.wos.length,
@@ -164,12 +172,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const gate = await requireRoles(WORK_ASSIGN_ROLES);
       if (gate.res) return gate.res;
 
-      if (!record.repairAuthorisedAt) {
+      const [machineRow] = await db
+        .select({ criticality: equipment.criticality })
+        .from(equipment)
+        .where(eq(equipment.id, record.equipmentId))
+        .limit(1);
+      const needsAuth = cmNeedsAuthorisation({
+        origin: record.origin,
+        urgency: record.urgency,
+        equipmentCriticality: machineRow?.criticality ?? null,
+      });
+      if (needsAuth && !record.repairAuthorisedAt) {
         return NextResponse.json(
           {
             error:
-              "The Factory Manager has not authorised this repair yet. A fault is assigned once the " +
-              "repair has been agreed, not before.",
+              `The Factory Manager has not authorised this repair yet. ` +
+              (String(record.origin) === "SCHEDULED"
+                ? `Planned repairs normally go straight to assignment, but this one is critical, ` +
+                  `so it goes up first.`
+                : `A reported fault is assigned once the repair has been agreed, not before.`),
           },
           { status: 409 },
         );

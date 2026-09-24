@@ -358,6 +358,15 @@ export const wmsDocuments = pgTable("wms_documents", {
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   // A batch WMS covers every machine in the batch; equipmentIds lists them.
   batchId: text("batch_id"),
+  // A method statement is a STANDING document, not a form filled in per job.
+  // The method for servicing CNC light-duty machines does not change because
+  // it is October rather than March, so it is written once against the
+  // category and revised, the way the maintenance procedure is. A WMS with no
+  // category is a one-off: a breakdown repair on a single machine.
+  category: text("category"),
+  changeSummary: text("change_summary"),
+  effectiveDate: text("effective_date"),
+  supersedesId: text("supersedes_id"),
 });
 
 // ─── Permits (PTW) ──────────────────────────────────────────────────────────
@@ -387,6 +396,14 @@ export const jhaDocuments = pgTable("jha_documents", {
   approvedAt: text("approved_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   batchId: text("batch_id"),
+  // The analysis inherits the category from its method statement, and pins
+  // the REVISION it was written against. When the method is revised — a new
+  // machine joins the category — that pin is what proves the hazards were
+  // assessed against the old work, and what stops a permit being issued on it.
+  category: text("category"),
+  wmsRevision: integer("wms_revision"),
+  changeSummary: text("change_summary"),
+  supersedesId: text("supersedes_id"),
 }, (t) => [index("jha_wms_idx").on(t.wmsId)]);
 
 export const permits = pgTable("permits", {
@@ -573,6 +590,13 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   repairAuthorisedAt: text("repair_authorised_at"),
   repairAuthorisedById: text("repair_authorised_by_id"),
   repairAuthorisedByName: text("repair_authorised_by_name"),
+  // Corrective work does not only arrive as a breakdown. A foreman can plan a
+  // repair for a machine, and that is a different origin with a different
+  // starting point in the flow.
+  origin: text("origin").notNull().default("REPORTED"), // REPORTED | SCHEDULED
+  plannedDate: text("planned_date"),
+  scheduledById: text("scheduled_by_id"),
+  scheduledByName: text("scheduled_by_name"),
 }, (t) => [index("corrective_maintenance_equipment_idx").on(t.equipmentId)]);
 
 // ─── KPI Records ────────────────────────────────────────────────────────────
@@ -1222,6 +1246,16 @@ export const signoffs = pgTable(
     comments: text("comments"),
     signedAt: text("signed_at"),
     createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+    // Delegation: moving a pending signature to somebody who is actually here.
+    // It does not sign anything — it changes WHO may sign this step, and it
+    // can happen more than once as people come and go, so the history lives in
+    // the audit log and these columns hold whoever holds it now.
+    delegatedToId: text("delegated_to_id").references(() => users.id),
+    delegatedToName: text("delegated_to_name"),
+    delegatedById: text("delegated_by_id").references(() => users.id),
+    delegatedByName: text("delegated_by_name"),
+    delegatedAt: text("delegated_at"),
+    delegationReason: text("delegation_reason"),
   },
   // The unique index is both the duplicate-chain guard (two concurrent
   // ensureSignoffChain calls can no longer both insert a chain) and the lookup
