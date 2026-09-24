@@ -119,6 +119,53 @@ export const users = pgTable("users", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── PM Batches ─────────────────────────────────────────────────────────────
+// A PM batch is the job, and it is the reason the safety documents are not
+// per machine.
+//
+// The annual plan schedules a CATEGORY, not a machine: "CNC light duty, 4
+// October". On the day, that resolves to whichever machines of that category
+// are due — say five. One person is assigned, and assigning them assigns all
+// five. One method statement describes the work across all five, one hazard
+// analysis covers it, and one permit authorises it. That is how the shop
+// floor actually works, and it is why a permit per machine was always wrong.
+//
+// Each machine still gets its own work order underneath, because equipment
+// history, PM checklists and parts consumption are all per machine. So the
+// batch is what the WMS, JHA and PTW hang off, and the work orders are what
+// the technician ticks off.
+export const pmBatches = pgTable("pm_batches", {
+  id: text("id").primaryKey(),
+  batchNumber: text("batch_number").notNull().unique(), // PMB-2026-XXXX
+  title: text("title").notNull(),
+  category: text("category").notNull(), // equipment.category
+  plannedDate: text("planned_date").notNull(),
+  year: integer("year").notNull(),
+  activityType: text("activity_type").notNull().default("PM"), // PM | INS
+  // PLANNED    raised from the schedule, nobody assigned yet
+  // ASSIGNED   one person owns every machine in the batch
+  // IN_PROGRESS a permit is live and work has started
+  // COMPLETED  every work order in the batch is closed
+  status: text("status").notNull().default("PLANNED"),
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  assignedToName: text("assigned_to_name"),
+  assignedById: text("assigned_by_id").references(() => users.id),
+  assignedByName: text("assigned_by_name"),
+  assignedAt: text("assigned_at"),
+  assistantIds: text("assistant_ids"), // JSON array of user ids
+  // The three shared documents. Plain text rather than foreign keys, matching
+  // workOrders.wmsId and the other existing cross-links, because these tables
+  // point at each other in both directions.
+  wmsId: text("wms_id"),
+  jhaId: text("jha_id"),
+  permitId: text("permit_id"),
+  completedDate: text("completed_date"),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
 // ─── Maintenance Schedule ───────────────────────────────────────────────────
 export const maintenanceSchedule = pgTable("maintenance_schedule", {
   id: text("id").primaryKey(),
@@ -155,6 +202,8 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   workOrderId: text("work_order_id"),
   remarks: text("remarks"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  // The batch this row was rolled into, once a PM batch was raised from it.
+  batchId: text("batch_id"),
 }, (t) => [index("maintenance_schedule_equipment_idx").on(t.equipmentId)]);
 
 // ─── Work Orders ────────────────────────────────────────────────────────────
@@ -206,6 +255,9 @@ export const workOrders = pgTable("work_orders", {
   createdBy: text("created_by").references(() => users.id),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  // Set when this work order is one machine inside a PM batch. The batch
+  // owns the WMS, JHA and permit that cover every machine in it.
+  batchId: text("batch_id"),
 }, (t) => [index("work_orders_equipment_idx").on(t.equipmentId)]);
 
 // Time actually booked to a job. One row per stretch of work, never
@@ -304,6 +356,8 @@ export const wmsDocuments = pgTable("wms_documents", {
   rejectionReason: text("rejection_reason"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  // A batch WMS covers every machine in the batch; equipmentIds lists them.
+  batchId: text("batch_id"),
 });
 
 // ─── Permits (PTW) ──────────────────────────────────────────────────────────
@@ -332,6 +386,7 @@ export const jhaDocuments = pgTable("jha_documents", {
   preparedDate: text("prepared_date"),
   approvedAt: text("approved_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  batchId: text("batch_id"),
 }, (t) => [index("jha_wms_idx").on(t.wmsId)]);
 
 export const permits = pgTable("permits", {
@@ -420,6 +475,7 @@ export const permits = pgTable("permits", {
   approvedAt: text("approved_at"),
   closedAt: text("closed_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  batchId: text("batch_id"),
 });
 
 // ─── Corrective Maintenance (full lifecycle) ────────────────────────────────
@@ -511,6 +567,12 @@ export const correctiveMaintenance = pgTable("corrective_maintenance", {
   status: text("status").notNull().default("OPEN"), // OPEN | IN_PROGRESS | PENDING_RCA | PENDING_APPROVAL | CLOSED
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  // The Factory Manager's decision that the repair goes ahead, which is what
+  // hands it to the Foreman to resource. Before this the fault is reported
+  // and nothing else; after it, the job is real.
+  repairAuthorisedAt: text("repair_authorised_at"),
+  repairAuthorisedById: text("repair_authorised_by_id"),
+  repairAuthorisedByName: text("repair_authorised_by_name"),
 }, (t) => [index("corrective_maintenance_equipment_idx").on(t.equipmentId)]);
 
 // ─── KPI Records ────────────────────────────────────────────────────────────
@@ -1456,3 +1518,5 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type AppSettings = typeof appSettings.$inferSelect;
 export type NewAppSettings = typeof appSettings.$inferInsert;
+export type PmBatch = typeof pmBatches.$inferSelect;
+export type NewPmBatch = typeof pmBatches.$inferInsert;

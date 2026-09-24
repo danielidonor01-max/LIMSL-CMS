@@ -10,6 +10,7 @@ import {
   workOrders,
   isolationPoints,
   contractors,
+  pmBatches,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -48,14 +49,28 @@ export async function GET() {
     const eqList = await db.select().from(equipment);
     const byId = new Map(eqList.map((e) => [e.id, e]));
 
+    // A batch permit names one machine in equipmentId because the column
+    // requires one, but it covers the whole batch. The tracker has to say so,
+    // or a reader counts five machines' worth of work as one machine's.
+    const batchList = await db.select().from(pmBatches);
+    const batchById = new Map(batchList.map((b) => [b.id, b]));
+    const batchCounts = new Map<string, number>();
+    for (const w of await db.select({ batchId: workOrders.batchId }).from(workOrders)) {
+      if (w.batchId) batchCounts.set(w.batchId, (batchCounts.get(w.batchId) ?? 0) + 1);
+    }
+
     const enriched = await Promise.all(
       list.map(async (r) => {
         const e = byId.get(r.equipmentId);
         const chain = await getSignoffChain("PERMIT", r.id);
+        const batch = r.batchId ? batchById.get(r.batchId) : null;
         return {
           ...r,
           equipmentName: e?.name ?? null,
           assetId: e?.assetId ?? null,
+          batchNumber: batch?.batchNumber ?? null,
+          batchTitle: batch?.title ?? null,
+          coveredMachines: batch ? (batchCounts.get(batch.id) ?? 0) : 1,
           approval: chainSummary(chain),
         };
       }),
@@ -297,6 +312,12 @@ export async function POST(request: Request) {
       controlMeasures: body.controlMeasures || "",
       wmsId,
       jhaId: jhaDoc.id,
+      // Carried down the chain, so a PM permit is attached to the batch of
+      // machines its method statement and hazard analysis were written for.
+      // equipmentId above names the lead machine because the column requires
+      // one; the batch is what says the permit covers all of them, and the
+      // permit face lists them.
+      batchId: jhaDoc.batchId ?? null,
       lotoApplied: body.lotoApplied || false,
       ppeRequired: jhaDoc.ppeRequired ?? "[]",
       areaBarricaded: body.areaBarricaded || false,
@@ -329,6 +350,9 @@ export async function POST(request: Request) {
     };
 
     await db.insert(permits).values(newPermit);
+    if (jhaDoc.batchId) {
+      await db.update(pmBatches).set({ permitId: newPermit.id, status: "IN_PROGRESS" }).where(eq(pmBatches.id, jhaDoc.batchId));
+    }
 
     // The isolation register: each energy source made safe, its device and
     // lock/tag, and who applied it. "lotoApplied: true" alone is not an

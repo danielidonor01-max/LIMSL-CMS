@@ -1,7 +1,7 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments, equipment, workOrders } from "@/lib/db/schema";
+import { wmsDocuments, equipment, workOrders, pmBatches, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -108,6 +108,35 @@ export async function POST(request: Request) {
       workOrderId = wo.id;
     }
 
+    // A batch method statement is the whole point of a batch: one document
+    // covering every machine due that day. The scope is read from the batch
+    // rather than taken from the request, because a WMS that covers four of
+    // the five machines on the permit is worse than no WMS at all.
+    let batchId: string | null = null;
+    let scopeIds: string[] = Array.isArray(body.equipmentIds) ? body.equipmentIds : [];
+    let scopeNames: string[] = Array.isArray(body.machinesScope) ? body.machinesScope : [];
+    if (body.batchId) {
+      const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, body.batchId)).limit(1);
+      if (!batch) return NextResponse.json({ error: "PM batch not found." }, { status: 400 });
+      const covered = await db
+        .select({ equipmentId: workOrders.equipmentId, woId: workOrders.id, assetId: equipment.assetId, name: equipment.name })
+        .from(workOrders)
+        .leftJoin(equipment, eq(workOrders.equipmentId, equipment.id))
+        .where(eq(workOrders.batchId, batch.id));
+      if (covered.length === 0) {
+        return NextResponse.json(
+          { error: "That batch has no work orders yet, so there is nothing to write a method for." },
+          { status: 409 },
+        );
+      }
+      batchId = batch.id;
+      scopeIds = covered.map((c) => c.equipmentId);
+      scopeNames = covered.map((c) => [c.assetId, c.name].filter(Boolean).join(" "));
+      // The batch's work orders are all equally the job. The first is carried
+      // as the named one so the existing permit gate, which reads a single
+      // work order off the chain, still finds an authorisation to check.
+      if (!workOrderId) workOrderId = covered[0].woId;
+    }
     const wmsNumber = await nextDocNumber("WMS");
 
     const newWms = {
@@ -116,8 +145,9 @@ export async function POST(request: Request) {
       title: body.title,
       workOrderId,
       revision: body.revision || 0,
-      machinesScope: body.machinesScope ? JSON.stringify(body.machinesScope) : "[]",
-      equipmentIds: body.equipmentIds ? JSON.stringify(body.equipmentIds) : "[]",
+      machinesScope: JSON.stringify(scopeNames),
+      batchId,
+      equipmentIds: JSON.stringify(scopeIds),
       purpose: body.purpose || "",
       scope: body.scope || "",
       mobilization: body.mobilization || "",
@@ -137,6 +167,19 @@ export async function POST(request: Request) {
     };
 
     await db.insert(wmsDocuments).values(newWms);
+
+    if (batchId) {
+      await db.update(pmBatches).set({ wmsId: newWms.id }).where(eq(pmBatches.id, batchId));
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name || "System",
+        action: "CREATE",
+        entityType: "wms",
+        entityId: newWms.id,
+        entityDescription: `${wmsNumber} written for PM batch, covering ${scopeIds.length} machine${scopeIds.length === 1 ? "" : "s"}`,
+      });
+    }
     // Open the authorisation chain and notify the first signer (Foreman).
     await ensureSignoffChain("WMS", newWms.id, newWms.wmsNumber);
     return NextResponse.json(newWms, { status: 201 });

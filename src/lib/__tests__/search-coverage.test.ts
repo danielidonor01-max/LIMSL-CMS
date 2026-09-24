@@ -19,6 +19,7 @@ const route = readFileSync(join(process.cwd(), "src", "app", "api", "search", "r
 const SEARCHABLE_MODULES = [
   "equipment",
   "work-orders",
+  "pm-batches",
   "corrective",
   "wms",
   "jha",
@@ -34,6 +35,7 @@ const SEARCHABLE_MODULES = [
 const TABLE_FOR: Record<string, string> = {
   equipment: "equipment",
   "work-orders": "workOrders",
+  "pm-batches": "pmBatches",
   corrective: "correctiveMaintenance",
   wms: "wmsDocuments",
   jha: "jhaDocuments",

@@ -80,6 +80,12 @@ Exported permission sets — import these, don't re-derive them:
   Deliberately narrower than `MAINTENANCE_WRITE_ROLES`, which includes
   TECHNICIAN so a technician can raise a work order, reschedule and defer
   against their own name. Deciding who carries a job is supervisory.
+  Applied on the schedule, on a PM batch and on a corrective record; gate any
+  new place work can be assigned the same way.
+- `REPAIR_AUTHORISE_ROLES` — may decide a reported breakdown will be repaired,
+  which is the act that hands it to the Foreman to resource. Factory Manager
+  only (plus Super Admin). Narrower than `WORK_ASSIGN_ROLES` on purpose: a
+  Foreman resources the repair, he does not authorise it to himself.
 - `ROLE_ALLOWED_PATHS` + `canAccessPath(role, pathname)` — drives **both** the
   sidebar nav and the page guard, so they can never disagree.
 - `canSignStep(userRole, stepRole)` — exact match, or a strictly more senior role,
@@ -166,6 +172,71 @@ breakdown crew unable to raise the permit their own isolation depends on.
 
 `src/lib/__tests__/safety-chain.test.ts` guards all four properties.
 
+## 6a-1. The PM and CM flows (what makes the documents move)
+
+§6a says what order the documents go in. This says what makes anybody create
+the next one, which was the piece that did not exist: every document was
+present and correctly gated, and nothing joined them up, so permits, method
+statements and hazard analyses sat around dormant and unconnected to the work
+they were meant to authorise.
+
+`src/lib/maintenance/flow.ts` holds both flows as data. It is pure — it takes
+facts and returns which step a job is on, who may take it and why it exists —
+so the API gate and the screens cannot drift apart about what comes next.
+`src/components/FlowRail.tsx` renders it, and puts the call to action on the
+current step and nowhere else.
+
+### PM: the plan schedules a CATEGORY, not a machine
+
+```
+PM batch → assignment → work orders → WMS → JHA → PTW → work
+```
+
+The annual plan says "CNC light duty, 4 October". On the day that resolves to
+whichever machines of that category are due — say five. **They are one job.**
+One person is assigned and that assigns all five, one method statement covers
+all five, one hazard analysis covers it, and one permit authorises it.
+
+`pm_batches` is that job. Raising a batch from the schedule fans out **one work
+order per machine** underneath it, because equipment history, PM checklists and
+parts consumption are all per machine. The batch is what the WMS, JHA and PTW
+hang off; the work orders are what the technician ticks off.
+
+A batch permit names one machine in `permits.equipment_id` because the column
+requires one. **`batch_id` is what says it covers all of them.** Do not read
+`equipment_id` as the scope of a batch permit.
+
+### CM: a breakdown is one machine
+
+```
+report → Factory Manager authorises → Foreman assigns → assignee raises the WO
+       → WMS (that machine) → JHA → PTW → repair
+```
+
+Each of those is a named act with its own gate and its own audit line, taken at
+`POST /api/corrective/[id]/flow`, not a field on a form. Specifically:
+
+- **Only the Factory Manager authorises** (`REPAIR_AUTHORISE_ROLES`). A Foreman
+  resources the repair; he does not authorise it to himself.
+- **Nothing is assigned before it is authorised** — the route returns 409.
+- **The assigned person raises the work order.** A manager may do it on their
+  behalf; another technician may not.
+
+### Assignment is a supervisory act, everywhere
+
+`MAINTENANCE_WRITE_ROLES` includes `TECHNICIAN`, so anything that lets a
+technician record their own work will also let them put a job on somebody else
+unless it is gated separately. `WORK_ASSIGN_ROLES` is that gate, and it is
+applied on the schedule, on the batch and on the corrective record. If you add
+a third place work can be assigned, gate it there too.
+
+### Parts consumed
+
+Booking a part against a work order is what moves the stock, via
+`WorkOrderParts` and `PATCH /api/spares/[id]`. It is mounted on the work order,
+the PM checklist and the breakdown record. There is one write path for this on
+purpose — do not add a second, or the register and the ledger will disagree.
+
 ## 6a-2. Safety information is not gated (do not "tighten" this back)
 
 Two deliberate widenings of access. Both look like holes in a review and are not.
@@ -250,6 +321,47 @@ for every seeded user is `limsl2026`.
 
 Timestamp/date columns are stored as **text** (ISO strings) — keep it that way;
 app code slices/compares them as strings. Never destructively reset the DB.
+
+### Local development uses PGlite, and it is single-process
+
+`DATABASE_URL=pglite` runs an embedded Postgres in `.pgdata`. **Only one process
+may hold it.** A dev server and a `tsx` script at the same time will not error
+cleanly — the second one crashes the Next worker with
+`Jest worker encountered 2 child process exceptions`, and auth routes start
+returning 500. Stop the server before running a script against the same
+database. If a script hangs, it is still holding the lock: find its PID and kill
+that PID specifically.
+
+### Document numbering
+
+`nextDocNumber()` draws from `doc_counters`, one row per series and year,
+incremented atomically. Two things have bitten this and both are fixed:
+
+- **The seeds write document numbers directly**, without advancing the counter,
+  so on any seeded database the counter said 1 while the register already held
+  `WO-2026-0011`. The next work order raised collided with the unique index and
+  the whole create path failed. Run `src/lib/db/sync-doc-counters.ts` after
+  seeding — it raises each counter to the highest number actually in use and
+  never lowers one.
+- **`db.execute()` returns different shapes per driver** — an array for
+  `postgres.js`, `{ rows }` for PGlite. Reading only the array form made every
+  lookup miss on PGlite and hand out `0001` forever. Anything reading a raw
+  result must handle both.
+
+### One-off scripts for this change
+
+```bash
+DATABASE_URL=...  npx tsx src/lib/db/apply-pm-flow.ts         # pm_batches + batch_id columns, idempotent
+DATABASE_URL=...  npx tsx src/lib/db/sync-doc-counters.ts     # counters -> highest number in use
+DATABASE_URL=...  npx tsx src/lib/db/reset-safety-documents.ts --dry-run
+```
+
+`reset-safety-documents.ts` clears every WMS, JHA and permit and sets the year's
+PM plan back to overdue/scheduled. It keeps work orders, breakdown records,
+equipment, spares **and the audit log** — the record that those documents
+existed and were deleted is itself evidence, and it writes its own line saying
+so. It finds the columns pointing at permits from `pg_constraint` rather than a
+hand-list, and nulls them rather than deleting the rows that carry them.
 
 ## 9. Git / branch protocol
 

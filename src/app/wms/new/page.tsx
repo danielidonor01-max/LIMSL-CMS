@@ -3,16 +3,22 @@
 
 import Select from "@/components/Select";
 import { PAGE_MAIN } from "@/lib/page-shell";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Trash2, Layers, Loader2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import ChainPreview from "@/components/ChainPreview";
 import { WMS_CHAIN } from "@/lib/signoff/chains";
 
-export default function NewWms() {
+function NewWmsForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // A method statement written for a batch covers every machine in it. The
+  // scope is settled by the batch, not picked here, so the form stops asking
+  // and starts telling.
+  const batchId = searchParams.get("batchId") ?? "";
+  const [batch, setBatch] = useState<any>(null);
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [loadingEq, setLoadingEq] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,11 +34,25 @@ export default function NewWms() {
   const [qualityControlRequirements, setQualityControlRequirements] = useState("");
   const [emergencyRequirements, setEmergencyRequirements] = useState("");
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
-  const [workOrderId, setWorkOrderId] = useState("");
+  // Prefilled when the method statement is being written for a job that has
+  // already been raised, which is the normal case for a breakdown repair.
+  const [workOrderId, setWorkOrderId] = useState(searchParams.get("workOrderId") ?? "");
   const [workOrders, setWorkOrders] = useState<any[]>([]);
 
   // Procedure Steps
   const [steps, setSteps] = useState<string[]>([""]);
+
+  useEffect(() => {
+    if (!batchId) return;
+    fetch(`/api/pm-batches/${batchId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (!b) return;
+        setBatch(b);
+        setTitle((t: string) => t || `Method statement, ${b.title}`);
+      })
+      .catch(() => {});
+  }, [batchId]);
 
   useEffect(() => {
     async function loadEquipment() {
@@ -110,6 +130,7 @@ export default function NewWms() {
           hseRequirements,
           qualityControlRequirements: qualityControlRequirements,
           emergencyRequirements: emergencyRequirements,
+          batchId: batchId || undefined,
           equipmentIds: selectedEquipments,
           machinesScope: scopeNames,
           // preparer is stamped from the session server-side
@@ -148,8 +169,36 @@ export default function NewWms() {
             Create Work Method Statement (WMS)
           </h2>
 
+          {/* When the job is a batch, the scope is not a question. Saying so
+              plainly, and listing the machines, is what stops somebody
+              writing a method for one machine and permitting five. */}
+          {batch && (
+            <div className="rounded-lg border border-brand-500/20 bg-brand-500/5 p-4">
+              <div className="flex items-start gap-2.5">
+                <Layers className="w-4 h-4 text-brand-600 mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink-900">
+                    {batch.batchNumber}, {batch.title}
+                  </p>
+                  <p className="text-xs text-ink-600 mt-1 leading-relaxed">
+                    This method statement covers every machine in the batch. The scope is taken from
+                    the batch when it is saved, so it cannot end up covering fewer machines than the
+                    permit does.
+                  </p>
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {(batch.workOrders ?? []).map((w: any) => (
+                      <li key={w.id} className="text-xs bg-surface border border-line rounded px-2 py-0.5 text-ink-700">
+                        {[w.assetId, w.machineName].filter(Boolean).join(" ")}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* The job this method statement is written for */}
-          <div className="space-y-2">
+          <div className={`space-y-2 ${batch ? "hidden" : ""}`}>
             <label className="text-sm font-medium text-ink-700">
               Work order <span className="font-normal text-ink-500">(optional)</span>
             </label>
@@ -394,5 +443,21 @@ export default function NewWms() {
         </form>
       </main>
     </div>
+  );
+}
+
+// useSearchParams suspends, so the page needs a boundary or the build cannot
+// prerender it.
+export default function NewWmsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-ink-500">
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+        </div>
+      }
+    >
+      <NewWmsForm />
+    </Suspense>
   );
 }

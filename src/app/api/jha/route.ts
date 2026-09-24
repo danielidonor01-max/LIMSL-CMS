@@ -1,7 +1,7 @@
 // src/app/api/jha/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { jhaDocuments, wmsDocuments, equipment, auditLog } from "@/lib/db/schema";
+import { jhaDocuments, wmsDocuments, equipment, auditLog, pmBatches } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -185,6 +185,10 @@ export async function POST(request: Request) {
       // Inherited from the method statement, so the whole chain points at one
       // work order rather than each document naming its own.
       workOrderId: wms.workOrderId ?? null,
+      // And the batch, where the method statement covers one. This is what
+      // keeps a PM's permit attached to the same group of machines the
+      // method was written for.
+      batchId: wms.batchId ?? null,
       equipmentId: body.equipmentId || null,
       workArea: body.workArea || null,
       steps: JSON.stringify(steps),
@@ -197,6 +201,9 @@ export async function POST(request: Request) {
     };
 
     await db.insert(jhaDocuments).values(row);
+    if (wms.batchId) {
+      await db.update(pmBatches).set({ jhaId: id }).where(eq(pmBatches.id, wms.batchId));
+    }
     await ensureSignoffChain("JHA", id, jhaNumber);
 
     await db.insert(auditLog).values({

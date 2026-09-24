@@ -18,6 +18,7 @@ import {
   workOrders,
   correctiveMaintenance,
   wmsDocuments,
+  pmBatches,
   jhaDocuments,
   permits,
   spareParts,
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
     // Escape LIKE wildcards so a literal "%" in the query can't blow up the scan.
     const pat = `%${q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
 
-    const [eqRows, woRows, cmRows, wmsRows, jhaRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows, incRows] =
+    const [eqRows, woRows, cmRows, wmsRows, jhaRows, ptwRows, spRows, calRows, emgRows, conRows, ncRows, trnRows, incRows, pmbRows] =
       await Promise.all([
         db
           .select({ name: equipment.name, assetId: equipment.assetId, location: equipment.location })
@@ -178,6 +179,11 @@ export async function GET(request: Request) {
             ),
           )
           .limit(PER_ENTITY),
+        db
+          .select({ id: pmBatches.id, batchNumber: pmBatches.batchNumber, title: pmBatches.title })
+          .from(pmBatches)
+          .where(or(ilike(pmBatches.batchNumber, pat), ilike(pmBatches.title, pat)))
+          .limit(PER_ENTITY),
       ]);
 
     const results: Result[] = [
@@ -198,6 +204,12 @@ export async function GET(request: Request) {
         label: c.cmrfNumber,
         sub: c.observedFault || c.faultType || "",
         href: `/corrective/${c.id}`,
+      })),
+      ...pmbRows.map((b) => ({
+        type: "PM Batch",
+        label: b.batchNumber,
+        sub: b.title,
+        href: `/pm-batches/${b.id}`,
       })),
       ...wmsRows.map((w) => ({
         type: "WMS",

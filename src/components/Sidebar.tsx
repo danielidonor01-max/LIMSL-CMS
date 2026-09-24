@@ -10,6 +10,7 @@ import {
     LayoutDashboard,
   Layers,
   Calendar,
+  CalendarCheck,
   ClipboardList,
   AlertTriangle,
   FileText,
@@ -65,6 +66,7 @@ const NAV_SECTIONS: NavSection[] = [
     section: "Maintenance",
     items: [
       { href: "/schedule", label: "Schedule", icon: Calendar },
+      { href: "/pm-batches", label: "PM Batches", icon: CalendarCheck },
       { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
       { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
       { href: "/spares", label: "Critical Spares", icon: Package },

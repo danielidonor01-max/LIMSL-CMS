@@ -19,11 +19,13 @@ import {
   Search,
   CalendarPlus,
   Users,
+  Layers,
   CalendarClock,
   BellOff,
   PauseCircle,
   ClipboardList,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
@@ -83,6 +85,7 @@ type ScheduleRow = {
   equipmentName: string | null;
   assetId: string | null;
   category: string | null;
+  batchId: string | null;
   criticality: string | null;
   location: string | null;
   deferredReason: string | null;
@@ -116,6 +119,7 @@ const emptyCreate = {
 };
 
 export default function SchedulePage() {
+  const router = useRouter();
   const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
   const rows = Array.isArray(rowsData) ? rowsData : [];
 
@@ -317,6 +321,33 @@ export default function SchedulePage() {
   // The work order goes in the menu rather than beside it, because it is
   // reached the same way everything else here is. What the row still SAYS,
   // in its own column, is whether one exists.
+  // Raising a batch from a row takes the row's CATEGORY and DATE, not the row,
+  // because that is what the batch is: every machine of that category due that
+  // day. The server works out which ones those are, so a stale screen cannot
+  // leave a machine out of the permit that is meant to cover it.
+  const raiseBatch = async (r: ScheduleRow) => {
+    if (!r.category) return;
+    try {
+      const res = await fetch("/api/pm-batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: r.category, plannedDate: r.plannedDate }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not raise the batch.");
+        return;
+      }
+      toast.success(
+        `${d.batchNumber} raised, covering ${d.machineCount} machine${d.machineCount === 1 ? "" : "s"}. ` +
+          `One work order each, and one permit for all of them.`,
+      );
+      router.push(`/pm-batches/${d.id}`);
+    } catch {
+      toast.error("Could not raise the batch.");
+    }
+  };
+
   const rowActions = (r: ScheduleRow) => [
     // Assigning names who carries the job. A technician may raise a work
     // order, move a date and record a deferral, but not put somebody else's
@@ -361,6 +392,21 @@ export default function SchedulePage() {
               }),
           },
         ]
+      : []),
+    ...(canAssign &&
+    !r.batchId &&
+    r.status !== "COMPLETED" &&
+    (r.activityType === "PM" || r.activityType === "INS")
+      ? [
+          {
+            label: "Raise PM batch",
+            icon: Layers,
+            onClick: () => raiseBatch(r),
+          },
+        ]
+      : []),
+    ...(r.batchId
+      ? [{ label: "Open the PM batch", icon: Layers, href: `/pm-batches/${r.batchId}` }]
       : []),
     ...(r.workOrderId
       ? [

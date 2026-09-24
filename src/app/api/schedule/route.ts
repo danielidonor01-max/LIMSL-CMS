@@ -45,6 +45,9 @@ export async function GET() {
         equipmentName: equipment.name,
         assetId: equipment.assetId,
         category: equipment.category,
+        // Whether this row has already been rolled into a PM batch, so the
+        // schedule can offer to raise one exactly once.
+        batchId: maintenanceSchedule.batchId,
         criticality: equipment.criticality,
         location: equipment.location,
       })

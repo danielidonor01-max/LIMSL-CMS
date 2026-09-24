@@ -184,6 +184,15 @@ export const WORK_ORDER_ASSIGNEE_ROLES = ["TECHNICIAN", "FOREMAN"];
 // behind it accepted the write, because both were reading the maintenance-write
 // list. That is the failure this list exists to prevent, and it is the one an
 // auditor finds rather than a user: nothing on screen said it was wrong.
+// Who decides that a reported breakdown will actually be repaired, which is
+// the act that hands it to the Foreman to resource.
+//
+// LIMSL call this person the final signature manager, and in the corrective
+// chain that is the Factory Manager, who also holds the close-out signature on
+// the same record. Deliberately narrower than WORK_ASSIGN_ROLES: a Foreman
+// resources the repair, he does not authorise it to himself.
+export const REPAIR_AUTHORISE_ROLES = ["SUPER_ADMIN", "FACTORY_MANAGER"];
+
 export const WORK_ASSIGN_ROLES = [
   "SUPER_ADMIN",
   "FACTORY_MANAGER",

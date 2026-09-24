@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { getWorkSettings } from "@/lib/settings";
 import { productionDowntimeHours } from "@/lib/worktime";
 import { logEquipmentEvent } from "@/lib/equipment-log";
@@ -55,6 +55,20 @@ export async function PATCH(
     }
 
     const record = currentRecord[0];
+
+    // ── Assignment gate ───────────────────────────────────────────────────
+    // MAINTENANCE_WRITE_ROLES includes TECHNICIAN so a technician can record
+    // their own repair. Deciding who carries the job is a different act, and
+    // it belongs to the Foreman and above, exactly as on the schedule. Left
+    // open, any technician could put a breakdown on a colleague's name.
+    const touchesAssignment =
+      body.assignedToId !== undefined || body.assignedToName !== undefined;
+    if (touchesAssignment && !WORK_ASSIGN_ROLES.includes(gate.actor?.role ?? "")) {
+      return NextResponse.json(
+        { error: "Assigning a repair to somebody else is done by a foreman or above." },
+        { status: 403 },
+      );
+    }
 
     // ── Close-out gate ────────────────────────────────────────────────────────
     // Closing a corrective record is a controlled event: the CM sign-off chain

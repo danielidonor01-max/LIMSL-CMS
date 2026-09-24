@@ -22,6 +22,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/documents": "Documents",
   "/procedure": "Maint. Procedure",
   "/schedule": "Schedule",
+  "/pm-batches": "PM Batches",
   "/work-orders": "Work Orders",
   "/corrective": "Corrective / RCA",
   "/spares": "Critical Spares",

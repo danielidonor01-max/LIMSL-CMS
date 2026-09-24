@@ -6,6 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import WorkOrderParts from "@/components/WorkOrderParts";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -391,9 +392,22 @@ export default function PMChecklistPage() {
           <input
             value={sparePartsNeeded}
             onChange={(e) => setSparePartsNeeded(e.target.value)}
-            placeholder="Spare parts needed (if any)"
+            placeholder="Spare parts still needed (if any)"
             className={field}
           />
+
+          {/* The box above is a request: something this machine still needs.
+              This is the other thing, and the one the store cares about, which
+              is what came off the shelf today. Booking it here moves the stock
+              and puts the part against this job, so the critical spares register
+              stops being a number somebody last typed in. */}
+          {wo && (
+            <WorkOrderParts
+              workOrderId={String(id)}
+              equipmentId={wo.equipmentId}
+              canWrite
+            />
+          )}
         </div>
 
         {/* 9. Completion & sign-off */}

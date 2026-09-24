@@ -12,6 +12,9 @@ import { useSession } from "next-auth/react";
 import { Clock, ShieldCheck, Plus, Trash2, UserCheck } from "lucide-react";
 import SignatureBlock from "@/components/SignatureBlock";
 import SignoffChain from "@/components/SignoffChain";
+import CorrectiveFlow from "@/components/CorrectiveFlow";
+import WorkOrderParts from "@/components/WorkOrderParts";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "sonner";
@@ -29,6 +32,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const recordId = resolvedParams.id;
 
   const [record, setRecord] = useState<any>(null);
+  // Bumped when the repair flow takes an action, so the record below it
+  // reflects the authorisation or assignment that just happened.
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // The session resolves client-side only, so anything role-dependent waits
+  // past mount or the server HTML and the first paint disagree (AGENTS.md 7).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const canBookParts = mounted && MAINTENANCE_WRITE_ROLES.includes(currentUserRole ?? "");
   const [equipment, setEquipment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -146,7 +158,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       }
     }
     loadData();
-  }, [recordId]);
+  }, [recordId, reloadKey]);
 
   const previewDowntime =
     downStartAt && downEndAt ? productionDowntimeHours(downStartAt, downEndAt, workSettings) : null;
@@ -348,6 +360,17 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             backLabel="Corrective Maintenance"
           />
         </div>
+
+        {/* What has to happen next, and who does it. A breakdown record that
+            does not say this is a form, not a process. */}
+        <div className="lg:col-span-3">
+          <CorrectiveFlow
+            recordId={recordId}
+            role={currentUserRole}
+            onChanged={() => setReloadKey((k) => k + 1)}
+          />
+        </div>
+
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-8">
           {/* Fault Specifications Card */}
@@ -548,6 +571,18 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-8">
+          {/* Parts fitted during the repair. Booking them here is what takes
+              them off the shelf, so the critical spares register reflects what
+              the repair actually consumed rather than what somebody remembered
+              to adjust afterwards. */}
+          {record.workOrderId && (
+            <WorkOrderParts
+              workOrderId={record.workOrderId}
+              equipmentId={record.equipmentId}
+              canWrite={canBookParts}
+            />
+          )}
+
           {/* Corrective Actions Tracking Log (CATL) */}
           <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900">Corrective Action Log</h2>

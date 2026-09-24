@@ -216,6 +216,7 @@ an older set and the two disagreed.
 | The one card that answers the page | `@/components/PageLead` | Headline that STATES the answer, one supporting sentence, the actions that follow from it, and a single dark panel with the figure worth reading across a room. Used by the dashboard, KPI and reports. A guard test keeps all three on it. |
 | Status pill | `@/components/Badge` | The `bg/text/border` tint formula. |
 | A given signature | `@/components/SignatureBlock` | Name, role signed as, and the moment. Typed, never drawn. Renders a historical drawn mark above the attribution when a record has one. |
+| Where a multi-document job has got to | `@/components/FlowRail` | The whole sequence, the current step marked, and the call to action on that step only. Reads `src/lib/maintenance/flow.ts`, so it cannot disagree with the API about what comes next. A screen offering six things to do next is not telling you what to do next. |
 | Notifications | `sonner` `toast.*` | Success/error feedback. |
 
 **Native controls:** none. Use `Select` (forms and filters) or `Dropdown`

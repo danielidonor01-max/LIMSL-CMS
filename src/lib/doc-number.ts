@@ -14,6 +14,16 @@ export async function nextDocNumber(prefix: string, pad = 4): Promise<string> {
     ON CONFLICT (series) DO UPDATE SET value = doc_counters.value + 1
     RETURNING value
   `);
-  const n = Number((res as unknown as Array<{ value: number }>)[0]?.value ?? 1);
+  // The two drivers disagree about the shape of a raw result: postgres.js
+  // returns the rows as an array, PGlite returns { rows }. Reading only the
+  // array form meant that on PGlite every lookup missed, fell through to the
+  // ?? 1 below, and handed out document number 0001 forever — so the first
+  // work order raised on a seeded local database collided with the seed and
+  // the whole create path failed with a unique-constraint error. Production
+  // was unaffected, which is exactly why it survived this long.
+  const rows = (Array.isArray(res) ? res : ((res as { rows?: unknown[] }).rows ?? [])) as Array<{
+    value: number;
+  }>;
+  const n = Number(rows[0]?.value ?? 1);
   return `${series}-${String(n).padStart(pad, "0")}`;
 }
