@@ -136,8 +136,11 @@ export function applyMovement(
   return { ok: false, error: "Movement must be a receipt, an issue or a stock adjustment." };
 }
 
+// What a movement is called after it has happened. The menu action that
+// starts one is worded as an instruction ("Reconcile stock"); these are the
+// record of it, so they are written the way a ledger reads.
 export const MOVEMENT_LABELS: Record<string, string> = {
   RECEIPT: "Received",
   ISSUE: "Issued to a job",
-  ADJUSTMENT: "Stock count correction",
+  ADJUSTMENT: "Stock reconciled",
 };

@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react";
 import Modal from "@/components/Modal";
 import { MONTH_NAMES } from "@/lib/constants";
 import SegmentedControl from "@/components/SegmentedControl";
+import { toast } from "sonner";
 
 type Row = {
   id: string;
@@ -22,6 +23,8 @@ type Row = {
   assetId: string | null;
   responsiblePersonName: string | null;
   workOrderId: string | null;
+  category: string | null;
+  batchId: string | null;
 };
 
 type View = "week" | "month" | "quarter" | "year";
@@ -49,11 +52,50 @@ const addDays = (d: Date, n: number) => {
 };
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
+export default function ScheduleCalendar({
+  rows,
+  canRaiseBatch = false,
+}: {
+  rows: Row[];
+  /** Raising a batch commits other people's time, so it is a foreman's act and above. */
+  canRaiseBatch?: boolean;
+}) {
+  const [raising, setRaising] = useState<string | null>(null);
   const router = useRouter();
   const [view, setView] = useState<View>("month");
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<string | null>(null); // YYYY-MM-DD
+
+  // The batch is raised from the row's CATEGORY and DATE, not from the row.
+  // The server works out which machines that means, so a calendar left open
+  // since this morning cannot leave one out of the permit meant to cover it.
+  const raiseBatch = async (r: Row) => {
+    if (!r.category) {
+      toast.error("This activity has no equipment category, so it cannot be batched.");
+      return;
+    }
+    setRaising(r.id);
+    try {
+      const res = await fetch("/api/pm-batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: r.category, plannedDate: r.plannedDate }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not raise the batch.");
+        return;
+      }
+      toast.success(
+        `${d.batchNumber} raised, covering ${d.machineCount} machine${d.machineCount === 1 ? "" : "s"}.`,
+      );
+      router.push(`/pm-batches/${d.id}`);
+    } catch {
+      toast.error("Could not raise the batch.");
+    } finally {
+      setRaising(null);
+    }
+  };
 
   const todayStr = ymd(new Date());
 
@@ -179,18 +221,60 @@ export default function ScheduleCalendar({ rows }: { rows: Row[] }) {
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-600">
                     <span className="px-1.5 py-0.5 rounded-lg bg-ink-100 font-bold">{r.activityType}</span>
                     <span>{r.status}</span>
-                    {r.responsiblePersonName && <span>· {r.responsiblePersonName}</span>}
+                    {/* Only once the work is done.
+                        While an activity is still pending or overdue, nobody is
+                        carrying it: the plan schedules a category on a date, and
+                        who does it is decided when the work order is raised and
+                        assigned. A name here beforehand asserts an accountability
+                        that does not exist yet, and reads as though somebody is
+                        already late on it.
+
+                        After completion the same name is the opposite thing — a
+                        record of who actually did it — so it is worth showing,
+                        and labelled so it cannot be misread as an assignment. */}
+                    {r.status === "COMPLETED" && r.responsiblePersonName && (
+                      <span>· Done by {r.responsiblePersonName}</span>
+                    )}
                   </div>
-                  <div className="mt-2">
-                    {r.workOrderId ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {/* A PM is not raised one machine at a time any more. The
+                        plan schedules a category on a date, and every machine of
+                        that category due that day is one job with one method
+                        statement, one hazard analysis and one permit. Offering a
+                        single-machine work order here would quietly produce the
+                        thing the batch exists to prevent. Corrective work is
+                        still one machine, so it still gets a work order. */}
+                    {r.batchId && (
+                      <Link href={`/pm-batches/${r.batchId}`} className="text-xs text-brand-600 hover:underline">
+                        Open the PM batch →
+                      </Link>
+                    )}
+                    {r.workOrderId && (
                       <Link href={`/work-orders/${r.workOrderId}`} className="text-xs text-brand-600 hover:underline">
                         View work order →
                       </Link>
-                    ) : (
-                      <Link href={`/work-orders/new?scheduleId=${r.id}`} className="text-xs text-info-600 hover:underline">
-                        Raise work order →
-                      </Link>
                     )}
+                    {!r.batchId &&
+                      !r.workOrderId &&
+                      (r.activityType === "PM" || r.activityType === "INS" ? (
+                        canRaiseBatch ? (
+                          <button
+                            onClick={() => raiseBatch(r)}
+                            disabled={raising === r.id}
+                            className="text-xs text-info-600 hover:underline disabled:opacity-50"
+                          >
+                            {raising === r.id ? "Raising…" : "Raise PM batch →"}
+                          </button>
+                        ) : (
+                          // An always-refused control is worse than none, so it
+                          // says whose job this is instead.
+                          <span className="text-xs text-ink-500">A foreman or above raises this PM</span>
+                        )
+                      ) : (
+                        <Link href={`/work-orders/new?scheduleId=${r.id}`} className="text-xs text-info-600 hover:underline">
+                          Raise work order →
+                        </Link>
+                      ))}
                   </div>
                 </div>
               ))}

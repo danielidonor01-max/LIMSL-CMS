@@ -534,7 +534,7 @@ export default function SchedulePage() {
           ]}
         />
 
-        {view === "calendar" && <ScheduleCalendar rows={rows} />}
+        {view === "calendar" && <ScheduleCalendar rows={rows} canRaiseBatch={canAssign} />}
 
         {view === "list" && (
         <>

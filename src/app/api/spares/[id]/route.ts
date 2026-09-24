@@ -1,8 +1,8 @@
 // src/app/api/spares/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { spareParts, sparePartMovements, auditLog } from "@/lib/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { spareParts, sparePartMovements, sparePartEquipment, equipment, auditLog } from "@/lib/db/schema";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES, SPARES_DELETE_ROLES } from "@/lib/roles";
@@ -23,7 +23,24 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       .orderBy(desc(sparePartMovements.createdAt))
       .limit(100);
 
-    return NextResponse.json({ ...part, movements });
+    const attachedEquipment = await db
+      .select({
+        linkId: sparePartEquipment.id,
+        equipmentId: equipment.id,
+        name: equipment.name,
+        assetId: equipment.assetId,
+        category: equipment.category,
+        criticality: equipment.criticality,
+        status: equipment.status,
+        location: equipment.location,
+        notes: sparePartEquipment.notes,
+        linkedAt: sparePartEquipment.createdAt,
+      })
+      .from(sparePartEquipment)
+      .innerJoin(equipment, eq(sparePartEquipment.equipmentId, equipment.id))
+      .where(eq(sparePartEquipment.sparePartId, id));
+
+    return NextResponse.json({ ...part, movements, attachedEquipment });
   } catch (error) {
     console.error("Failed to fetch spare part:", error);
     return NextResponse.json({ error: "Failed to fetch spare part" }, { status: 500 });
@@ -87,6 +104,83 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ ok: true, balanceAfter: result.balanceAfter, movementId });
     }
 
+    // Attaching or detaching an equipment/machine
+    if (body.attachEquipmentId) {
+      // Check the machine exists before relying on the foreign key to say so.
+      // Without this an unknown id reaches the insert and comes back as a 500
+      // with no explanation, when the honest answer is 'no such machine'.
+      const [machine] = await db
+        .select({ id: equipment.id, name: equipment.name, assetId: equipment.assetId })
+        .from(equipment)
+        .where(eq(equipment.id, String(body.attachEquipmentId)))
+        .limit(1);
+      if (!machine) {
+        return NextResponse.json({ error: "That machine is not on the register." }, { status: 400 });
+      }
+      const machineLabel = [machine.assetId, machine.name].filter(Boolean).join(" ");
+
+      const existing = await db
+        .select()
+        .from(sparePartEquipment)
+        .where(
+          and(
+            eq(sparePartEquipment.sparePartId, id),
+            eq(sparePartEquipment.equipmentId, String(body.attachEquipmentId))
+          )
+        )
+        .limit(1);
+
+      if (!existing.length) {
+        await db.insert(sparePartEquipment).values({
+          id: nanoid(),
+          sparePartId: id,
+          equipmentId: String(body.attachEquipmentId),
+          notes: body.notes || null,
+        });
+
+        await db.insert(auditLog).values({
+          id: nanoid(),
+          userId: gate.actor?.id ?? null,
+          userName: gate.actor?.name || "System",
+          action: "UPDATE",
+          entityType: "spare_part",
+          entityId: id,
+          entityDescription: `${part.partNumber} ${part.name}, now held for ${machineLabel}`,
+        });
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body.detachEquipmentId) {
+      const [machine] = await db
+        .select({ name: equipment.name, assetId: equipment.assetId })
+        .from(equipment)
+        .where(eq(equipment.id, String(body.detachEquipmentId)))
+        .limit(1);
+      const machineLabel =
+        [machine?.assetId, machine?.name].filter(Boolean).join(" ") || String(body.detachEquipmentId);
+
+      await db
+        .delete(sparePartEquipment)
+        .where(
+          and(
+            eq(sparePartEquipment.sparePartId, id),
+            eq(sparePartEquipment.equipmentId, String(body.detachEquipmentId))
+          )
+        );
+
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name || "System",
+        action: "UPDATE",
+        entityType: "spare_part",
+        entityId: id,
+        entityDescription: `${part.partNumber} ${part.name}, no longer held for ${machineLabel}`,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     // Ordinary field edits.
     const set: Record<string, unknown> = { updatedAt: new Date().toISOString() };
     const numField = (key: string) => {
@@ -114,6 +208,33 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     await db.update(spareParts).set(set).where(eq(spareParts.id, id));
+
+    // spare_parts.equipment_id is the original single link and the register
+    // form still edits it, while the machines a part is held for now live in
+    // spare_part_equipment. Setting one without the other leaves the register
+    // and the part's own page disagreeing about the same part, so this keeps
+    // the two in step. It only ever ADDS the link — removing a machine is done
+    // on the part's page, and doing it silently here would drop an attachment
+    // somebody made deliberately.
+    if (body.equipmentId) {
+      const [already] = await db
+        .select({ id: sparePartEquipment.id })
+        .from(sparePartEquipment)
+        .where(
+          and(
+            eq(sparePartEquipment.sparePartId, id),
+            eq(sparePartEquipment.equipmentId, String(body.equipmentId)),
+          ),
+        )
+        .limit(1);
+      if (!already) {
+        await db.insert(sparePartEquipment).values({
+          id: nanoid(),
+          sparePartId: id,
+          equipmentId: String(body.equipmentId),
+        });
+      }
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to update spare part:", error);

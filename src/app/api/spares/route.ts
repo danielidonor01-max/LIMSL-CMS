@@ -1,7 +1,7 @@
 // src/app/api/spares/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { spareParts, equipment, auditLog } from "@/lib/db/schema";
+import { spareParts, equipment, sparePartEquipment, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -44,8 +44,26 @@ export async function GET() {
       .from(spareParts)
       .leftJoin(equipment, eq(spareParts.equipmentId, equipment.id));
 
+    // Every machine each part is held for, not just the one named on the part
+    // itself. A part can be held for several machines, and the screen that
+    // actually matters — picking parts on a job — has to know all of them or
+    // the many-to-many is decoration.
+    const links = await db
+      .select({
+        sparePartId: sparePartEquipment.sparePartId,
+        equipmentId: sparePartEquipment.equipmentId,
+      })
+      .from(sparePartEquipment);
+    const attachedBy = new Map<string, string[]>();
+    for (const l of links) {
+      const list = attachedBy.get(l.sparePartId) ?? [];
+      list.push(l.equipmentId);
+      attachedBy.set(l.sparePartId, list);
+    }
+
     const withRisk = rows.map((r) => ({
       ...r,
+      attachedEquipmentIds: attachedBy.get(r.id) ?? (r.equipmentId ? [r.equipmentId] : []),
       risk: spareRisk({
         quantityOnHand: r.quantityOnHand,
         minimumQuantity: r.minimumQuantity,
@@ -113,6 +131,14 @@ export async function POST(request: Request) {
     };
 
     await db.insert(spareParts).values(row);
+
+    if (row.equipmentId) {
+      await db.insert(sparePartEquipment).values({
+        id: nanoid(),
+        sparePartId: row.id,
+        equipmentId: row.equipmentId,
+      });
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),

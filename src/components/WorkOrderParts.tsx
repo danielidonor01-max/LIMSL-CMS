@@ -25,6 +25,7 @@ type Spare = {
   unit: string | null;
   binLocation: string | null;
   equipmentId: string | null;
+  attachedEquipmentIds?: string[];
   risk: { level: StockLevel };
 };
 
@@ -74,7 +75,15 @@ export default function WorkOrderParts({
   // Parts held for this machine first. On a job you reach for that machine's
   // spares, not an alphabetical list of everything in the store.
   const sorted = [...spares].sort((a, b) => {
-    const mine = (s: Spare) => (equipmentId && s.equipmentId === equipmentId ? 0 : 1);
+    // A part can be held for several machines. Reading only the single
+    // equipmentId on the part meant a bearing held for three machines came
+    // first on one job and was buried alphabetically on the other two, which
+    // is the problem the many-to-many was added to solve.
+    const mine = (s: Spare) => {
+      if (!equipmentId) return 1;
+      const held = s.attachedEquipmentIds ?? (s.equipmentId ? [s.equipmentId] : []);
+      return held.includes(equipmentId) ? 0 : 1;
+    };
     return mine(a) - mine(b) || a.name.localeCompare(b.name);
   });
 

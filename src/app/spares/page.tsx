@@ -4,9 +4,10 @@
 import MetricPanel from "@/components/MetricPanel";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { Suspense, useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale, Trash2 } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
@@ -83,6 +84,7 @@ export default function SparesPage() {
 }
 
 function SparesRegister() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { data, loading, error, refresh } = useApi<Spare[]>("/api/spares", []);
   const spares = Array.isArray(data) ? data : [];
@@ -108,7 +110,7 @@ function SparesRegister() {
         toast.error(d.error || "Could not remove the part.");
         return;
       }
-      toast.success(`${deleting.name} removed from the spares register.`);
+      toast.success(`${deleting.name} removed.`);
       setDeleting(null);
       refresh();
     } finally {
@@ -118,11 +120,12 @@ function SparesRegister() {
 
   // One place deciding what a row offers.
   const rowActions = (s: Spare, reorder: number) => [
+    { label: "View part details", icon: Eye, onClick: () => router.push(`/spares/${s.id}`) },
     { label: "Issue to a job", icon: ArrowUpFromLine, onClick: () => setMovement({ spare: s, type: "ISSUE", qty: "1", reason: "" }) },
     { label: "Receive stock", icon: ArrowDownToLine, onClick: () => setMovement({ spare: s, type: "RECEIPT", qty: String(reorder || 1), reason: "" }) },
-    { label: "Correct after a stock count", icon: Scale, onClick: () => setMovement({ spare: s, type: "ADJUSTMENT", qty: String(s.quantityOnHand), reason: "" }) },
+    { label: "Reconcile stock", icon: Scale, onClick: () => setMovement({ spare: s, type: "ADJUSTMENT", qty: String(s.quantityOnHand), reason: "" }) },
     ...(canDelete
-      ? [{ label: "Remove from the register", icon: Trash2, onClick: () => setDeleting(s), danger: true }]
+      ? [{ label: "Remove part", icon: Trash2, onClick: () => setDeleting(s), danger: true }]
       : []),
   ];
 
@@ -404,7 +407,6 @@ function SparesRegister() {
                 <thead>
                   <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
                     <th className="py-3.5 px-5 font-semibold">Part</th>
-                    <th className="py-3.5 px-5 font-semibold">Held for</th>
                     <th className="py-3.5 px-5 font-semibold text-center">On hand</th>
                     <th className="py-3.5 px-5 font-semibold text-center">Min</th>
                     <th className="py-3.5 px-5 font-semibold">Stock</th>
@@ -416,9 +418,14 @@ function SparesRegister() {
                   {filtered.map((s) => {
                     const reorder = reorderQuantity(s.quantityOnHand, s.minimumQuantity, s.maximumQuantity);
                     return (
-                      <tr key={s.id} className="hover:bg-ink-50">
+                      <tr key={s.id} className="hover:bg-ink-50 transition-colors">
                         <td className="py-3.5 px-5">
-                          <p className="font-semibold text-ink-900">{s.name}</p>
+                          <Link
+                            href={`/spares/${s.id}`}
+                            className="font-semibold text-ink-900 hover:text-brand-600 transition-colors underline-offset-2 hover:underline"
+                          >
+                            {s.name}
+                          </Link>
                           {/* What a storeman says out loud is "the SKF 6205",
                               not the catalogue number, so it reads first. */}
                           {(s.brand || s.model) && (
@@ -430,19 +437,6 @@ function SparesRegister() {
                             {s.partNumber}
                             {s.binLocation ? ` · bin ${s.binLocation}` : ""}
                           </p>
-                        </td>
-                        <td className="py-3.5 px-5">
-                          {s.equipmentName ? (
-                            <>
-                              <p className="text-ink-700">{s.equipmentName}</p>
-                              <p className="text-xs text-ink-500 mt-0.5">
-                                {s.assetId}
-                                {s.equipmentCriticality ? ` · ${CRITICALITY_SHORT[s.equipmentCriticality]}` : ""}
-                              </p>
-                            </>
-                          ) : (
-                            <span className="text-ink-500">General stock</span>
-                          )}
                         </td>
                         <td className="py-3.5 px-5 text-center font-semibold text-ink-900">
                           {s.quantityOnHand}
@@ -604,14 +598,11 @@ function SparesRegister() {
           </form>
         </Modal>
 
-        {/* Removing a part from the register.
-            The route refuses outright for any part with stock history, so this
-            says what it will and will not do rather than promising something
-            the server may decline. */}
+        {/* Removing a part */}
         <Modal
           open={!!deleting}
           onClose={() => setDeleting(null)}
-          title="Remove from the spares register"
+          title="Remove part"
           subtitle={deleting ? `${deleting.partNumber} · ${deleting.name}` : undefined}
         >
           <div className="space-y-4">
@@ -632,7 +623,7 @@ function SparesRegister() {
                 Cancel
               </Button>
               <Button variant="danger" icon={Trash2} loading={deletingBusy} onClick={confirmDelete}>
-                Remove the part
+                Remove part
               </Button>
             </div>
           </div>
@@ -642,7 +633,7 @@ function SparesRegister() {
         <Modal
           open={!!movement}
           onClose={() => setMovement(null)}
-          title={movement ? (MOVEMENT_LABELS[movement.type] ?? "Stock movement") : "Stock movement"}
+          title={movement ? (movement.type === "ADJUSTMENT" ? "Reconcile stock" : (MOVEMENT_LABELS[movement.type] ?? "Stock movement")) : "Stock movement"}
           subtitle={movement ? `${movement.spare.partNumber} · ${movement.spare.quantityOnHand} ${movement.spare.unit ?? "ea"} on hand` : ""}
         >
           {movement && (

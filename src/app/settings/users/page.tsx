@@ -28,6 +28,7 @@ import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
+import MetricPanel from "@/components/MetricPanel";
 import Modal from "@/components/Modal";
 import KebabMenu from "@/components/KebabMenu";
 import Select from "@/components/Select";
@@ -583,34 +584,76 @@ export default function UsersAdminPage() {
       )}
 
       {pageTab === "roles" && (
-        <div className="space-y-4">
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-info-50 border border-info-100 text-info-800 text-xs">
-            <Info className="w-4 h-4 shrink-0 mt-0.5" />
+        <div className="space-y-6">
+          {/* Metric summary panel */}
+          <MetricPanel
+            columns={4}
+            label="Roles and staff overview"
+            metrics={[
+              {
+                key: "defined",
+                label: "Defined roles",
+                value: String(ROLES.length),
+                count: ROLES.length,
+                description: `Across ${departments.length} department${departments.length === 1 ? "" : "s"}`,
+                status: "plain",
+              },
+              {
+                key: "assigned",
+                label: "Assigned staff",
+                value: String(list.filter((u) => u.isActive !== false).length),
+                count: list.filter((u) => u.isActive !== false).length,
+                description: "Active user accounts",
+                status: "plain",
+              },
+              {
+                key: "unassigned",
+                label: "Unassigned roles",
+                value: String(
+                  ROLES.filter((r) => (membersByRole[r]?.filter((m) => m.isActive !== false).length ?? 0) === 0).length,
+                ),
+                count: ROLES.filter((r) => (membersByRole[r]?.filter((m) => m.isActive !== false).length ?? 0) === 0).length,
+                description: "Roles with 0 members",
+                status:
+                  ROLES.filter((r) => (membersByRole[r]?.filter((m) => m.isActive !== false).length ?? 0) === 0).length > 0
+                    ? "warning"
+                    : "plain",
+              },
+              {
+                key: "signoff",
+                label: "Sign-off chain",
+                value: "1–99",
+                description: "Seniority rank hierarchy",
+                status: "plain",
+              },
+            ]}
+          />
+
+          <div className="flex items-start gap-3 p-3.5 rounded-xl bg-info-50 border border-info-200 text-info-900 text-xs leading-relaxed">
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-info-600" />
             <p>
-              Role <strong>definitions</strong>, write permissions, sign-off seniority and module scope, are
-              controlled in code (<span className="">src/lib/roles.ts</span>) and change only through a
-              reviewed release, so they stay auditable for ISO 9001/45001. Role <strong>membership</strong> (who holds
-              each role) is managed here and every change is audit-logged. A signer may sign steps of their own role or
+              Role <strong>definitions</strong>, write permissions, sign-off seniority and module scope are
+              controlled in code (<span className="bg-info-100/60 px-1 py-0.5 rounded">src/lib/roles.ts</span>) and change only through a
+              reviewed release to preserve ISO 9001/45001 compliance. Role <strong>membership</strong> (who holds
+              each role) is managed here and every assignment is audit-logged. A signer may sign steps of their own role or
               any junior rank; a Super Admin may sign or override any step.
             </p>
           </div>
 
-          {/* Cards answer "what can this role do". The matrix answers "who can do
-              this thing", the direction an auditor reads, and the artefact they
-              ask for by name. */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          {/* View switcher & Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
             <Tabs
               ariaLabel="Role view"
               value={roleView}
               onChange={setRoleView}
               items={[
-                { value: "cards", label: "By role" },
-                { value: "matrix", label: "Permission matrix" },
+                { value: "cards", label: "By role", count: ROLES.length },
+                { value: "matrix", label: "Permission matrix", count: PERMISSION_SETS.length },
               ]}
               className="flex-1"
             />
             {roleView === "matrix" && (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" icon={Download} onClick={exportMatrix}>
                   Export CSV
                 </Button>
@@ -626,14 +669,14 @@ export default function UsersAdminPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
-                      <th className="py-3.5 px-5 font-semibold sticky left-0 bg-ink-50 z-10">Role</th>
-                      <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">Members</th>
-                      <th className="py-3 px-3 font-semibold text-center whitespace-nowrap" title="Higher rank may sign any junior step">
+                    <tr className="border-b border-ink-200 bg-ink-50/70 text-ink-500">
+                      <th className="py-3.5 px-5 font-semibold text-xs sticky left-0 bg-ink-50/90 z-10">Role</th>
+                      <th className="py-3 px-3 font-semibold text-xs text-center whitespace-nowrap">Members</th>
+                      <th className="py-3 px-3 font-semibold text-xs text-center whitespace-nowrap" title="Higher rank may sign any junior step">
                         Sign-off rank
                       </th>
                       {PERMISSION_SETS.map((p) => (
-                        <th key={p.label} className="py-3 px-3 font-semibold text-center whitespace-nowrap" title={p.label}>
+                        <th key={p.label} className="py-3 px-3 font-semibold text-xs text-center whitespace-nowrap" title={p.label}>
                           {p.short}
                         </th>
                       ))}
@@ -644,32 +687,47 @@ export default function UsersAdminPage() {
                       const members = membersByRole[r] ?? [];
                       const activeMembers = members.filter((m) => m.isActive !== false).length;
                       return (
-                        <tr key={r} className="hover:bg-ink-50">
-                          <td className="py-3.5 px-5 sticky left-0 bg-white z-10">
-                            <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
-                              {ROLE_LABELS[r]}
-                            </Badge>
-                            <p className="text-xs text-ink-500 mt-1">
-                              {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"}
-                            </p>
+                        <tr key={r} className="hover:bg-ink-50/60 transition-colors">
+                          <td className="py-3.5 px-5 sticky left-0 bg-white z-10 border-r sm:border-r-0 border-ink-100">
+                            <div className="flex items-center gap-2.5">
+                              <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
+                                {ROLE_LABELS[r]}
+                              </Badge>
+                              <span className="text-xs text-ink-400 font-medium">
+                                {deptLabel(ROLE_DEPARTMENT[r]) ?? "General"}
+                              </span>
+                            </div>
                           </td>
-                          <td
-                            className={`py-3 px-3 text-center font-semibold ${
- activeMembers === 0 ? "text-warn-600" : "text-ink-700"
- }`}
-                            title={activeMembers === 0 ? "Nobody holds this role, any step requiring it cannot be signed" : undefined}
-                          >
-                            {activeMembers}
+                          <td className="py-3 px-3 text-center">
+                            {activeMembers > 0 ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 inline-block" />
+                                {activeMembers}
+                              </span>
+                            ) : (
+                              <span
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-warn-50 text-warn-700 border border-warn-200"
+                                title="Nobody holds this role; any sign-off requiring it will block"
+                              >
+                                0
+                              </span>
+                            )}
                           </td>
-                          <td className="py-3 px-3 text-center text-ink-500">{ROLE_RANK[r] ?? 0}</td>
+                          <td className="py-3 px-3 text-center">
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-ink-100 text-ink-700">
+                              Rank {ROLE_RANK[r] ?? 0}
+                            </span>
+                          </td>
                           {PERMISSION_SETS.map((p) => {
                             const has = p.roles.includes(r);
                             return (
                               <td key={p.label} className="py-3 px-3 text-center">
                                 {has ? (
-                                  <Check className="w-4 h-4 text-brand-600 inline" aria-label="Yes" />
+                                  <div className="w-5 h-5 rounded-full bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center mx-auto shadow-2xs">
+                                    <Check className="w-3.5 h-3.5 stroke-[2.5]" aria-label="Yes" />
+                                  </div>
                                 ) : (
-                                  <span className="text-ink-300" aria-label="No">&mdash;</span>
+                                  <span className="text-ink-200 font-light text-sm select-none" aria-label="No">&mdash;</span>
                                 )}
                               </td>
                             );
@@ -680,87 +738,126 @@ export default function UsersAdminPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-ink-500 px-4 py-3 border-t border-ink-200">
-                A tick is a <strong>write</strong> permission. A role with no ticks still participates through
-                sign-off: QA/QC and HSE approve maintenance work rather than performing it. A role with{" "}
-                <span className="text-warn-600 font-semibold">0 members</span> blocks every chain step that requires it.
-              </p>
+              <div className="px-5 py-3.5 bg-ink-50/50 border-t border-ink-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-ink-500">
+                <p>
+                  A green checkmark indicates a <strong>write / execution</strong> permission. A role with no checks still participates in compliance via <strong>sign-off approvals</strong> (e.g. QA/QC and HSE).
+                </p>
+                <span className="text-xs font-semibold text-warn-700 shrink-0">
+                  Roles with 0 members will block required sign-offs.
+                </span>
+              </div>
             </div>
           )}
 
           <div className={`grid sm:grid-cols-2 gap-4 ${roleView === "matrix" ? "hidden" : ""}`}>
             {ROLES.map((r) => {
               const members = membersByRole[r] ?? [];
+              const activeMembers = members.filter((m) => m.isActive !== false).length;
               const perms = PERMISSION_SETS.filter((p) => p.roles.includes(r));
               const paths = ROLE_ALLOWED_PATHS[r];
               return (
-                <div key={r} className="bg-surface border border-line rounded-xl shadow-card p-5 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
-                        {ROLE_LABELS[r]}
-                      </Badge>
-                      <p className="text-xs text-ink-400 mt-1.5">
-                        {deptLabel(ROLE_DEPARTMENT[r]) ?? "No department"} · sign-off rank {ROLE_RANK[r] ?? 0}
+                <div
+                  key={r}
+                  className="bg-surface border border-line rounded-xl shadow-card p-5 flex flex-col gap-4 hover:shadow-card-hover transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Badge className={ROLE_BADGE[r] ?? "bg-ink-100 text-ink-600 border-ink-200"}>
+                          {ROLE_LABELS[r]}
+                        </Badge>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-ink-600 bg-ink-100/80 px-2 py-0.5 rounded border border-ink-200/60">
+                          Rank {ROLE_RANK[r] ?? 0}
+                        </span>
+                      </div>
+                      <p className="text-xs text-ink-400">
+                        {deptLabel(ROLE_DEPARTMENT[r]) ?? "General"} Department
                       </p>
                     </div>
-                    <span className="text-xs font-semibold text-ink-500 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5 whitespace-nowrap">
-                      {members.length} member{members.length === 1 ? "" : "s"}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-ink-400 mb-1">Members</p>
-                    {members.length === 0 ? (
-                      <p className="text-xs text-ink-400">No users hold this role.</p>
+                    {activeMembers > 0 ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-500 inline-block" />
+                        {activeMembers} member{activeMembers === 1 ? "" : "s"}
+                      </span>
                     ) : (
-                      <p className="text-xs text-ink-600 leading-relaxed">
-                        {members.map((m, i) => (
-                          <span key={m.id} className={m.isActive === false ? "text-ink-400 line-through" : undefined}>
-                            {m.name}{i < members.length - 1 ? ", " : ""}
-                          </span>
-                        ))}
-                      </p>
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-warn-50 text-warn-700 border border-warn-200 shrink-0"
+                        title="Nobody holds this role; any sign-off requiring it will block"
+                      >
+                        0 members
+                      </span>
                     )}
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-ink-400 mb-1">Write permissions</p>
-                    {perms.length === 0 ? (
-                      <p className="text-xs text-ink-400">
-                        {r === "VIEWER" ? "Read-only access." : "Participates via sign-off only, no direct writes."}
-                      </p>
+                    <p className="text-xs font-semibold text-ink-400 mb-2">Members</p>
+                    {members.length === 0 ? (
+                      <p className="text-xs text-ink-400 italic">No users currently assigned to this role.</p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
-                        {perms.map((p) => (
-                          <Badge key={p.label} className="bg-brand-500/10 text-brand-700 border-brand-500/20">
-                            {p.label}
-                          </Badge>
+                        {members.map((m) => (
+                          <span
+                            key={m.id}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${
+                              m.isActive === false
+                                ? "bg-ink-100/50 text-ink-400 border-ink-200 line-through"
+                                : "bg-surface text-ink-800 border-ink-200/80 shadow-2xs"
+                            }`}
+                          >
+                            <span className="w-4 h-4 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center shrink-0">
+                              {m.name.charAt(0).toUpperCase()}
+                            </span>
+                            {m.name}
+                          </span>
                         ))}
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-ink-400 mb-1">Module access</p>
+                    <p className="text-xs font-semibold text-ink-400 mb-2">Write capabilities</p>
+                    {perms.length === 0 ? (
+                      <p className="text-xs text-ink-400">
+                        {r === "VIEWER" ? "Read-only access across enabled modules." : "Participates via sign-off approval chains only (no direct writes)."}
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {perms.map((p) => (
+                          <span
+                            key={p.label}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-brand-50 text-brand-700 border border-brand-200/70"
+                          >
+                            <Check className="w-3 h-3 text-brand-600 stroke-[2.5]" />
+                            {p.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-ink-400 mb-2">Module access</p>
                     {paths ? (
                       <div className="flex flex-wrap gap-1.5">
                         {paths.map((p) => (
-                          <span key={p} className="text-xs font-medium text-ink-600 bg-ink-100 border border-ink-200 rounded-full px-2 py-0.5">
+                          <span key={p} className="text-xs font-medium text-ink-600 bg-ink-50 border border-ink-200 rounded-lg px-2 py-0.5">
                             {moduleLabel(p)}
                           </span>
                         ))}
                       </div>
                     ) : (
                       <p className="text-xs text-ink-600">
-                        All modules{SETTINGS_WRITE_ROLES.includes(r) ? ", including Administration" : " (except Administration)"}
+                        All modules{SETTINGS_WRITE_ROLES.includes(r) ? ", including Administration" : " (excluding Administration)"}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-auto pt-1">
+                  <div className="mt-auto pt-3 border-t border-ink-100 flex items-center justify-between">
+                    <span className="text-xs text-ink-400">
+                      {activeMembers === 0 ? "Requires staff assignment" : "Operational in workflow"}
+                    </span>
                     <Button variant="secondary" size="sm" icon={UserCog} onClick={() => setMembersRole(r)}>
-                      Change members
+                      Manage members
                     </Button>
                   </div>
                 </div>

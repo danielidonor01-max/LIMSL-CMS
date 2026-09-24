@@ -24,7 +24,7 @@ export const ROLE_LABELS: Record<string, string> = {
   FACTORY_MANAGER: "Factory Manager",
   MAINTENANCE_MANAGER: "Maintenance Manager",
   FOREMAN: "Foreman",
-  QA_QC: "QA/QC Officer",
+  QA_QC: "QA/QC Supervisor",
   HSE: "HSE Supervisor",
   TECHNICIAN: "Maintenance Technician",
   VIEWER: "Viewer",

@@ -891,6 +891,18 @@ export const sparePartMovements = pgTable("spare_part_movements", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 }, (t) => [index("spare_movements_part_idx").on(t.sparePartId)]);
 
+// Spares can be held for and used on multiple machines.
+export const sparePartEquipment = pgTable("spare_part_equipment", {
+  id: text("id").primaryKey(),
+  sparePartId: text("spare_part_id").notNull().references(() => spareParts.id, { onDelete: "cascade" }),
+  equipmentId: text("equipment_id").notNull().references(() => equipment.id, { onDelete: "cascade" }),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+}, (t) => [
+  index("spare_part_equipment_spare_idx").on(t.sparePartId),
+  index("spare_part_equipment_equipment_idx").on(t.equipmentId),
+]);
+
 export const oemInterventions = pgTable("oem_interventions", {
   id: text("id").primaryKey(),
   oemId: text("oem_id").references(() => oemRegistry.id),
@@ -1497,6 +1509,8 @@ export type ConditionReading = typeof conditionReadings.$inferSelect;
 export type MeterReading = typeof meterReadings.$inferSelect;
 export type SparePart = typeof spareParts.$inferSelect;
 export type NewSparePart = typeof spareParts.$inferInsert;
+export type SparePartEquipment = typeof sparePartEquipment.$inferSelect;
+export type NewSparePartEquipment = typeof sparePartEquipment.$inferInsert;
 export type SparePartMovement = typeof sparePartMovements.$inferSelect;
 export type NonConformity = typeof nonConformities.$inferSelect;
 export type EquipmentDocument = typeof equipmentDocuments.$inferSelect;
