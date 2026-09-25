@@ -9,7 +9,8 @@
 // the record of that — what was asked, by whom, why, and who agreed.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight } from "lucide-react";
@@ -83,7 +84,7 @@ type Draft = {
   previous?: { label: string; frequency: string };
 };
 
-export default function AssetCategoriesPage() {
+function AssetCategoriesView() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role ?? null;
@@ -105,9 +106,20 @@ export default function AssetCategoriesPage() {
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
-  const [openChange, setOpenChange] = useState<string | null>(null);
+  // Arriving from a notification or from My Approvals, the change is named in
+  // the URL. It is opened and brought into view, rather than leaving the
+  // signer to find which of several pending changes is theirs.
+  const searchParams = useSearchParams();
+  const [openChange, setOpenChange] = useState<string | null>(searchParams.get("change"));
+  const [scrolled, setScrolled] = useState(false);
 
   const pending = useMemo(() => changes.filter((c) => c.status === "PENDING_APPROVAL"), [changes]);
+
+  useEffect(() => {
+    if (scrolled || !openChange || !changes.some((c) => c.id === openChange)) return;
+    document.getElementById(`change-${openChange}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setScrolled(true);
+  }, [changes, openChange, scrolled]);
 
   const refreshAll = () => {
     refreshCats();
@@ -273,7 +285,7 @@ export default function AssetCategoriesPage() {
               {changes.map((ch) => {
                 const open = openChange === ch.id;
                 return (
-                  <li key={ch.id}>
+                  <li key={ch.id} id={`change-${ch.id}`} className="scroll-mt-20">
                     <button
                       onClick={() => {
                         setOpenChange(open ? null : ch.id);
@@ -332,7 +344,7 @@ export default function AssetCategoriesPage() {
                           <p className="text-xs font-medium text-ink-500">Reason</p>
                           <p className="text-sm text-ink-800 mt-0.5 whitespace-pre-line">{ch.reason}</p>
                         </div>
-                        <SignoffChain entityType="ASSET_CATEGORY" entityId={ch.id} title="Sign-off" />
+                        <SignoffChain entityType="ASSET_CATEGORY" entityId={ch.id} title="Sign-off" onChange={refreshAll} />
                       </div>
                     )}
                   </li>
@@ -409,5 +421,15 @@ export default function AssetCategoriesPage() {
         )}
       </Modal>
     </div>
+  );
+}
+
+// useSearchParams suspends, so the page needs a boundary or the build cannot
+// prerender it.
+export default function AssetCategoriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <AssetCategoriesView />
+    </Suspense>
   );
 }

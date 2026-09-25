@@ -18,6 +18,7 @@ import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import LoadError from "@/components/LoadError";
 import { ROLE_LABELS } from "@/lib/roles";
+import ApprovalFlows from "@/components/ApprovalFlows";
 
 type Item = {
   signoffId: string;
@@ -43,8 +44,8 @@ export default function ApprovalsPage() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.detail}>
         <PageHeader
-          title="Awaiting your signature"
-          subtitle="Every document across the system that cannot move until you sign it"
+          title="My Approvals"
+          subtitle="What is waiting on your signature, and every other approval flow you can open"
           backHref="/"
           backLabel="Dashboard"
         />
@@ -127,6 +128,8 @@ export default function ApprovalsPage() {
             )}
           </>
         )}
+
+        {!error && <ApprovalFlows />}
       </main>
     </div>
   );

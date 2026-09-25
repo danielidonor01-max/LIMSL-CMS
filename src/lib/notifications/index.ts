@@ -14,6 +14,7 @@ import { config, whatsappReady, emailReady } from "@/lib/config";
 import { parsePrefs } from "@/lib/user-prefs";
 import { sendWhatsApp } from "./whatsapp";
 import { sendEmail } from "./email";
+import { entityHref, entityLabel } from "@/lib/signoff/inbox";
 
 export type NotifyEvent =
   | "PTW_SIGN_REQUEST"
@@ -193,13 +194,31 @@ export async function notifyNextSigner(
   );
   if (earlierUnsigned) return;
 
-  const label = ENTITY_LABEL[entityType] ?? entityType;
+  // Every chain type gets a name and a link. The lists above cover the older
+  // ones; anything newer falls back to the inbox's map rather than to its raw
+  // code and no link — which is how a category change arrived as
+  // "ASSET_CATEGORY ACC-2026-0001 awaits your sign-off" and went nowhere.
+  const label = ENTITY_LABEL[entityType] ?? entityLabel(entityType);
+
+  // The first request carries the document's number because whoever opened
+  // the chain passed it. Every request after that — the next signer, once the
+  // one before has signed — did not, and arrived as "Asset category change
+  // awaits your sign-off" with no way to tell which. Look it up instead.
+  if (!reference) {
+    try {
+      const { describeEntities } = await import("@/lib/signoff/describe");
+      const d = (await describeEntities([{ entityType, entityId }])).get(`${entityType}:${entityId}`);
+      reference = d?.code ?? undefined;
+    } catch {
+      // A name is a courtesy; the notification still goes without it.
+    }
+  }
   const ref = reference ? ` ${reference}` : "";
   await notify({
     event: ENTITY_EVENT[entityType] ?? "GENERAL",
     title: `${label}${ref} awaits your sign-off`,
     body: `You are the "${pending.roleLabel}" for ${label}${ref}. Please review and sign.`,
-    linkPath: ENTITY_LINK[entityType]?.(entityId),
+    linkPath: ENTITY_LINK[entityType]?.(entityId) ?? entityHref(entityType, entityId),
     relatedEntityType: entityType,
     relatedEntityId: entityId,
     roles: [pending.role],

@@ -47,10 +47,15 @@ export default function SignoffChain({
   entityType,
   entityId,
   title = "Approval & sign-off",
+  onChange,
 }: {
   entityType: string;
   entityId: string;
   title?: string;
+  /** Called after a signature or a return lands, so the page around the
+   *  chain can refresh what the signature changed. Without it the chain
+   *  moves and everything beside it still says "awaiting". */
+  onChange?: () => void;
 }) {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role;
@@ -135,7 +140,9 @@ export default function SignoffChain({
     invalidateApi("/api/permits");
     invalidateApi("/api/jha");
     invalidateApi("/api/corrective");
+    invalidateApi("/api/approvals");
     load();
+    onChange?.();
   };
 
   const summary = chainSummary(chain);

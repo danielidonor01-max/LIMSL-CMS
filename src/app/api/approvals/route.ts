@@ -7,25 +7,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import {
-  signoffs,
-  workOrders,
-  correctiveMaintenance,
-  wmsDocuments,
-  jhaDocuments,
-  permits,
-  nonConformities,
-  procedureRevisions,
-  pmChecklists,
-} from "@/lib/db/schema";
+import { signoffs } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
+import { describeEntities } from "@/lib/signoff/describe";
 import { pendingFor, sortInbox, entityHref, entityLabel, type SignoffRow } from "@/lib/signoff/inbox";
 import { reconcileWorkOrderApprovals } from "@/lib/work-order-approval";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
 
-// A PM checklist is reached through its work order rather than by its own id,
-// so a describer can override where the row points.
-type Describer = { title: string; code: string | null; href?: string };
 
 export async function GET() {
   const session = await auth();
@@ -52,49 +40,12 @@ export async function GET() {
     const mine = sortInbox(pendingFor(rows, { id: actor.id, role: actor.role }));
     if (mine.length === 0) return NextResponse.json([]);
 
-    // One lookup per entity type, only for the types actually present.
-    const need = (t: string) => [...new Set(mine.filter((m) => m.entityType === t).map((m) => m.entityId))];
-    const describers = new Map<string, Describer>();
-    const put = (type: string, id: string, d: Describer) => describers.set(`${type}:${id}`, d);
-
-    const load = async <T extends { id: string }>(
-      type: string,
-      table: any,
-      describe: (r: T) => Describer,
-    ) => {
-      const ids = need(type);
-      if (!ids.length) return;
-      const found = (await db.select().from(table).where(inArray(table.id, ids))) as T[];
-      for (const r of found) put(type, r.id, describe(r));
-    };
-
-    await Promise.all([
-      load("WORK_ORDER", workOrders, (r: any) => ({ title: r.title, code: r.workOrderNumber })),
-      load("CORRECTIVE", correctiveMaintenance, (r: any) => ({
-        title: r.faultDescription || r.equipmentName || "Corrective record",
-        code: r.cmrfNumber,
-      })),
-      load("WMS", wmsDocuments, (r: any) => ({ title: r.title, code: r.wmsNumber })),
-      load("JHA", jhaDocuments, (r: any) => ({ title: r.title, code: r.jhaNumber })),
-      load("PERMIT", permits, (r: any) => ({ title: r.workDescription, code: r.permitNumber })),
-      load("PERMIT_CLOSEOUT", permits, (r: any) => ({ title: r.workDescription, code: r.permitNumber })),
-      load("NON_CONFORMITY", nonConformities, (r: any) => ({ title: r.description, code: r.ncNumber })),
-      load("PROCEDURE", procedureRevisions, (r: any) => ({
-        title: r.title || "Maintenance procedure",
-        code: r.revision ? `Rev ${r.revision}` : null,
-      })),
-      // The checklist's own id is not a route. It is filled in against the work
-      // order that raised it, so that is where the signature is given.
-      load("PM_CHECKLIST", pmChecklists, (r: any) => ({
-        title: "PM checklist",
-        code: r.date ?? null,
-        href: `/work-orders/${r.workOrderId}/pm-checklist`,
-      })),
-    ]);
-
+    // What each document is called and where it is read, from the one
+    // describer the flow tracker uses too.
+    const described = await describeEntities(mine);
     return NextResponse.json(
       mine.map((m) => {
-        const d = describers.get(`${m.entityType}:${m.entityId}`);
+        const d = described.get(`${m.entityType}:${m.entityId}`);
         return {
           ...m,
           kind: entityLabel(m.entityType),

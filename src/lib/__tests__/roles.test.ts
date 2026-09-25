@@ -127,7 +127,9 @@ test("a scoped role reaches its own modules and their sub-routes", () => {
 
 test("a scoped role is denied modules outside its department", () => {
   assert.equal(canAccessPath("QA_QC", "/permits"), false);
-  assert.equal(canAccessPath("QA_QC", "/wms"), false);
+  // Not /wms: QA/QC sign every method statement as document control, so they
+  // must be able to open one (see signer-can-reach.test.ts).
+  assert.equal(canAccessPath("QA_QC", "/wms"), true);
   assert.equal(canAccessPath("QA_QC", "/calibration"), false);
   assert.equal(canAccessPath("HSE", "/kpi"), false);
   assert.equal(canAccessPath("HSE", "/documents"), false);
