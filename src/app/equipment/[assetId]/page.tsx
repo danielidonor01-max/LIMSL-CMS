@@ -4,7 +4,8 @@
 import { use, useState, useEffect } from "react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import EquipmentEditModal from "@/components/EquipmentEditModal";
 import {
   Wrench,
   CheckCircle2,
@@ -84,6 +85,10 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
   // history are all on screen while the choice is made.
   const [removing, setRemoving] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
+  // ?edit=1 opens the editor on arrival, so the old /edit links still land
+  // somewhere sensible now that editing is a modal on this page.
+  const searchParams = useSearchParams();
+  const [editOpen, setEditOpen] = useState(searchParams.get("edit") === "1");
 
   const restore = async () => {
     const res = await fetch(`/api/equipment/${assetIdKey}/removal`, { method: "PATCH" });
@@ -235,7 +240,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                   { label: "Troubleshoot", icon: Stethoscope, href: `/equipment/${assetIdKey}/troubleshoot` },
                   { label: "History Log", icon: History, href: `/equipment/${assetIdKey}/history` },
                   { label: "Raise Work Order", icon: ClipboardList, href: `/work-orders/new?equipmentId=${eq.id}` },
-                  { label: "Edit Details", icon: Pencil, href: `/equipment/${assetIdKey}/edit` },
+                  { label: "Edit Details", icon: Pencil, onClick: () => setEditOpen(true) },
                   { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${assetIdKey}` },
                   ...(eq.removedAt
                     ? [{ label: "Put back on the register", icon: Undo2, onClick: restore }]
@@ -537,6 +542,23 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
 
         {/* Per-machine document register (live) */}
         {activeTab !== "history" && <EquipmentDocuments assetId={assetIdKey} />}
+        <EquipmentEditModal
+          assetKey={assetIdKey}
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSaved={(saved) => {
+            // The asset ID can be edited, and it IS the URL. Follow it.
+            const newKey = String(saved.assetId || "").replaceAll("/", "-");
+            if (newKey && newKey !== assetIdKey) {
+              router.replace(`/equipment/${newKey}`);
+              return;
+            }
+            fetch(`/api/equipment/${assetIdKey}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((d) => d && setEq(d))
+              .catch(() => {});
+          }}
+        />
       </main>
 
       <RemoveFromRegisterModal

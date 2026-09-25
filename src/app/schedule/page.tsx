@@ -7,6 +7,7 @@ import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useCategoryLabels } from "@/lib/use-category-labels";
 import { useApi } from "@/lib/api-cache";
 import { useSession } from "next-auth/react";
 import {
@@ -46,7 +47,6 @@ import {
   SCHEDULE_STATUS_BADGE,
   SCHEDULE_STATUS_LABELS,
   WO_STATUS_LABELS,
-  EQUIPMENT_CATEGORY_LABELS,
   MONTH_NAMES,
   FREQUENCY_LABELS,
 } from "@/lib/constants";
@@ -121,6 +121,8 @@ const emptyCreate = {
 export default function SchedulePage() {
   const router = useRouter();
   const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
+  // Names as the register holds them, including categories added in Settings.
+  const EQUIPMENT_CATEGORY_LABELS = useCategoryLabels();
   const rows = Array.isArray(rowsData) ? rowsData : [];
 
   // The session resolves client-side only; anything role-dependent has to wait

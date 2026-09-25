@@ -47,8 +47,9 @@ type Batch = {
   assignedByName?: string | null;
   assignedAt?: string | null;
   workOrders: BatchWo[];
-  wms: { id: string; wmsNumber: string; status: string } | null;
-  jha: { id: string; jhaNumber: string; status: string } | null;
+  wms: { id: string; wmsNumber: string; status: string; revision?: number | null } | null;
+  jha: { id: string; jhaNumber: string; status: string; revision?: number | null } | null;
+  previousJha: { id: string; jhaNumber: string; wmsRevision?: number | null } | null;
   permit: { id: string; permitNumber: string; status: string } | null;
   flow: FlowState;
 };
@@ -131,9 +132,13 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
     WORK_ORDER: {
       ref: `${batch.workOrders.length} raised`,
     },
+    // The method statement belongs to the category and is reused cycle after
+    // cycle, so an approved one is simply done here — nobody is asked to write
+    // it again because the month changed. Its revision is shown so a reader can
+    // tell which version of the method this job runs under.
     WMS: batch.wms
       ? {
-          ref: batch.wms.wmsNumber,
+          ref: `${batch.wms.wmsNumber} · rev ${batch.wms.revision ?? 0}`,
           href: `/wms/${batch.wms.id}`,
           waitingOn:
             batch.wms.status !== "APPROVED"
@@ -141,9 +146,14 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
               : undefined,
         }
       : { actionHref: `/wms/new?batchId=${batch.id}` },
+
+    // The analysis is also standing, and tied to the method's revision. When a
+    // machine joined the category and the method was revised, the old analysis
+    // was retired with it — so the next one is a REVISION of that one, and the
+    // form is told which one it replaces.
     JHA: batch.jha
       ? {
-          ref: batch.jha.jhaNumber,
+          ref: `${batch.jha.jhaNumber} · rev ${batch.jha.revision ?? 0}`,
           href: `/jha/${batch.jha.id}`,
           waitingOn:
             batch.jha.status !== "APPROVED"
@@ -151,18 +161,26 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
               : undefined,
         }
       : batch.wms?.status === "APPROVED"
-        ? { actionHref: `/jha/new?wmsId=${batch.wms.id}` }
+        ? batch.previousJha
+          ? {
+              actionHref: `/jha/new?wmsId=${batch.wms.id}&supersedes=${batch.previousJha.id}`,
+              actionLabel: "Revise the JHA",
+            }
+          : { actionHref: `/jha/new?wmsId=${batch.wms.id}` }
         : { waitingOn: "The method statement has to be approved first." },
+
+    // The permit IS per cycle, so it is raised for this batch by name. The
+    // server takes this batch's own work order from it.
     PERMIT: batch.permit
       ? { ref: batch.permit.permitNumber, href: `/permits/${batch.permit.id}` }
       : batch.jha?.status === "APPROVED"
-        ? { actionHref: `/permits/new?jhaId=${batch.jha.id}` }
+        ? { actionHref: `/permits/new?jhaId=${batch.jha.id}&batchId=${batch.id}` }
         : { waitingOn: "The hazard analysis has to be approved first." },
     WORK: {
       waitingOn: batch.permit
         ? undefined
         : "No permit, no PM. Work cannot start until the permit is raised.",
-      actionLabel: "Open each machine's work order below to complete its checklist",
+      actionLabel: "Complete each machine's checklist from its work order below.",
     },
   };
 

@@ -26,7 +26,8 @@ import { requireRoles } from "@/lib/authz";
 import { WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { raiseWorkOrder } from "@/lib/maintenance/raise-work-order";
-import { EQUIPMENT_CATEGORY_LABELS } from "@/lib/constants";
+import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
+import { standingPairFor } from "@/lib/hse/standing-documents";
 import { auth } from "@/auth";
 
 export async function GET() {
@@ -51,29 +52,35 @@ export async function GET() {
       .from(workOrders)
       .where(inArray(workOrders.batchId, ids));
 
-    const wmsRows = await db
-      .select({ id: wmsDocuments.id, batchId: wmsDocuments.batchId, status: wmsDocuments.status, wmsNumber: wmsDocuments.wmsNumber })
-      .from(wmsDocuments)
-      .where(inArray(wmsDocuments.batchId, ids));
-
-    const jhaRows = await db
-      .select({ id: jhaDocuments.id, batchId: jhaDocuments.batchId, status: jhaDocuments.status, jhaNumber: jhaDocuments.jhaNumber })
-      .from(jhaDocuments)
-      .where(inArray(jhaDocuments.batchId, ids));
+    // The method and analysis belong to the category, so they are looked up
+    // once per category rather than per batch — a year of monthly crane
+    // batches all share the one crane WMS.
+    const pairByCategory = new Map<string, Awaited<ReturnType<typeof standingPairFor>>>();
+    for (const category of new Set(rows.map((b) => b.category))) {
+      pairByCategory.set(category, await standingPairFor(category));
+    }
 
     const permitRows = await db
       .select({ id: permits.id, batchId: permits.batchId, status: permits.status, permitNumber: permits.permitNumber })
       .from(permits)
       .where(inArray(permits.batchId, ids));
 
+    const labels = await categoryLabelMap();
     const batches = rows.map((b) => {
       const mine = wos.filter((w) => w.batchId === b.id);
-      const wms = wmsRows.find((w) => w.batchId === b.id) ?? null;
-      const jha = jhaRows.find((j) => j.batchId === b.id) ?? null;
+      const pair = pairByCategory.get(b.category);
+      const wms = pair?.wms
+        ? { id: pair.wms.id, status: pair.wms.status, wmsNumber: pair.wms.wmsNumber }
+        : null;
+      // A stale analysis is not in place: the permit route will refuse it.
+      const stale = pair?.readiness.ok === false && pair.readiness.blockedBy === "JHA_STALE";
+      const jha = pair?.jha
+        ? { id: pair.jha.id, status: stale ? "STALE" : pair.jha.status, jhaNumber: pair.jha.jhaNumber }
+        : null;
       const permit = permitRows.find((p) => p.batchId === b.id) ?? null;
       return {
         ...b,
-        categoryLabel: EQUIPMENT_CATEGORY_LABELS[b.category] ?? b.category,
+        categoryLabel: labels[b.category] ?? b.category,
         machineCount: mine.length,
         workOrdersClosed: mine.filter((w) => w.status === "COMPLETED").length,
         wms,
@@ -147,7 +154,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const categoryLabel = EQUIPMENT_CATEGORY_LABELS[category] ?? category;
+    const categoryLabel = (await categoryLabelMap())[category] ?? category;
     const id = nanoid();
     const batchNumber = await nextDocNumber("PMB");
     const activityType = machines.every((m) => m.activityType === "INS") ? "INS" : "PM";

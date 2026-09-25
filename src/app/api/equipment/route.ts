@@ -6,9 +6,40 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { syncPlanForEquipment } from "@/lib/maintenance/plan-sync";
+import { getCategory, listCategories } from "@/lib/maintenance/asset-categories";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
 import { normaliseAssetId } from "@/lib/asset-id";
+
+// Which interval a machine in this category is serviced on.
+//
+// Once categories are managed — the table has rows — an unknown category is
+// refused: a new category is proposed and signed off in Settings, not invented
+// by typing it into an asset form. Before the table exists (a deployment that
+// has not run apply-asset-categories yet) the old behaviour stands, so the
+// register keeps working while the migration catches up.
+async function resolveCategory(code: unknown): Promise<
+  { ok: true; frequency: string | null } | { ok: false; error: string }
+> {
+  const c = String(code ?? "");
+  if (!c) return { ok: false, error: "Choose the category this machine belongs to." };
+  try {
+    const cat = await getCategory(c);
+    if (cat) return { ok: true, frequency: cat.maintenanceFrequency };
+    const managed = (await listCategories()).length > 0;
+    if (managed) {
+      return {
+        ok: false,
+        error:
+          "That category is not on the register. New categories are added in Settings, where " +
+          "the Maintenance Manager and QA/QC Supervisor sign them off with their interval.",
+      };
+    }
+  } catch {
+    // The categories table does not exist here yet. Fall through.
+  }
+  return { ok: true, frequency: null };
+}
 
 export async function GET() {
   try {
@@ -47,6 +78,11 @@ export async function POST(request: Request) {
       );
     }
 
+    // The interval comes from the category, not from the form. Two identical
+    // machines on different regimes is exactly what categories exist to stop.
+    const resolved = await resolveCategory(body.category);
+    if (!resolved.ok) return NextResponse.json({ error: resolved.error }, { status: 400 });
+
     const newAsset = {
       id: nanoid(),
       assetId: id.assetId,
@@ -61,7 +97,7 @@ export async function POST(request: Request) {
       status: body.status || "OPERATIONAL",
       // The old literal "Quarterly" matched none of the uppercase frequency
       // keys the adherence window and recurrence tables use.
-      maintenanceFrequency: body.maintenanceFrequency || suggestedPmFrequency(body.criticality),
+      maintenanceFrequency: resolved.frequency ?? body.maintenanceFrequency ?? suggestedPmFrequency(body.criticality),
       criticality: body.criticality || "MEDIUM",
       notes: body.notes || null,
     };

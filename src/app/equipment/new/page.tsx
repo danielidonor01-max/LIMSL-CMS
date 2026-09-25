@@ -81,9 +81,25 @@ export default function NewEquipmentPage() {
     }));
   };
 
-  const categoryOptions = Object.entries(EQUIPMENT_CATEGORY_LABELS).filter(([k]) =>
+  // The register's categories — including any added in Settings since this
+  // form was written — each with the interval its machines are serviced on.
+  const [registerCategories, setRegisterCategories] = useState<
+    { code: string; label: string; maintenanceFrequency: string }[]
+  >([]);
+  useEffect(() => {
+    fetch("/api/asset-categories")
+      .then((r) => (r.ok ? r.json() : { categories: [] }))
+      .then((d) => setRegisterCategories(Array.isArray(d?.categories) ? d.categories : []))
+      .catch(() => {});
+  }, []);
+
+  const allCategories: [string, string][] = registerCategories.length
+    ? registerCategories.map((c) => [c.code, c.label])
+    : Object.entries(EQUIPMENT_CATEGORY_LABELS);
+  const categoryOptions = allCategories.filter(([k]) =>
     assetType === "SYS" ? SYSTEM_CATEGORIES.includes(k) : !SYSTEM_CATEGORIES.includes(k) || k === "OTHER",
   );
+  const categoryInterval = registerCategories.find((c) => c.code === form.category)?.maintenanceFrequency;
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -250,20 +266,19 @@ export default function NewEquipmentPage() {
               {CRITICALITIES.map((c) => <option key={c} value={c}>{CRITICALITY_LABELS[c]}</option>)}
             </Select>
             <p className="text-xs text-ink-500 mt-1">
-              Sets the default service interval, work-order priority and how early overdue work escalates.
+              Sets work-order priority and how early overdue work escalates.
             </p>
           </div>
           <div>
-            <label className={LABEL_CLASS}>Service interval</label>
-            <Select value={form.maintenanceFrequency} onChange={(v) => set("maintenanceFrequency", v)} className="w-full">
-              {FREQUENCIES.map((fq) => <option key={fq} value={fq}>{FREQUENCY_LABELS[fq] ?? fq}</option>)}
-            </Select>
-            {form.maintenanceFrequency !== suggestedPmFrequency(form.criticality) && (
-              <p className="text-xs text-warn-700 mt-1">
-                {CRITICALITY_SHORT[form.criticality]} criticality normally means{" "}
-                {(FREQUENCY_LABELS[suggestedPmFrequency(form.criticality)] ?? "").toLowerCase()}.
-              </p>
-            )}
+            <label className={LABEL_CLASS}>Serviced</label>
+            {/* Set by the category, not chosen per machine: two identical machines
+                on different regimes is what categories exist to prevent. */}
+            <div className={`${FIELD_CLASS} bg-ink-100 text-ink-700 cursor-default`} aria-readonly="true">
+              {categoryInterval ? (FREQUENCY_LABELS[categoryInterval] ?? categoryInterval) : "Set by the category"}
+            </div>
+            <p className="text-xs text-ink-500 mt-1">
+              From the category. Changed in Settings, with sign-off.
+            </p>
           </div>
         </div>
 

@@ -49,6 +49,10 @@ function NewJhaForm() {
   const [saving, setSaving] = useState(false);
 
   const [wmsId, setWmsId] = useState(searchParams.get("wmsId") ?? "");
+  // Set when this analysis REVISES an earlier one, because the method it was
+  // written against has moved on. Carried so the new analysis names the old
+  // one, and the chain from one to the other is on the record.
+  const supersedesId = searchParams.get("supersedes") ?? "";
   const [title, setTitle] = useState("");
   const [equipmentId, setEquipmentId] = useState("");
   const [workArea, setWorkArea] = useState("");
@@ -99,6 +103,7 @@ function NewJhaForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wmsId,
+          supersedesId: supersedesId || undefined,
           title: title.trim(),
           equipmentId: equipmentId || null,
           workArea: workArea.trim() || null,

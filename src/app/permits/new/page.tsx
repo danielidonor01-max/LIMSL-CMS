@@ -36,6 +36,11 @@ function NewPermitForm() {
   const searchParams = useSearchParams();
   const prefillEquipmentId = searchParams.get("equipmentId") || "";
   const prefillJhaId = searchParams.get("jhaId") || "";
+  // The PM batch this permit is for. A standing hazard analysis covers a
+  // category for as long as it stands, so it cannot say which cycle a permit
+  // belongs to; the batch page that sent us here can, and the server takes the
+  // batch's own work order from it.
+  const prefillBatchId = searchParams.get("batchId") || "";
 
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [userList, setUserList] = useState<any[]>([]);
@@ -122,11 +127,16 @@ function NewPermitForm() {
   const toggleWorkType = (value: string) =>
     setWorkTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
 
+  // Ask for the work order unless it is already known: from a batch (the server
+  // takes the batch's own), or from a one-off analysis raised with its job.
+  const needsWorkOrder =
+    !!selectedJha && !prefillBatchId && (!selectedJha.workOrderId || !!selectedJha.category);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!jhaId) return toast.error("Select the approved Job Hazard Analysis this permit is issued against.");
-    if (selectedJha && !selectedJha.workOrderId && !workOrderId) {
+    if (needsWorkOrder && !workOrderId) {
       return toast.error("Select the approved work order that authorises this job.");
     }
     if (workTypes.length === 0) return toast.error("Select at least one type of work.");
@@ -145,6 +155,7 @@ function NewPermitForm() {
         body: JSON.stringify({
           jhaId,
           workOrderId: workOrderId || undefined,
+          batchId: prefillBatchId || undefined,
           taskNo: taskNo.trim() || null,
           workTypes,
           facility: facility.trim() || null,
@@ -235,7 +246,7 @@ function NewPermitForm() {
                 this is the last point at which the work order can be missing.
                 It is inherited when the chain started from a raised job, and
                 asked for when the paperwork ran ahead of it. */}
-            {selectedJha && !selectedJha.workOrderId && (
+            {needsWorkOrder && (
               <div className="space-y-2 pt-2 border-t border-line">
                 <label className="text-sm font-medium text-ink-700">Approved work order</label>
                 <Select

@@ -8,7 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Snowflake, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle, Users2 } from "lucide-react";
+import { SlidersHorizontal, Clock, Save, ShieldAlert, Loader2, CalendarDays, Info, BellRing, Mail, KeyRound, Trash2, CheckCircle2, XCircle, PlugZap, RefreshCw, Cloud, Database, Tags, Snowflake, Users as UsersIcon, ChevronRight, UserCircle, AlertTriangle, Users2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/Button";
 import Toggle from "@/components/Toggle";
@@ -998,6 +998,12 @@ export default function AppSettingsPage() {
             icon: Database,
             title: "Data Import",
             desc: "Bring in equipment, schedule, users and components from Excel, CSV or SharePoint. Previews before it commits.",
+          },
+          {
+            href: "/settings/categories",
+            icon: Tags,
+            title: "Asset Categories",
+            desc: "Each category sets how often its machines are serviced. Changes are signed off by the Maintenance Manager and QA/QC Supervisor, then the plan follows.",
           },
           {
             href: "/settings/users",

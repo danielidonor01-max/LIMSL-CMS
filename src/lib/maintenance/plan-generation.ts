@@ -21,13 +21,10 @@ export const FREQUENCY_MONTHS: Record<string, number> = {
   ANNUAL: 12,
 };
 
-export const FREQUENCY_LABELS: Record<string, string> = {
-  MONTHLY: "Monthly",
-  BI_MONTHLY: "Every two months",
-  QUARTERLY: "Quarterly",
-  SEMI_ANNUAL: "Twice a year",
-  ANNUAL: "Once a year",
-};
+// Labels live in constants.ts (FREQUENCY_LABELS) with the rest of the
+// register's vocabulary. This file only decides which intervals the planner
+// can actually schedule — FREQUENCY_MONTHS — so an interval offered in a form
+// is always one that produces a plan.
 
 const iso = (y: number, m: number, d: number) =>
   `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;

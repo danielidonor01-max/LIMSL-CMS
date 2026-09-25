@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { equipment } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
-import { syncPlanForEquipment } from "@/lib/maintenance/plan-sync";
+import { getCategory, listCategories, replanMachine } from "@/lib/maintenance/asset-categories";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 
@@ -54,7 +54,7 @@ export async function PATCH(
       "assetId",
       "name", "category", "location", "bay", "oem", "model", "serialNumber",
       "commissioningDate", "warrantyExpiry", "status", "criticality",
-      "maintenanceFrequency", "lastMaintenanceDate", "lastUsedDate",
+      "lastMaintenanceDate", "lastUsedDate",
       "nextMaintenanceDate", "notes", "requiresCalibration", "requiresPremob",
     ] as const;
     const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
@@ -68,6 +68,27 @@ export async function PATCH(
       .where(or(eq(equipment.assetId, assetIdOriginal), eq(equipment.assetId, assetIdKey), eq(equipment.id, assetIdKey)))
       .limit(1);
     if (!before) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+
+    // A machine's interval is its category's. Moving it to another category
+    // moves it onto that category's regime; the interval itself is changed on
+    // the category, with sign-off, never here.
+    if (body.category !== undefined && body.category !== before.category) {
+      let cat = null;
+      let managed = false;
+      try {
+        cat = await getCategory(String(body.category));
+        managed = (await listCategories()).length > 0;
+      } catch {
+        // Categories table not migrated yet: keep the old behaviour.
+      }
+      if (managed && !cat) {
+        return NextResponse.json(
+          { error: "That category is not on the register. Add it in Settings first." },
+          { status: 400 },
+        );
+      }
+      if (cat) updates.maintenanceFrequency = cat.maintenanceFrequency;
+    }
 
     // Retiring an asset silently removes it from availability, PM compliance and
     // every other denominator it was in. That is the same weight as deferring
@@ -111,13 +132,12 @@ export async function PATCH(
     // plan follows. Only the missing dates are added — anything already
     // rescheduled, deferred or done is somebody's decision and stays.
     // A decommissioned machine gets nothing new: it is not being serviced.
-    if (
-      body.maintenanceFrequency !== undefined &&
-      body.maintenanceFrequency !== before.maintenanceFrequency &&
-      (updated[0]?.status ?? before.status) !== "DECOMMISSIONED"
-    ) {
+    const nowFrequency = updated[0]?.maintenanceFrequency ?? before.maintenanceFrequency;
+    if (nowFrequency !== before.maintenanceFrequency) {
       try {
-        await syncPlanForEquipment(updated[0] ?? before, { actor: gate.actor });
+        // Future activities nobody has touched are replaced; overdue, deferred,
+        // batched and started ones are decisions and stay.
+        await replanMachine(updated[0] ?? before, gate.actor);
       } catch (err) {
         console.warn("equipment update: could not refresh the maintenance plan", err);
       }

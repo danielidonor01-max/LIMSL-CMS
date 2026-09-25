@@ -47,6 +47,7 @@ export const ENTITY_META: Record<string, { label: string; href: (id: string) => 
   PROCEDURE: { label: "Maintenance procedure", href: (id) => `/procedure/${id}` },
   NON_CONFORMITY: { label: "Non-conformity", href: () => `/audit/non-conformity` },
   SAFETY_INCIDENT: { label: "Safety incident", href: (id) => `/incidents/${id}` },
+  ASSET_CATEGORY: { label: "Asset category change", href: () => `/settings/categories` },
 };
 
 export const entityLabel = (t: string) => ENTITY_META[t]?.label ?? t.toLowerCase().replace(/_/g, " ");

@@ -46,6 +46,10 @@ export type FlowStep = {
   roles: string[];
   /** The call to action, written as an instruction to whoever owns it. */
   action: string;
+  /** The button. Short, because it sits in a narrow rail beside the page and
+   *  a button that wraps or clips reads as broken. The sentence above it
+   *  carries the detail. */
+  cta: string;
   /** Why the step exists, shown to whoever is being held up by it. */
   because: string;
 };
@@ -61,6 +65,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "BATCH",
     roles: WORK_ASSIGN_ROLES,
     action: "Raise the batch for this category and date",
+    cta: "Raise the batch",
     because: "The machines due together are one job, and they share one set of safety documents.",
   },
   {
@@ -69,6 +74,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "BATCH",
     roles: WORK_ASSIGN_ROLES,
     action: "Assign the batch to one person",
+    cta: "Assign",
     because: "Assigning the batch assigns every machine in it, and tells that person it is theirs.",
   },
   {
@@ -77,6 +83,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "WORK_ORDER",
     roles: [],
     action: "Sign the work orders raised for the machines in this batch",
+    cta: "Open work orders",
     because: "A work order is the authorisation to do the job. No PM starts without one.",
   },
   {
@@ -85,6 +92,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "WMS",
     roles: WMS_WRITE_ROLES,
     action: "Write the method statement covering every machine in the batch",
+    cta: "Write the WMS",
     because: "HSE builds the hazard analysis from the method statement. No WMS, no permit.",
   },
   {
@@ -93,6 +101,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "JHA",
     roles: JHA_WRITE_ROLES,
     action: "Build the hazard analysis from the approved method statement",
+    cta: "Build the JHA",
     because: "A permit is issued against an approved hazard analysis, never against a bare request.",
   },
   {
@@ -101,6 +110,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "PERMIT",
     roles: PERMIT_ISSUE_ROLES,
     action: "Raise the permit covering the batch",
+    cta: "Raise the permit",
     because: "No permit, no PM. The permit is the document that lets somebody pick up a spanner.",
   },
   {
@@ -109,6 +119,7 @@ export const PM_FLOW: FlowStep[] = [
     doc: "WORK",
     roles: [],
     action: "Complete the PM checklist for each machine and record the parts used",
+    cta: "Record the work",
     because: "Parts booked against the job are what keep the critical spares register honest.",
   },
 ];
@@ -123,6 +134,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "REPORT",
     roles: [],
     action: "Report the fault",
+    cta: "Report the fault",
     because: "Nothing moves until the breakdown is on the record.",
   },
   {
@@ -131,6 +143,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "REPORT",
     roles: REPAIR_AUTHORISE_ROLES,
     action: "Move the repair to the Foreman",
+    cta: "Authorise repair",
     because:
       "The Factory Manager decides the repair goes ahead and hands it to the Foreman to resource.",
   },
@@ -140,6 +153,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "REPORT",
     roles: WORK_ASSIGN_ROLES,
     action: "Assign the repair to a technician",
+    cta: "Assign",
     because: "The Foreman picks who does the work, and that person raises the paperwork.",
   },
   {
@@ -148,6 +162,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "WORK_ORDER",
     roles: WORK_ORDER_ASSIGNEE_ROLES,
     action: "Raise the work order for the affected machine",
+    cta: "Raise work order",
     because: "A work order is the authorisation to do the job. No repair starts without one.",
   },
   {
@@ -156,6 +171,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "WMS",
     roles: WMS_WRITE_ROLES,
     action: "Write the method statement for the affected machine",
+    cta: "Write the WMS",
     because: "HSE builds the hazard analysis from it, and the permit rests on both.",
   },
   {
@@ -164,6 +180,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "JHA",
     roles: JHA_WRITE_ROLES,
     action: "Build the hazard analysis from the approved method statement",
+    cta: "Build the JHA",
     because: "A permit is issued against an approved hazard analysis, never against a bare request.",
   },
   {
@@ -172,6 +189,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "PERMIT",
     roles: PERMIT_ISSUE_ROLES,
     action: "Raise the permit for the repair",
+    cta: "Raise the permit",
     because: "No permit, no repair work.",
   },
   {
@@ -180,6 +198,7 @@ export const CM_FLOW: FlowStep[] = [
     doc: "WORK",
     roles: [],
     action: "Carry out the repair, record the parts used and close it out",
+    cta: "Close it out",
     because: "Parts booked against the job are what keep the critical spares register honest.",
   },
 ];

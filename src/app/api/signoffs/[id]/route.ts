@@ -11,6 +11,7 @@ import { hasSigningPin } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { sealDocument } from "@/lib/signoff/seal";
+import { applyCategoryChange } from "@/lib/maintenance/asset-categories";
 import { notify, notifyNextSigner } from "@/lib/notifications";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
@@ -213,6 +214,14 @@ export async function POST(
         const after = await getSignoffChain(step.entityType, step.entityId);
         if (chainSummary(after).complete) {
           await sealDocument(step.entityType, step.entityId);
+
+          // A category change takes effect the moment its last signature lands:
+          // every machine in the category moves to the new interval and its
+          // future plan is rebuilt, in the same request, so nobody has to open
+          // a page for the schedule to become true.
+          if (step.entityType === "ASSET_CATEGORY") {
+            await applyCategoryChange(step.entityId, { id: user.id ?? null, name: user.name ?? null });
+          }
 
           if (step.entityType === "WORK_ORDER") {
             const [wo] = await db.select().from(workOrders).where(eq(workOrders.id, step.entityId)).limit(1);

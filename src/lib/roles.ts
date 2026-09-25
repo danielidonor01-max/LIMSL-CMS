@@ -105,12 +105,30 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
 // Paths every authenticated role may reach, regardless of scope.
 const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications", "/account", "/offline", "/forgot-password", "/reset-password", "/account/confirm-email"];
 
+// Who may see and propose changes to the asset categories — the categories
+// being where every machine's maintenance interval now lives. A change still
+// takes the Maintenance Manager's and the QA/QC Supervisor's signatures
+// before it touches anything; this is who may open the page and ask.
+//
+// The page sits under /settings, which is otherwise Super Admin only. The two
+// approvers have to be able to open the change they are asked to sign, so
+// this one page is carved out for them rather than moved out of settings.
+export const ASSET_CATEGORY_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "QA_QC",
+];
+
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
   if (UNIVERSAL_PATHS.includes(pathname)) return true;
   // Administration lives under /settings, even "full access" roles must not
   // reach it by direct URL. Mirrors SETTINGS_WRITE_ROLES, which gates the
   // settings API routes.
+  if (pathname === "/settings/categories" || pathname.startsWith("/settings/categories/")) {
+    return ASSET_CATEGORY_ROLES.includes(role);
+  }
   if (pathname === "/settings" || pathname.startsWith("/settings/")) {
     return SETTINGS_WRITE_ROLES.includes(role);
   }

@@ -245,6 +245,14 @@ Permits are the exception to all of this and are raised fresh each PM cycle,
 because a permit has a start, a validity, an expiry and a hand-back. It
 authorises work in a window; it cannot span months the way a method can.
 
+**A standing JHA cannot tell a permit which cycle it is for.** The crane JHA
+approved in March is the crane JHA in October, so its `batchId` and
+`workOrderId` name March. A permit therefore takes its batch from the caller
+(`/permits/new?jhaId=…&batchId=…`) and its work order from THAT batch — never
+from the JHA. Inheriting them issued an October permit that claimed to
+authorise a March work order. Batches find their WMS/JHA by CATEGORY
+(`standingPairFor`), never by `batchId`.
+
 The rules are pure in `src/lib/hse/standing-documents.ts` so the permit route
 and the screens cannot disagree about them.
 
@@ -263,6 +271,29 @@ Two different things, and the difference is the point.
 
 Delegating sets `signerUserId` to the delegate, which is why their signature
 is their own rather than an override: they are exactly who the step now names.
+
+### The category owns the interval
+
+A machine's maintenance frequency is its CATEGORY's, from `asset_categories`.
+It is not an editable field of the machine: the edit modal shows it read-only,
+the equipment routes derive it from the category, and moving a machine to
+another category moves it onto that category's interval (and replans it).
+
+Changing a category — its name, its interval, or adding a new one — is a
+PROPOSAL (`asset_category_changes`, `ACC-…`) signed by the Maintenance Manager
+then the QA/QC Supervisor (`ASSET_CATEGORY_CHAIN`). Nothing moves until the
+second signature; then `applyCategoryChange()` runs once, from the sign route,
+and every machine in the category takes the new interval. One pending change
+per category.
+
+`/settings/categories` is the one page under /settings that is not Super Admin
+only — `ASSET_CATEGORY_ROLES` can open it, because the two approvers have to be
+able to read the change they are asked to sign.
+
+**Replanning** (`replanMachine`, rule in `isReplannable`) removes only future
+rows nobody has touched — SCHEDULED, no work order, not batched, not deferred —
+then adds the new interval's dates. Overdue, rescheduled, deferred and started
+rows are decisions and stay.
 
 ### The register drives the plan
 
@@ -410,6 +441,16 @@ DATABASE_URL=...  npx tsx src/lib/db/apply-pm-flow.ts         # pm_batches + bat
 DATABASE_URL=...  npx tsx src/lib/db/sync-doc-counters.ts     # counters -> highest number in use
 DATABASE_URL=...  npx tsx src/lib/db/reset-safety-documents.ts --dry-run
 ```
+
+`apply-asset-categories.ts` creates the category tables, seeds a row per
+category in use at its machines' MAJORITY interval, and moves the minority
+onto it (with a replan). `--dry-run` lists exactly which machines move.
+
+`erase-work-orders.ts` deletes every work order and what exists only for them
+(PM checklists, time logs, their signatures and seals, PM batches), clears the
+link on records that stand alone (spares movements — the stock figure depends
+on them — breakdown records, the plan), never touches the audit log, and does
+NOT reset document numbers: the log still names the erased numbers.
 
 `reset-safety-documents.ts` clears every WMS, JHA and permit and sets the year's
 PM plan back to overdue/scheduled. It keeps work orders, breakdown records,

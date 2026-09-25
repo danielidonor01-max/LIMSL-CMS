@@ -173,6 +173,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // A revision continues the earlier analysis rather than starting a new
+    // line, so 'what did HSE assess before the new machine arrived' stays
+    // answerable: the new one names the old, and carries the next number.
+    let previousJha: typeof jhaDocuments.$inferSelect | null = null;
+    if (body.supersedesId) {
+      const [prev] = await db
+        .select()
+        .from(jhaDocuments)
+        .where(eq(jhaDocuments.id, String(body.supersedesId)))
+        .limit(1);
+      previousJha = prev ?? null;
+    }
+
     const jhaNumber = await nextDocNumber("JHA");
     const id = nanoid();
 
@@ -180,7 +193,8 @@ export async function POST(request: Request) {
       id,
       jhaNumber,
       title: String(body.title).trim(),
-      revision: 0,
+      // Numbered like the method statement it hangs off: the first is revision 1.
+      revision: previousJha ? (previousJha.revision ?? 0) + 1 : 1,
       wmsId: wms.id,
       // Inherited from the method statement, so the whole chain points at one
       // work order rather than each document naming its own.
@@ -196,7 +210,7 @@ export async function POST(request: Request) {
       category: wms.category ?? null,
       wmsRevision: wms.revision ?? 0,
       changeSummary: body.changeSummary || null,
-      supersedesId: body.supersedesId || null,
+      supersedesId: previousJha?.id ?? null,
       equipmentId: body.equipmentId || null,
       workArea: body.workArea || null,
       steps: JSON.stringify(steps),
@@ -221,7 +235,9 @@ export async function POST(request: Request) {
       action: "CREATE",
       entityType: "jha",
       entityId: id,
-      entityDescription: `${jhaNumber} raised against ${wms.wmsNumber}, ${steps.length} step(s)`,
+      entityDescription:
+        `${jhaNumber} raised against ${wms.wmsNumber} revision ${wms.revision ?? 0}, ${steps.length} step(s)` +
+        (previousJha ? `, revising ${previousJha.jhaNumber} which covered revision ${previousJha.wmsRevision ?? "?"}` : ""),
     });
 
     return NextResponse.json(row, { status: 201 });

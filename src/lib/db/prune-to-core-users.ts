@@ -182,6 +182,7 @@ async function main() {
     process.exit(1);
   }
   await pruneToCoreUsers({ dryRun });
+  process.exit(0);
 }
 
 if (process.argv[1]?.includes("prune-to-core-users")) {

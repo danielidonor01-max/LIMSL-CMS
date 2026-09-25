@@ -166,6 +166,47 @@ export const pmBatches = pgTable("pm_batches", {
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
 });
 
+// ─── Asset Categories ───────────────────────────────────────────────────────
+// A category is where a machine's maintenance interval lives. CNC light-duty
+// machines are serviced quarterly because they are CNC light-duty machines,
+// not because somebody typed "quarterly" on each one, so the interval is set
+// here once and every machine in the category inherits it. Changing it is a
+// change to the maintenance regime for every machine at once, which is why a
+// change is proposed and signed off (Maintenance Manager, then QA/QC) before
+// it takes effect — see assetCategoryChanges.
+export const assetCategories = pgTable("asset_categories", {
+  code: text("code").primaryKey(), // CNC_LIGHT, EXCAVATION_DEVICE, ...
+  label: text("label").notNull(),
+  maintenanceFrequency: text("maintenance_frequency").notNull(), // MONTHLY | BI_MONTHLY | QUARTERLY | SEMI_ANNUAL | ANNUAL
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
+// A proposed change to a category. Nothing on the register or the plan moves
+// until its sign-off chain completes; then it is applied in one step and the
+// before/after is kept here, which is the record of why every machine in the
+// category is now serviced on a different interval.
+export const assetCategoryChanges = pgTable("asset_category_changes", {
+  id: text("id").primaryKey(),
+  changeNumber: text("change_number").notNull().unique(), // ACC-2026-XXXX
+  kind: text("kind").notNull(), // CREATE | UPDATE
+  categoryCode: text("category_code").notNull(),
+  proposedLabel: text("proposed_label").notNull(),
+  proposedFrequency: text("proposed_frequency").notNull(),
+  previousLabel: text("previous_label"),
+  previousFrequency: text("previous_frequency"),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("PENDING_APPROVAL"), // PENDING_APPROVAL | APPLIED | REJECTED
+  proposedById: text("proposed_by_id").references(() => users.id),
+  proposedByName: text("proposed_by_name"),
+  appliedAt: text("applied_at"),
+  // What applying it did, so the record says it rather than implying it.
+  machinesAffected: integer("machines_affected"),
+  planRowsReplaced: integer("plan_rows_replaced"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
 // ─── Maintenance Schedule ───────────────────────────────────────────────────
 export const maintenanceSchedule = pgTable("maintenance_schedule", {
   id: text("id").primaryKey(),
@@ -1568,3 +1609,5 @@ export type AppSettings = typeof appSettings.$inferSelect;
 export type NewAppSettings = typeof appSettings.$inferInsert;
 export type PmBatch = typeof pmBatches.$inferSelect;
 export type NewPmBatch = typeof pmBatches.$inferInsert;
+export type AssetCategory = typeof assetCategories.$inferSelect;
+export type AssetCategoryChange = typeof assetCategoryChanges.$inferSelect;

@@ -40,6 +40,21 @@ export async function currentWmsForCategory(category: string): Promise<WmsRow | 
   return row ?? null;
 }
 
+/**
+ * The newest revision of a category's method in ANY live state — including one
+ * still collecting signatures. The approved one is what work runs under; this
+ * is what a screen shows when it needs to say "a revision is in review".
+ * Rejected drafts are left out: they are history, not a document in progress.
+ */
+export async function latestWmsForCategory(category: string): Promise<WmsRow | null> {
+  const rows = await db
+    .select()
+    .from(wmsDocuments)
+    .where(eq(wmsDocuments.category, category))
+    .orderBy(desc(wmsDocuments.revision));
+  return rows.find((r) => r.status !== "REJECTED") ?? null;
+}
+
 /** Every revision of a category's method, newest first. The document's history. */
 export async function wmsHistoryForCategory(category: string): Promise<WmsRow[]> {
   return db

@@ -120,19 +120,25 @@ export default function FlowRail({
                     <p className="text-xs text-ink-600 mt-0.5 leading-relaxed">{step.because}</p>
 
                     {link.waitingOn ? (
-                      <p className="text-xs text-warn-700 mt-2 flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      <p className="text-xs text-warn-700 mt-2 flex items-start gap-1.5 leading-relaxed">
+                        <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                         {link.waitingOn}
                       </p>
                     ) : mine ? (
                       <div className="mt-2">
+                        {/* The sentence says what to do; the button is the
+                            handle. The whole sentence used to BE the button,
+                            which in a 360px rail clipped mid-word. */}
+                        {(link.onAction || link.actionHref) && (
+                          <p className="text-xs text-ink-700 mb-2 leading-relaxed">{step.action}.</p>
+                        )}
                         {link.onAction ? (
                           <Button size="sm" onClick={link.onAction}>
-                            {link.actionLabel ?? step.action}
+                            {link.actionLabel ?? step.cta}
                           </Button>
                         ) : link.actionHref ? (
                           <Button size="sm" href={link.actionHref} icon={ChevronRight}>
-                            {link.actionLabel ?? step.action}
+                            {link.actionLabel ?? step.cta}
                           </Button>
                         ) : (
                           <p className="text-xs text-ink-600">{link.actionLabel ?? step.action}</p>

@@ -18,14 +18,15 @@ import {
   users,
   auditLog,
 } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { requireRoles } from "@/lib/authz";
 import { WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { notify } from "@/lib/notifications";
 import { pmFlowState } from "@/lib/maintenance/flow";
-import { EQUIPMENT_CATEGORY_LABELS } from "@/lib/constants";
+import { standingPairFor, latestWmsForCategory } from "@/lib/hse/standing-documents";
+import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
 
 async function loadBatch(id: string) {
   const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, id)).limit(1);
@@ -46,8 +47,33 @@ async function loadBatch(id: string) {
     .leftJoin(equipment, eq(workOrders.equipmentId, equipment.id))
     .where(eq(workOrders.batchId, id));
 
-  const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.batchId, id)).limit(1);
-  const [jha] = await db.select().from(jhaDocuments).where(eq(jhaDocuments.batchId, id)).limit(1);
+  // The method statement and hazard analysis belong to the CATEGORY, not to
+  // this batch. A crane WMS approved in March is the crane WMS in October; the
+  // batch does not own one and must not ask for a new one. Looking it up by
+  // batch is what made every cycle look as though it needed writing again.
+  //
+  // The approved revision is what work runs under. If a newer revision is still
+  // collecting signatures, that is shown too, so nobody starts a third.
+  const pair = await standingPairFor(batch.category);
+  const latest = await latestWmsForCategory(batch.category);
+  const wms = pair.wms ?? latest;
+  const jha = pair.jha;
+  const inReview = latest && pair.wms && latest.id !== pair.wms.id ? latest : null;
+
+  // When the method has been revised and its analysis retired with it, the
+  // next analysis is a REVISION of that one, not a fresh start. Finding it here
+  // lets the page hand it to the form, so the new analysis names the old.
+  const [previousJha] = !jha
+    ? await db
+        .select({ id: jhaDocuments.id, jhaNumber: jhaDocuments.jhaNumber, wmsRevision: jhaDocuments.wmsRevision })
+        .from(jhaDocuments)
+        .where(and(eq(jhaDocuments.category, batch.category), eq(jhaDocuments.status, "SUPERSEDED")))
+        .orderBy(desc(jhaDocuments.revision))
+        .limit(1)
+    : [];
+
+  // The permit is the one document that IS per batch: it authorises this
+  // cycle's work in this cycle's window.
   const [permit] = await db.select().from(permits).where(eq(permits.batchId, id)).limit(1);
 
   const flow = pmFlowState({
@@ -55,17 +81,22 @@ async function loadBatch(id: string) {
     assignedToId: batch.assignedToId,
     workOrderCount: wos.length,
     wmsStatus: wms?.status ?? null,
-    jhaStatus: jha?.status ?? null,
+    // An analysis written against an older revision of the method does not
+    // count as done, because the permit route will refuse it.
+    jhaStatus: jha && pair.readiness.ok === false && pair.readiness.blockedBy === "JHA_STALE" ? "STALE" : (jha?.status ?? null),
     permitStatus: permit?.status ?? null,
     completed: batch.status === "COMPLETED",
   });
 
   return {
     ...batch,
-    categoryLabel: EQUIPMENT_CATEGORY_LABELS[batch.category] ?? batch.category,
+    categoryLabel: (await categoryLabelMap())[batch.category] ?? batch.category,
     workOrders: wos,
     wms: wms ?? null,
+    wmsInReview: inReview ? { id: inReview.id, wmsNumber: inReview.wmsNumber, revision: inReview.revision, status: inReview.status } : null,
     jha: jha ?? null,
+    previousJha: previousJha ?? null,
+    readiness: pair.readiness,
     permit: permit ?? null,
     flow,
   };

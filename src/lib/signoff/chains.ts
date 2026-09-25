@@ -141,7 +141,18 @@ export const SAFETY_INCIDENT_CHAIN: ChainStep[] = [
   { role: "FACTORY_MANAGER", roleLabel: "Close-out approved (Factory Manager)", required: true },
 ];
 
+// A change to an asset category — its name, or the interval every machine in
+// it is serviced on. The Maintenance Manager reviews it as the owner of the
+// maintenance regime; QA/QC approve it as document control, the same order
+// as the method statement. Nothing on the register or the plan moves until
+// both have signed.
+export const ASSET_CATEGORY_CHAIN: ChainStep[] = [
+  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
+  { role: "QA_QC", roleLabel: "Approved by (QA/QC Supervisor)", required: true },
+];
+
 export const CHAINS: Record<string, ChainStep[]> = {
+  ASSET_CATEGORY: ASSET_CATEGORY_CHAIN,
   NON_CONFORMITY: NC_CHAIN,
   SAFETY_INCIDENT: SAFETY_INCIDENT_CHAIN,
   PM_CHECKLIST: PM_CHAIN,

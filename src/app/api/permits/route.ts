@@ -208,7 +208,59 @@ export async function POST(request: Request) {
     // The work order is inherited from the analysis when the chain carried one
     // from the start, and picked here when the paperwork ran ahead of the
     // authorisation, which is now the normal case.
-    const workOrderId = body.workOrderId ?? jhaDoc.workOrderId ?? null;
+    // ── Which cycle this permit is for ──────────────────────────────────
+    // The method statement and hazard analysis are STANDING documents for a
+    // category: the crane JHA approved in March is the crane JHA in October.
+    // So the JHA cannot say which batch or which work order a permit belongs
+    // to — it would answer March. The permit authorises THIS cycle's work, so
+    // its batch is named by the caller and its work order comes from that
+    // batch. Inheriting them from the JHA would issue an October permit that
+    // claims to authorise a March work order.
+    const standing = !!jhaDoc.category;
+    let permitBatchId: string | null = standing ? null : (jhaDoc.batchId ?? null);
+    let batchLeadWorkOrderId: string | null = null;
+    if (body.batchId) {
+      const [b] = await db.select().from(pmBatches).where(eq(pmBatches.id, String(body.batchId))).limit(1);
+      if (!b) return NextResponse.json({ error: "PM batch not found." }, { status: 400 });
+      if (jhaDoc.category && b.category !== jhaDoc.category) {
+        return NextResponse.json(
+          {
+            error:
+              `${jhaDoc.jhaNumber} covers ${jhaDoc.category.replace(/_/g, " ").toLowerCase()}, and ` +
+              `${b.batchNumber} is ${b.category.replace(/_/g, " ").toLowerCase()}. A permit rests on the ` +
+              `analysis for the machines it actually covers.`,
+          },
+          { status: 409 },
+        );
+      }
+      // One permit per cycle. A second live one for the same batch is two
+      // documents claiming to authorise the same work.
+      const [existing] = await db
+        .select({ permitNumber: permits.permitNumber, status: permits.status })
+        .from(permits)
+        .where(eq(permits.batchId, b.id))
+        .limit(1);
+      if (existing && existing.status !== "REJECTED" && existing.status !== "CANCELLED") {
+        return NextResponse.json(
+          { error: `${b.batchNumber} already has ${existing.permitNumber}. One permit covers the batch.` },
+          { status: 409 },
+        );
+      }
+      permitBatchId = b.id;
+      const batchWos = await db
+        .select({ id: workOrders.id, status: workOrders.status })
+        .from(workOrders)
+        .where(eq(workOrders.batchId, b.id));
+      batchLeadWorkOrderId = batchWos.find((w) => w.status !== "CANCELLED")?.id ?? null;
+      if (body.workOrderId && !batchWos.some((w) => w.id === body.workOrderId)) {
+        return NextResponse.json(
+          { error: `That work order is not part of ${b.batchNumber}.` },
+          { status: 409 },
+        );
+      }
+    }
+    const workOrderId =
+      body.workOrderId ?? batchLeadWorkOrderId ?? (standing ? null : jhaDoc.workOrderId) ?? null;
     if (!workOrderId) {
       return NextResponse.json(
         { error: "Select the approved work order that authorises this job." },
@@ -330,7 +382,7 @@ export async function POST(request: Request) {
       // equipmentId above names the lead machine because the column requires
       // one; the batch is what says the permit covers all of them, and the
       // permit face lists them.
-      batchId: jhaDoc.batchId ?? null,
+      batchId: permitBatchId,
       lotoApplied: body.lotoApplied || false,
       ppeRequired: jhaDoc.ppeRequired ?? "[]",
       areaBarricaded: body.areaBarricaded || false,
@@ -363,8 +415,8 @@ export async function POST(request: Request) {
     };
 
     await db.insert(permits).values(newPermit);
-    if (jhaDoc.batchId) {
-      await db.update(pmBatches).set({ permitId: newPermit.id, status: "IN_PROGRESS" }).where(eq(pmBatches.id, jhaDoc.batchId));
+    if (permitBatchId) {
+      await db.update(pmBatches).set({ permitId: newPermit.id, status: "IN_PROGRESS" }).where(eq(pmBatches.id, permitBatchId));
     }
 
     // The isolation register: each energy source made safe, its device and

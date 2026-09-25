@@ -9,11 +9,17 @@ import Sidebar from "./Sidebar";
 import OfflineBanner from "./OfflineBanner";
 import OutboxTray from "./OutboxTray";
 import GlobalSearch from "./GlobalSearch";
+
 import NotificationBell from "./NotificationBell";
 import QuickActions from "./QuickActions";
 import PlantStatus from "./PlantStatus";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
 import { pageTitle } from "@/lib/page-title";
+
+// Same maximum width and side padding as PAGE_MAIN.register, so the bar's
+// left edge IS the page's left edge. Kept next to the shell rather than
+// re-derived by eye, which is how it drifted in the first place.
+const TOPBAR_INNER = "h-full max-w-7xl w-full mx-auto px-6 lg:px-8 flex items-center gap-4";
 
 // Global chrome: left vertical sidebar + top bar with global search.
 // The login page renders bare (no chrome). Pages the current role may not access
@@ -56,33 +62,39 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 min-w-0 flex flex-col">
         <OfflineBanner />
         <OutboxTray />
-        {/* Search takes the centre of the bar rather than hugging the left.
-            The bar spans a wide screen, and a left-anchored run of controls
-            left two thirds of it empty, which is what read as unfinished.
+        {/* The bar's contents sit in the same column as the page beneath it —
+            the widest one, the register width — with the same side padding. So
+            the search starts exactly where the page title and its back link
+            start, and the controls end where the page's right edge ends.
+
+            It used to centre the search across the whole bar, which lined it
+            up with nothing: on a register the search floated right of the
+            title, and on a narrower page it floated somewhere else again.
+
             The account control is NOT here: it lives at the foot of the
-            sidebar, which already carried the same name and role. Two controls
-            saying the same thing on one screen is not reinforcement, and this
-            bar was paying for it in the only space it has. */}
-        <header className="no-print h-16 shrink-0 sticky top-0 z-30 border-b border-line bg-surface flex items-center gap-4 px-4 lg:px-8">
-          <button
-            onClick={() => setNavOpen(true)}
-            className="lg:hidden p-2 -ml-1 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100"
-            aria-label="Open navigation menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+            sidebar, which already carried the same name and role. */}
+        <header className="no-print h-16 shrink-0 sticky top-0 z-30 border-b border-line bg-surface">
+          <div className={TOPBAR_INNER}>
+            <button
+              onClick={() => setNavOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-          <div className="flex-1 flex justify-center min-w-0">
-            <div className="w-full max-w-xl">
-              <GlobalSearch />
+            <div className="flex-1 min-w-0">
+              <div className="w-full max-w-xl">
+                <GlobalSearch />
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <PlantStatus />
-            <QuickActions />
-            <span className="hidden sm:block w-px h-6 bg-line" aria-hidden="true" />
-            <NotificationBell />
+            <div className="flex items-center gap-3 shrink-0">
+              <PlantStatus />
+              <QuickActions />
+              <span className="hidden sm:block w-px h-6 bg-line" aria-hidden="true" />
+              <NotificationBell />
+            </div>
           </div>
         </header>
         <div id="main-content" tabIndex={-1} className="flex-1 min-w-0">

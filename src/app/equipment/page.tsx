@@ -22,15 +22,16 @@ import {
   ArchiveX,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
+import EquipmentEditModal from "@/components/EquipmentEditModal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Badge } from "@/components/Badge";
+import { useCategoryLabels } from "@/lib/use-category-labels";
 import { useApi } from "@/lib/api-cache";
 import {
-  EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_STATUS_BADGE,
   CRITICALITY_SHORT,
@@ -60,7 +61,12 @@ function SortIcon({ field, active, direction }: { field: string; active: string;
 
 export default function EquipmentList() {
   const { data: equipmentList, loading, error, refresh } = useApi<any[]>("/api/equipment", []);
+  // Names as the register holds them, including categories added in Settings.
+  const EQUIPMENT_CATEGORY_LABELS = useCategoryLabels();
   const [search, setSearch] = useState("");
+  // The row being edited, by its URL key. Editing opens over the register
+  // rather than navigating away from it.
+  const [editKey, setEditKey] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeTab, setTypeTab] = useState<TypeTab>("ALL");
@@ -202,7 +208,7 @@ export default function EquipmentList() {
       { label: "Troubleshoot", icon: Stethoscope, href: `/equipment/${urlParam}/troubleshoot` },
       { label: "Report Fault", icon: AlertTriangle, href: `/corrective/new?equipmentId=${eq.id}`, danger: true },
       { label: "History Log", icon: History, href: `/equipment/${urlParam}/history` },
-      { label: "Edit", icon: Pencil, href: `/equipment/${urlParam}/edit` },
+      { label: "Edit", icon: Pencil, onClick: () => setEditKey(urlParam) },
       { label: "Print QR Code", icon: QrCode, href: `/equipment/qr/${urlParam}` },
       // Taking an asset off the register, and deleting it outright, are NOT
       // here. They were two items among eight on a menu opened from a row in a
@@ -459,6 +465,12 @@ export default function EquipmentList() {
             </div>
           </>
         )}
+        <EquipmentEditModal
+          assetKey={editKey}
+          open={!!editKey}
+          onClose={() => setEditKey(null)}
+          onSaved={() => refresh()}
+        />
       </main>
 
     </div>
