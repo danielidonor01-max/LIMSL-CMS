@@ -170,7 +170,12 @@ export function validateRenewal(input: {
       return { ok: false, error: "Enter the time work started on that day, as HH:MM." };
     }
     time = raw;
-    if (!input.signatureData) {
+    // Signed by the person revalidating: their account, name and the moment,
+    // the same as every other signature in the system. It used to demand a
+    // drawn image, and when drawn signatures were retired the renewal grid
+    // stopped sending one — so no day could be revalidated from the screen at
+    // all. A drawn mark on an older renewal still counts.
+    if (!input.signedById && !input.signatureData) {
       return { ok: false, error: "The Asset Holder Supervisor must sign the day's renewal." };
     }
   }

@@ -213,6 +213,19 @@ export const WORK_ORDER_ASSIGNEE_ROLES = ["TECHNICIAN", "FOREMAN"];
 // resources the repair, he does not authorise it to himself.
 export const REPAIR_AUTHORISE_ROLES = ["SUPER_ADMIN", "FACTORY_MANAGER"];
 
+// Who may authorise a ROUTINE repair — one below the threshold, meaning not a
+// critical fault and not on a machine the register calls critical. There the
+// Maintenance Manager or the Foreman can agree the repair goes ahead
+// themselves; waiting for the Factory Manager to approve a routine repair is
+// the kind of control that gets worked around. Critical work still needs
+// REPAIR_AUTHORISE_ROLES.
+export const REPAIR_AUTHORISE_ROUTINE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+];
+
 export const WORK_ASSIGN_ROLES = [
   "SUPER_ADMIN",
   "FACTORY_MANAGER",

@@ -25,10 +25,10 @@ import {
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { WORK_ASSIGN_ROLES, REPAIR_AUTHORISE_ROLES } from "@/lib/roles";
+import { WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { notify } from "@/lib/notifications";
 import { raiseWorkOrder } from "@/lib/maintenance/raise-work-order";
-import { cmFlowState, cmNeedsAuthorisation } from "@/lib/maintenance/flow";
+import { cmFlowState, cmNeedsAuthorisation, repairAuthorisers, isCriticalRepair } from "@/lib/maintenance/flow";
 
 
 async function documents(id: string, record: typeof correctiveMaintenance.$inferSelect) {
@@ -107,7 +107,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!record) return NextResponse.json({ error: "Record not found" }, { status: 404 });
 
     const [machine] = await db
-      .select({ assetId: equipment.assetId, name: equipment.name })
+      .select({ assetId: equipment.assetId, name: equipment.name, criticality: equipment.criticality })
       .from(equipment)
       .where(eq(equipment.id, record.equipmentId))
       .limit(1);
@@ -115,8 +115,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // ── The Factory Manager authorises the repair ─────────────────────────
     if (action === "AUTHORISE") {
-      const gate = await requireRoles(REPAIR_AUTHORISE_ROLES);
-      if (gate.res) return gate.res;
+      // The Factory Manager authorises; on a routine repair the Maintenance
+      // Manager or Foreman may too. A critical one stays with the Factory Manager.
+      const authorisers = repairAuthorisers({ urgency: record.urgency, equipmentCriticality: machine?.criticality });
+      const gate = await requireRoles(authorisers);
+      if (gate.res) {
+        if (gate.res.status === 403) {
+          return NextResponse.json(
+            {
+              error: isCriticalRepair({ urgency: record.urgency, equipmentCriticality: machine?.criticality })
+                ? "This is a critical repair, so the Factory Manager authorises it."
+                : "A repair is authorised by the Factory Manager, the Maintenance Manager or the Foreman.",
+            },
+            { status: 403 },
+          );
+        }
+        return gate.res;
+      }
 
       if (record.repairAuthorisedAt) {
         return NextResponse.json(

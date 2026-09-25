@@ -24,6 +24,7 @@ import {
   PERMIT_ISSUE_ROLES,
   WORK_ORDER_ASSIGNEE_ROLES,
   REPAIR_AUTHORISE_ROLES,
+  REPAIR_AUTHORISE_ROUTINE_ROLES,
 } from "@/lib/roles";
 
 export type FlowDoc =
@@ -213,13 +214,27 @@ export const CM_FLOW: FlowStep[] = [
 // The exception is the work where being wrong is expensive: a critical fault,
 // or any fault on a machine the register calls critical. Those go up whatever
 // their origin.
+/** A critical fault, or any fault on a machine the register calls critical. */
+export function isCriticalRepair(input: { urgency?: string | null; equipmentCriticality?: string | null }): boolean {
+  return String(input.urgency ?? "").toUpperCase() === "CRITICAL" ||
+    String(input.equipmentCriticality ?? "").toUpperCase() === "CRITICAL";
+}
+
+/**
+ * Who may authorise this repair. The Factory Manager always may. Below the
+ * threshold the Maintenance Manager and the Foreman may too; above it — a
+ * critical fault, or a critical machine — it stays with the Factory Manager.
+ */
+export function repairAuthorisers(input: { urgency?: string | null; equipmentCriticality?: string | null }): string[] {
+  return isCriticalRepair(input) ? REPAIR_AUTHORISE_ROLES : REPAIR_AUTHORISE_ROUTINE_ROLES;
+}
+
 export function cmNeedsAuthorisation(input: {
   origin?: string | null;
   urgency?: string | null;
   equipmentCriticality?: string | null;
 }): boolean {
-  if (String(input.urgency ?? "").toUpperCase() === "CRITICAL") return true;
-  if (String(input.equipmentCriticality ?? "").toUpperCase() === "CRITICAL") return true;
+  if (isCriticalRepair(input)) return true;
   return String(input.origin ?? "REPORTED").toUpperCase() !== "SCHEDULED";
 }
 
@@ -293,7 +308,18 @@ export function pmFlowState(facts: FlowFacts): FlowState {
 }
 
 export function cmFlowState(facts: FlowFacts): FlowState {
-  return evaluate(CM_FLOW, (key) => {
+  const steps = CM_FLOW.map((step) =>
+    step.key === "MOTION"
+      ? {
+          ...step,
+          roles: repairAuthorisers(facts),
+          because: isCriticalRepair(facts)
+            ? "A critical repair goes to the Factory Manager, who decides it goes ahead and hands it to the Foreman."
+            : "The Factory Manager, the Maintenance Manager or the Foreman agrees the repair goes ahead.",
+        }
+      : step,
+  );
+  return evaluate(steps, (key) => {
     switch (key) {
       // Reporting is what creates the record, so by the time anything asks,
       // it has happened.

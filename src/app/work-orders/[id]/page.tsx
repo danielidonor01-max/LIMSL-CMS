@@ -35,6 +35,7 @@ import { invalidateApi } from "@/lib/api-cache";
 import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import WorkOrderParts from "@/components/WorkOrderParts";
+import WorkReadiness from "@/components/WorkReadiness";
 import AssignPeople, { type Person } from "@/components/AssignPeople";
 import {
   isAwaitingRetrospectiveApproval,
@@ -118,6 +119,10 @@ export default function WorkOrderDetailPage() {
   };
 
   useEffect(load, [id]);
+
+  // Whether the job is cleared to start today — the same check the server
+  // enforces on clock-on and on Start Work. Null until it has loaded.
+  const [ready, setReady] = useState<boolean | null>(null);
 
   const clock = async (action: "on" | "off") => {
     setClocking(true);
@@ -354,7 +359,8 @@ export default function WorkOrderDetailPage() {
               {wo.status === "OPEN" && (
                 <button
                   onClick={() => patch({ status: "IN_PROGRESS" })}
-                  disabled={acting}
+                  disabled={acting || ready === false}
+                  title={ready === false ? "Not cleared to start. See the checklist below." : undefined}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-warn-600 hover:bg-warn-500 text-white rounded-lg text-xs font-semibold disabled:opacity-60"
                 >
                   <Play className="w-4 h-4" /> Start Work
@@ -366,7 +372,8 @@ export default function WorkOrderDetailPage() {
                 <Button
                   variant={clockedOn ? "secondary" : "primary"}
                   onClick={() => clock(clockedOn ? "off" : "on")}
-                  disabled={clocking}
+                  // Clocking OFF is never blocked: stopping work is always allowed.
+                  disabled={clocking || (!clockedOn && ready === false)}
                   loading={clocking}
                   icon={clockedOn ? Square : Timer}
                 >
@@ -427,6 +434,13 @@ export default function WorkOrderDetailPage() {
             />
           </div>
         </div>
+
+        {/* Everything that has to be signed before anybody starts, and today's
+            revalidation — shown whole, so the person at the machine can see
+            what is outstanding rather than meeting a greyed-out button. */}
+        {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
+          <WorkReadiness workOrderId={String(id)} onChange={setReady} />
+        )}
 
         {/* People on the job */}
         <div className="bg-surface border border-line rounded-xl shadow-card p-6">

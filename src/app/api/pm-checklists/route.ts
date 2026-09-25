@@ -14,6 +14,7 @@ import {
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { permitWasIssued } from "@/lib/maintenance/work-readiness-db";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { generateNextOccurrence } from "@/lib/schedule";
@@ -42,19 +43,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Enforce PTW: if a Permit-to-Work is attached to this work order, it must be
-    // signed off (ACTIVE) before the PM can be completed. This is the server-side
-    // audit backing the technician's checklist attestation, a self-declared
-    // "PTW issued" checkbox can't stand in for a real, signed permit.
+    // No permit, no PM. This used to apply only IF a permit happened to be
+    // attached, so a checklist with no permit at all went straight through;
+    // and it looked the permit up by work order alone, so on a PM batch only
+    // the lead machine's work order found it and the other machines passed
+    // unchecked. The shared rule covers both: a permit must have been issued
+    // and signed for this job — directly, or for its batch.
     await reconcilePermits();
-    const linkedPermits = await db.select().from(permits).where(eq(permits.workOrderId, body.workOrderId));
-    if (linkedPermits.length > 0 && !linkedPermits.some((p) => p.status === "ACTIVE")) {
-      const p = linkedPermits[0];
+    if (!(await permitWasIssued(String(body.workOrderId)))) {
       return NextResponse.json(
         {
           error:
-            `Permit ${p.permitNumber} is ${p.status.replace("_", " ").toLowerCase()}, the Permit-to-Work must be ` +
-            `signed off (ACTIVE) before this PM checklist can be submitted.`,
+            "No signed Permit-to-Work covers this job, so the PM cannot be recorded as done. " +
+            "No permit, no PM: HSE raise the permit, and it is signed, before work starts.",
         },
         { status: 409 },
       );

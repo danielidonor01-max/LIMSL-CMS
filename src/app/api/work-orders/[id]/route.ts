@@ -12,6 +12,7 @@ import {
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { loadReadiness } from "@/lib/maintenance/work-readiness-db";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { notify } from "@/lib/notifications";
@@ -89,6 +90,20 @@ export async function PATCH(
     // Every other type (corrective, emergency, calibration) completes here with
     // a mandatory summary of what was done, so they can't strand IN_PROGRESS.
     const isPreventive = current.type === "PREVENTIVE" || current.type === "INSPECTION";
+    // "Start Work" moves the job to In Progress, which is starting work just as
+    // clocking on is. It was a second way in that checked nothing, so it answers
+    // to the same rule: approved work order, approved WMS and JHA, a signed
+    // permit in force, and today revalidated on it.
+    if (body.status === "IN_PROGRESS" && current.status !== "IN_PROGRESS") {
+      const readiness = await loadReadiness(id);
+      if (readiness && !readiness.ok) {
+        return NextResponse.json(
+          { error: `Work cannot start yet. ${readiness.firstBlocker?.detail ?? ""}`.trim(), readiness },
+          { status: 409 },
+        );
+      }
+    }
+
     const completing = body.status === "COMPLETED" && current.status !== "COMPLETED";
     if (completing && isPreventive) {
       return NextResponse.json(

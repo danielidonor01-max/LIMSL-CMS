@@ -1,7 +1,7 @@
 // src/lib/maintenance/flow.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pmFlowState, cmFlowState, canTake, cmNeedsAuthorisation, PM_FLOW, CM_FLOW } from "./flow";
+import { pmFlowState, cmFlowState, canTake, cmNeedsAuthorisation, repairAuthorisers, PM_FLOW, CM_FLOW } from "./flow";
 
 test("a PM with nothing done is waiting on its batch", () => {
   const s = pmFlowState({});
@@ -178,4 +178,29 @@ test("a scheduled repair below the threshold starts at assignment", () => {
 test("a scheduled repair on a critical machine still waits for the Factory Manager", () => {
   const s = cmFlowState({ origin: "SCHEDULED", urgency: "LOW", equipmentCriticality: "CRITICAL" });
   assert.equal(s.current?.key, "MOTION");
+});
+
+test("a routine repair may be authorised by the Maintenance Manager or the Foreman", () => {
+  const roles = repairAuthorisers({ urgency: "MEDIUM", equipmentCriticality: "HIGH" });
+  assert.ok(roles.includes("FACTORY_MANAGER"));
+  assert.ok(roles.includes("MAINTENANCE_MANAGER"));
+  assert.ok(roles.includes("FOREMAN"));
+  assert.ok(!roles.includes("TECHNICIAN"), "the person reporting it never authorises it");
+});
+
+test("a critical repair stays with the Factory Manager", () => {
+  for (const facts of [{ urgency: "CRITICAL" }, { urgency: "LOW", equipmentCriticality: "CRITICAL" }]) {
+    const roles = repairAuthorisers(facts);
+    assert.ok(roles.includes("FACTORY_MANAGER"));
+    assert.ok(!roles.includes("FOREMAN") && !roles.includes("MAINTENANCE_MANAGER"), JSON.stringify(facts));
+  }
+});
+
+test("the rail offers the authorise step to whoever the threshold allows", () => {
+  const routine = cmFlowState({ urgency: "MEDIUM" }).current!;
+  assert.equal(routine.key, "MOTION");
+  assert.ok(canTake(routine, "FOREMAN"));
+  const critical = cmFlowState({ urgency: "CRITICAL" }).current!;
+  assert.ok(!canTake(critical, "FOREMAN"));
+  assert.ok(canTake(critical, "FACTORY_MANAGER"));
 });

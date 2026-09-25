@@ -332,3 +332,20 @@ test("a permit that never got authorised raises nothing", () => {
     false,
   );
 });
+
+test("a worked day is signed by the person revalidating, with no drawn mark needed", () => {
+  // Drawn signatures were retired; the renewal grid sends none. The signed-in
+  // renewer IS the signature. Before this, no day could be revalidated at all.
+  const r = validateRenewal({
+    startDate: START,
+    validityDays: 7,
+    date: "2026-08-05",
+    today: "2026-08-05",
+    status: "WORKED",
+    time: "07:30",
+    signedById: "u-mm",
+    signedByName: "Kingsley Iworah",
+  });
+  assert.equal(r.ok, true);
+  assert.equal(r.ok && r.day.signedByName, "Kingsley Iworah");
+});

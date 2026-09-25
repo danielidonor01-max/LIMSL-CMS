@@ -14,6 +14,7 @@ import { workOrders, workOrderTimeLogs, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
+import { loadReadiness } from "@/lib/maintenance/work-readiness-db";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import {
   canClockIn,
@@ -76,6 +77,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const sessions = await sessionsFor(id);
 
     if (action === "on") {
+      // Clocking on IS starting work, so it is where "no work order, no work;
+      // no permit, no work" is enforced — every morning, not once. The work
+      // order approved, the method statement and hazard analysis approved, the
+      // permit signed and in force, and today revalidated on it. Clocking OFF
+      // is never refused: somebody stopping work is always allowed to say so.
+      const readiness = await loadReadiness(id);
+      if (readiness && !readiness.ok) {
+        return NextResponse.json(
+          {
+            error: `Work cannot start yet. ${readiness.firstBlocker?.detail ?? ""}`.trim(),
+            readiness,
+          },
+          { status: 409 },
+        );
+      }
+
       const decision = canClockIn(sessions, actorId);
       if (!decision.ok) return NextResponse.json({ error: decision.error }, { status: 409 });
 

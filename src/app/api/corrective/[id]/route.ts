@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
+import { cmNeedsAuthorisation } from "@/lib/maintenance/flow";
+import { permitWasIssued } from "@/lib/maintenance/work-readiness-db";
 import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { getWorkSettings } from "@/lib/settings";
 import { productionDowntimeHours } from "@/lib/worktime";
@@ -69,6 +71,27 @@ export async function PATCH(
         { status: 403 },
       );
     }
+    // And not before the repair is authorised. The repair flow refuses that;
+    // this route used to accept it, which let a repair be assigned before
+    // anybody had agreed it should happen.
+    if (touchesAssignment && body.assignedToId) {
+      const [machineRow] = await db
+        .select({ criticality: equipment.criticality })
+        .from(equipment)
+        .where(eq(equipment.id, record.equipmentId))
+        .limit(1);
+      const needsAuth = cmNeedsAuthorisation({
+        origin: record.origin,
+        urgency: record.urgency,
+        equipmentCriticality: machineRow?.criticality ?? null,
+      });
+      if (needsAuth && !record.repairAuthorisedAt) {
+        return NextResponse.json(
+          { error: "This repair has not been authorised yet. It is assigned once it has been." },
+          { status: 409 },
+        );
+      }
+    }
 
     // ── Close-out gate ────────────────────────────────────────────────────────
     // Closing a corrective record is a controlled event: the CM sign-off chain
@@ -82,6 +105,20 @@ export async function PATCH(
     let chainTechnicianId: string | null = null;
     let chainSupervisorId: string | null = null;
     if (closingOut) {
+      // A repair closed with no work order and no permit is a repair that was
+      // done without authorisation, and closing it would file that as normal.
+      if (!record.workOrderId) {
+        return NextResponse.json(
+          { error: "No work order was raised for this repair. No work order, no work — and no close-out." },
+          { status: 409 },
+        );
+      }
+      if (!(await permitWasIssued(record.workOrderId))) {
+        return NextResponse.json(
+          { error: "No permit was issued for this repair. No permit, no work — and no close-out." },
+          { status: 409 },
+        );
+      }
       await ensureSignoffChain("CORRECTIVE", record.id, record.cmrfNumber);
       const chain = await getSignoffChain("CORRECTIVE", record.id);
       const summary = chainSummary(chain);

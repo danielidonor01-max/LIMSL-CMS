@@ -308,6 +308,32 @@ Counting runs from the machine's own anchor (commissioning, or last service),
 not the calendar quarter, because two machines bought six months apart really
 are due at different times.
 
+### No work order, no permit, no work — enforced where work STARTS
+
+Every document was gated where it is created, but nothing stood at the moment
+somebody picks up a spanner. `readinessToWork()` (pure, in
+`src/lib/maintenance/work-readiness.ts`) is that check, and the server runs it
+on BOTH ways work starts: clocking on (`/api/work-orders/[id]/time`) and
+"Start Work" (PATCH to IN_PROGRESS). It requires: the work order approved
+(the emergency exception still covers its signatures only), the WMS approved,
+the JHA approved and current, the permit signed and ACTIVE, today inside the
+permit's window, and — after the first day — **today revalidated** on the
+permit (a WORKED renewal mark for today). Clocking OFF is never refused.
+
+A technician cannot revalidate; they ask (`/api/permits/[id]/revalidation-request`,
+once a day) and the Maintenance Manager signs today's renewal on the permit.
+A renewal is signed by the signed-in renewer — it no longer needs a drawn
+image, which the grid stopped sending when drawn signatures were retired and
+which had made revalidation impossible from the screen.
+
+Closing a repair and submitting a PM checklist require that a permit WAS
+issued (`permitWasIssued`, which also finds a batch's permit — looking up by
+work order alone missed every machine in a batch but the lead one).
+
+Repair authorisation follows the threshold: the Factory Manager always; the
+Maintenance Manager or Foreman too below it (`repairAuthorisers`). A critical
+fault, or any fault on a critical machine, stays with the Factory Manager.
+
 ### Assignment is a supervisory act, everywhere
 
 `MAINTENANCE_WRITE_ROLES` includes `TECHNICIAN`, so anything that lets a

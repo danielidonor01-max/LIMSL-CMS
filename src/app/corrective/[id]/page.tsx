@@ -13,6 +13,7 @@ import { Clock, ShieldCheck, Plus, Trash2, UserCheck } from "lucide-react";
 import SignatureBlock from "@/components/SignatureBlock";
 import SignoffChain from "@/components/SignoffChain";
 import CorrectiveFlow from "@/components/CorrectiveFlow";
+import WorkReadiness from "@/components/WorkReadiness";
 import WorkOrderParts from "@/components/WorkOrderParts";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import Select from "@/components/Select";
@@ -234,24 +235,18 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assignedToId: assignedToId || null,
-          assignedToName: userList.find((u) => u.id === assignedToId)?.name ?? null,
           rcaTargetDate: rcaTargetDate || null,
           expectedRestorationAt: expectedRestorationAt || null,
         }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't save the assignment.");
+        toast.error(d.error || "Couldn't save the dates.");
         return;
       }
-      toast.success(
-        assignedToId
-          ? `Assigned to ${userList.find((u) => u.id === assignedToId)?.name ?? "the investigator"}.`
-          : "Assignment cleared.",
-      );
+      toast.success("RCA due date and restoration estimate saved.");
     } catch {
-      toast.error("Couldn't save the assignment.");
+      toast.error("Couldn't save the dates.");
     } finally {
       setAssigning(false);
     }
@@ -370,6 +365,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             onChanged={() => setReloadKey((k) => k + 1)}
           />
         </div>
+
+        {/* Once the work order exists: whether the repair may start today.
+            Work order, method statement, hazard analysis and permit all
+            signed, and — after the first day — today's revalidation. */}
+        {record.workOrderId && record.status !== "CLOSED" && (
+          <div className="lg:col-span-3">
+            <WorkReadiness workOrderId={record.workOrderId} />
+          </div>
+        )}
 
         {/* Left Side: Fault Spec & RCA */}
         <div className="lg:col-span-2 space-y-8">
@@ -567,6 +571,156 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               Save RCA Analysis
             </Button>
           </div>
+
+          {/* Closeout & Approvals */}
+          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
+            <h2 className="text-base font-semibold text-ink-900">Completion Sign-off</h2>
+
+            {record.status === "CLOSED" ? (
+              <div className="p-3 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+                <div>
+                  <p className="font-bold">Record Closed Out Successfully</p>
+                  <p className="text-xs text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  {record.totalDowntimeHours != null && (
+                    <p className="text-xs text-ink-500">
+                      Production downtime: <span className="font-semibold text-ink-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {currentUserName && (
+                  <p className="text-xs text-ink-500">
+                    Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
+                  </p>
+                )}
+                {/* No name field. It used to be free text, and the server
+                    has always discarded it in favour of the signed chain, so
+                    the box asked for something that looked like it mattered and
+                    did not. The approving supervisor is whoever signs the
+                    foreman step, and now their user id is stored beside their
+                    name, which is what an auditor asking "who signed this and
+                    were they competent to" actually needs. */}
+                <p className="text-xs text-ink-500 leading-relaxed">
+                  The approving supervisor is taken from the signed foreman step on the sign-off
+                  chain above, and recorded against their account. It cannot be typed in.
+                </p>
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-ink-500">Supervisor Comments</span>
+                  <textarea
+                    placeholder="Provide supervisor closeout recommendations or audit check notes..."
+                    value={supervisorComments}
+                    onChange={(e) => setSupervisorComments(e.target.value)}
+                    className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
+                  />
+                </div>
+
+                {/* Who is investigating, and when the machine is expected
+                    back. Without a named next actor a fault report becomes a
+                    fault report nobody came back to, which is how a record ends
+                    up sitting in "RCA investigation" for a month. */}
+                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-brand-600" />
+                    <span className="text-xs font-semibold text-ink-700">
+                      Investigation &amp; restoration
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Shown, not chosen. Who carries a repair is decided in the
+                        repair flow above, by the Foreman, once the repair has been
+                        authorised. A second picker here set the same field and skipped
+                        that rule, so a repair could be assigned before anyone agreed
+                        it should happen. */}
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-medium text-ink-700">Assigned to</p>
+                      <p className="text-sm text-ink-900 py-2">
+                        {record.assignedToName || "Nobody yet"}
+                      </p>
+                      <p className="text-xs text-ink-500">Assigned through the repair flow above.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">RCA due by</label>
+                      <DateField value={rcaTargetDate} onChange={setRcaTargetDate} />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-sm font-medium text-ink-700">Expected back in service</label>
+                      <DateTimeField
+                        value={expectedRestorationAt}
+                        onChange={setExpectedRestorationAt}
+                        ariaLabel="Expected back in service"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Button variant="secondary" loading={assigning} onClick={saveAssignment}>
+                      Save dates
+                    </Button>
+                    <p className="text-xs text-ink-500">
+                      The estimate is what production is told. A breakdown with none reads as
+                      &ldquo;no estimate given&rdquo; on the dashboard.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Downtime window, feeds MTTR. Production hours only. */}
+                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-danger-600" />
+                    <span className="text-xs font-semibold text-ink-700">Downtime Window</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">Machine went down</label>
+                      <DateTimeField
+                        value={downStartAt}
+                        onChange={setDownStartAt}
+                        ariaLabel="Machine went down"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-ink-700">Restored to service</label>
+                      <DateTimeField
+                        value={downEndAt}
+                        onChange={setDownEndAt}
+                        min={downStartAt || undefined}
+                        ariaLabel="Restored to service"
+                      />
+                    </div>
+                  </div>
+                  {previewDowntime !== null && (
+                    <p className="text-xs text-ink-600">
+                      Production downtime:{" "}
+                      <span className="font-bold text-ink-900">{previewDowntime.toFixed(2)} h</span>{" "}
+                      <span className="text-xs text-ink-400">(excludes off-shift &amp; non-working days)</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* The close-out attestation.
+                    Two drawn marks used to sit here, one above the other, and
+                    neither could be verified against anything. Closing a
+                    breakdown is attested by the person doing it, under their
+                    own name, with the moment recorded — which is what the
+                    sign-off chain below this already does properly. */}
+                <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
+                  <p className="text-sm font-medium text-ink-700 mb-1.5">Closing this out as</p>
+                  <SignatureBlock name={currentUserName} role={currentUserRole} signedAt={new Date().toISOString()} />
+                </div>
+
+                <Button fullWidth variant="danger"
+                  type="button"
+                  onClick={handleCloseOut}
+                  disabled={saving}
+                >
+                  Verify and Close Breakdown Work Order
+                </Button>
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* Right Side: Corrective Actions & Signoff */}
@@ -627,7 +781,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 onChange={(e) => setNewAction(e.target.value)}
                 className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none"
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <input
                   type="text"
                   placeholder="Responsible Person..."
@@ -647,167 +801,15 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          {/* Closeout & Approvals */}
-          <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
-            <h2 className="text-base font-semibold text-ink-900">Completion Sign-off</h2>
+        </div>
 
-            {record.status === "CLOSED" ? (
-              <div className="p-3 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-                <div>
-                  <p className="font-bold">Record Closed Out Successfully</p>
-                  <p className="text-xs text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
-                  {record.totalDowntimeHours != null && (
-                    <p className="text-xs text-ink-500">
-                      Production downtime: <span className="font-semibold text-ink-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {currentUserName && (
-                  <p className="text-xs text-ink-500">
-                    Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
-                  </p>
-                )}
-                {/* No name field. It used to be free text, and the server
-                    has always discarded it in favour of the signed chain, so
-                    the box asked for something that looked like it mattered and
-                    did not. The approving supervisor is whoever signs the
-                    foreman step, and now their user id is stored beside their
-                    name, which is what an auditor asking "who signed this and
-                    were they competent to" actually needs. */}
-                <p className="text-xs text-ink-500 leading-relaxed">
-                  The approving supervisor is taken from the signed foreman step on the sign-off
-                  chain above, and recorded against their account. It cannot be typed in.
-                </p>
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-ink-500">Supervisor Comments</span>
-                  <textarea
-                    placeholder="Provide supervisor closeout recommendations or audit check notes..."
-                    value={supervisorComments}
-                    onChange={(e) => setSupervisorComments(e.target.value)}
-                    className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
-                  />
-                </div>
-
-                {/* Who is investigating, and when the machine is expected
-                    back. Without a named next actor a fault report becomes a
-                    fault report nobody came back to, which is how a record ends
-                    up sitting in "RCA investigation" for a month. */}
-                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-brand-600" />
-                    <span className="text-xs font-semibold text-ink-700">
-                      Investigation &amp; restoration
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-ink-700">Assigned to</label>
-                      <Select
-                        value={assignedToId}
-                        onChange={setAssignedToId}
-                        ariaLabel="Assigned investigator"
-                        className="w-full"
-                      >
-                        <option value="">Nobody yet</option>
-                        {userList.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-ink-700">RCA due by</label>
-                      <DateField value={rcaTargetDate} onChange={setRcaTargetDate} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-ink-700">Expected back in service</label>
-                      <DateTimeField
-                        value={expectedRestorationAt}
-                        onChange={setExpectedRestorationAt}
-                        ariaLabel="Expected back in service"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Button variant="secondary" loading={assigning} onClick={saveAssignment}>
-                      Save assignment
-                    </Button>
-                    <p className="text-xs text-ink-500">
-                      The estimate is what production is told. A breakdown with none reads as
-                      &ldquo;no estimate given&rdquo; on the dashboard.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Downtime window, feeds MTTR. Production hours only. */}
-                <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-danger-600" />
-                    <span className="text-xs font-semibold text-ink-700">Downtime Window</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-ink-700">Machine went down</label>
-                      <DateTimeField
-                        value={downStartAt}
-                        onChange={setDownStartAt}
-                        ariaLabel="Machine went down"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-ink-700">Restored to service</label>
-                      <DateTimeField
-                        value={downEndAt}
-                        onChange={setDownEndAt}
-                        min={downStartAt || undefined}
-                        ariaLabel="Restored to service"
-                      />
-                    </div>
-                  </div>
-                  {previewDowntime !== null && (
-                    <p className="text-xs text-ink-600">
-                      Production downtime:{" "}
-                      <span className="font-bold text-ink-900">{previewDowntime.toFixed(2)} h</span>{" "}
-                      <span className="text-xs text-ink-400">(excludes off-shift &amp; non-working days)</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* The close-out attestation.
-                    Two drawn marks used to sit here, one above the other, and
-                    neither could be verified against anything. Closing a
-                    breakdown is attested by the person doing it, under their
-                    own name, with the moment recorded — which is what the
-                    sign-off chain below this already does properly. */}
-                <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
-                  <p className="text-sm font-medium text-ink-700 mb-1.5">Closing this out as</p>
-                  <SignatureBlock name={currentUserName} role={currentUserRole} signedAt={new Date().toISOString()} />
-                </div>
-
-                <Button fullWidth variant="danger"
-                  type="button"
-                  onClick={handleCloseOut}
-                  disabled={saving}
-                >
-                  Verify and Close Breakdown Work Order
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Multi-level corrective sign-off chain */}
-          <div className="lg:col-span-3">
-            <SignoffChain
-              entityType="CORRECTIVE"
-              entityId={recordId}
-              title="Corrective maintenance sign-off"
-            />
-          </div>
+        {/* Multi-level corrective sign-off chain, the full width of the page */}
+        <div className="lg:col-span-3">
+          <SignoffChain
+            entityType="CORRECTIVE"
+            entityId={recordId}
+            title="Corrective maintenance sign-off"
+          />
         </div>
       </main>
     </div>
