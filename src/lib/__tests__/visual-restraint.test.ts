@@ -44,7 +44,7 @@ function walk(dir: string, out: string[] = []): string[] {
 // the printed ISO documents worse to serve a number.
 const isPrint = (f: string) =>
   /[\\/]print[\\/]/.test(f) ||
-  /PrintableReport|PermitRenewalGrid|DocumentSeal/.test(f) ||
+  /PrintableReport|PermitRenewalGrid|DocumentSeal|WmsDocumentHeader/.test(f) ||
   /[\\/]qr[\\/]/.test(f);
 
 const SCREEN = walk(join(SRC, "app"))

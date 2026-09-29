@@ -2,6 +2,8 @@
 "use client";
 
 import DocumentSeal from "@/components/DocumentSeal";
+import WmsDocumentHeader from "@/components/WmsDocumentHeader";
+import type { RevisionEntry } from "@/components/WmsDocumentHeader";
 import { pageMain } from "@/lib/page-shell";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -18,6 +20,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
 
   const [wms, setWms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [chain, setChain] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadWms() {
@@ -34,6 +37,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       }
     }
     loadWms();
+  }, [wmsId]);
+
+  // Fetch the sign-off chain to populate the revision history header with
+  // real signer names once signatures are captured.
+  useEffect(() => {
+    fetch(`/api/signoffs?entityType=WMS&entityId=${wmsId}`)
+      .then((r) => r.json())
+      .then((d) => setChain(Array.isArray(d) ? d : []))
+      .catch(() => setChain([]));
   }, [wmsId]);
 
   if (loading) {
@@ -75,6 +87,47 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const tools = safeParse(wms.equipmentAndTools);
   const materials = safeParse(wms.materials);
 
+  // Build revision history from the WMS data and the live sign-off chain.
+  // The chain has 4 steps: Foreman (Prepared), Maintenance Manager (Reviewed),
+  // HSE, Factory Manager (Approved). The paper header shows 3 columns:
+  // Prepared, Reviewed, Approved — so we collapse to the originator, reviewer,
+  // and final approver.
+  const stepByRole = (role: string) => chain.find((s) => s.role === role);
+  const foreman = stepByRole("FOREMAN");
+  const maintMgr = stepByRole("MAINTENANCE_MANAGER");
+  const factoryMgr = stepByRole("FACTORY_MANAGER");
+
+  const currentRevision: RevisionEntry = {
+    rev: wms.revision ?? 0,
+    date: (wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join("-"),
+    description: "ISSUED FOR REVIEW AND APPROVAL",
+    preparedBy: {
+      name: foreman?.signedByName ?? wms.preparedByName ?? "—",
+      title: foreman?.signedByName ? "Foreman" : (wms.preparedByName ? "Maintenance Tech." : "—"),
+    },
+    reviewedBy: {
+      name: maintMgr?.signedByName ?? "—",
+      title: maintMgr?.signedByName ? "Maintenance Manager" : "Factory Supervisor",
+    },
+    approvedBy: {
+      name: factoryMgr?.signedByName ?? "—",
+      title: factoryMgr?.signedByName ? "Factory Manager" : "Factory Coord.",
+    },
+  };
+
+  // If there's a previous revision, show it too (rev 0)
+  const revisions: RevisionEntry[] = [currentRevision];
+  if ((wms.revision ?? 0) > 0) {
+    revisions.push({
+      rev: 0,
+      date: (wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join("-"),
+      description: "ISSUED FOR REVIEW AND APPROVAL",
+      preparedBy: { name: wms.preparedByName ?? "—", title: "Maintenance Tech." },
+      reviewedBy: { name: "—", title: "Factory Supervisor" },
+      approvedBy: { name: "—", title: "Factory Coord." },
+    });
+  }
+
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
@@ -104,6 +157,18 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             }
           />
         </div>
+
+        {/* ─── Corporate document header (matches the LIMSL paper format) ─── */}
+        <div className="lg:col-span-3">
+          <WmsDocumentHeader
+            docNumber={wms.wmsNumber ?? "LIMSL-MAIN-WMS-XXX"}
+            title={wms.title}
+            revNo={wms.revision ?? 0}
+            dateRevised={(wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join(".")}
+            revisions={revisions}
+          />
+        </div>
+
         {/* Left Side: Document Sections */}
         <div className="lg:col-span-2 space-y-8">
           {/* The document read as seven green captions over grey 12px prose:
