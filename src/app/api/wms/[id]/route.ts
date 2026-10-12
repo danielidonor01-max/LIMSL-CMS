@@ -21,11 +21,51 @@ export async function GET(
       .from(wmsDocuments)
       .where(eq(wmsDocuments.id, resolvedParams.id));
 
-    if (records.length === 0) {
-      return NextResponse.json({ error: "WMS not found" }, { status: 404 });
+    const currentWms = records[0];
+
+    // Collect all documents in this lineage (by category or ancestor/descendant link)
+    const allDocs = await db.select().from(wmsDocuments);
+    const lineageIds = new Set<string>([currentWms.id]);
+    if (currentWms.category) {
+      for (const d of allDocs) {
+        if (d.category === currentWms.category) lineageIds.add(d.id);
+      }
+    }
+    let expanded = true;
+    while (expanded) {
+      expanded = false;
+      for (const d of allDocs) {
+        if (lineageIds.has(d.id)) {
+          if (d.supersedesId && !lineageIds.has(d.supersedesId)) {
+            lineageIds.add(d.supersedesId);
+            expanded = true;
+          }
+        } else if (d.supersedesId && lineageIds.has(d.supersedesId)) {
+          lineageIds.add(d.id);
+          expanded = true;
+        }
+      }
     }
 
-    return NextResponse.json(records[0]);
+    const revisions = allDocs
+      .filter((d) => lineageIds.has(d.id))
+      .sort((a, b) => (b.revision ?? 0) - (a.revision ?? 0))
+      .map((d) => ({
+        id: d.id,
+        wmsNumber: d.wmsNumber,
+        title: d.title,
+        revision: d.revision ?? 0,
+        status: d.status,
+        changeSummary: d.changeSummary,
+        preparedByName: d.preparedByName,
+        reviewedByName: d.reviewedByName,
+        approvedByName: d.approvedByName,
+        preparedDate: d.preparedDate,
+        effectiveDate: d.effectiveDate,
+        createdAt: d.createdAt,
+      }));
+
+    return NextResponse.json({ ...currentWms, revisions });
   } catch (error: any) {
     console.error("Failed to fetch WMS details:", error);
     return NextResponse.json({ error: "Failed to fetch WMS details" }, { status: 500 });

@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import Markdown from "@/components/Markdown";
 import SignoffChain from "@/components/SignoffChain";
+import DocumentSeal from "@/components/DocumentSeal";
+import WmsDocumentHeader, { type RevisionEntry } from "@/components/WmsDocumentHeader";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import { PROCEDURE_CONTROL_ROLES } from "@/lib/roles";
@@ -194,23 +196,68 @@ export default function ProcedurePage() {
       )}
 
       {/* The controlled document (printable) */}
-      <div className="bg-surface border border-line rounded-xl shadow-card p-8 print:border-0 print:p-0" id="procedure-doc">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
-          <div>
-            <p className="text-xs text-ink-400">Controlled Document</p>
-            <p className="text-xs font-semibold text-ink-900">{current?.code}</p>
+      <div className="bg-surface border border-line rounded-xl shadow-card p-6 md:p-8 print:border-0 print:p-0 space-y-6" id="procedure-doc">
+        <WmsDocumentHeader
+          docNumber={current?.code ?? "LIMSL-MAIN-PROC-001"}
+          title={current?.title ?? "Equipment and System Maintenance Procedure"}
+          revNo={current?.revision ?? 1}
+          dateRevised={formatDate(current?.effectiveDate ?? current?.createdAt)}
+          procedureLabel="EQUIPMENT MAINTENANCE PROCEDURE"
+          revisions={
+            (revisions && revisions.length > 0)
+              ? revisions.map((r) => ({
+                  rev: r.revision,
+                  date: formatDate(r.effectiveDate ?? r.createdAt),
+                  description: r.changeSummary || "ISSUED FOR IMPLEMENTATION AND CONTROL",
+                  preparedBy: {
+                    name: r.preparedByName || "Originator",
+                    title: "Originator / QA/QC",
+                  },
+                  reviewedBy: {
+                    name: "Maintenance Manager",
+                    title: "Maintenance Manager",
+                  },
+                  approvedBy: {
+                    name: "Factory Manager / COO",
+                    title: "QA/QC Document Control",
+                  },
+                }))
+              : current
+              ? [
+                  {
+                    rev: current.revision ?? 1,
+                    date: formatDate(current.effectiveDate ?? current.createdAt),
+                    description: current.changeSummary || "APPROVED FOR USE",
+                    preparedBy: {
+                      name: current.preparedByName || "Originator",
+                      title: "Originator / QA/QC",
+                    },
+                    reviewedBy: {
+                      name: "Maintenance Manager",
+                      title: "Maintenance Manager",
+                    },
+                    approvedBy: {
+                      name: "Factory Manager / COO",
+                      title: "QA/QC Document Control",
+                    },
+                  },
+                ]
+              : []
+          }
+        />
+
+        <article className="pt-2">
+          {current?.contentMarkdown ? (
+            <Markdown content={current.contentMarkdown} />
+          ) : (
+            <p className="text-sm text-ink-400">No approved procedure on record.</p>
+          )}
+        </article>
+
+        {current?.id && (
+          <div className="pt-4 border-t border-line">
+            <DocumentSeal entityType="PROCEDURE" entityId={current.id} />
           </div>
-          <div className="text-right">
-            <Badge className={STATUS_BADGE[current?.status ?? "APPROVED"]}>{DOC_STATUS_LABELS[current?.status ?? "APPROVED"] ?? current?.status}</Badge>
-            <p className="text-xs text-ink-400 mt-1">
-              Rev {current?.revision} · effective {formatDate(current?.effectiveDate)}
-            </p>
-          </div>
-        </div>
-        {current?.contentMarkdown ? (
-          <Markdown content={current.contentMarkdown} />
-        ) : (
-          <p className="text-sm text-ink-400">No approved procedure on record.</p>
         )}
       </div>
     </div>

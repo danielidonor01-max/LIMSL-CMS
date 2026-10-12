@@ -184,8 +184,14 @@ export const PERMIT_ACCEPT_ROLES = [
 ];
 
 // Roles permitted to propose a revision of the maintenance procedure. Document
-// control sits with QA/QC under ISO 9001; Super Admin covers an absence.
-export const PROCEDURE_CONTROL_ROLES = ["SUPER_ADMIN", "QA_QC"];
+// control sits with QA/QC under ISO 9001; Originator (Maintenance team) prepares
+// and QA/QC authorises. Super Admin covers an absence.
+export const PROCEDURE_CONTROL_ROLES = [
+  "SUPER_ADMIN",
+  "QA_QC",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+];
 
 // Who may be named as the person carrying out a work order. A job is done by
 // the people who hold the tools; naming a manager as the doer would make the
@@ -342,4 +348,5 @@ export const WMS_WRITE_ROLES = [
   "MAINTENANCE_MANAGER",
   "FOREMAN",
   "HSE",
+  "QA_QC",
 ];

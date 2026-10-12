@@ -5,7 +5,7 @@ import Select from "@/components/Select";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Trash2, Layers, Loader2 } from "lucide-react";
+import { Trash2, Layers, Loader2, FilePlus2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import ChainPreview from "@/components/ChainPreview";
@@ -18,6 +18,9 @@ function NewWmsForm() {
   // scope is settled by the batch, not picked here, so the form stops asking
   // and starts telling.
   const batchId = searchParams.get("batchId") ?? "";
+  const reviseId = searchParams.get("reviseId") ?? "";
+  const [predecessor, setPredecessor] = useState<any>(null);
+  const [changeSummary, setChangeSummary] = useState("");
   const [batch, setBatch] = useState<any>(null);
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [loadingEq, setLoadingEq] = useState(true);
@@ -50,6 +53,73 @@ function NewWmsForm() {
 
   // Procedure Steps
   const [steps, setSteps] = useState<string[]>([""]);
+
+  useEffect(() => {
+    if (!reviseId) return;
+    fetch(`/api/wms/${reviseId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setPredecessor(data);
+        setTitle(data.title || "");
+        setPurpose(data.purpose || "");
+        setScope(data.scope || "");
+        setMobilization(data.mobilization || "");
+        setHseRequirements(data.hseRequirements || "");
+        setQualityControlRequirements(data.qualityControlRequirements || "");
+        setEmergencyRequirements(data.emergencyRequirements || "");
+        if (data.workOrderId) setWorkOrderId(data.workOrderId);
+
+        if (data.equipmentAndTools) {
+          try {
+            const parsed = JSON.parse(data.equipmentAndTools);
+            if (Array.isArray(parsed)) {
+              setRawTools(
+                parsed
+                  .map((t: any) => (typeof t === "string" ? t : t.name || t.description || ""))
+                  .filter(Boolean)
+                  .join(", ")
+              );
+            }
+          } catch {}
+        }
+
+        if (data.materials) {
+          try {
+            const parsed = JSON.parse(data.materials);
+            if (Array.isArray(parsed)) {
+              setPickedParts(
+                parsed.map((p: any) => ({
+                  sparePartId: p.sparePartId || p.id || "",
+                  partNumber: p.partNumber || "",
+                  name: p.name || "",
+                  quantity: String(p.quantity || 1),
+                }))
+              );
+            }
+          } catch {}
+        }
+
+        if (data.workProcedureSteps) {
+          try {
+            const parsed = JSON.parse(data.workProcedureSteps);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSteps(
+                parsed.map((s: any) => (typeof s === "string" ? s : s.step || s.description || ""))
+              );
+            }
+          } catch {}
+        }
+
+        if (data.equipmentIds) {
+          try {
+            const parsed = JSON.parse(data.equipmentIds);
+            if (Array.isArray(parsed)) setSelectedEquipments(parsed);
+          } catch {}
+        }
+      })
+      .catch((err) => console.error("Failed to load WMS to revise:", err));
+  }, [reviseId]);
 
   useEffect(() => {
     if (!batchId) return;
@@ -149,6 +219,8 @@ function NewWmsForm() {
           qualityControlRequirements: qualityControlRequirements,
           emergencyRequirements: emergencyRequirements,
           batchId: batchId || undefined,
+          supersedesId: reviseId || undefined,
+          changeSummary: changeSummary || undefined,
           equipmentIds: selectedEquipments,
           machinesScope: scopeNames,
           // preparer is stamped from the session server-side
@@ -156,7 +228,9 @@ function NewWmsForm() {
       });
 
       if (res.ok) {
-        router.push("/wms");
+        const created = await res.json().catch(() => null);
+        if (created?.id) router.push(`/wms/${created.id}`);
+        else router.push("/wms");
       }
     } catch (err) {
       console.error(err);
@@ -177,15 +251,40 @@ function NewWmsForm() {
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.form}>
         <PageHeader
-          title="Draft a Work Method Statement"
+          title={predecessor ? `Revise Method Statement (Rev ${(predecessor.revision ?? 0) + 1})` : "Draft a Work Method Statement"}
           subtitle="Set out how the job will be done safely, step by step, for review and approval"
           backHref="/wms"
           backLabel="Work Method Statements"
         />
         <form onSubmit={handleSubmit} className="p-6 bg-surface border border-line rounded-xl shadow-card space-y-8">
           <h2 className="text-base font-semibold text-ink-900 border-b border-ink-200 pb-3">
-            Create Work Method Statement (WMS)
+            {predecessor ? `Revise Work Method Statement (${predecessor.wmsNumber})` : "Create Work Method Statement (WMS)"}
           </h2>
+
+          {predecessor && (
+            <div className="rounded-lg border border-brand-500/30 bg-brand-500/5 p-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-brand-900">
+                <FilePlus2 className="w-4 h-4 text-brand-600" />
+                Proposing Revision {(predecessor.revision ?? 0) + 1} (Supersedes {predecessor.wmsNumber})
+              </div>
+              <p className="text-xs text-ink-600 leading-relaxed">
+                You are revising an existing Work Method Statement. The prior revision will be preserved in the revision history records and superseded once this new revision completes sign-off.
+              </p>
+              <div className="pt-2">
+                <label className="text-xs font-semibold text-ink-800 block mb-1">
+                  Summary of changes / amendment rationale <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={changeSummary}
+                  onChange={(e) => setChangeSummary(e.target.value)}
+                  placeholder="e.g. Updated bearing puller procedure and specified torque ratings"
+                  className="w-full bg-surface border border-ink-300 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-500"
+                />
+              </div>
+            </div>
+          )}
 
           {/* When the job is a batch, the scope is not a question. Saying so
               plainly, and listing the machines, is what stops somebody

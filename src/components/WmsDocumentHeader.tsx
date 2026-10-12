@@ -38,18 +38,18 @@ export type WmsDocumentHeaderProps = {
   /** Total pages (display "Page 1 of N") */
   totalPages?: number;
   /** Revision history entries, newest first */
-  revisions: RevisionEntry[];
+  revisions?: RevisionEntry[];
   /** Optional subtitle line below the document procedure tag */
   procedureLabel?: string;
 };
 
-export default function WmsDocumentHeader({
+export function WmsDocumentHeader({
   docNumber,
   title,
   revNo,
   dateRevised,
   totalPages = 1,
-  revisions,
+  revisions = [],
   procedureLabel = "CORPORATE PROCEDURE",
 }: WmsDocumentHeaderProps) {
   return (
@@ -142,36 +142,44 @@ export default function WmsDocumentHeader({
               </tr>
             </thead>
             <tbody>
-              {revisions.map((entry, i) => (
-                <tr
-                  key={entry.rev}
-                  className={`border-b border-ink-200 last:border-b-0 ${
-                    i % 2 === 0 ? "bg-surface" : "bg-ink-50/30"
-                  }`}
-                >
-                  <td className="py-2 px-2 text-center text-ink-700 tabular-nums border-r border-ink-200">
-                    {entry.rev}
-                  </td>
-                  <td className="py-2 px-2 text-center text-ink-700 tabular-nums border-r border-ink-200 whitespace-nowrap">
-                    {entry.date}
-                  </td>
-                  <td className="py-2 px-2 text-center text-ink-600 border-r border-ink-200 uppercase leading-tight">
-                    {entry.description}
-                  </td>
-                  <td className="py-2 px-2 text-center border-r border-ink-200">
-                    <p className="text-ink-700">{entry.preparedBy.name}</p>
-                    <p className="font-bold text-ink-900 uppercase leading-tight">{entry.preparedBy.title}</p>
-                  </td>
-                  <td className="py-2 px-2 text-center border-r border-ink-200">
-                    <p className="text-ink-700">{entry.reviewedBy.name}</p>
-                    <p className="font-bold text-ink-900 uppercase leading-tight">{entry.reviewedBy.title}</p>
-                  </td>
-                  <td className="py-2 px-2 text-center">
-                    <p className="text-ink-700">{entry.approvedBy.name}</p>
-                    <p className="font-bold text-ink-900 uppercase leading-tight">{entry.approvedBy.title}</p>
+              {revisions.length === 0 ? (
+                <tr className="border-b border-ink-200">
+                  <td colSpan={6} className="py-2.5 px-3 text-center text-ink-500 italic">
+                    No prior revisions recorded. Current Rev {revNo}.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                revisions.map((entry, i) => (
+                  <tr
+                    key={entry.rev}
+                    className={`border-b border-ink-200 last:border-b-0 ${
+                      i % 2 === 0 ? "bg-surface" : "bg-ink-50/30"
+                    }`}
+                  >
+                    <td className="py-2 px-2 text-center text-ink-700 tabular-nums border-r border-ink-200">
+                      {entry.rev}
+                    </td>
+                    <td className="py-2 px-2 text-center text-ink-700 tabular-nums border-r border-ink-200 whitespace-nowrap">
+                      {entry.date}
+                    </td>
+                    <td className="py-2 px-2 text-center text-ink-600 border-r border-ink-200 uppercase leading-tight">
+                      {entry.description}
+                    </td>
+                    <td className="py-2 px-2 text-center border-r border-ink-200">
+                      <p className="text-ink-700">{entry.preparedBy.name}</p>
+                      <p className="font-bold text-ink-900 uppercase leading-tight">{entry.preparedBy.title}</p>
+                    </td>
+                    <td className="py-2 px-2 text-center border-r border-ink-200">
+                      <p className="text-ink-700">{entry.reviewedBy.name}</p>
+                      <p className="font-bold text-ink-900 uppercase leading-tight">{entry.reviewedBy.title}</p>
+                    </td>
+                    <td className="py-2 px-2 text-center">
+                      <p className="text-ink-700">{entry.approvedBy.name}</p>
+                      <p className="font-bold text-ink-900 uppercase leading-tight">{entry.approvedBy.title}</p>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -186,3 +194,6 @@ export default function WmsDocumentHeader({
     </div>
   );
 }
+
+export const CorporateDocumentHeader = WmsDocumentHeader;
+export default WmsDocumentHeader;

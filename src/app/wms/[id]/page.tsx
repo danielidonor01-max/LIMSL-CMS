@@ -7,20 +7,27 @@ import type { RevisionEntry } from "@/components/WmsDocumentHeader";
 import { pageMain } from "@/lib/page-shell";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { Loader2, ShieldCheck, Biohazard } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Loader2, ShieldCheck, Biohazard, Printer, History, FilePlus2 } from "lucide-react";
 import Button from "@/components/Button";
 import SignoffChain from "@/components/SignoffChain";
 import PageHeader from "@/components/PageHeader";
 import { Badge } from "@/components/Badge";
 import { WMS_STATUS_BADGE, WMS_STATUS_LABELS } from "@/lib/constants";
+import { WMS_WRITE_ROLES } from "@/lib/roles";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const wmsId = resolvedParams.id;
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role;
 
   const [wms, setWms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [chain, setChain] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     async function loadWms() {
@@ -99,7 +106,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const currentRevision: RevisionEntry = {
     rev: wms.revision ?? 0,
     date: (wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join("-"),
-    description: "ISSUED FOR REVIEW AND APPROVAL",
+    description: wms.changeSummary || "ISSUED FOR REVIEW AND APPROVAL",
     preparedBy: {
       name: foreman?.signedByName ?? wms.preparedByName ?? "—",
       title: foreman?.signedByName ? "Foreman" : (wms.preparedByName ? "Maintenance Tech." : "—"),
@@ -114,23 +121,36 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     },
   };
 
-  // If there's a previous revision, show it too (rev 0)
-  const revisions: RevisionEntry[] = [currentRevision];
-  if ((wms.revision ?? 0) > 0) {
-    revisions.push({
-      rev: 0,
-      date: (wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join("-"),
-      description: "ISSUED FOR REVIEW AND APPROVAL",
-      preparedBy: { name: wms.preparedByName ?? "—", title: "Maintenance Tech." },
-      reviewedBy: { name: "—", title: "Factory Supervisor" },
-      approvedBy: { name: "—", title: "Factory Coord." },
-    });
-  }
+  const revisions: RevisionEntry[] =
+    Array.isArray(wms.revisions) && wms.revisions.length > 0
+      ? wms.revisions.map((r: any) => {
+          const isCurrent = r.id === wms.id;
+          return {
+            rev: r.revision ?? 0,
+            date: (r.effectiveDate ?? r.preparedDate ?? r.createdAt ?? "").slice(0, 10).split("-").reverse().join("."),
+            description: r.changeSummary || (r.revision === 0 ? "ISSUED FOR REVIEW AND APPROVAL" : "REVISED WORK PROCEDURE"),
+            preparedBy: {
+              name: isCurrent ? (foreman?.signedByName ?? r.preparedByName ?? "—") : (r.preparedByName ?? "—"),
+              title: isCurrent && foreman?.signedByName ? "Foreman" : (r.preparedByName ? "Maintenance Tech." : "—"),
+            },
+            reviewedBy: {
+              name: isCurrent ? (maintMgr?.signedByName ?? r.reviewedByName ?? "—") : (r.reviewedByName ?? "—"),
+              title: isCurrent && maintMgr?.signedByName ? "Factory Supervisor / Maint. Mgr" : "Factory Supervisor",
+            },
+            approvedBy: {
+              name: isCurrent ? (factoryMgr?.signedByName ?? r.approvedByName ?? "—") : (r.approvedByName ?? "—"),
+              title: "Factory Coord.",
+            },
+          };
+        })
+      : [currentRevision];
+
+  const canRevise = mounted && !loading && (WMS_WRITE_ROLES.includes(role ?? "") || role === "SUPER_ADMIN");
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6")}>
-        <div className="lg:col-span-3">
+      <main className={pageMain("detail", "grid grid-cols-1 lg:grid-cols-3 gap-6 print:block print:space-y-6")}>
+        <div className="lg:col-span-3 no-print">
           <PageHeader
             title="Work Method Statement"
             subtitle="How the job is to be done safely, with its quality plan and approvals"
@@ -138,24 +158,64 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             backHref="/wms"
             backLabel="Work Method Statements"
             actions={
-              /* The next document in the chain, raised from the one it is
-                 written against. Without this the analysis is reached by
-                 leaving the record, opening the JHA module and picking this
-                 method statement back out of a list, which is how the two end
-                 up pointing at different jobs. */
-              wms.status === "APPROVED" ? (
-                <Button href={`/jha/new?wmsId=${wms.id}`} icon={Biohazard}>
-                  Create JHA from this WMS
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="secondary" icon={History} onClick={() => setShowHistory((s) => !s)}>
+                  History
                 </Button>
-              ) : (
-                <span className="text-xs text-ink-500 max-w-xs text-right leading-snug">
-                  A hazard analysis is written against an approved method statement. This one is{" "}
-                  {String(wms.status).toLowerCase().replace(/_/g, " ")}.
-                </span>
-              )
+                <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
+                  Print
+                </Button>
+                {canRevise && (
+                  <Button variant="secondary" icon={FilePlus2} href={`/wms/new?reviseId=${wms.id}`}>
+                    Revise
+                  </Button>
+                )}
+                {wms.status === "APPROVED" ? (
+                  <Button href={`/jha/new?wmsId=${wms.id}`} icon={Biohazard}>
+                    Create JHA from this WMS
+                  </Button>
+                ) : (
+                  <span className="text-xs text-ink-500 max-w-xs text-right leading-snug">
+                    A hazard analysis is written against an approved method statement. This one is{" "}
+                    {String(wms.status).toLowerCase().replace(/_/g, " ")}.
+                  </span>
+                )}
+              </div>
             }
           />
         </div>
+
+        {/* Revision history drawer */}
+        {showHistory && (
+          <div className="lg:col-span-3 no-print bg-surface border border-line rounded-xl shadow-card p-4">
+            <h3 className="text-sm font-semibold text-ink-900 mb-3">Revision history and records</h3>
+            <div className="space-y-1.5">
+              {(wms.revisions ?? [wms]).map((r: any) => (
+                <div key={r.id} className="flex items-center justify-between text-xs py-2 border-b border-ink-100 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-ink-900">Rev {r.revision}</span>
+                    <Badge className={WMS_STATUS_BADGE[r.status] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
+                      {WMS_STATUS_LABELS[r.status] ?? r.status}
+                    </Badge>
+                    <span className="text-ink-500">{r.changeSummary || "Standing work method statement"}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-ink-400 tabular-nums">
+                      {(r.effectiveDate ?? r.preparedDate ?? r.createdAt ?? "").slice(0, 10)}
+                    </span>
+                    {r.id !== wms.id ? (
+                      <Link href={`/wms/${r.id}`} className="text-brand-600 hover:underline">
+                        View
+                      </Link>
+                    ) : (
+                      <span className="text-ink-400 font-semibold">Current</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ─── Corporate document header (matches the LIMSL paper format) ─── */}
         <div className="lg:col-span-3">
@@ -164,18 +224,14 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
             title={wms.title}
             revNo={wms.revision ?? 0}
             dateRevised={(wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join(".")}
+            procedureLabel="WORK METHOD STATEMENT"
             revisions={revisions}
           />
         </div>
 
         {/* Left Side: Document Sections */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* The document read as seven green captions over grey 12px prose:
-              every heading the same weight as the last, and the body set two
-              steps below what a person reads a procedure at. Headings are
-              section headings now and the prose is body text, because this is
-              the document somebody follows while doing the job. */}
-          <article className="bg-surface border border-line rounded-xl shadow-card">
+        <div className="lg:col-span-2 print:col-span-3 space-y-8">
+          <article className="bg-surface border border-line rounded-xl shadow-card print:border-0">
             <header className="px-6 py-5 border-b border-line">
               <h2 className="text-xl font-semibold text-ink-900 leading-snug">{wms.title}</h2>
               <p className="text-sm text-ink-500 mt-1.5">
@@ -234,7 +290,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         </div>
 
         {/* Right side: what state the document is in, and why. */}
-        <div className="space-y-6">
+        <div className="space-y-6 no-print">
           <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <div className="px-6 py-4 border-b border-line flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-ink-900">Document status</h2>
@@ -253,17 +309,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {/* The chain runs the full width, under both columns.
-            It was in the right-hand third, where a step called "Reviewed by
-            (Maintenance Manager)" wrapped onto four lines with its status
-            squeezed alongside. This is the object an auditor opens the page to
-            read, and it was the narrowest thing on it. */}
+        {/* The chain runs the full width, under both columns. */}
         <div className="lg:col-span-3 space-y-6">
-          <SignoffChain
-            entityType="WMS"
-            entityId={wmsId}
-            title="Method statement authorisation"
-          />
+          <div className="no-print">
+            <SignoffChain
+              entityType="WMS"
+              entityId={wmsId}
+              title="Method statement authorisation"
+            />
+          </div>
           {/* Prints with the page, and only once the statement is approved. */}
           <DocumentSeal entityType="WMS" entityId={wmsId} />
         </div>

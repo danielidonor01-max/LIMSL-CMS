@@ -7,19 +7,25 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Printer } from "lucide-react";
 import Markdown from "@/components/Markdown";
-import { Badge } from "@/components/Badge";
+import DocumentSeal from "@/components/DocumentSeal";
+import WmsDocumentHeader, { type RevisionEntry } from "@/components/WmsDocumentHeader";
 import { formatDate } from "@/lib/utils";
-import { DOC_STATUS_LABELS } from "@/lib/constants";
 
 export default function ProcedureRevisionPage() {
   const { id } = useParams<{ id: string }>();
   const [rev, setRev] = useState<any>(null);
+  const [allRevs, setAllRevs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/procedure/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setRev)
+    Promise.all([
+      fetch(`/api/procedure/${id}`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/procedure`).then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([single, parent]) => {
+        setRev(single);
+        if (parent?.revisions) setAllRevs(parent.revisions);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -39,6 +45,24 @@ export default function ProcedureRevisionPage() {
     );
   }
 
+  const headerRevisions: RevisionEntry[] = (allRevs.length > 0 ? allRevs : [rev]).map((r) => ({
+    rev: r.revision,
+    date: formatDate(r.effectiveDate ?? r.createdAt),
+    description: r.changeSummary || "ISSUED FOR IMPLEMENTATION AND CONTROL",
+    preparedBy: {
+      name: r.preparedByName || "Originator",
+      title: "Originator / QA/QC",
+    },
+    reviewedBy: {
+      name: "Maintenance Manager",
+      title: "Maintenance Manager",
+    },
+    approvedBy: {
+      name: "Factory Manager / COO",
+      title: "QA/QC Document Control",
+    },
+  }));
+
   return (
     <div className={PAGE_MAIN.detail}>
       <div className="no-print flex items-center justify-between">
@@ -50,18 +74,25 @@ export default function ProcedureRevisionPage() {
         </button>
       </div>
 
-      <div className="bg-surface border border-line rounded-xl shadow-card p-8 print:border-0 print:p-0">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-200">
-          <div>
-            <p className="text-xs text-ink-400">Controlled Document · Historical</p>
-            <p className="text-xs font-semibold text-ink-900">{rev.code}</p>
+      <div className="bg-surface border border-line rounded-xl shadow-card p-6 md:p-8 print:border-0 print:p-0 space-y-6">
+        <WmsDocumentHeader
+          docNumber={rev.code}
+          title={rev.title}
+          revNo={rev.revision}
+          dateRevised={formatDate(rev.effectiveDate ?? rev.createdAt)}
+          procedureLabel="EQUIPMENT MAINTENANCE PROCEDURE"
+          revisions={headerRevisions}
+        />
+
+        <article className="pt-2">
+          <Markdown content={rev.contentMarkdown} />
+        </article>
+
+        {rev.status === "APPROVED" && (
+          <div className="pt-4 border-t border-line">
+            <DocumentSeal entityType="PROCEDURE" entityId={rev.id} />
           </div>
-          <div className="text-right">
-            <Badge className="bg-ink-500/10 text-ink-500 border-ink-500/20">{DOC_STATUS_LABELS[String(rev.status)] ?? String(rev.status)}</Badge>
-            <p className="text-xs text-ink-400 mt-1">Rev {rev.revision} · {formatDate(rev.effectiveDate ?? rev.createdAt)}</p>
-          </div>
-        </div>
-        <Markdown content={rev.contentMarkdown} />
+        )}
       </div>
     </div>
   );

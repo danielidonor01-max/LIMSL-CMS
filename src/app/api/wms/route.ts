@@ -164,9 +164,29 @@ export async function POST(request: Request) {
     }
 
     let revision = Number(body.revision ?? 0) || 0;
-    let supersedesId: string | null = null;
+    let supersedesId: string | null = body.supersedesId ? String(body.supersedesId) : null;
 
-    if (category) {
+    if (supersedesId) {
+      const [predecessor] = await db
+        .select()
+        .from(wmsDocuments)
+        .where(eq(wmsDocuments.id, supersedesId))
+        .limit(1);
+      if (predecessor) {
+        revision = (predecessor.revision ?? 0) + 1;
+        category = category ?? predecessor.category;
+        if (scopeIds.length === 0 && predecessor.equipmentIds) {
+          try {
+            scopeIds = JSON.parse(predecessor.equipmentIds);
+          } catch {}
+        }
+        if (scopeNames.length === 0 && predecessor.machinesScope) {
+          try {
+            scopeNames = JSON.parse(predecessor.machinesScope);
+          } catch {}
+        }
+      }
+    } else if (category) {
       const machines = await db
         .select({ id: equipment.id, assetId: equipment.assetId, name: equipment.name })
         .from(equipment)
