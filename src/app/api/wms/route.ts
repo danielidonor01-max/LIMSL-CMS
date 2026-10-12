@@ -11,7 +11,8 @@ import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 
 // A WMS document's status is DERIVED from its sign-off chain (WMS_CHAIN:
-// Foreman → Maintenance Manager → HSE → Factory Manager), never set by a button.
+// Originator/Foreman → Factory Supervisor/Maintenance Manager → Factory
+// Coordinator), never set by a button.
 //   no signatures          → DRAFT
 //   some, not all           → UNDER_REVIEW
 //   any required rejected   → REJECTED

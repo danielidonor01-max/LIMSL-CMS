@@ -88,10 +88,9 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const materials = safeParse(wms.materials);
 
   // Build revision history from the WMS data and the live sign-off chain.
-  // The chain has 4 steps: Foreman (Prepared), Maintenance Manager (Reviewed),
-  // HSE, Factory Manager (Approved). The paper header shows 3 columns:
-  // Prepared, Reviewed, Approved — so we collapse to the originator, reviewer,
-  // and final approver.
+  // The chain has 3 steps, one per column on the paper header: Originator
+  // (Foreman) = Prepared, Factory Supervisor / Maintenance Manager = Reviewed,
+  // Factory Coordinator = Approved.
   const stepByRole = (role: string) => chain.find((s) => s.role === role);
   const foreman = stepByRole("FOREMAN");
   const maintMgr = stepByRole("MAINTENANCE_MANAGER");
@@ -107,11 +106,11 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
     },
     reviewedBy: {
       name: maintMgr?.signedByName ?? "—",
-      title: maintMgr?.signedByName ? "Maintenance Manager" : "Factory Supervisor",
+      title: maintMgr?.signedByName ? "Factory Supervisor / Maint. Mgr" : "Factory Supervisor",
     },
     approvedBy: {
       name: factoryMgr?.signedByName ?? "—",
-      title: factoryMgr?.signedByName ? "Factory Manager" : "Factory Coord.",
+      title: "Factory Coord.",
     },
   };
 

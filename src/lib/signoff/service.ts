@@ -21,7 +21,23 @@ export async function ensureSignoffChain(
     .select()
     .from(signoffs)
     .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)));
-  if (existing.length > 0) return existing;
+  if (existing.length > 0) {
+    // A chain created under an older definition (e.g. the 5-step WMS chain)
+    // is rebuilt from the current one, but ONLY while nobody has acted on it:
+    // a signature or rejection is evidence and is never discarded here, and a
+    // bound signer can't be reconstructed without the caller's context.
+    const current = chainFor(entityType);
+    const ordered = [...existing].sort((a, b) => a.stepOrder - b.stepOrder);
+    const stale =
+      current.length > 0 &&
+      (ordered.length !== current.length ||
+        ordered.some((s, i) => s.role !== current[i].role || s.roleLabel !== current[i].roleLabel));
+    const untouched = ordered.every((s) => s.status === "PENDING" && !s.signerUserId);
+    if (!(stale && untouched)) return existing;
+    await db
+      .delete(signoffs)
+      .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)));
+  }
 
   const steps = chainFor(entityType);
   if (steps.length === 0) return [];
