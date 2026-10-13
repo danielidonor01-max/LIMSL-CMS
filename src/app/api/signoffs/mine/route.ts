@@ -9,6 +9,7 @@ import {
   signoffs,
   permits,
   wmsDocuments,
+  jhaDocuments,
   procedureRevisions,
   correctiveMaintenance,
   pmChecklists,
@@ -21,6 +22,7 @@ const LABEL: Record<string, string> = {
   PERMIT: "Permit-to-Work",
   PERMIT_CLOSEOUT: "Permit close-out",
   WMS: "Work Method Statement",
+  JHA: "Job Hazard Analysis",
   PROCEDURE: "Maintenance Procedure",
   PM_CHECKLIST: "PM checklist",
   CORRECTIVE: "Corrective / RCA",
@@ -77,9 +79,10 @@ export async function GET() {
 
     // Batch-load referenced entities for friendly labels + deep links.
     const need = (t: string) => mine.some((m) => m.entityType === t);
-    const [permitRows, wmsRows, procRows, cmRows, pmRows, woRows] = await Promise.all([
+    const [permitRows, wmsRows, jhaRows, procRows, cmRows, pmRows, woRows] = await Promise.all([
       need("PERMIT") || need("PERMIT_CLOSEOUT") ? db.select().from(permits) : [],
       need("WMS") ? db.select().from(wmsDocuments) : [],
+      need("JHA") ? db.select().from(jhaDocuments) : [],
       need("PROCEDURE") ? db.select().from(procedureRevisions) : [],
       need("CORRECTIVE") ? db.select().from(correctiveMaintenance) : [],
       need("PM_CHECKLIST") ? db.select().from(pmChecklists) : [],
@@ -87,6 +90,7 @@ export async function GET() {
     ]);
     const permitById = new Map(permitRows.map((r) => [r.id, r]));
     const wmsById = new Map(wmsRows.map((r) => [r.id, r]));
+    const jhaById = new Map(jhaRows.map((r) => [r.id, r]));
     const procById = new Map(procRows.map((r) => [r.id, r]));
     const cmById = new Map(cmRows.map((r) => [r.id, r]));
     const pmById = new Map(pmRows.map((r) => [r.id, r]));
@@ -107,6 +111,12 @@ export async function GET() {
           const w = wmsById.get(m.entityId);
           reference = w?.wmsNumber ?? w?.title ?? "";
           link = `/wms/${m.entityId}`;
+          break;
+        }
+        case "JHA": {
+          const j = jhaById.get(m.entityId);
+          reference = j?.jhaNumber ?? j?.title ?? "JHA";
+          link = `/jha/${m.entityId}`;
           break;
         }
         case "PROCEDURE": {

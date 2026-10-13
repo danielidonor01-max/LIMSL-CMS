@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
-import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers } from "lucide-react";
+import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers, MapPin } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -32,6 +32,11 @@ type Permit = {
   workDescription: string;
   equipmentName?: string | null;
   assetId?: string | null;
+  location?: string | null;
+  facility?: string | null;
+  workArea?: string | null;
+  daysRemaining?: number | null;
+  daysOverdue?: number | null;
   permitHolderName?: string | null;
   createdAt?: string | null;
   expiryDate?: string | null;
@@ -73,7 +78,7 @@ function RemainingBadge({ startDate, validityDays }: { startDate: string; validi
   );
 }
 
-type Scope = "OPEN" | "CLOSED" | "ALL";
+type Scope = "OPEN" | "OVERDUE" | "EXPIRING_SOON" | "CLOSED" | "ALL";
 
 export default function PermitsList() {
   const { data: session } = useSession();
@@ -88,18 +93,41 @@ export default function PermitsList() {
 
   const open = useMemo(() => records.filter((r) => !CLOSED_STATES.has(r.status)), [records]);
   const closed = useMemo(() => records.filter((r) => CLOSED_STATES.has(r.status)), [records]);
-  const rows = scope === "OPEN" ? open : scope === "CLOSED" ? closed : records;
+  const overdue = useMemo(
+    () => open.filter((r) => r.status === "EXPIRED" || (r.daysOverdue ?? 0) > 0),
+    [open],
+  );
+  const expiringSoon = useMemo(
+    () => open.filter((r) => r.status === "ACTIVE" && (r.daysRemaining ?? 99) <= 2 && (r.daysOverdue ?? 0) === 0),
+    [open],
+  );
+
+  const rows = useMemo(() => {
+    switch (scope) {
+      case "OVERDUE":
+        return overdue;
+      case "EXPIRING_SOON":
+        return expiringSoon;
+      case "CLOSED":
+        return closed;
+      case "ALL":
+        return records;
+      case "OPEN":
+      default:
+        return open;
+    }
+  }, [scope, open, closed, overdue, expiringSoon, records]);
 
   const awaiting = records.filter((r) => r.status === "PENDING_APPROVAL").length;
   const active = records.filter((r) => r.status === "ACTIVE").length;
-  const expired = records.filter((r) => r.status === "EXPIRED").length;
+  const expired = records.filter((r) => r.status === "EXPIRED" || (r.daysOverdue ?? 0) > 0).length;
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Permits to Work"
-          subtitle="Every permit is signed and approved before work begins"
+          subtitle="Track open and closed PTWs, trace where they belong, and monitor days to closure or overdue"
           backHref="/"
           backLabel="Dashboard"
           actions={
@@ -112,7 +140,7 @@ export default function PermitsList() {
         />
 
         <MetricPanel
-          label="Permit status"
+          label="Permit lifecycle & safety tracking"
           metrics={[
             {
               key: "awaiting",
@@ -128,23 +156,24 @@ export default function PermitsList() {
               count: active,
               value: String(active),
               status: "plain",
-              description: "Work may proceed under these",
+              description: "Work proceeding under controls",
             },
             {
-              key: "expired",
-              label: "Expired",
-              count: expired,
-              value: String(expired),
-              status: "danger",
-              description: "Validity ran out before close-out",
+              key: "overdue",
+              label: "Overdue for closure",
+              count: overdue.length,
+              value: String(overdue.length),
+              status: overdue.length > 0 ? "danger" : "plain",
+              icon: AlertTriangle,
+              description: "Past validity without formal handback",
             },
             {
               key: "closed",
-              label: "Closed",
+              label: "Closed & de-isolated",
               count: closed.length,
               value: String(closed.length),
               status: "plain",
-              description: "Handed back and signed off",
+              description: "Handed back with HSE sign-off",
             },
           ]}
         />
@@ -156,6 +185,8 @@ export default function PermitsList() {
             onChange={setScope}
             options={[
               { value: "OPEN", label: "Open", count: open.length },
+              { value: "OVERDUE", label: "Overdue", count: overdue.length },
+              { value: "EXPIRING_SOON", label: "Expiring Soon", count: expiringSoon.length },
               { value: "CLOSED", label: "Closed", count: closed.length },
               { value: "ALL", label: "All", count: records.length },
             ]}
@@ -171,16 +202,24 @@ export default function PermitsList() {
               title={
                 records.length === 0
                   ? "No permits raised yet"
-                  : scope === "OPEN"
-                    ? "No permits are open"
-                    : "No permits have been closed"
+                  : scope === "OVERDUE"
+                    ? "No overdue permits"
+                    : scope === "EXPIRING_SOON"
+                      ? "No permits approaching expiry"
+                      : scope === "OPEN"
+                        ? "No permits are open"
+                        : "No permits have been closed"
               }
               message={
                 records.length === 0
                   ? "No permits raised. A permit must be fully signed before work begins."
-                  : scope === "OPEN"
-                    ? "Every permit on the register has been closed out."
-                    : "Nothing has been handed back and closed yet."
+                  : scope === "OVERDUE"
+                    ? "All active permits are currently within their authorized validity window."
+                    : scope === "EXPIRING_SOON"
+                      ? "No active permits are due for closure in the next 48 hours."
+                      : scope === "OPEN"
+                        ? "Every permit on the register has been closed out."
+                        : "Nothing has been handed back and closed yet."
               }
               blockedBy={
                 records.length === 0 && canIssue
@@ -194,11 +233,10 @@ export default function PermitsList() {
                 <thead>
                   <tr className="border-b border-line text-ink-500 text-xs">
                     <th className="py-2.5 px-4 font-medium whitespace-nowrap">Permit #</th>
-                    <th className="py-2.5 px-4 font-medium">Covers</th>
-                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Holder</th>
-                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Raised</th>
-                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Expires</th>
-                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Closed</th>
+                    <th className="py-2.5 px-4 font-medium">Where It Belongs & Covers</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Permit Holder</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Authorized Window</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Closure Horizon / Days</th>
                     <th className="py-2.5 px-4 font-medium whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -210,6 +248,9 @@ export default function PermitsList() {
                     const covers = rec.batchNumber
                       ? `${rec.batchTitle ?? rec.batchNumber}`
                       : rec.equipmentName || "Equipment";
+                    const isClosed = CLOSED_STATES.has(rec.status);
+                    const isOverdue = !isClosed && (rec.status === "EXPIRED" || (rec.daysOverdue ?? 0) > 0);
+
                     return (
                       <tr key={rec.id} className="hover:bg-ink-50 transition-colors align-top">
                         <td className="py-3 px-4 whitespace-nowrap">
@@ -228,30 +269,48 @@ export default function PermitsList() {
                         <td className="py-3 px-4 min-w-0">
                           <div className="flex items-center gap-1.5">
                             {rec.batchNumber && <Layers className="w-3.5 h-3.5 text-ink-400 shrink-0" />}
-                            <span className="text-ink-900 truncate">{covers}</span>
+                            <span className="font-medium text-ink-900 truncate">{covers}</span>
                           </div>
-                          <p className="text-xs text-ink-500 line-clamp-1">
-                            {rec.batchNumber
-                              ? `${rec.coveredMachines ?? 0} machine${(rec.coveredMachines ?? 0) === 1 ? "" : "s"} · ${rec.batchNumber}`
-                              : rec.assetId || rec.workDescription}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-ink-500">
+                            {rec.assetId && <span>{rec.assetId}</span>}
+                            {(rec.location || rec.workArea) && (
+                              <span className="inline-flex items-center gap-1 text-ink-600 font-medium">
+                                <MapPin className="w-3 h-3 text-brand-600 shrink-0" />
+                                {rec.location || rec.workArea} {rec.facility ? `· ${rec.facility}` : ""}
+                              </span>
+                            )}
+                          </div>
+                          {rec.workDescription && (
+                            <p className="text-xs text-ink-500 line-clamp-1 mt-0.5">
+                              {rec.workDescription}
+                            </p>
+                          )}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap text-ink-700">
                           {rec.permitHolderName || "—"}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-ink-600 tabular-nums">
-                          {rec.createdAt ? formatDate(rec.createdAt) : "—"}
+                        <td className="py-3 px-4 whitespace-nowrap text-xs text-ink-600 tabular-nums">
+                          <div>Start: {rec.startDate ? formatDate(rec.startDate) : rec.createdAt ? formatDate(rec.createdAt) : "—"}</div>
+                          <div>Expiry: {rec.expiryDate ? formatDate(rec.expiryDate) : "—"}</div>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-ink-600 tabular-nums">
-                          {rec.expiryDate ? formatDate(rec.expiryDate) : "—"}
-                          {rec.status === "ACTIVE" && rec.startDate ? (
-                            <div className="mt-1">
-                              <RemainingBadge startDate={rec.startDate} validityDays={rec.validityDays} />
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {isClosed ? (
+                            <span className="text-xs text-ink-500 tabular-nums">
+                              Closed {rec.closedAt ? formatDate(rec.closedAt) : ""}
+                            </span>
+                          ) : isOverdue ? (
+                            <div className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-danger-500/10 text-danger-700 border-danger-500/20">
+                              <AlertTriangle className="w-3 h-3 text-danger-600 shrink-0" />
+                              Overdue by {rec.daysOverdue ?? 1}d
                             </div>
-                          ) : null}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-ink-600 tabular-nums">
-                          {rec.closedAt ? formatDate(rec.closedAt) : "—"}
+                          ) : rec.status === "ACTIVE" ? (
+                            <div className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-brand-500/10 text-brand-700 border-brand-500/20">
+                              <Clock className="w-3 h-3 text-brand-600 shrink-0" />
+                              {rec.daysRemaining === 0 ? "Expires today" : `${rec.daysRemaining}d to closure`}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-ink-400">Awaiting authorization</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           <Badge className={PERMIT_STATUS_BADGE[rec.status] ?? PERMIT_STATUS_BADGE.DRAFT}>
@@ -263,9 +322,9 @@ export default function PermitsList() {
                               {signed}/{total} signed
                             </div>
                           )}
-                          {rec.status === "EXPIRED" && (
-                            <div className="flex items-center gap-1 text-xs text-danger-600 font-semibold mt-1">
-                              <AlertTriangle className="w-3.5 h-3.5" /> Not closed
+                          {isOverdue && (
+                            <div className="text-[11px] text-danger-600 font-medium mt-0.5">
+                              Requires de-isolation & handback
                             </div>
                           )}
                         </td>

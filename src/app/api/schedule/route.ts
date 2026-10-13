@@ -5,7 +5,7 @@ import { maintenanceSchedule, equipment, workOrders, auditLog } from "@/lib/db/s
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { SCHEDULE_WRITE_ROLES } from "@/lib/roles";
 import { reconcileSchedule } from "@/lib/schedule";
 import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
 
@@ -70,7 +70,7 @@ export async function GET() {
 // then perpetuates it automatically once completed.
 export async function POST(request: Request) {
   try {
-    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    const gate = await requireRoles(SCHEDULE_WRITE_ROLES);
     if (gate.res) return gate.res;
 
     const body = await request.json();

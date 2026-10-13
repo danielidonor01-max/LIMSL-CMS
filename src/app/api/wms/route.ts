@@ -1,7 +1,7 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments, jhaDocuments, equipment, workOrders, pmBatches, auditLog } from "@/lib/db/schema";
+import { wmsDocuments, jhaDocuments, equipment, workOrders, pmBatches, auditLog, permits } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -9,6 +9,7 @@ import { WMS_WRITE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
+import { notify } from "@/lib/notifications";
 
 // A WMS document's status is DERIVED from its sign-off chain (WMS_CHAIN:
 // Originator/Foreman → Factory Supervisor/Maintenance Manager → Factory
@@ -70,6 +71,41 @@ export async function GET() {
     const list = await db.select().from(wmsDocuments);
     const eqList = await db.select().from(equipment);
     const byId = new Map(eqList.map((e) => [e.id, e]));
+
+    // Query JHAs and Permits to link safety status with each method statement
+    const [jhaRows, permitRows] = await Promise.all([
+      db.select({
+        id: jhaDocuments.id,
+        jhaNumber: jhaDocuments.jhaNumber,
+        wmsId: jhaDocuments.wmsId,
+        status: jhaDocuments.status,
+      }).from(jhaDocuments),
+      db.select({
+        id: permits.id,
+        permitNumber: permits.permitNumber,
+        jhaId: permits.jhaId,
+        status: permits.status,
+      }).from(permits),
+    ]);
+
+    const jhaByWmsId = new Map<string, typeof jhaRows>();
+    for (const j of jhaRows) {
+      if (j.wmsId) {
+        const arr = jhaByWmsId.get(j.wmsId) ?? [];
+        arr.push(j);
+        jhaByWmsId.set(j.wmsId, arr);
+      }
+    }
+
+    const permitsByJhaId = new Map<string, typeof permitRows>();
+    for (const p of permitRows) {
+      if (p.jhaId) {
+        const arr = permitsByJhaId.get(p.jhaId) ?? [];
+        arr.push(p);
+        permitsByJhaId.set(p.jhaId, arr);
+      }
+    }
+
     const enriched = list.map((w) => {
       // Resolve equipment names from either the scope JSON or the equipmentIds JSON
       let names: string[] = [];
@@ -82,7 +118,25 @@ export async function GET() {
           names = ids.map((id) => byId.get(id)?.name).filter(Boolean) as string[];
         } catch {}
       }
-      return { ...w, equipmentName: names.join(", ") || null };
+
+      // Check associated JHA & PTW status
+      const wmsJhas = jhaByWmsId.get(w.id) ?? [];
+      const primaryJha = wmsJhas.find((j) => j.status === "APPROVED") ?? wmsJhas[0] ?? null;
+      const jhaPermits = primaryJha ? (permitsByJhaId.get(primaryJha.id) ?? []) : [];
+      const primaryPtw = jhaPermits.find((p) => p.status === "ACTIVE") ?? jhaPermits[0] ?? null;
+
+      return {
+        ...w,
+        equipmentName: names.join(", ") || null,
+        hasJha: !!primaryJha,
+        jhaId: primaryJha?.id ?? null,
+        jhaNumber: primaryJha?.jhaNumber ?? null,
+        jhaStatus: primaryJha?.status ?? null,
+        hasPtw: !!primaryPtw,
+        ptwId: primaryPtw?.id ?? null,
+        ptwNumber: primaryPtw?.permitNumber ?? null,
+        ptwStatus: primaryPtw?.status ?? null,
+      };
     });
     return NextResponse.json(enriched);
   } catch (error: any) {

@@ -1,7 +1,7 @@
 // src/app/api/signoffs/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signoffs, auditLog, users, workOrders } from "@/lib/db/schema";
+import { signoffs, auditLog, users, workOrders, wmsDocuments } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
@@ -251,6 +251,35 @@ export async function POST(
                 } catch (err) {
                   console.warn("signoff: notify technician of approval failed", err);
                 }
+              }
+            }
+          }
+
+          if (step.entityType === "WMS") {
+            const [wms] = await db.select().from(wmsDocuments).where(eq(wmsDocuments.id, step.entityId)).limit(1);
+            if (wms) {
+              await db
+                .update(wmsDocuments)
+                .set({
+                  status: "APPROVED",
+                  approvedById: user.id ?? null,
+                  approvedByName: user.name ?? null,
+                  approvedDate: new Date().toISOString().slice(0, 10),
+                })
+                .where(eq(wmsDocuments.id, wms.id));
+
+              try {
+                await notify({
+                  event: "GENERAL",
+                  title: `WMS Approved: ${wms.wmsNumber}`,
+                  body: `Work Method Statement "${wms.title}" has been approved and is ready for use. HSE may now review and raise Job Hazard Analysis (JHA).`,
+                  linkPath: `/wms/${wms.id}`,
+                  relatedEntityType: "wms",
+                  relatedEntityId: wms.id,
+                  roles: ["HSE"],
+                });
+              } catch (err) {
+                console.warn("signoff: notify HSE of WMS approval failed", err);
               }
             }
           }

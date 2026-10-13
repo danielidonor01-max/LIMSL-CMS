@@ -79,10 +79,17 @@ export const canManageUsers = (role?: string | null) => role === "SUPER_ADMIN";
 // Whether a user with `userRole` may sign a step requiring `stepRole`.
 // Exact match; a Super Admin may sign/override any step; a strictly more senior
 // role in the same chain may also sign (e.g. Maintenance Manager covers Foreman).
+// HSE and QA/QC are independent assurance roles: HSE signs safety steps only
+// (JHA, PTW close-out, CM safety, incidents) and has nothing to do with signing
+// maintenance work orders or method statements.
 export function canSignStep(userRole: string | null | undefined, stepRole: string): boolean {
   if (!userRole) return false;
   if (userRole === "SUPER_ADMIN") return true;
   if (userRole === stepRole) return true;
+  // HSE and QA/QC are independent assurance functions and do not cover maintenance steps
+  if (userRole === "HSE" && stepRole !== "HSE") return false;
+  if (userRole === "QA_QC" && stepRole !== "QA_QC") return false;
+
   // Fail CLOSED on roles this module doesn't know: an unrecognised step role
   // (a typo in a chain definition) must never become a step almost anyone
   // outranks, and an unrecognised user role must never outrank anything.
@@ -91,6 +98,17 @@ export function canSignStep(userRole: string | null | undefined, stepRole: strin
   if (userRank === undefined || stepRank === undefined) return false;
   return userRank > stepRank;
 }
+
+// Who may add activities to the annual schedule (PMs, periodic inspections).
+// HSE is responsible for scheduling periodic safety and environmental inspections
+// spanning across the annual calendar.
+export const SCHEDULE_WRITE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "HSE",
+];
 
 // ── Path-based access control ─────────────────────────────────────────────────
 // Roles listed here see only the allowed path prefixes. Roles NOT listed

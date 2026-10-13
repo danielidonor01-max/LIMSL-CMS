@@ -65,14 +65,37 @@ export async function GET() {
         const e = byId.get(r.equipmentId);
         const chain = await getSignoffChain("PERMIT", r.id);
         const batch = r.batchId ? batchById.get(r.batchId) : null;
+
+        // Calculate expected days to closure or days overdue
+        const expDateStr = r.expiryDate || (r.startDate ? expiryDateOf(r.startDate, r.validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS) : null);
+        let daysRemaining: number | null = null;
+        let daysOverdue: number | null = null;
+        if (expDateStr) {
+          const expTime = new Date(expDateStr).getTime();
+          const nowTime = new Date().getTime();
+          const diffDays = Math.round((expTime - nowTime) / (1000 * 60 * 60 * 24));
+          if (diffDays < 0) {
+            daysOverdue = Math.abs(diffDays);
+            daysRemaining = 0;
+          } else {
+            daysRemaining = diffDays;
+            daysOverdue = 0;
+          }
+        }
+
         return {
           ...r,
           equipmentName: e?.name ?? null,
           assetId: e?.assetId ?? null,
+          location: e?.location ?? r.workArea ?? null,
+          facility: r.facility ?? "Factory",
+          workArea: r.workArea ?? e?.location ?? null,
           batchNumber: batch?.batchNumber ?? null,
           batchTitle: batch?.title ?? null,
           coveredMachines: batch ? (batchCounts.get(batch.id) ?? 0) : 1,
           approval: chainSummary(chain),
+          daysRemaining,
+          daysOverdue,
         };
       }),
     );

@@ -40,7 +40,7 @@ import ScheduleCalendar from "@/components/ScheduleCalendar";
 import KebabMenu from "@/components/KebabMenu";
 import AssignPeople from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
-import { ROLE_LABELS, WORK_ASSIGN_ROLES } from "@/lib/roles";
+import { ROLE_LABELS, WORK_ASSIGN_ROLES, SCHEDULE_WRITE_ROLES } from "@/lib/roles";
 import {
   ACTIVITY_TYPE_BADGE,
   ACTIVITY_TYPE_LABELS,
@@ -134,6 +134,7 @@ export default function SchedulePage() {
   // Naming who does a job, and adding a job to the plan, are the same kind of
   // decision and belong to the same hands.
   const canAssign = mounted && WORK_ASSIGN_ROLES.includes(role ?? "");
+  const canSchedule = mounted && SCHEDULE_WRITE_ROLES.includes(role ?? "");
   const [tab, setTab] = useState<"upcoming" | "all" | "deferred">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [q, setQ] = useState("");
@@ -479,9 +480,20 @@ export default function SchedulePage() {
                   { value: "calendar" as const, label: "Calendar", icon: CalendarDays },
                 ]}
               />
-              {canAssign && (
-                <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowCreate(true)}>
-                  Schedule PM
+              {canSchedule && (
+                <Button
+                  variant="secondary"
+                  icon={CalendarPlus}
+                  onClick={() => {
+                    setCreateForm({
+                      ...emptyCreate,
+                      activityType: role === "HSE" ? "INS" : "PM",
+                      taskDescription: role === "HSE" ? "Periodic Safety & Environmental Inspection" : "",
+                    });
+                    setShowCreate(true);
+                  }}
+                >
+                  {role === "HSE" ? "Schedule Inspection" : "Schedule PM"}
                 </Button>
               )}
               <Button href="/work-orders/new" icon={Plus}>
