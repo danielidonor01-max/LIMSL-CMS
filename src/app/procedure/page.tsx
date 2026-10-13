@@ -27,6 +27,8 @@ import { FIELD_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 import { DOC_STATUS_LABELS } from "@/lib/constants";
 
+import Modal from "@/components/Modal";
+
 type Rev = {
   id: string;
   code: string;
@@ -68,6 +70,7 @@ export default function ProcedurePage() {
   const [showHistory, setShowHistory] = useState(false);
 
   const [editing, setEditing] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [summary, setSummary] = useState("");
   const [saving, setSaving] = useState(false);
@@ -83,6 +86,10 @@ export default function ProcedurePage() {
   };
 
   const propose = async () => {
+    if (!summary.trim()) {
+      toast.error("Please enter a summary of the amendment.");
+      return;
+    }
     setSaving(true);
     const res = await fetch("/api/procedure", {
       method: "POST",
@@ -97,7 +104,19 @@ export default function ProcedurePage() {
     }
     toast.success(`Revision ${d.revision} proposed. Awaiting Maintenance Manager, Factory Manager and COO.`);
     setEditing(false);
+    setConfirmCloseOpen(false);
     load();
+  };
+
+  const handleRequestClose = () => {
+    setConfirmCloseOpen(true);
+  };
+
+  const handleConfirmDiscard = () => {
+    setConfirmCloseOpen(false);
+    setEditing(false);
+    setDraft(current?.contentMarkdown ?? "");
+    setSummary("");
   };
 
   if (loading) {
@@ -167,33 +186,95 @@ export default function ProcedurePage() {
         </div>
       )}
 
-      {/* Propose editor */}
-      {editing && (
-        <div className="no-print bg-surface border border-line rounded-xl shadow-card p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-brand-600" /> Propose new revision (QA/QC document control)
-          </h3>
-          <input
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            placeholder="Summary of amendment…"
-            className={FIELD_CLASS}
-          />
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={18}
-            className={`${FIELD_CLASS} text-xs `}
-          />
-          <p className="text-xs text-ink-400">Markdown: # heading, ## section, - bullet, **bold**. Content is retained verbatim.</p>
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-            <Button icon={FilePlus2} onClick={propose} disabled={saving} loading={saving}>
+      {/* Propose revision modal */}
+      <Modal
+        open={editing}
+        onClose={handleRequestClose}
+        title="Propose Maintenance Procedure Revision"
+        subtitle="QA/QC controlled document revision. Submitting initiates authorization sign-off workflow."
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-ink-700 block mb-1">
+              Summary of Amendment <span className="text-danger-600">*</span>
+            </label>
+            <input
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="e.g. Revised safety isolation and mechanical check intervals"
+              className={FIELD_CLASS}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-ink-700">
+                Procedure Markdown Content
+              </label>
+              <span className="text-xs text-ink-400"># Heading, ## Section, - Bullet, **Bold**</span>
+            </div>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={14}
+              className={`${FIELD_CLASS} text-xs font-sans leading-relaxed`}
+              placeholder="# Maintenance Procedure Content..."
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-ink-100">
+            <Button variant="secondary" onClick={handleRequestClose}>
+              Cancel
+            </Button>
+            <Button
+              icon={FilePlus2}
+              onClick={propose}
+              disabled={saving || !summary.trim()}
+              loading={saving}
+            >
               Submit for approval
             </Button>
           </div>
         </div>
-      )}
+      </Modal>
+
+      {/* Confirmation prompt before closing revision modal */}
+      <Modal
+        open={confirmCloseOpen}
+        onClose={() => setConfirmCloseOpen(false)}
+        title="Confirm Exit"
+        subtitle="You are about to close the revision proposal editor."
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-ink-600 leading-relaxed">
+            Do you want to save and submit your changes before closing, or discard and exit?
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-ink-100">
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmCloseOpen(false)}
+            >
+              Keep Editing
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmDiscard}
+            >
+              Discard & Close
+            </Button>
+            {summary.trim() && (
+              <Button
+                icon={FilePlus2}
+                onClick={propose}
+                loading={saving}
+              >
+                Save & Submit
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
 
       {/* The controlled document (printable) */}
       <div className="bg-surface border border-line rounded-xl shadow-card p-6 md:p-8 print:border-0 print:p-0 space-y-6" id="procedure-doc">

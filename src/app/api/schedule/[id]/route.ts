@@ -1,8 +1,8 @@
 // src/app/api/schedule/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { maintenanceSchedule, auditLog } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { maintenanceSchedule, auditLog, equipment, workOrders } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
@@ -111,11 +111,50 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       set.assistantIds = JSON.stringify(next);
     }
 
-    if (Object.keys(set).length === 0) {
-      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    // If applyToCategory is requested, find all schedule rows for that category and date
+    let targetIds = [id];
+    let categoryLabel: string | null = null;
+    const [eqItem] = await db
+      .select({ category: equipment.category })
+      .from(equipment)
+      .where(eq(equipment.id, row.equipmentId))
+      .limit(1);
+
+    if (body.applyToCategory && eqItem?.category) {
+      const catRows = await db
+        .select({ id: maintenanceSchedule.id })
+        .from(maintenanceSchedule)
+        .innerJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id))
+        .where(
+          and(
+            eq(maintenanceSchedule.plannedDate, row.plannedDate),
+            eq(equipment.category, eqItem.category),
+            eq(maintenanceSchedule.activityType, row.activityType),
+          ),
+        );
+      if (catRows.length > 0) {
+        targetIds = catRows.map((c) => c.id);
+      }
     }
 
-    await db.update(maintenanceSchedule).set(set).where(eq(maintenanceSchedule.id, id));
+    await db.update(maintenanceSchedule).set(set).where(inArray(maintenanceSchedule.id, targetIds));
+
+    // If this schedule row is associated with a batch and assignment was updated, sync child work orders
+    if (row.batchId && touchesAssignment) {
+      const woIds = (
+        await db.select({ id: workOrders.id }).from(workOrders).where(eq(workOrders.batchId, row.batchId))
+      ).map((w) => w.id);
+      if (woIds.length > 0) {
+        await db
+          .update(workOrders)
+          .set({
+            technicianId: set.responsiblePersonId || null,
+            technicianName: set.responsiblePersonName || null,
+            assistantIds: set.assistantIds,
+          })
+          .where(inArray(workOrders.id, woIds));
+      }
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),
@@ -128,7 +167,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ? `Activity DEFERRED to review ${set.deferredReviewDate}, ${set.deferredReason}`
         : set.plannedDate
           ? `Activity rescheduled to ${set.plannedDate}`
-          : `Activity updated`,
+          : targetIds.length > 1
+            ? `Assigned category schedule (${targetIds.length} machines)`
+            : `Activity updated`,
     });
 
     // Being given work you were not told about is how a PM goes quietly overdue.
@@ -146,7 +187,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           title: newLead.length
             ? `${row.activityType} assigned to you, due ${when}`
             : `You are on a ${row.activityType} due ${when}`,
-          body: row.taskDescription || `Scheduled ${row.activityType} activity.`,
+          body: targetIds.length > 1
+            ? `Assigned to ${targetIds.length} machines for planned ${row.activityType} schedule.`
+            : row.taskDescription || `Scheduled ${row.activityType} activity.`,
           linkPath: "/schedule",
           relatedEntityType: "maintenance_schedule",
           relatedEntityId: id,

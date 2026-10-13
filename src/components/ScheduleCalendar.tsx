@@ -13,6 +13,7 @@ import Modal from "@/components/Modal";
 import { MONTH_NAMES } from "@/lib/constants";
 import SegmentedControl from "@/components/SegmentedControl";
 import { toast } from "sonner";
+import { useCategoryLabels } from "@/lib/use-category-labels";
 
 type Row = {
   id: string;
@@ -134,7 +135,50 @@ export default function ScheduleCalendar({
     return `${cursor.getFullYear()}`;
   }, [view, cursor]);
 
+  const categoryLabels = useCategoryLabels();
+
   const selectedRows = selected ? byDay.get(selected) ?? [] : [];
+
+  const groupedCategories = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        key: string;
+        category: string | null;
+        categoryLabel: string;
+        activityType: string;
+        status: string;
+        batchId: string | null;
+        plannedDate: string;
+        firstRow: Row;
+        equipments: Row[];
+      }
+    >();
+
+    for (const r of selectedRows) {
+      const key = r.category ? `${r.activityType}::${r.category}` : `SINGLE::${r.id}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          category: r.category,
+          categoryLabel: r.category
+            ? (categoryLabels[r.category] ?? r.category)
+            : (r.equipmentName ?? r.assetId ?? "Individual Equipment"),
+          activityType: r.activityType,
+          status: r.status,
+          batchId: r.batchId,
+          plannedDate: r.plannedDate,
+          firstRow: r,
+          equipments: [],
+        });
+      }
+      const g = map.get(key)!;
+      g.equipments.push(r);
+      if (!g.batchId && r.batchId) g.batchId = r.batchId;
+      if (r.status === "OVERDUE" || r.status === "MISSED") g.status = "OVERDUE";
+    }
+    return Array.from(map.values());
+  }, [selectedRows, categoryLabels]);
 
   return (
     <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
@@ -171,20 +215,20 @@ export default function ScheduleCalendar({
       </div>
 
       <div className="p-4">
-        {view === "week" && <WeekGrid cursor={cursor} byDay={byDay} todayStr={todayStr} onPick={setSelected} />}
-        {view === "month" && <MonthGrid year={cursor.getFullYear()} month={cursor.getMonth()} byDay={byDay} todayStr={todayStr} onPick={setSelected} />}
+        {view === "week" && <WeekGrid cursor={cursor} byDay={byDay} todayStr={todayStr} onPick={setSelected} categoryLabels={categoryLabels} />}
+        {view === "month" && <MonthGrid year={cursor.getFullYear()} month={cursor.getMonth()} byDay={byDay} todayStr={todayStr} onPick={setSelected} categoryLabels={categoryLabels} />}
         {view === "quarter" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => {
               const m = Math.floor(cursor.getMonth() / 3) * 3 + i;
-              return <MiniMonth key={m} year={cursor.getFullYear()} month={m} byDay={byDay} todayStr={todayStr} onPick={setSelected} />;
+              return <MiniMonth key={m} year={cursor.getFullYear()} month={m} byDay={byDay} todayStr={todayStr} onPick={setSelected} categoryLabels={categoryLabels} />;
             })}
           </div>
         )}
         {view === "year" && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 12 }, (_, m) => (
-              <MiniMonth key={m} year={cursor.getFullYear()} month={m} byDay={byDay} todayStr={todayStr} onPick={setSelected} />
+              <MiniMonth key={m} year={cursor.getFullYear()} month={m} byDay={byDay} todayStr={todayStr} onPick={setSelected} categoryLabels={categoryLabels} />
             ))}
           </div>
         )}
@@ -198,7 +242,7 @@ export default function ScheduleCalendar({
             <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[k]}`} /> {l}
           </span>
         ))}
-        <span className="ml-auto">Click any day for details or to schedule work</span>
+        <span className="ml-auto">Click any day to view category batches & equipment</span>
       </div>
 
       {/* Day modal */}
@@ -206,75 +250,73 @@ export default function ScheduleCalendar({
         open={selected !== null}
         onClose={() => setSelected(null)}
         title={selected ? new Date(selected + "T00:00:00").toDateString() : ""}
-        subtitle={`${selectedRows.length} scheduled activit${selectedRows.length === 1 ? "y" : "ies"}`}
+        subtitle={`${groupedCategories.length} category schedule${groupedCategories.length === 1 ? "" : "s"} (${selectedRows.length} equipment total)`}
       >
-        {selectedRows.length > 0 ? (
-          <div className="space-y-3">
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {selectedRows.map((r) => (
-                <div key={r.id} className="p-3 border border-ink-200 rounded-lg">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-ink-900">{r.equipmentName ?? "-"}</span>
-                    <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[r.status] ?? "bg-ink-400"}`} title={r.status} />
-                  </div>
-                  <p className="text-xs text-ink-500">{r.assetId}</p>
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-600">
-                    <span className="px-1.5 py-0.5 rounded-lg bg-ink-100 font-bold">{r.activityType}</span>
-                    <span>{r.status}</span>
-                    {/* Only once the work is done.
-                        While an activity is still pending or overdue, nobody is
-                        carrying it: the plan schedules a category on a date, and
-                        who does it is decided when the work order is raised and
-                        assigned. A name here beforehand asserts an accountability
-                        that does not exist yet, and reads as though somebody is
-                        already late on it.
+        {groupedCategories.length > 0 ? (
+          <div className="space-y-4">
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+              {groupedCategories.map((g) => (
+                <div key={g.key} className="p-3.5 border border-ink-200 rounded-xl bg-surface space-y-3">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-ink-900">{g.categoryLabel}</span>
+                        <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[g.status] ?? "bg-ink-400"}`} title={g.status} />
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-ink-500">
+                        <span className="px-1.5 py-0.5 rounded bg-ink-100 font-bold text-ink-700">{g.activityType}</span>
+                        <span>{g.equipments.length} machine{g.equipments.length === 1 ? "" : "s"} in schedule</span>
+                      </div>
+                    </div>
 
-                        After completion the same name is the opposite thing — a
-                        record of who actually did it — so it is worth showing,
-                        and labelled so it cannot be misread as an assignment. */}
-                    {r.status === "COMPLETED" && r.responsiblePersonName && (
-                      <span>· Done by {r.responsiblePersonName}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    {/* A PM is not raised one machine at a time any more. The
-                        plan schedules a category on a date, and every machine of
-                        that category due that day is one job with one method
-                        statement, one hazard analysis and one permit. Offering a
-                        single-machine work order here would quietly produce the
-                        thing the batch exists to prevent. Corrective work is
-                        still one machine, so it still gets a work order. */}
-                    {r.batchId && (
-                      <Link href={`/pm-batches/${r.batchId}`} className="text-xs text-brand-600 hover:underline">
-                        Open the PM batch →
-                      </Link>
-                    )}
-                    {r.workOrderId && (
-                      <Link href={`/work-orders/${r.workOrderId}`} className="text-xs text-brand-600 hover:underline">
-                        View work order →
-                      </Link>
-                    )}
-                    {!r.batchId &&
-                      !r.workOrderId &&
-                      (r.activityType === "PM" || r.activityType === "INS" ? (
+                    <div className="flex items-center gap-2">
+                      {g.batchId ? (
+                        <Link
+                          href={`/pm-batches/${g.batchId}`}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100"
+                        >
+                          Open PM Batch →
+                        </Link>
+                      ) : (g.activityType === "PM" || g.activityType === "INS") && g.category ? (
                         canRaiseBatch ? (
                           <button
-                            onClick={() => raiseBatch(r)}
-                            disabled={raising === r.id}
-                            className="text-xs text-info-600 hover:underline disabled:opacity-50"
+                            onClick={() => raiseBatch(g.firstRow)}
+                            disabled={raising === g.firstRow.id}
+                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-50"
                           >
-                            {raising === r.id ? "Raising…" : "Raise PM batch →"}
+                            {raising === g.firstRow.id ? "Raising…" : `Raise PM Batch (${g.equipments.length}) →`}
                           </button>
                         ) : (
-                          // An always-refused control is worse than none, so it
-                          // says whose job this is instead.
-                          <span className="text-xs text-ink-500">A foreman or above raises this PM</span>
+                          <span className="text-xs text-ink-400">Foreman raises batch</span>
                         )
-                      ) : (
-                        <Link href={`/work-orders/new?scheduleId=${r.id}`} className="text-xs text-info-600 hover:underline">
-                          Raise work order →
-                        </Link>
-                      ))}
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {/* List of equipments in this category */}
+                  <div className="border border-ink-100 rounded-lg overflow-hidden divide-y divide-ink-100 bg-ink-50/50">
+                    {g.equipments.map((r) => (
+                      <div key={r.id} className="p-2.5 flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-ink-900 truncate">{r.equipmentName ?? r.assetId}</p>
+                          <p className="text-xs text-ink-400">
+                            {r.assetId} · {r.status}
+                            {r.responsiblePersonName ? ` · Responsible: ${r.responsiblePersonName}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {r.workOrderId ? (
+                            <Link href={`/work-orders/${r.workOrderId}`} className="text-brand-600 hover:underline font-medium">
+                              Work Order →
+                            </Link>
+                          ) : (
+                            <Link href={`/equipment/${r.assetId?.replace(/\//g, "-")}`} className="text-ink-500 hover:underline">
+                              Equipment →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -320,6 +362,7 @@ function DayCell({
   todayStr,
   onPick,
   compact,
+  categoryLabels,
 }: {
   date: Date;
   inMonth: boolean;
@@ -327,20 +370,39 @@ function DayCell({
   todayStr: string;
   onPick: (d: string) => void;
   compact?: boolean;
+  categoryLabels?: Record<string, string>;
 }) {
   const key = ymd(date);
   const isToday = key === todayStr;
+
+  const dayGroups = useMemo(() => {
+    const map = new Map<string, { label: string; activityType: string; count: number; status: string }>();
+    for (const a of acts) {
+      const catKey = a.category ? `${a.activityType}::${a.category}` : `ID::${a.id}`;
+      if (!map.has(catKey)) {
+        const label = a.category
+          ? (categoryLabels?.[a.category] ?? a.category)
+          : (a.assetId ?? a.equipmentName ?? "Eq.");
+        map.set(catKey, { label, activityType: a.activityType, count: 0, status: a.status });
+      }
+      const item = map.get(catKey)!;
+      item.count += 1;
+      if (a.status === "OVERDUE" || a.status === "MISSED") item.status = "OVERDUE";
+    }
+    return Array.from(map.values());
+  }, [acts, categoryLabels]);
+
   return (
     <button
       onClick={() => onPick(key)}
       className={`relative border border-ink-100 rounded-lg text-left transition-colors hover:bg-brand-50 ${
- compact ? "h-9 p-1" : "min-h-[76px] p-1.5"
- } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
+        compact ? "h-9 p-1" : "min-h-[76px] p-1.5"
+      } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
     >
       <span
         className={`inline-flex items-center justify-center text-xs ${compact ? "" : "font-semibold"} ${
- isToday ? "bg-brand-600 text-white w-4 h-4 rounded-full" : inMonth ? "text-ink-600" : "text-ink-300"
- }`}
+          isToday ? "bg-brand-600 text-white w-4 h-4 rounded-full" : inMonth ? "text-ink-600" : "text-ink-300"
+        }`}
       >
         {date.getDate()}
       </span>
@@ -353,25 +415,38 @@ function DayCell({
           </div>
         ) : (
           <div className="mt-1 space-y-0.5">
-            {acts.slice(0, 3).map((a, i) => (
+            {dayGroups.slice(0, 3).map((g, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1 text-xs text-ink-600 truncate"
-                title={`${a.activityType} · ${a.equipmentName} · ${a.status}`}
+                className="flex items-center gap-1 text-xs text-ink-700 truncate"
+                title={`${g.activityType} · ${g.label} (${g.count} machine${g.count === 1 ? "" : "s"}) · ${g.status}`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-ink-400"}`} />
-                <span className="font-bold">{a.activityType}</span>
-                <span className="truncate text-ink-400">{a.assetId}</span>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[g.status] ?? "bg-ink-400"}`} />
+                <span className="font-bold text-ink-900">{g.activityType}</span>
+                <span className="truncate text-ink-700">{g.label}</span>
+                {g.count > 1 && <span className="text-ink-400 font-normal">({g.count})</span>}
               </div>
             ))}
-            {acts.length > 3 && <div className="text-xs text-ink-400">+{acts.length - 3} more</div>}
+            {dayGroups.length > 3 && <div className="text-xs text-ink-400">+{dayGroups.length - 3} more</div>}
           </div>
         ))}
     </button>
   );
 }
 
-function WeekGrid({ cursor, byDay, todayStr, onPick }: { cursor: Date; byDay: Map<string, Row[]>; todayStr: string; onPick: (d: string) => void }) {
+function WeekGrid({
+  cursor,
+  byDay,
+  todayStr,
+  onPick,
+  categoryLabels,
+}: {
+  cursor: Date;
+  byDay: Map<string, Row[]>;
+  todayStr: string;
+  onPick: (d: string) => void;
+  categoryLabels?: Record<string, string>;
+}) {
   const start = startOfWeek(cursor);
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   return (
@@ -381,14 +456,28 @@ function WeekGrid({ cursor, byDay, todayStr, onPick }: { cursor: Date; byDay: Ma
       ))}
       {days.map((d) => (
         <div key={ymd(d)} className="min-h-[140px]">
-          <DayCell date={d} inMonth acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} />
+          <DayCell date={d} inMonth acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} categoryLabels={categoryLabels} />
         </div>
       ))}
     </div>
   );
 }
 
-function MonthGrid({ year, month, byDay, todayStr, onPick }: { year: number; month: number; byDay: Map<string, Row[]>; todayStr: string; onPick: (d: string) => void }) {
+function MonthGrid({
+  year,
+  month,
+  byDay,
+  todayStr,
+  onPick,
+  categoryLabels,
+}: {
+  year: number;
+  month: number;
+  byDay: Map<string, Row[]>;
+  todayStr: string;
+  onPick: (d: string) => void;
+  categoryLabels?: Record<string, string>;
+}) {
   const first = new Date(year, month, 1);
   const gridStart = startOfWeek(first);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
@@ -398,13 +487,27 @@ function MonthGrid({ year, month, byDay, todayStr, onPick }: { year: number; mon
         <div key={d} className="text-center text-xs font-semibold text-ink-400 pb-1">{d}</div>
       ))}
       {cells.map((d) => (
-        <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} />
+        <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} categoryLabels={categoryLabels} />
       ))}
     </div>
   );
 }
 
-function MiniMonth({ year, month, byDay, todayStr, onPick }: { year: number; month: number; byDay: Map<string, Row[]>; todayStr: string; onPick: (d: string) => void }) {
+function MiniMonth({
+  year,
+  month,
+  byDay,
+  todayStr,
+  onPick,
+  categoryLabels,
+}: {
+  year: number;
+  month: number;
+  byDay: Map<string, Row[]>;
+  todayStr: string;
+  onPick: (d: string) => void;
+  categoryLabels?: Record<string, string>;
+}) {
   const first = new Date(year, month, 1);
   const gridStart = startOfWeek(first);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
@@ -416,7 +519,7 @@ function MiniMonth({ year, month, byDay, todayStr, onPick }: { year: number; mon
           <div key={d} className="text-center text-xs text-ink-300">{d[0]}</div>
         ))}
         {cells.map((d) => (
-          <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} compact />
+          <DayCell key={ymd(d)} date={d} inMonth={d.getMonth() === month} acts={byDay.get(ymd(d)) ?? []} todayStr={todayStr} onPick={onPick} compact categoryLabels={categoryLabels} />
         ))}
       </div>
     </div>

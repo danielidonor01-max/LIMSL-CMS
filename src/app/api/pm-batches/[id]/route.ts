@@ -17,6 +17,8 @@ import {
   permits,
   users,
   auditLog,
+  pmChecklists,
+  workOrderTimeLogs,
 } from "@/lib/db/schema";
 import { eq, inArray, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -32,7 +34,7 @@ async function loadBatch(id: string) {
   const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, id)).limit(1);
   if (!batch) return null;
 
-  const wos = await db
+  const rawWos = await db
     .select({
       id: workOrders.id,
       workOrderNumber: workOrders.workOrderNumber,
@@ -40,12 +42,68 @@ async function loadBatch(id: string) {
       title: workOrders.title,
       status: workOrders.status,
       technicianName: workOrders.technicianName,
+      startDate: workOrders.startDate,
+      completionDate: workOrders.completionDate,
       assetId: equipment.assetId,
       machineName: equipment.name,
+      location: equipment.location,
     })
     .from(workOrders)
     .leftJoin(equipment, eq(workOrders.equipmentId, equipment.id))
     .where(eq(workOrders.batchId, id));
+
+  const woIds = rawWos.map((w) => w.id);
+  const [checklists, timeLogs] = await Promise.all([
+    woIds.length > 0
+      ? db
+          .select({
+            workOrderId: pmChecklists.workOrderId,
+            observations: pmChecklists.observations,
+            correctiveActionRequired: pmChecklists.correctiveActionRequired,
+            actionDescription: pmChecklists.actionDescription,
+            technicianName: pmChecklists.technicianName,
+            signedAt: pmChecklists.signedAt,
+            pmCompleted: pmChecklists.pmCompleted,
+            date: pmChecklists.date,
+          })
+          .from(pmChecklists)
+          .where(inArray(pmChecklists.workOrderId, woIds))
+      : [],
+    woIds.length > 0
+      ? db
+          .select({
+            workOrderId: workOrderTimeLogs.workOrderId,
+            startedAt: workOrderTimeLogs.startedAt,
+            endedAt: workOrderTimeLogs.endedAt,
+          })
+          .from(workOrderTimeLogs)
+          .where(inArray(workOrderTimeLogs.workOrderId, woIds))
+      : [],
+  ]);
+
+  const wos = rawWos.map((w) => {
+    const chk = checklists.find((c) => c.workOrderId === w.id);
+    const logs = timeLogs.filter((l) => l.workOrderId === w.id);
+    const starts = logs.map((l) => l.startedAt).filter(Boolean).sort();
+    const ends = logs.map((l) => l.endedAt).filter(Boolean).sort();
+    const earliestStart = starts[0] ?? w.startDate ?? null;
+    const latestEnd = ends[ends.length - 1] ?? w.completionDate ?? chk?.signedAt ?? null;
+    return {
+      ...w,
+      checklist: chk
+        ? {
+            completed: Boolean(chk.pmCompleted),
+            observations: chk.observations ?? null,
+            correctiveActionRequired: Boolean(chk.correctiveActionRequired),
+            actionDescription: chk.actionDescription ?? null,
+            signedAt: chk.signedAt ?? chk.date ?? null,
+            technicianName: chk.technicianName ?? null,
+          }
+        : null,
+      startedAt: earliestStart,
+      completedAt: latestEnd,
+    };
+  });
 
   // The method statement and hazard analysis belong to the CATEGORY, not to
   // this batch. A crane WMS approved in March is the crane WMS in October; the

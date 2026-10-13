@@ -7,7 +7,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { workOrders, maintenanceSchedule, equipment } from "@/lib/db/schema";
+import { workOrders, maintenanceSchedule, equipment, pmBatches } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { reconcileWorkOrderApprovals, approvalBlockMessage } from "@/lib/work-order-approval";
 import type { Task } from "@/lib/my-tasks";
@@ -34,17 +34,46 @@ export async function GET() {
   try {
     await reconcileWorkOrderApprovals();
 
-    const [wos, schedule, eqList] = await Promise.all([
+    const [wos, schedule, eqList, batches] = await Promise.all([
       db.select().from(workOrders),
       db.select().from(maintenanceSchedule),
       db.select().from(equipment),
+      db.select().from(pmBatches),
     ]);
     const eqName = new Map(eqList.map((e) => [e.id, e.name]));
 
     const tasks: Task[] = [];
+    const myBatchIds = new Set<string>();
+
+    // PM batches assigned to the technician carrying the whole group of equipment
+    for (const b of batches) {
+      if (b.status === "COMPLETED" || b.status === "CANCELLED") continue;
+      const batchWos = wos.filter((w) => w.batchId === b.id);
+      const lead = b.assignedToId === me || batchWos.some((w) => w.technicianId === me);
+      const assisting =
+        !lead &&
+        (assistants(b.assistantIds).includes(me) ||
+          batchWos.some((w) => assistants(w.assistantIds).includes(me)));
+      if (!lead && !assisting) continue;
+
+      myBatchIds.add(b.id);
+      tasks.push({
+        kind: "WORK_ORDER",
+        id: b.id,
+        code: b.batchNumber,
+        title: `${b.title} (${batchWos.length} machine${batchWos.length === 1 ? "" : "s"})`,
+        href: `/pm-batches/${b.id}`,
+        dueDate: b.plannedDate ?? null,
+        status: b.status,
+        assisting,
+        blockedReason: null,
+      });
+    }
 
     for (const w of wos) {
       if (DONE_WO.includes(w.status)) continue;
+      // Batched work orders are reached through their parent PM batch in My Tasks
+      if (w.batchId && myBatchIds.has(w.batchId)) continue;
       const lead = w.technicianId === me;
       const assisting = !lead && assistants(w.assistantIds).includes(me);
       if (!lead && !assisting) continue;

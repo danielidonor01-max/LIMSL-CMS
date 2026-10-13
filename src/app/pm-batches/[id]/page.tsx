@@ -23,16 +23,35 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES } from "@/lib/roles";
 import { WO_STATUS_LABELS, WO_STATUS_BADGE } from "@/lib/constants";
 import type { FlowState } from "@/lib/maintenance/flow";
-import { UserCheck } from "lucide-react";
+import {
+  UserCheck,
+  CheckCircle2,
+  Clock,
+  ClipboardCheck,
+  FileText,
+  AlertTriangle,
+} from "lucide-react";
 
 type BatchWo = {
   id: string;
   workOrderNumber: string;
+  equipmentId?: string | null;
   title: string;
   status: string;
   assetId?: string | null;
   machineName?: string | null;
+  location?: string | null;
   technicianName?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  checklist?: {
+    completed: boolean;
+    observations?: string | null;
+    correctiveActionRequired: boolean;
+    actionDescription?: string | null;
+    signedAt?: string | null;
+    technicianName?: string | null;
+  } | null;
 };
 
 type Batch = {
@@ -252,54 +271,184 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
             </section>
 
             {/* The machines, which is what the batch actually is */}
+            {/* The machines, which is what the batch actually is */}
             <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
-              <header className="px-4 py-3 border-b border-line">
-                <h2 className="text-sm font-semibold text-ink-900">
-                  Machines in this batch
-                </h2>
-                <p className="text-xs text-ink-500 mt-0.5">
-                  One work order each, because history and checklists are per machine. The method
-                  statement, hazard analysis and permit cover all of them.
-                </p>
+              <header className="px-4 py-3 border-b border-line flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-sm font-semibold text-ink-900">
+                    Machines in this batch to work on
+                  </h2>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Select an equipment from the list below to conduct its PM checklist. The WMS, JHA, and PTW cover all equipment in this schedule.
+                  </p>
+                </div>
+                <Badge className="bg-ink-100 text-ink-700">
+                  {batch.workOrders.filter((w) => w.status === "COMPLETED").length} of {batch.workOrders.length} Completed
+                </Badge>
               </header>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-line text-ink-500 text-xs">
                       <th className="py-2.5 px-4 font-medium whitespace-nowrap">WO #</th>
-                      <th className="py-2.5 px-4 font-medium">Machine</th>
-                      <th className="py-2.5 px-4 font-medium whitespace-nowrap">Technician</th>
+                      <th className="py-2.5 px-4 font-medium">Machine & Asset</th>
                       <th className="py-2.5 px-4 font-medium whitespace-nowrap">Status</th>
+                      <th className="py-2.5 px-4 font-medium text-right">Checklist Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
-                    {batch.workOrders.map((w) => (
-                      <tr key={w.id} className="hover:bg-ink-50 transition-colors">
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <Link
-                            href={`/work-orders/${w.id}`}
-                            className="font-semibold text-ink-900 hover:text-brand-700"
-                          >
-                            {w.workOrderNumber}
-                          </Link>
-                        </td>
-                        <td className="py-3 px-4 text-ink-700">
-                          {[w.assetId, w.machineName].filter(Boolean).join(" ") || w.title}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-ink-600">
-                          {w.technicianName ?? "—"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <Badge className={WO_STATUS_BADGE[w.status] ?? WO_STATUS_BADGE.OPEN}>
-                            {WO_STATUS_LABELS[w.status] ?? w.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
+                    {batch.workOrders.map((w) => {
+                      const isComplete = w.status === "COMPLETED" || Boolean(w.checklist?.completed);
+                      return (
+                        <tr key={w.id} className="hover:bg-ink-50 transition-colors">
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <Link
+                              href={`/work-orders/${w.id}`}
+                              className="font-semibold text-ink-900 hover:text-brand-700"
+                            >
+                              {w.workOrderNumber}
+                            </Link>
+                          </td>
+                          <td className="py-3 px-4 text-ink-700">
+                            <div className="font-medium text-ink-900">
+                              {[w.assetId, w.machineName].filter(Boolean).join(" ") || w.title}
+                            </div>
+                            {w.location && (
+                              <div className="text-xs text-ink-400 mt-0.5">{w.location}</div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <Badge className={WO_STATUS_BADGE[w.status] ?? WO_STATUS_BADGE.OPEN}>
+                              {WO_STATUS_LABELS[w.status] ?? w.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            {isComplete ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <span className="inline-flex items-center gap-1 text-xs text-brand-700 font-medium">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-600" /> Done
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  href={`/work-orders/${w.id}/pm-checklist`}
+                                  icon={FileText}
+                                >
+                                  View Checklist
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                href={`/work-orders/${w.id}/pm-checklist`}
+                                icon={ClipboardCheck}
+                              >
+                                Fill Checklist
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </section>
+
+            {/* Completed PM Work & Execution Records table */}
+            {batch.workOrders.some((w) => w.status === "COMPLETED" || w.checklist?.completed) && (
+              <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+                <header className="px-4 py-3 border-b border-line bg-brand-50/30">
+                  <h2 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-brand-600" /> Completed PM Work & Execution Records
+                  </h2>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Logged work records, execution window timestamps (start to finish), inspection findings, and details.
+                  </p>
+                </header>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-line text-ink-500">
+                        <th className="py-3 px-4 font-medium">Equipment</th>
+                        <th className="py-3 px-4 font-medium whitespace-nowrap">Technician</th>
+                        <th className="py-3 px-4 font-medium whitespace-nowrap">Execution Window</th>
+                        <th className="py-3 px-4 font-medium">Findings & Work Done</th>
+                        <th className="py-3 px-4 font-medium text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-ink-200">
+                      {batch.workOrders
+                        .filter((w) => w.status === "COMPLETED" || w.checklist?.completed)
+                        .map((w) => (
+                          <tr key={w.id} className="hover:bg-ink-50">
+                            <td className="py-3 px-4">
+                              <div className="font-semibold text-ink-900">
+                                {w.machineName ?? w.assetId ?? w.title}
+                              </div>
+                              <div className="text-xs text-ink-400">{w.assetId} · {w.workOrderNumber}</div>
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap text-ink-700">
+                              {w.checklist?.technicianName || w.technicianName || "—"}
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap text-ink-700">
+                              <div className="flex items-center gap-1.5 text-ink-900">
+                                <Clock className="w-3.5 h-3.5 text-ink-400" />
+                                <span>{w.startedAt ? formatDate(w.startedAt) : "—"}</span>
+                              </div>
+                              {w.completedAt && (
+                                <div className="text-xs text-ink-500 mt-0.5">
+                                  Finished: {formatDate(w.completedAt)}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 max-w-xs">
+                              <div className="line-clamp-2 text-ink-800">
+                                {w.checklist?.observations || "All PM checkpoints verified and satisfactory."}
+                              </div>
+                              {w.checklist?.correctiveActionRequired && (
+                                <div className="mt-1 flex items-center gap-1 text-danger-700 font-medium text-xs">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span>Defect Flagged: {w.checklist.actionDescription || "Corrective action needed"}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  href={`/work-orders/${w.id}/pm-checklist`}
+                                  icon={FileText}
+                                >
+                                  Checklist
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  href={`/work-orders/${w.id}`}
+                                >
+                                  Details
+                                </Button>
+                                {w.checklist?.correctiveActionRequired && w.equipmentId && (
+                                  <Button
+                                    size="sm"
+                                    variant="danger"
+                                    href={`/corrective/new?equipmentId=${w.equipmentId}`}
+                                    icon={AlertTriangle}
+                                  >
+                                    Log CM
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </div>
 
           <FlowRail flow={batch.flow} role={role} links={links} className="lg:sticky lg:top-4" />

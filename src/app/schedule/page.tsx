@@ -158,6 +158,40 @@ export default function SchedulePage() {
   );
   const [snooze, setSnooze] = useState<{ row: ScheduleRow; reason: string; until: string } | null>(null);
   const [assign, setAssign] = useState<ScheduleRow | null>(null);
+  const [tableMode, setTableMode] = useState<"category" | "individual">("category");
+  const [viewingCategoryGroup, setViewingCategoryGroup] = useState<{
+    categoryLabel: string;
+    plannedDate: string;
+    rows: ScheduleRow[];
+  } | null>(null);
+
+  const raiseBatch = async (r: ScheduleRow) => {
+    if (!r.category) {
+      toast.error("This activity has no equipment category, so it cannot be batched.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/pm-batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: r.category, plannedDate: r.plannedDate }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not raise the batch.");
+        return;
+      }
+      toast.success(
+        `${d.batchNumber} raised, covering ${d.machineCount} machine${d.machineCount === 1 ? "" : "s"}.`,
+      );
+      router.push(`/pm-batches/${d.id}`);
+    } catch {
+      toast.error("Could not raise the batch.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submitAssign = async (next: { leadId: string; leadName: string; assistantIds: string[] }) => {
     if (!assign) return;
@@ -170,6 +204,7 @@ export default function SchedulePage() {
           responsiblePersonId: next.leadId || null,
           responsiblePersonName: next.leadName || null,
           assistantIds: next.assistantIds,
+          applyToCategory: true,
         }),
       });
       const d = await res.json();
@@ -324,32 +359,6 @@ export default function SchedulePage() {
   // The work order goes in the menu rather than beside it, because it is
   // reached the same way everything else here is. What the row still SAYS,
   // in its own column, is whether one exists.
-  // Raising a batch from a row takes the row's CATEGORY and DATE, not the row,
-  // because that is what the batch is: every machine of that category due that
-  // day. The server works out which ones those are, so a stale screen cannot
-  // leave a machine out of the permit that is meant to cover it.
-  const raiseBatch = async (r: ScheduleRow) => {
-    if (!r.category) return;
-    try {
-      const res = await fetch("/api/pm-batches", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: r.category, plannedDate: r.plannedDate }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(d.error || "Could not raise the batch.");
-        return;
-      }
-      toast.success(
-        `${d.batchNumber} raised, covering ${d.machineCount} machine${d.machineCount === 1 ? "" : "s"}. ` +
-          `One work order each, and one permit for all of them.`,
-      );
-      router.push(`/pm-batches/${d.id}`);
-    } catch {
-      toast.error("Could not raise the batch.");
-    }
-  };
 
   const rowActions = (r: ScheduleRow) => [
     // Assigning names who carries the job. A technician may raise a work
@@ -462,6 +471,53 @@ export default function SchedulePage() {
     setQuarterFilter("ALL");
   };
 
+  type CategoryGroup = {
+    key: string;
+    plannedDate: string;
+    month: number | null;
+    quarter: number | null;
+    category: string | null;
+    categoryLabel: string;
+    activityType: string;
+    maintenanceFrequency: string | null;
+    responsiblePersonName: string | null;
+    assistantIds: string | null;
+    status: string;
+    batchId: string | null;
+    firstRow: ScheduleRow;
+    rows: ScheduleRow[];
+  };
+
+  const categoryGroups = useMemo(() => {
+    const map = new Map<string, CategoryGroup>();
+    for (const r of filtered) {
+      const catKey = r.category ? `${r.plannedDate}::${r.activityType}::${r.category}` : `ROW::${r.id}`;
+      if (!map.has(catKey)) {
+        map.set(catKey, {
+          key: catKey,
+          plannedDate: r.plannedDate,
+          month: r.month,
+          quarter: r.quarter,
+          category: r.category,
+          categoryLabel: r.category ? (EQUIPMENT_CATEGORY_LABELS[r.category] ?? r.category) : (r.equipmentName ?? "Individual Equipment"),
+          activityType: r.activityType,
+          maintenanceFrequency: r.maintenanceFrequency,
+          responsiblePersonName: r.responsiblePersonName,
+          assistantIds: r.assistantIds,
+          status: r.status,
+          batchId: r.batchId,
+          firstRow: r,
+          rows: [],
+        });
+      }
+      const g = map.get(catKey)!;
+      g.rows.push(r);
+      if (!g.batchId && r.batchId) g.batchId = r.batchId;
+      if (r.status === "OVERDUE" || r.status === "MISSED") g.status = "OVERDUE";
+    }
+    return Array.from(map.values());
+  }, [filtered, EQUIPMENT_CATEGORY_LABELS]);
+
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
@@ -566,6 +622,15 @@ export default function SchedulePage() {
           />
 
           <div className="flex flex-wrap items-center gap-2">
+            <SegmentedControl
+              ariaLabel="Schedule view grouping"
+              value={tableMode}
+              onChange={setTableMode}
+              options={[
+                { value: "category", label: "By Category" },
+                { value: "individual", label: "All Equipment" },
+              ]}
+            />
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-ink-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
@@ -643,6 +708,104 @@ export default function SchedulePage() {
                 onAction={() => setShowCreate(true)}
               />
             )
+          ) : tableMode === "category" ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-ink-200 text-ink-500">
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Planned</th>
+                    <th className="py-3.5 px-5 font-medium">Category & Equipment Coverage</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Activity</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Freq.</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Responsible</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Status</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">PM Batch</th>
+                    <th className="py-3.5 px-5 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink-200">
+                  {categoryGroups.map((g) => (
+                    <tr key={g.key} className="hover:bg-ink-50">
+                      <td className="py-3.5 px-5 whitespace-nowrap">
+                        <div className="tabular-nums text-ink-900">{formatDate(g.plannedDate)}</div>
+                        <div className="text-xs text-ink-500">
+                          {g.month ? MONTH_NAMES[g.month - 1] : ""} · Q{g.quarter}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-5 max-w-0 w-full">
+                        <div className="font-semibold text-ink-900 truncate">
+                          {g.categoryLabel}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewingCategoryGroup(g)}
+                            className="inline-flex items-center gap-1 text-xs text-brand-700 hover:text-brand-900 font-medium px-2 py-0.5 rounded bg-brand-50 border border-brand-200 hover:bg-brand-100"
+                          >
+                            <Layers className="w-3 h-3" />
+                            {g.rows.length} equipment in schedule →
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <Badge className={ACTIVITY_TYPE_BADGE[g.activityType]}>
+                          {g.activityType}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-5 text-ink-500">
+                        {FREQUENCY_LABELS[g.maintenanceFrequency ?? ""] ?? g.maintenanceFrequency ?? "-"}
+                      </td>
+                      <td className="py-3.5 px-5 text-ink-700">
+                        {g.responsiblePersonName ?? "-"}
+                        {safeIds(g.assistantIds).length > 0 && (
+                          <span className="text-ink-400"> +{safeIds(g.assistantIds).length}</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <Badge className={SCHEDULE_STATUS_BADGE[g.status]}>
+                          {SCHEDULE_STATUS_LABELS[g.status] ?? g.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-5 whitespace-nowrap">
+                        {g.batchId ? (
+                          <Link
+                            href={`/pm-batches/${g.batchId}`}
+                            className="text-brand-700 font-semibold hover:underline"
+                          >
+                            Open Batch →
+                          </Link>
+                        ) : canAssign && g.category && (g.activityType === "PM" || g.activityType === "INS") ? (
+                          <button
+                            onClick={() => raiseBatch(g.firstRow)}
+                            disabled={saving}
+                            className="text-xs text-brand-600 hover:underline font-semibold"
+                          >
+                            Raise PM Batch →
+                          </button>
+                        ) : (
+                          <span className="text-ink-400">Not batched</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setViewingCategoryGroup(g)}
+                          >
+                            View
+                          </Button>
+                          <KebabMenu
+                            ariaLabel={`Actions for ${g.categoryLabel} on ${g.plannedDate}`}
+                            items={rowActions(g.firstRow)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -945,6 +1108,114 @@ export default function SchedulePage() {
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setDefer(null)}>Cancel</Button>
                 <Button type="button" loading={saving} onClick={submitDefer}>Record deferral</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Category Equipment Breakdown Modal */}
+        <Modal
+          open={!!viewingCategoryGroup}
+          onClose={() => setViewingCategoryGroup(null)}
+          title={viewingCategoryGroup?.categoryLabel ?? "Category Equipment Coverage"}
+          subtitle={
+            viewingCategoryGroup
+              ? `Planned for ${formatDate(viewingCategoryGroup.plannedDate)} · ${viewingCategoryGroup.rows.length} equipment in schedule`
+              : ""
+          }
+        >
+          {viewingCategoryGroup && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-ink-100">
+                <span className="text-xs text-ink-600">
+                  All equipment scheduled in this category batch for{" "}
+                  <strong>{formatDate(viewingCategoryGroup.plannedDate)}</strong>:
+                </span>
+                {viewingCategoryGroup.rows[0]?.batchId ? (
+                  <Link
+                    href={`/pm-batches/${viewingCategoryGroup.rows[0].batchId}`}
+                    className="text-xs font-semibold text-brand-700 hover:underline inline-flex items-center gap-1"
+                  >
+                    Open PM Batch →
+                  </Link>
+                ) : canAssign && viewingCategoryGroup.rows[0]?.category && (viewingCategoryGroup.rows[0].activityType === "PM" || viewingCategoryGroup.rows[0].activityType === "INS") ? (
+                  <Button
+                    size="sm"
+                    loading={saving}
+                    onClick={() => {
+                      const first = viewingCategoryGroup.rows[0];
+                      setViewingCategoryGroup(null);
+                      raiseBatch(first);
+                    }}
+                  >
+                    Raise PM Batch
+                  </Button>
+                ) : null}
+              </div>
+
+              <div className="border border-line rounded-lg overflow-hidden max-h-80 overflow-y-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-canvas sticky top-0 border-b border-ink-200 text-ink-500">
+                    <tr>
+                      <th className="py-2.5 px-3 font-medium">Equipment</th>
+                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Asset ID</th>
+                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Status</th>
+                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Work Order</th>
+                      <th className="py-2.5 px-3 font-medium text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink-100">
+                    {viewingCategoryGroup.rows.map((row) => (
+                      <tr key={row.id} className="hover:bg-ink-50">
+                        <td className="py-2.5 px-3 font-medium text-ink-900">
+                          {row.equipmentName ?? "Unnamed equipment"}
+                        </td>
+                        <td className="py-2.5 px-3 text-ink-600 tabular-nums">
+                          {row.assetId ?? "-"}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <Badge className={SCHEDULE_STATUS_BADGE[row.status]}>
+                            {SCHEDULE_STATUS_LABELS[row.status] ?? row.status}
+                          </Badge>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {row.workOrderNumber ? (
+                            <Link
+                              href={`/work-orders/${row.workOrderId}`}
+                              className="text-brand-700 hover:underline font-medium"
+                            >
+                              {row.workOrderNumber}
+                            </Link>
+                          ) : (
+                            <span className="text-ink-400">None</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {row.equipmentId && (
+                              <Link
+                                href={`/equipment/${row.equipmentId}`}
+                                className="text-xs text-ink-600 hover:text-ink-900 px-2 py-0.5 rounded hover:bg-ink-100"
+                              >
+                                Asset card
+                              </Link>
+                            )}
+                            <KebabMenu
+                              ariaLabel={`Actions for ${row.equipmentName ?? row.assetId}`}
+                              items={rowActions(row)}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button variant="secondary" onClick={() => setViewingCategoryGroup(null)}>
+                  Close
+                </Button>
               </div>
             </div>
           )}
