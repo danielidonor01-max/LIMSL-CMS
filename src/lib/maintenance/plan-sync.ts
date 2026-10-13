@@ -11,9 +11,10 @@
 // overwrote them would erase those decisions silently, which is worse than
 // having no generator at all.
 import { db } from "@/lib/db";
-import { maintenanceSchedule, auditLog } from "@/lib/db/schema";
+import { maintenanceSchedule, auditLog, assetCategories } from "@/lib/db/schema";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
 import { plannedDatesFor, missingDates } from "./plan-generation";
 
 export type PlanSyncResult = { added: number; dates: string[]; skipped: number };
@@ -21,6 +22,7 @@ export type PlanSyncResult = { added: number; dates: string[]; skipped: number }
 export async function syncPlanForEquipment(
   machine: {
     id: string;
+    category?: string | null;
     assetId?: string | null;
     name?: string | null;
     maintenanceFrequency?: string | null;
@@ -37,9 +39,27 @@ export async function syncPlanForEquipment(
   const year = opts.year ?? new Date().getFullYear();
   const notBefore = opts.notBefore === null ? null : (opts.notBefore ?? new Date().toISOString().slice(0, 10));
 
+  let anchor = machine.lastMaintenanceDate || machine.commissioningDate || null;
+  if (!anchor && machine.category) {
+    let catStart = DEFAULT_CATEGORY_START_DATES[machine.category] || null;
+    try {
+      const [cat] = await db
+        .select({ defaultStartDate: assetCategories.defaultStartDate })
+        .from(assetCategories)
+        .where(eq(assetCategories.code, machine.category))
+        .limit(1);
+      if (cat?.defaultStartDate) catStart = cat.defaultStartDate;
+    } catch {
+      // fallback to DEFAULT_CATEGORY_START_DATES
+    }
+    if (catStart) {
+      anchor = `${year}-${catStart.slice(5, 10)}`;
+    }
+  }
+
   const wanted = plannedDatesFor({
     frequency: machine.maintenanceFrequency,
-    anchorDate: machine.lastMaintenanceDate || machine.commissioningDate || null,
+    anchorDate: anchor,
     year,
     notBefore,
   });

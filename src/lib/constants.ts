@@ -18,6 +18,21 @@ export const EQUIPMENT_CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
+export const DEFAULT_CATEGORY_START_DATES: Record<string, string> = {
+  CNC_HEAVY: "2026-01-26",
+  CRANE: "2026-01-20",
+  PRESS_ROLL_SHEAR: "2026-01-26",
+  OTHER: "2026-01-27",
+  FACILITY_AC: "2026-02-09",
+  COMPRESSOR: "2026-02-12",
+  WELDING: "2026-02-16",
+  SYSTEM: "2026-02-01",
+  MEASURING: "2026-03-03",
+  CNC_LIGHT: "2026-03-10",
+  ELECTRICAL_PANEL: "2026-03-18",
+  EARTHING: "2026-04-22",
+};
+
 export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
   OPERATIONAL: "Operational",
   UNDER_MAINTENANCE: "Under Maintenance",

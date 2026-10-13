@@ -178,6 +178,7 @@ export const assetCategories = pgTable("asset_categories", {
   code: text("code").primaryKey(), // CNC_LIGHT, EXCAVATION_DEVICE, ...
   label: text("label").notNull(),
   maintenanceFrequency: text("maintenance_frequency").notNull(), // MONTHLY | BI_MONTHLY | QUARTERLY | SEMI_ANNUAL | ANNUAL
+  defaultStartDate: text("default_start_date"), // YYYY-MM-DD annual start date
   isActive: boolean("is_active").notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
@@ -194,8 +195,10 @@ export const assetCategoryChanges = pgTable("asset_category_changes", {
   categoryCode: text("category_code").notNull(),
   proposedLabel: text("proposed_label").notNull(),
   proposedFrequency: text("proposed_frequency").notNull(),
+  proposedStartDate: text("proposed_start_date"),
   previousLabel: text("previous_label"),
   previousFrequency: text("previous_frequency"),
+  previousStartDate: text("previous_start_date"),
   reason: text("reason").notNull(),
   status: text("status").notNull().default("PENDING_APPROVAL"), // PENDING_APPROVAL | APPLIED | REJECTED
   proposedById: text("proposed_by_id").references(() => users.id),

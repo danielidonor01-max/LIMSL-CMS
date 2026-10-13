@@ -18,7 +18,7 @@ import { db } from "@/lib/db";
 import { assetCategories, equipment, auditLog } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { EQUIPMENT_CATEGORY_LABELS } from "@/lib/constants";
+import { EQUIPMENT_CATEGORY_LABELS, DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
 import { FREQUENCY_MONTHS } from "@/lib/maintenance/plan-generation";
 import { replanMachine } from "@/lib/maintenance/asset-categories";
 
@@ -27,6 +27,7 @@ const DDL = [
      code                  text PRIMARY KEY,
      label                 text NOT NULL,
      maintenance_frequency text NOT NULL,
+     default_start_date    text,
      is_active             boolean NOT NULL DEFAULT true,
      created_at            text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
      updated_at            text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -38,8 +39,10 @@ const DDL = [
      category_code       text NOT NULL,
      proposed_label      text NOT NULL,
      proposed_frequency  text NOT NULL,
+     proposed_start_date text,
      previous_label      text,
      previous_frequency  text,
+     previous_start_date text,
      reason              text NOT NULL,
      status              text NOT NULL DEFAULT 'PENDING_APPROVAL',
      proposed_by_id      text REFERENCES users(id),
@@ -131,7 +134,12 @@ async function main() {
   }
 
   for (const p of plan.filter((p) => p.isNew)) {
-    await db.insert(assetCategories).values({ code: p.code, label: p.label, maintenanceFrequency: p.frequency });
+    await db.insert(assetCategories).values({
+      code: p.code,
+      label: p.label,
+      maintenanceFrequency: p.frequency,
+      defaultStartDate: DEFAULT_CATEGORY_START_DATES[p.code] ?? null,
+    });
   }
 
   let replaced = 0;

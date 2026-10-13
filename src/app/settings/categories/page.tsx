@@ -13,7 +13,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight } from "lucide-react";
+import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar } from "lucide-react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
@@ -22,6 +22,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import Field, { FIELD_CLASS } from "@/components/Field";
+import DateField from "@/components/DateField";
 import { Badge } from "@/components/Badge";
 import KebabMenu from "@/components/KebabMenu";
 import EmptyState from "@/components/EmptyState";
@@ -35,6 +36,7 @@ type Category = {
   code: string;
   label: string;
   maintenanceFrequency: string;
+  defaultStartDate: string | null;
   machineCount: number;
   pendingChange: { id: string; changeNumber: string } | null;
 };
@@ -46,8 +48,10 @@ type Change = {
   categoryCode: string;
   proposedLabel: string;
   proposedFrequency: string;
+  proposedStartDate: string | null;
   previousLabel: string | null;
   previousFrequency: string | null;
+  previousStartDate: string | null;
   reason: string;
   status: "PENDING_APPROVAL" | "APPLIED" | "REJECTED";
   proposedByName: string | null;
@@ -79,9 +83,10 @@ type Draft = {
   categoryCode?: string;
   label: string;
   frequency: string;
+  startDate: string;
   reason: string;
   machineCount?: number;
-  previous?: { label: string; frequency: string };
+  previous?: { label: string; frequency: string; startDate?: string };
 };
 
 function AssetCategoriesView() {
@@ -138,6 +143,7 @@ function AssetCategoriesView() {
           categoryCode: draft.categoryCode,
           label: draft.label,
           frequency: draft.frequency,
+          startDate: draft.startDate || null,
           reason: draft.reason,
         }),
       });
@@ -158,14 +164,16 @@ function AssetCategoriesView() {
   };
 
   const intervalChanges =
-    draft?.kind === "UPDATE" && draft.previous && draft.previous.frequency !== draft.frequency;
+    draft?.kind === "UPDATE" &&
+    draft.previous &&
+    (draft.previous.frequency !== draft.frequency || (draft.previous.startDate ?? "") !== (draft.startDate ?? ""));
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Asset Categories"
-          subtitle="Each category sets how often its machines are serviced. Changes are signed off before the plan moves."
+          subtitle="Each category sets how often its machines are serviced and its annual schedule start date to prevent maintenance collisions."
           backHref={isAdmin ? "/settings" : "/approvals"}
           backLabel={isAdmin ? "Settings" : "My Approvals"}
           actions={
@@ -173,7 +181,13 @@ function AssetCategoriesView() {
               <Button
                 icon={Plus}
                 onClick={() =>
-                  setDraft({ kind: "CREATE", label: "", frequency: "QUARTERLY", reason: "" })
+                  setDraft({
+                    kind: "CREATE",
+                    label: "",
+                    frequency: "QUARTERLY",
+                    startDate: new Date().toISOString().slice(0, 10),
+                    reason: "",
+                  })
                 }
               >
                 Add a category
@@ -195,7 +209,7 @@ function AssetCategoriesView() {
         {/* ── The categories ───────────────────────────────────────────── */}
         <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {loading ? (
-            <TableSkeleton rows={6} cols={4} />
+            <TableSkeleton rows={6} cols={5} />
           ) : categories.length === 0 ? (
             <EmptyState
               icon={Tags}
@@ -208,7 +222,8 @@ function AssetCategoriesView() {
                 <thead>
                   <tr className="border-b border-line text-ink-500 text-xs">
                     <th className="py-2.5 px-4 font-medium">Category</th>
-                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Serviced</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Frequency</th>
+                    <th className="py-2.5 px-4 font-medium whitespace-nowrap">Annual Start</th>
                     <th className="py-2.5 px-4 font-medium whitespace-nowrap text-right">Machines</th>
                     <th className="py-2.5 px-4 font-medium whitespace-nowrap">Status</th>
                     <th className="py-2.5 px-4 font-medium text-right w-px">Actions</th>
@@ -222,6 +237,16 @@ function AssetCategoriesView() {
                         <p className="text-xs text-ink-500">{c.code}</p>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-ink-700">{freq(c.maintenanceFrequency)}</td>
+                      <td className="py-3 px-4 whitespace-nowrap text-ink-700">
+                        {c.defaultStartDate ? (
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand-50 border border-brand-200 text-xs text-brand-800 font-medium">
+                            <Calendar className="w-3 h-3 text-brand-600 shrink-0" />
+                            <span>{formatDate(c.defaultStartDate)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-ink-400">—</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4 whitespace-nowrap text-right tabular-nums text-ink-700">
                         {c.machineCount}
                       </td>
@@ -253,9 +278,14 @@ function AssetCategoriesView() {
                                     categoryCode: c.code,
                                     label: c.label,
                                     frequency: c.maintenanceFrequency,
+                                    startDate: c.defaultStartDate || "",
                                     reason: "",
                                     machineCount: c.machineCount,
-                                    previous: { label: c.label, frequency: c.maintenanceFrequency },
+                                    previous: {
+                                      label: c.label,
+                                      frequency: c.maintenanceFrequency,
+                                      startDate: c.defaultStartDate || "",
+                                    },
                                   }),
                               },
                             ]}
@@ -314,6 +344,11 @@ function AssetCategoriesView() {
                             <>
                               New category <span className="font-medium">{ch.proposedLabel}</span>, serviced{" "}
                               {freq(ch.proposedFrequency).toLowerCase()}
+                              {ch.proposedStartDate && (
+                                <span className="text-ink-500">
+                                  (starts {formatDate(ch.proposedStartDate)})
+                                </span>
+                              )}
                             </>
                           ) : (
                             <>
@@ -327,6 +362,11 @@ function AssetCategoriesView() {
                               )}
                               {ch.previousLabel !== ch.proposedLabel && (
                                 <span className="text-ink-500">renamed to {ch.proposedLabel}</span>
+                              )}
+                              {ch.previousStartDate !== ch.proposedStartDate && (
+                                <span className="text-ink-500 text-xs">
+                                  · start: {ch.proposedStartDate ? formatDate(ch.proposedStartDate) : "none"}
+                                </span>
                               )}
                             </>
                           )}
@@ -377,7 +417,7 @@ function AssetCategoriesView() {
                 className={FIELD_CLASS}
               />
             </Field>
-            <Field label="Serviced" htmlFor="cat-freq">
+            <Field label="Frequency" htmlFor="cat-freq">
               <Select
                 value={draft.frequency}
                 onChange={(v) => setDraft({ ...draft, frequency: v })}
@@ -391,12 +431,19 @@ function AssetCategoriesView() {
                 ))}
               </Select>
             </Field>
+            <Field label="Annual Schedule Start Date" htmlFor="cat-start-date">
+              <DateField
+                id="cat-start-date"
+                value={draft.startDate}
+                onChange={(v) => setDraft({ ...draft, startDate: v })}
+              />
+              <p className="text-xs text-ink-500 mt-1">
+                Staggers when maintenance begins in the annual plan so categories with the same interval (e.g. Quarterly) do not collide.
+              </p>
+            </Field>
             {intervalChanges && (
               <p className="text-xs text-ink-600 rounded-lg border border-info-500/20 bg-info-500/5 px-3 py-2 leading-relaxed">
-                Once signed, all {draft.machineCount ?? 0} machine{draft.machineCount === 1 ? "" : "s"} in this
-                category move from {freq(draft.previous?.frequency).toLowerCase()} to{" "}
-                {freq(draft.frequency).toLowerCase()}. Their future planned activities that nobody has started are
-                rebuilt; overdue, deferred and started ones stay as they are.
+                Once signed, future planned activities that nobody has started for all {draft.machineCount ?? 0} machine{draft.machineCount === 1 ? "" : "s"} in this category will be rebuilt to align with the new interval and start date; overdue, deferred and started ones stay as they are.
               </p>
             )}
             <Field label="Why" htmlFor="cat-reason">

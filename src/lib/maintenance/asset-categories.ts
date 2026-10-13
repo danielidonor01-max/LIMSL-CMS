@@ -21,7 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { and, eq, gt, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { EQUIPMENT_CATEGORY_LABELS } from "@/lib/constants";
+import { EQUIPMENT_CATEGORY_LABELS, DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
 import { FREQUENCY_MONTHS } from "./plan-generation";
 import { syncPlanForEquipment } from "./plan-sync";
 
@@ -40,13 +40,53 @@ export function categoryCodeFrom(label: string): string {
 }
 
 export async function listCategories(): Promise<Category[]> {
-  return db.select().from(assetCategories);
+  try {
+    const rows = await db.select().from(assetCategories);
+    return rows.map((r) => ({
+      ...r,
+      defaultStartDate: r.defaultStartDate || DEFAULT_CATEGORY_START_DATES[r.code] || null,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function getCategory(code: string | null | undefined): Promise<Category | null> {
   if (!code) return null;
-  const [row] = await db.select().from(assetCategories).where(eq(assetCategories.code, code)).limit(1);
-  return row ?? null;
+  try {
+    const [row] = await db.select().from(assetCategories).where(eq(assetCategories.code, code)).limit(1);
+    if (!row) {
+      if (EQUIPMENT_CATEGORY_LABELS[code]) {
+        return {
+          code,
+          label: EQUIPMENT_CATEGORY_LABELS[code],
+          maintenanceFrequency: "QUARTERLY",
+          defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || null,
+          isActive: true,
+          createdAt: "",
+          updatedAt: "",
+        };
+      }
+      return null;
+    }
+    return {
+      ...row,
+      defaultStartDate: row.defaultStartDate || DEFAULT_CATEGORY_START_DATES[row.code] || null,
+    };
+  } catch {
+    if (EQUIPMENT_CATEGORY_LABELS[code]) {
+      return {
+        code,
+        label: EQUIPMENT_CATEGORY_LABELS[code],
+        maintenanceFrequency: "QUARTERLY",
+        defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || null,
+        isActive: true,
+        createdAt: "",
+        updatedAt: "",
+      };
+    }
+    return null;
+  }
 }
 
 /**
@@ -139,12 +179,16 @@ export async function applyCategoryChange(
 
   const now = new Date().toISOString();
   const existing = await getCategory(change.categoryCode);
+  const targetStartDate =
+    change.proposedStartDate ?? existing?.defaultStartDate ?? DEFAULT_CATEGORY_START_DATES[change.categoryCode] ?? null;
+
   if (existing) {
     await db
       .update(assetCategories)
       .set({
         label: change.proposedLabel,
         maintenanceFrequency: change.proposedFrequency,
+        defaultStartDate: targetStartDate,
         updatedAt: now,
       })
       .where(eq(assetCategories.code, change.categoryCode));
@@ -153,6 +197,7 @@ export async function applyCategoryChange(
       code: change.categoryCode,
       label: change.proposedLabel,
       maintenanceFrequency: change.proposedFrequency,
+      defaultStartDate: targetStartDate,
     });
   }
 
@@ -160,6 +205,7 @@ export async function applyCategoryChange(
   // whole point — and its plan follows.
   const machines = await db.select().from(equipment).where(eq(equipment.category, change.categoryCode));
   const frequencyChanged = !existing || existing.maintenanceFrequency !== change.proposedFrequency;
+  const startDateChanged = !existing || (existing.defaultStartDate ?? "") !== (targetStartDate ?? "");
 
   let replaced = 0;
   if (machines.length) {
@@ -168,7 +214,7 @@ export async function applyCategoryChange(
       .set({ maintenanceFrequency: change.proposedFrequency })
       .where(eq(equipment.category, change.categoryCode));
 
-    if (frequencyChanged) {
+    if (frequencyChanged || startDateChanged) {
       for (const m of machines) {
         const r = await replanMachine({ ...m, maintenanceFrequency: change.proposedFrequency }, actor);
         replaced += r.removed;

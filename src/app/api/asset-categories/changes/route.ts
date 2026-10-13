@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     const kind = String(body.kind ?? "UPDATE").toUpperCase() === "CREATE" ? "CREATE" : "UPDATE";
     const label = String(body.label ?? "").trim();
     const frequency = String(body.frequency ?? "").toUpperCase();
+    const startDate = body.startDate ? String(body.startDate).slice(0, 10) : (body.proposedStartDate ? String(body.proposedStartDate).slice(0, 10) : null);
     const reason = String(body.reason ?? "").trim();
 
     if (!label) return NextResponse.json({ error: "Give the category a name." }, { status: 400 });
@@ -112,7 +113,8 @@ export async function POST(request: Request) {
     if (kind === "UPDATE" && !existing) {
       return NextResponse.json({ error: "That category is not on the register." }, { status: 404 });
     }
-    if (existing && existing.label === label && existing.maintenanceFrequency === frequency) {
+    const dateChanged = (existing?.defaultStartDate ?? "") !== (startDate ?? "");
+    if (existing && existing.label === label && existing.maintenanceFrequency === frequency && !dateChanged) {
       return NextResponse.json({ error: "That is what the category already says." }, { status: 400 });
     }
 
@@ -136,8 +138,10 @@ export async function POST(request: Request) {
       categoryCode: code,
       proposedLabel: label,
       proposedFrequency: frequency,
+      proposedStartDate: startDate,
       previousLabel: existing?.label ?? null,
       previousFrequency: existing?.maintenanceFrequency ?? null,
+      previousStartDate: existing?.defaultStartDate ?? null,
       reason: reason.slice(0, 1000),
       proposedById: gate.actor?.id ?? null,
       proposedByName: gate.actor?.name ?? null,
@@ -155,8 +159,8 @@ export async function POST(request: Request) {
       entityDescription:
         `${changeNumber} proposed: ` +
         (kind === "CREATE"
-          ? `new category ${label}, serviced ${frequency.toLowerCase().replace(/_/g, " ")}`
-          : `${existing?.label} -> ${label}, ${String(existing?.maintenanceFrequency).toLowerCase().replace(/_/g, " ")} -> ${frequency.toLowerCase().replace(/_/g, " ")}`) +
+          ? `new category ${label}, serviced ${frequency.toLowerCase().replace(/_/g, " ")}${startDate ? `, starts ${startDate}` : ""}`
+          : `${existing?.label} -> ${label}, ${String(existing?.maintenanceFrequency).toLowerCase().replace(/_/g, " ")} -> ${frequency.toLowerCase().replace(/_/g, " ")}${dateChanged ? `, start ${existing?.defaultStartDate ?? "none"} -> ${startDate ?? "none"}` : ""}`) +
         `. Waiting for the Maintenance Manager and QA/QC Supervisor. Reason: ${reason.slice(0, 200)}`,
     });
 
