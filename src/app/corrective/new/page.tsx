@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import Select from "@/components/Select";
+import MachineSelect from "@/components/MachineSelect";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import Field, { FIELD_CLASS } from "@/components/Field";
@@ -122,7 +123,7 @@ export default function NewCorrectiveRequest() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.form}>
-        <PageHeader
+        <PageHeader
           title="Report a Machinery Fault"
           subtitle="Raise a corrective maintenance request against a machine"
           code="LIMSL-MAIN-015"
@@ -135,26 +136,14 @@ export default function NewCorrectiveRequest() {
           </h2>
 
           {/* Machine Selection */}
-          <Field label="Select Broken Equipment" required>
-            {loadingEq ? (
-              <div className="flex items-center text-xs text-ink-500">
-                <Loader2 className="w-4 h-4 animate-spin text-danger-600 mr-2" /> Loading equipment list…
-              </div>
-            ) : (
-              <Select
-                value={equipmentId}
-                onChange={(v) => setEquipmentId(v)}
-                className="w-full"
-                required
-              >
-                {equipmentList.map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.assetId} - {eq.name} ({eq.location})
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <MachineSelect
+            label="Broken Equipment / Machine"
+            required
+            value={equipmentId}
+            onChange={setEquipmentId}
+            equipmentList={equipmentList}
+            defaultMode="specific"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Fault Nature */}

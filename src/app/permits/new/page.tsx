@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Loader2, FileText, ShieldAlert, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import Select from "@/components/Select";
+import MachineSelect from "@/components/MachineSelect";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import TriStateChecklist, { type TriState } from "@/components/TriStateChecklist";
@@ -202,7 +203,7 @@ function NewPermitForm() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.detail}>
-        <PageHeader
+        <PageHeader
           title="Raise a Permit to Work"
           subtitle="The last document in the chain. It authorises the work, records the week it ran, and closes it."
           backHref="/permits"
@@ -326,17 +327,17 @@ function NewPermitForm() {
               </div>
             </div>
 
-            <div>
-              <label className={LABEL_CLASS}>Machine or system</label>
-              <Select value={equipmentId} onChange={setEquipmentId} className="w-full">
-                <option value="">Select</option>
-                {equipmentList.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.assetId} · {e.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <MachineSelect
+              label="Machine or system"
+              required
+              value={equipmentId}
+              onChange={setEquipmentId}
+              equipmentList={equipmentList}
+              selectedCategory={selectedJha?.category || undefined}
+              onLocationInferred={(loc) => {
+                if (!workArea) setWorkArea(loc);
+              }}
+            />
 
             <div>
               <label className={LABEL_CLASS}>Description of work</label>

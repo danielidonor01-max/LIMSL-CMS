@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2, Save } from "lucide-react";
 import Select from "@/components/Select";
+import MachineSelect from "@/components/MachineSelect";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
@@ -22,7 +23,14 @@ import ChainPreview from "@/components/ChainPreview";
 import { WORK_ORDER_CHAIN } from "@/lib/signoff/chains";
 import { invalidateApi } from "@/lib/api-cache";
 
-type Equipment = { id: string; assetId: string; name: string; criticality: string | null };
+type Equipment = {
+  id: string;
+  assetId: string;
+  name: string;
+  criticality: string | null;
+  category?: string | null;
+  location?: string | null;
+};
 type User = { id: string; name: string; role: string };
 
 function NewWorkOrderForm() {
@@ -173,22 +181,13 @@ function NewWorkOrderForm() {
               </div>
             )}
 
-            <div>
-              <label className={LABEL_CLASS}>Equipment *</label>
-              <Select
-                value={form.equipmentId}
-                onChange={(v) => onEquipmentChange(v)}
-                className="w-full"
-                required
-              >
-                <option value="">Select equipment…</option>
-                {equipment.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.assetId}, {e.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <MachineSelect
+              label="Equipment / Machinery"
+              required
+              value={form.equipmentId}
+              onChange={(id) => onEquipmentChange(id)}
+              equipmentList={equipment}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

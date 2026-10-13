@@ -2,6 +2,7 @@
 "use client";
 
 import Select from "@/components/Select";
+import MachineSelect from "@/components/MachineSelect";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -359,48 +360,19 @@ function NewWmsForm() {
               touch was picking them by a number nobody says out loud. Naming
               the machine is what makes the choice checkable, and getting it
               wrong here scopes a permit onto the wrong machine. */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-ink-700 block">Associated machinery scope</label>
-            {loadingEq ? (
-              <p className="text-sm text-ink-500">Loading the asset register…</p>
-            ) : equipmentList.length === 0 ? (
-              <p className="text-sm text-ink-500">
-                No machines are on the register yet, so there is nothing to scope this statement to.
-              </p>
-            ) : (
-              <div className="max-h-64 overflow-y-auto rounded-lg border border-ink-200 bg-surface divide-y divide-line">
-                {equipmentList.map((eq) => {
-                  const selected = selectedEquipments.includes(eq.id);
-                  return (
-                    <label
-                      key={eq.id}
-                      className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer select-none transition-colors ${
- selected ? "bg-brand-50" : "hover:bg-ink-50"
- }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleEquipmentSelect(eq.id)}
-                        className="rounded-lg border-ink-300 accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium text-ink-900 truncate">{eq.name}</span>
-                        <span className="block text-xs text-ink-500 tabular-nums">
-                          {eq.assetId}
-                          {eq.location ? ` · ${eq.location}` : ""}
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-            <p className="text-xs text-ink-500">
-              {selectedEquipments.length === 0
-                ? "Select every machine the working party will be on or near."
-                : `${selectedEquipments.length} machine${selectedEquipments.length === 1 ? "" : "s"} in scope.`}
-            </p>
+          <div>
+            <MachineSelect
+              label="Associated Machinery Scope"
+              multiple
+              selectedIds={selectedEquipments}
+              onSelectedIdsChange={setSelectedEquipments}
+              equipmentList={equipmentList}
+              helperText={
+                selectedEquipments.length === 0
+                  ? "Select every machine or category the working party will be on or near."
+                  : `${selectedEquipments.length} machine${selectedEquipments.length === 1 ? "" : "s"} in scope.`
+              }
+            />
           </div>
 
           {/* Scope / Purpose */}

@@ -12,6 +12,7 @@ import ChainPreview from "@/components/ChainPreview";
 import { JHA_CHAIN } from "@/lib/signoff/chains";
 import { invalidateApi } from "@/lib/api-cache";
 import Select from "@/components/Select";
+import MachineSelect from "@/components/MachineSelect";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
 import { LIKELIHOOD, SEVERITY, rate, BAND_LABEL, BAND_TONE } from "@/lib/hse/risk-matrix";
@@ -44,8 +45,8 @@ const emptyStep = (): StepRow => ({
 function NewJhaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [wmsList, setWmsList] = useState<{ id: string; wmsNumber: string; title: string; status: string }[]>([]);
-  const [equipmentList, setEquipmentList] = useState<{ id: string; name: string; assetId: string }[]>([]);
+  const [wmsList, setWmsList] = useState<any[]>([]);
+  const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   const [wmsId, setWmsId] = useState(searchParams.get("wmsId") ?? "");
@@ -55,6 +56,7 @@ function NewJhaForm() {
   const supersedesId = searchParams.get("supersedes") ?? "";
   const [title, setTitle] = useState("");
   const [equipmentId, setEquipmentId] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [workArea, setWorkArea] = useState("");
   const [emergencyArrangements, setEmergencyArrangements] = useState("");
   const [ppe, setPpe] = useState<string[]>([]);
@@ -75,7 +77,10 @@ function NewJhaForm() {
   // keeps the two findable together.
   const selectedWms = useMemo(() => wmsList.find((w) => w.id === wmsId), [wmsList, wmsId]);
   useEffect(() => {
-    if (selectedWms && !title.trim()) setTitle(`Job Hazard Analysis, ${selectedWms.title}`);
+    if (selectedWms) {
+      if (!title.trim()) setTitle(`Job Hazard Analysis, ${selectedWms.title}`);
+      if (selectedWms.category) setSelectedCategory(selectedWms.category);
+    }
   }, [selectedWms, title]);
 
   const setStep = (i: number, patch: Partial<StepRow>) =>
@@ -106,6 +111,7 @@ function NewJhaForm() {
           supersedesId: supersedesId || undefined,
           title: title.trim(),
           equipmentId: equipmentId || null,
+          category: selectedCategory || null,
           workArea: workArea.trim() || null,
           emergencyArrangements: emergencyArrangements.trim() || null,
           ppeRequired: ppe,
@@ -165,24 +171,26 @@ function NewJhaForm() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={LABEL_CLASS}>Machine</label>
-                <Select value={equipmentId} onChange={setEquipmentId} className="w-full">
-                  <option value="">Not machine-specific</option>
-                  {equipmentList.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.assetId} · {e.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+            <div className="space-y-4">
+              <MachineSelect
+                value={equipmentId}
+                onChange={setEquipmentId}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                equipmentList={equipmentList}
+                onLocationInferred={(loc) => {
+                  if (!workArea) setWorkArea(loc);
+                }}
+                label="Machine or Equipment"
+                defaultMode="category"
+              />
+
               <div>
                 <label className={LABEL_CLASS}>Work area</label>
                 <input
                   value={workArea}
                   onChange={(e) => setWorkArea(e.target.value)}
-                  placeholder="e.g. Bay 1"
+                  placeholder="e.g. Bay 1, 2 and 3"
                   className={FIELD_CLASS}
                 />
               </div>
