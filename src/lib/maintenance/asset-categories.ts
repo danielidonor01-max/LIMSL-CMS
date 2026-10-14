@@ -28,6 +28,7 @@ import {
 } from "@/lib/constants";
 import { FREQUENCY_MONTHS } from "./plan-generation";
 import { syncPlanForEquipment } from "./plan-sync";
+import { checkCategoryScheduleCollision } from "./category-collision";
 
 export type Category = typeof assetCategories.$inferSelect;
 
@@ -250,6 +251,19 @@ export async function applyCategoryChange(
   const existing = await getCategory(change.categoryCode);
   const targetStartDate =
     change.proposedStartDate ?? existing?.defaultStartDate ?? DEFAULT_CATEGORY_START_DATES[change.categoryCode] ?? null;
+
+  if (targetStartDate) {
+    const collision = await checkCategoryScheduleCollision({
+      categoryCode: change.categoryCode,
+      label: change.proposedLabel,
+      frequency: change.proposedFrequency,
+      startDate: targetStartDate,
+    });
+    if (collision.collides) {
+      console.warn("Prevented applying category change due to schedule collision:", collision.message);
+      return { applied: false, machines: 0, replaced: 0 };
+    }
+  }
 
   if (existing) {
     await db

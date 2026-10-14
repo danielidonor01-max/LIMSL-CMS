@@ -106,3 +106,36 @@ test("next due date correctly chooses upcoming date and counts days away", () =>
   const daysAway = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   assert.equal(daysAway, 10);
 });
+
+test("checkCategoryScheduleCollision detects and rejects colliding start dates", async () => {
+  const { checkCategoryScheduleCollision } = await import("../maintenance/category-collision");
+
+  // Proposing a new category that matches CRANE's start date (2026-01-20)
+  const result = await checkCategoryScheduleCollision({
+    categoryCode: "NEW_HEAVY_LIFT",
+    label: "Heavy Lift Equipment",
+    frequency: "BI_MONTHLY",
+    startDate: "2026-01-20",
+    year: 2026,
+  });
+
+  assert.equal(result.collides, true, "Must flag collision with Crane");
+  assert.equal(result.collidingCategoryCode, "CRANE");
+  assert.ok(result.message?.includes("Schedule collision detected"));
+});
+
+test("checkCategoryScheduleCollision allows distinct staggered dates without collisions", async () => {
+  const { checkCategoryScheduleCollision } = await import("../maintenance/category-collision");
+
+  // Proposing an unused collision-free date (e.g. 2026-05-18)
+  const result = await checkCategoryScheduleCollision({
+    categoryCode: "NEW_ROBOTICS",
+    label: "Robotic Arms",
+    frequency: "ANNUAL",
+    startDate: "2026-05-18",
+    year: 2026,
+  });
+
+  assert.equal(result.collides, false, "Must permit non-colliding date");
+});
+

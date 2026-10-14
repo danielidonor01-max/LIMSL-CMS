@@ -25,6 +25,7 @@ import {
   pendingChangeFor,
   applyCategoryChange,
 } from "@/lib/maintenance/asset-categories";
+import { checkCategoryScheduleCollision } from "@/lib/maintenance/category-collision";
 
 // A change's state is read off its signatures, the same way the WMS and the
 // permit derive theirs, so the list can never say "pending" about a change two
@@ -116,6 +117,19 @@ export async function POST(request: Request) {
     const dateChanged = (existing?.defaultStartDate ?? "") !== (startDate ?? "");
     if (existing && existing.label === label && existing.maintenanceFrequency === frequency && !dateChanged) {
       return NextResponse.json({ error: "That is what the category already says." }, { status: 400 });
+    }
+
+    // Global rule: no two categories can ever collide on their scheduled PM dates.
+    if (startDate) {
+      const collision = await checkCategoryScheduleCollision({
+        categoryCode: code,
+        label,
+        frequency,
+        startDate,
+      });
+      if (collision.collides) {
+        return NextResponse.json({ error: collision.message }, { status: 400 });
+      }
     }
 
     // One change at a time per category. Two proposals racing each other through

@@ -10,10 +10,11 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar, Eye } from "lucide-react";
+import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar, Eye, AlertTriangle } from "lucide-react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
@@ -21,7 +22,6 @@ import PageHeader from "@/components/PageHeader";
 import SettingsNav from "@/components/SettingsNav";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
-import CategoryDetailModal from "@/components/CategoryDetailModal";
 import Select from "@/components/Select";
 import Field, { FIELD_CLASS } from "@/components/Field";
 import DateField from "@/components/DateField";
@@ -32,7 +32,7 @@ import TableSkeleton from "@/components/TableSkeleton";
 import SignoffChain from "@/components/SignoffChain";
 import { ASSET_CATEGORY_ROLES, SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import { FREQUENCY_LABELS } from "@/lib/constants";
-import { FREQUENCY_MONTHS } from "@/lib/maintenance/plan-generation";
+import { FREQUENCY_MONTHS, plannedDatesFor } from "@/lib/maintenance/plan-generation";
 
 type Category = {
   code: string;
@@ -113,7 +113,6 @@ function AssetCategoriesView() {
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
-  const [viewingCategory, setViewingCategory] = useState<string | null>(null);
   // Arriving from a notification or from My Approvals, the change is named in
   // the URL. It is opened and brought into view, rather than leaving the
   // signer to find which of several pending changes is theirs.
@@ -134,8 +133,37 @@ function AssetCategoriesView() {
     refreshChanges();
   };
 
+  const collisionWarning = useMemo(() => {
+    if (!draft?.startDate || !draft.frequency) return null;
+    const thisYear = new Date().getFullYear();
+    const proposed = plannedDatesFor({
+      frequency: draft.frequency,
+      anchorDate: draft.startDate,
+      year: thisYear,
+    }).map((p) => p.plannedDate);
+
+    for (const other of categories) {
+      if (draft.categoryCode && other.code === draft.categoryCode) continue;
+      if (!other.defaultStartDate) continue;
+      const otherDates = plannedDatesFor({
+        frequency: other.maintenanceFrequency,
+        anchorDate: other.defaultStartDate,
+        year: thisYear,
+      }).map((p) => p.plannedDate);
+      const common = proposed.filter((d) => otherDates.includes(d));
+      if (common.length > 0) {
+        return `Schedule collision: This date collides with ${other.label} on ${common.join(", ")}. Different categories cannot share scheduled maintenance days.`;
+      }
+    }
+    return null;
+  }, [draft?.startDate, draft?.frequency, draft?.categoryCode, categories]);
+
   const submit = async () => {
     if (!draft) return;
+    if (collisionWarning) {
+      toast.error(collisionWarning);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/asset-categories/changes", {
@@ -238,15 +266,15 @@ function AssetCategoriesView() {
                   {categories.map((c) => (
                     <tr key={c.code} className="hover:bg-ink-50 transition-colors">
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => setViewingCategory(c.code)}
+                        <Link
+                          href={`/settings/categories/${encodeURIComponent(c.code)}`}
                           className="text-left group block"
                         >
                           <p className="font-medium text-ink-900 group-hover:text-brand-600 transition-colors">
                             {c.label}
                           </p>
                           <p className="text-xs text-ink-500">{c.code}</p>
-                        </button>
+                        </Link>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-ink-700">{freq(c.maintenanceFrequency)}</td>
                       <td className="py-3 px-4 whitespace-nowrap text-ink-700">
@@ -278,22 +306,22 @@ function AssetCategoriesView() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => setViewingCategory(c.code)}
-                            title={`View ${c.label} details`}
-                            aria-label={`View ${c.label} details`}
+                          <Link
+                            href={`/settings/categories/${encodeURIComponent(c.code)}`}
+                            title={`View ${c.label} digital twin`}
+                            aria-label={`View ${c.label} digital twin`}
                             className="p-1.5 text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded-lg transition-colors min-w-8 min-h-8 inline-flex items-center justify-center"
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
+                          </Link>
                           {canPropose && !c.pendingChange && (
                             <KebabMenu
                               ariaLabel={`Actions for ${c.label}`}
                               items={[
                                 {
-                                  label: "View details",
+                                  label: "View category page",
                                   icon: Eye,
-                                  onClick: () => setViewingCategory(c.code),
+                                  href: `/settings/categories/${encodeURIComponent(c.code)}`,
                                 },
                                 {
                                   label: "Propose a change",
@@ -467,6 +495,12 @@ function AssetCategoriesView() {
               <p className="text-xs text-ink-500 mt-1">
                 Staggers when maintenance begins in the annual plan so categories with the same interval (e.g. Quarterly) do not collide.
               </p>
+              {collisionWarning && (
+                <div className="rounded-lg border border-danger-500/20 bg-danger-500/10 px-3 py-2 text-xs text-danger-700 flex items-start gap-2 mt-2">
+                  <AlertTriangle className="w-4 h-4 text-danger-600 shrink-0 mt-0.5" />
+                  <span>{collisionWarning}</span>
+                </div>
+              )}
             </Field>
             {intervalChanges && (
               <p className="text-xs text-ink-600 rounded-lg border border-info-500/20 bg-info-500/5 px-3 py-2 leading-relaxed">
@@ -487,39 +521,13 @@ function AssetCategoriesView() {
               <Button variant="ghost" onClick={() => setDraft(null)}>
                 Cancel
               </Button>
-              <Button loading={saving} onClick={submit}>
+              <Button loading={saving} disabled={Boolean(collisionWarning)} onClick={submit}>
                 Propose for sign-off
               </Button>
             </div>
           </div>
         )}
       </Modal>
-
-      <CategoryDetailModal
-        categoryCode={viewingCategory}
-        open={viewingCategory !== null}
-        onClose={() => setViewingCategory(null)}
-        canPropose={canPropose}
-        onProposeChange={() => {
-          const c = categories.find((cat) => cat.code === viewingCategory);
-          if (c && canPropose && !c.pendingChange) {
-            setDraft({
-              kind: "UPDATE",
-              categoryCode: c.code,
-              label: c.label,
-              frequency: c.maintenanceFrequency,
-              startDate: c.defaultStartDate || "",
-              reason: "",
-              machineCount: c.machineCount,
-              previous: {
-                label: c.label,
-                frequency: c.maintenanceFrequency,
-                startDate: c.defaultStartDate || "",
-              },
-            });
-          }
-        }}
-      />
     </div>
   );
 }
