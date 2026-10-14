@@ -22,6 +22,7 @@ import {
   ArrowRight,
   Layers,
   Sparkles,
+  PenLine,
 } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
 import PageHeader from "@/components/PageHeader";
@@ -34,6 +35,7 @@ import { Badge } from "@/components/Badge";
 import { ROLE_LABELS } from "@/lib/roles";
 import ApprovalFlows from "@/components/ApprovalFlows";
 import MetricPanel from "@/components/MetricPanel";
+import QuickSignModal, { type QuickSignTarget } from "@/components/QuickSignModal";
 import type { PriorityTier } from "@/lib/signoff/inbox";
 
 type Item = {
@@ -65,6 +67,7 @@ export default function ApprovalsPage() {
   const { data: items, loading, error, refresh } = useApi<Item[]>("/api/approvals", []);
   const [activeTab, setActiveTab] = useState<ViewTab>("action");
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("ALL");
+  const [quickSignTarget, setQuickSignTarget] = useState<QuickSignTarget | null>(null);
 
   const count = items?.length ?? 0;
 
@@ -393,17 +396,36 @@ export default function ApprovalsPage() {
                         </div>
 
                         {/* Direct Action CTA */}
-                        <div className="shrink-0 flex items-center md:self-center pt-2 md:pt-0">
-                          <Link
-                            href={item.href}
-                            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-2xs ${
+                        <div className="shrink-0 flex items-center gap-2 md:self-center pt-2 md:pt-0">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setQuickSignTarget({
+                                signoffId: item.signoffId,
+                                entityType: item.entityType,
+                                entityId: item.entityId,
+                                code: item.code,
+                                title: item.title,
+                                kind: item.kind,
+                                roleLabel: item.roleLabel,
+                                stepRole: item.role,
+                              })
+                            }
+                            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-2xs ${
                               isUrgent
                                 ? "bg-danger-600 hover:bg-danger-700 text-white"
                                 : "bg-ink-900 hover:bg-ink-800 text-white"
                             }`}
                           >
-                            <span>Review & sign</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
+                            <PenLine className="w-3.5 h-3.5" />
+                            <span>Quick sign</span>
+                          </button>
+                          <Link
+                            href={item.href}
+                            className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-white border border-line hover:border-ink-300 text-ink-700 transition-colors"
+                          >
+                            <span>Details</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-ink-400" />
                           </Link>
                         </div>
                       </div>
@@ -414,6 +436,14 @@ export default function ApprovalsPage() {
             )}
           </div>
         )}
+
+        <QuickSignModal
+          open={!!quickSignTarget}
+          onClose={() => setQuickSignTarget(null)}
+          target={quickSignTarget}
+          userRole={role}
+          onSuccess={() => refresh()}
+        />
       </main>
     </div>
   );

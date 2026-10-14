@@ -111,13 +111,106 @@ function NewPermitForm() {
 
   const selectedJha = useMemo(() => jhaList.find((j) => j.id === jhaId), [jhaList, jhaId]);
 
-  // The analysis already names the machine, the area and the PPE. Retyping them
-  // onto the permit is how the two documents end up disagreeing.
+  // The analysis already names the machine, the area, PPE, and control measures.
+  // Auto-populating them onto the permit ensures safety alignment and reduces data re-entry.
   useEffect(() => {
     if (!selectedJha) return;
     if (selectedJha.equipmentId && !equipmentId) setEquipmentId(selectedJha.equipmentId);
     if (selectedJha.workArea && !workArea) setWorkArea(selectedJha.workArea);
     if (!workDescription && selectedJha.title) setWorkDescription(selectedJha.title);
+
+    // Auto-populate documents checklist
+    setDocumentMarks((prev) => ({
+      ...prev,
+      JHA: "YES",
+      ...(selectedJha.wmsId ? { WMS: "YES" } : {}),
+      TOOL_LIST: prev.TOOL_LIST ?? "YES",
+    }));
+
+    // Auto-populate PPE requirements from JHA
+    let ppeList: string[] = [];
+    try {
+      if (typeof selectedJha.ppeRequired === "string") {
+        ppeList = JSON.parse(selectedJha.ppeRequired);
+      } else if (Array.isArray(selectedJha.ppeRequired)) {
+        ppeList = selectedJha.ppeRequired;
+      }
+    } catch {
+      // not JSON
+    }
+
+    const nextPpe: Marks = {
+      HELMET: "YES",
+      SAFETY_SHOE: "YES",
+    };
+
+    if (Array.isArray(ppeList)) {
+      const ppeUpper = ppeList.map((p) => String(p).toUpperCase());
+      if (ppeUpper.some((p) => p.includes("GLOVE"))) nextPpe.GLOVES = "YES";
+      if (ppeUpper.some((p) => p.includes("GOGGLE") || p.includes("GLASSES") || p.includes("EYE"))) nextPpe.GOGGLES = "YES";
+      if (ppeUpper.some((p) => p.includes("EAR") || p.includes("HEARING") || p.includes("NOISE"))) nextPpe.HEARING = "YES";
+      if (ppeUpper.some((p) => p.includes("MASK") || p.includes("RESPIRATOR"))) nextPpe.DUST_MASK = "YES";
+      if (ppeUpper.some((p) => p.includes("HARNESS") || p.includes("FALL"))) nextPpe.HARNESS = "YES";
+      if (ppeUpper.some((p) => p.includes("VISOR") || p.includes("SHIELD"))) nextPpe.FACE_VISOR = "YES";
+      if (ppeUpper.some((p) => p.includes("COVERALL") || p.includes("FIRE"))) nextPpe.FR_COVERALL = "YES";
+    }
+    setPpeMarks((prev) => ({ ...nextPpe, ...prev }));
+
+    // Auto-populate precautions based on JHA steps / controls
+    let stepsText = "";
+    try {
+      if (typeof selectedJha.steps === "string") {
+        const parsed = JSON.parse(selectedJha.steps);
+        if (Array.isArray(parsed)) {
+          stepsText = parsed
+            .map((s: any) => `${s.step || ""} ${s.hazards || ""} ${s.controls || ""}`)
+            .join(" ")
+            .toLowerCase();
+        } else {
+          stepsText = selectedJha.steps.toLowerCase();
+        }
+      }
+    } catch {
+      stepsText = String(selectedJha.steps || "").toLowerCase();
+    }
+
+    const nextPrec: Marks = { TOOLBOX_TALK: "YES", CLEAR_AREA: "YES" };
+    if (
+      stepsText.includes("loto") ||
+      stepsText.includes("lock") ||
+      stepsText.includes("isolat") ||
+      stepsText.includes("de-energiz")
+    ) {
+      nextPrec.SPADE_LOTO = "YES";
+      nextPrec.DE_ENERGIZING = "YES";
+      setLotoApplied(true);
+    }
+    if (
+      stepsText.includes("barricad") ||
+      stepsText.includes("demarcat") ||
+      stepsText.includes("barrier")
+    ) {
+      nextPrec.DEMARCATION = "YES";
+      setAreaBarricaded(true);
+    }
+    if (
+      stepsText.includes("fire") ||
+      stepsText.includes("extinguish") ||
+      stepsText.includes("hot work") ||
+      stepsText.includes("weld")
+    ) {
+      nextPrec.FIRE_WATCH = "YES";
+      setWorkTypes((prev) => (prev.includes("HOT_WORK") ? prev : [...prev, "HOT_WORK"]));
+    }
+    if (stepsText.includes("gas") || stepsText.includes("confined")) {
+      nextPrec.GAS_TEST_PRIOR = "YES";
+      setDocumentMarks((prev) => ({ ...prev, GAS_TEST: "YES" }));
+    }
+    if (stepsText.includes("ventilate") || stepsText.includes("ventilation")) {
+      nextPrec.VENTILATION = "YES";
+    }
+
+    setPrecautionMarks((prev) => ({ ...nextPrec, ...prev }));
   }, [selectedJha, equipmentId, workArea, workDescription]);
 
   const mandatory = useMemo(() => mandatoryPrecautionsFor(workTypes).map((m) => m.key), [workTypes]);
@@ -282,6 +375,10 @@ function NewPermitForm() {
                     </span>
                   )}
                   <span>The method statement is inherited from this analysis.</span>
+                  <div className="w-full mt-2 p-2.5 rounded-lg bg-brand-500/10 border border-brand-500/20 text-xs text-brand-800 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-brand-600 shrink-0" />
+                    <span>Controls, PPE, and mandatory precautions pre-populated from {selectedJha.jhaNumber}.</span>
+                  </div>
                 </div>
               )
             )}

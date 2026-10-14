@@ -66,7 +66,7 @@ export default function Tabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
-      className={`flex items-center gap-6 border-b border-line ${className}`}
+      className={`flex items-center gap-6 border-b border-line overflow-x-auto ${className}`}
     >
       {items.map((t) => {
         const active = t.value === value;
@@ -78,7 +78,7 @@ export default function Tabs<T extends string>({
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(t.value)}
-            className={`relative -mb-px flex items-center gap-2 border-b-2 pb-2.5 pt-1 text-sm transition-colors ${
+            className={`relative -mb-px flex items-center gap-2 border-b-2 pb-2.5 pt-1 text-sm transition-colors whitespace-nowrap shrink-0 ${
  active
  ? "border-brand-600 text-ink-900 font-semibold"
  : "border-transparent text-ink-500 font-medium hover:text-ink-900"

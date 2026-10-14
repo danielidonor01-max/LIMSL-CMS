@@ -309,10 +309,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Breakdown alert (only when something is actually down) */}
-        {brokenDown.map((eq) => (
+        {/* Breakdown alerts (single banner if 1 machine down, consolidated panel if multiple) */}
+        {brokenDown.length === 1 && (
           <div
-            key={eq.id}
+            key={brokenDown[0].id}
             className="relative overflow-hidden rounded-xl border border-danger-200 bg-danger-50 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
           >
             <div className="flex items-start gap-3 relative z-10 min-w-0">
@@ -321,20 +321,83 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-danger-700">
-                  {eq.name} is down ({eq.assetId})
+                  {brokenDown[0].name} is down ({brokenDown[0].assetId})
                 </p>
-                <BreakdownDetail record={openFor(eq.id)} />
+                <BreakdownDetail record={openFor(brokenDown[0].id)} />
               </div>
             </div>
             {mounted && canAccessPath(role ?? "", "/corrective/new") && (
-              <Button variant="danger"
-                href={`/corrective/new?equipmentId=${eq.id}`}
-              >
+              <Button variant="danger" href={`/corrective/new?equipmentId=${brokenDown[0].id}`}>
                 Report Corrective Fault
               </Button>
             )}
           </div>
-        ))}
+        )}
+
+        {brokenDown.length > 1 && (
+          <div className="rounded-xl border border-danger-200 bg-surface shadow-card overflow-hidden">
+            <div className="px-6 py-4 bg-danger-50 border-b border-danger-200 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 bg-danger-500/20 text-danger-600 rounded-lg shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-danger-900">
+                    Active equipment outages ({brokenDown.length} machines down)
+                  </h3>
+                  <p className="text-xs text-danger-700/80 mt-0.5">
+                    Unscheduled stoppages impacting production capacity and MTBF metrics.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/corrective"
+                className="text-xs font-semibold text-danger-700 hover:text-danger-900 shrink-0"
+              >
+                All corrective records &rarr;
+              </Link>
+            </div>
+            <div className="divide-y divide-ink-100">
+              {brokenDown.map((eq) => {
+                const rec = openFor(eq.id);
+                return (
+                  <div
+                    key={eq.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-3.5 hover:bg-ink-50 transition-colors"
+                  >
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-ink-900 truncate">{eq.name}</span>
+                        <span className="text-xs text-ink-500">{eq.assetId}</span>
+                        {eq.location && <span className="text-xs text-ink-400">&middot; {eq.location}</span>}
+                      </div>
+                      <BreakdownDetail record={rec} />
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      {rec ? (
+                        <Link
+                          href={`/corrective/${rec.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-700 hover:text-ink-900 px-3 py-1.5 rounded-lg border border-line hover:border-ink-300 transition-colors"
+                        >
+                          <span>CMRF record</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : mounted && canAccessPath(role ?? "", "/corrective/new") ? (
+                        <Link
+                          href={`/corrective/new?equipmentId=${eq.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-danger-700 bg-danger-50 hover:bg-danger-100 px-3 py-1.5 rounded-lg border border-danger-200 transition-colors"
+                        >
+                          <span>Raise CMRF</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Executive stats */}
         {loading ? (
