@@ -19,9 +19,13 @@ import {
   maintenanceSchedule,
   auditLog,
 } from "@/lib/db/schema";
-import { and, eq, gt, inArray } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { EQUIPMENT_CATEGORY_LABELS, DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
+import {
+  EQUIPMENT_CATEGORY_LABELS,
+  DEFAULT_CATEGORY_START_DATES,
+  DEFAULT_CATEGORY_FREQUENCIES,
+} from "@/lib/constants";
 import { FREQUENCY_MONTHS } from "./plan-generation";
 import { syncPlanForEquipment } from "./plan-sync";
 
@@ -40,14 +44,79 @@ export function categoryCodeFrom(label: string): string {
 }
 
 export async function listCategories(): Promise<Category[]> {
+  const defaults: Category[] = Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([code, label]) => ({
+    code,
+    label,
+    maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] || "QUARTERLY",
+    defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || "2026-01-01",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+
   try {
-    const rows = await db.select().from(assetCategories);
-    return rows.map((r) => ({
-      ...r,
-      defaultStartDate: r.defaultStartDate || DEFAULT_CATEGORY_START_DATES[r.code] || null,
-    }));
+    let rows: Category[] = [];
+    try {
+      rows = await db.select().from(assetCategories);
+    } catch {
+      // Table may not exist yet, create it
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS asset_categories (
+            code                  text PRIMARY KEY,
+            label                 text NOT NULL,
+            maintenance_frequency text NOT NULL,
+            default_start_date    text,
+            is_active             boolean NOT NULL DEFAULT true,
+            created_at            text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+            updated_at            text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+          );
+          CREATE TABLE IF NOT EXISTS asset_category_changes (
+            id                  text PRIMARY KEY,
+            change_number       text NOT NULL UNIQUE,
+            kind                text NOT NULL,
+            category_code       text NOT NULL,
+            proposed_label      text NOT NULL,
+            proposed_frequency  text NOT NULL,
+            proposed_start_date text,
+            previous_label      text,
+            previous_frequency  text,
+            previous_start_date text,
+            reason              text NOT NULL,
+            status              text NOT NULL DEFAULT 'PENDING_APPROVAL',
+            proposed_by_id      text,
+            proposed_by_name    text,
+            applied_at          text,
+            machines_affected   integer,
+            plan_rows_replaced  integer,
+            created_at          text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+          );
+        `);
+        rows = await db.select().from(assetCategories);
+      } catch {
+        // Table creation or query fallback
+      }
+    }
+
+    if (!rows || rows.length === 0) {
+      try {
+        await db.insert(assetCategories).values(defaults).onConflictDoNothing();
+        rows = await db.select().from(assetCategories);
+      } catch {
+        // Insert fallback
+      }
+    }
+
+    if (rows && rows.length > 0) {
+      return rows.map((r) => ({
+        ...r,
+        defaultStartDate: r.defaultStartDate || DEFAULT_CATEGORY_START_DATES[r.code] || null,
+      }));
+    }
+
+    return defaults;
   } catch {
-    return [];
+    return defaults;
   }
 }
 
@@ -60,7 +129,7 @@ export async function getCategory(code: string | null | undefined): Promise<Cate
         return {
           code,
           label: EQUIPMENT_CATEGORY_LABELS[code],
-          maintenanceFrequency: "QUARTERLY",
+          maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] || "QUARTERLY",
           defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || null,
           isActive: true,
           createdAt: "",
@@ -78,7 +147,7 @@ export async function getCategory(code: string | null | undefined): Promise<Cate
       return {
         code,
         label: EQUIPMENT_CATEGORY_LABELS[code],
-        maintenanceFrequency: "QUARTERLY",
+        maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] || "QUARTERLY",
         defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || null,
         isActive: true,
         createdAt: "",

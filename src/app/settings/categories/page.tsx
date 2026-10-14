@@ -18,6 +18,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
 import PageHeader from "@/components/PageHeader";
+import SettingsNav from "@/components/SettingsNav";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
@@ -195,6 +196,8 @@ function AssetCategoriesView() {
             ) : undefined
           }
         />
+
+        <SettingsNav />
 
         {pending.length > 0 && (
           <div className="rounded-xl border border-warn-500/20 bg-warn-500/5 px-4 py-3 text-sm text-ink-700">

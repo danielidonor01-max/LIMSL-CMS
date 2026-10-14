@@ -44,6 +44,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/training": "Training & Competency",
   "/reports": "Reports",
   "/settings/users": "Users",
+  "/settings/categories": "Asset Categories",
   "/settings/import": "Data Import",
   "/settings": "App Settings",
   "/notifications": "Notifications",

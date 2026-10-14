@@ -4,6 +4,7 @@
 import { useMemo, useRef, useState } from "react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import PageHeader from "@/components/PageHeader";
+import SettingsNav from "@/components/SettingsNav";
 import { useSession } from "next-auth/react";
 import { Database, Download, Upload, Loader2, ShieldAlert, CheckCircle2, AlertTriangle, Copy, Check, Cloud, X, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
@@ -169,6 +170,8 @@ export default function DataImportPage() {
         title="Data Import"
         subtitle="Super Admin · go-live register import (CSV / Excel)"
       />
+
+      <SettingsNav />
 
       <SegmentedControl
         ariaLabel="Register to import"

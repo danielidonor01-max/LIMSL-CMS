@@ -9,8 +9,14 @@ import {
   riskRegister,
   componentRegistry,
   diagnosticGuides,
+  assetCategories,
 } from "./schema";
 import { nanoid } from "nanoid";
+import {
+  EQUIPMENT_CATEGORY_LABELS,
+  DEFAULT_CATEGORY_START_DATES,
+  DEFAULT_CATEGORY_FREQUENCIES,
+} from "@/lib/constants";
 
 export async function seedDatabase() {
   console.log("🌱 Seeding LIMSL CMS database with historical data...");
@@ -304,6 +310,19 @@ export async function seedDatabase() {
     // Insert users
     await db.insert(users).values(seedUsers).onConflictDoNothing();
     console.log(`✅ Inserted ${seedUsers.length} users`);
+
+    // Insert asset categories
+    const seedCategories = Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([code, label]) => ({
+      code,
+      label,
+      maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] || "QUARTERLY",
+      defaultStartDate: DEFAULT_CATEGORY_START_DATES[code] || "2026-01-01",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    await db.insert(assetCategories).values(seedCategories).onConflictDoNothing();
+    console.log(`✅ Inserted ${seedCategories.length} asset categories`);
 
     // Insert equipment
     await db.insert(equipment).values(seedEquipment).onConflictDoNothing();

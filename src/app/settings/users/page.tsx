@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import PageHeader from "@/components/PageHeader";
+import SettingsNav from "@/components/SettingsNav";
 import { useSession } from "next-auth/react";
 import {
   Users as UsersIcon,
@@ -399,6 +400,8 @@ export default function UsersAdminPage() {
         }
       />
 
+      <SettingsNav />
+
       {/* The same underline tabs the rest of the app uses, rather than a
           private copy of them that had drifted to caption-sized labels. */}
       <Tabs
@@ -407,7 +410,7 @@ export default function UsersAdminPage() {
         onChange={setPageTab}
         items={[
           { value: "users", label: "Users", count: list.length || undefined },
-          { value: "roles", label: "Roles", count: ROLES.length },
+          { value: "roles", label: "Roles & Permissions", count: ROLES.length },
         ]}
       />
 

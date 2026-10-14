@@ -29,6 +29,7 @@ import {
   Users,
   SlidersHorizontal,
   Database,
+  Tags,
   Package,
   Siren,
   HardHat,
@@ -58,6 +59,7 @@ const NAV_SECTIONS: NavSection[] = [
     section: "Assets",
     items: [
       { href: "/equipment", label: "Equipment", icon: Layers },
+      { href: "/settings/categories", label: "Asset Categories", icon: Tags },
       { href: "/documents", label: "Documents", icon: FolderOpen },
       { href: "/procedure", label: "Maint. Procedure", icon: BookText },
     ],
@@ -166,6 +168,7 @@ export default function Sidebar({
       section: "Administration",
       items: [
         { href: "/settings/users", label: "Users", icon: Users },
+        { href: "/settings/categories", label: "Asset Categories", icon: Tags },
         { href: "/settings/import", label: "Data Import", icon: Database },
         { href: "/settings", label: "App Settings", icon: SlidersHorizontal, exact: true },
       ],

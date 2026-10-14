@@ -18,15 +18,26 @@ export async function GET() {
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const categories = await listCategories();
-    const machines = await db.select({ category: equipment.category, status: equipment.status }).from(equipment);
-    const pending = await db
-      .select({
-        id: assetCategoryChanges.id,
-        changeNumber: assetCategoryChanges.changeNumber,
-        categoryCode: assetCategoryChanges.categoryCode,
-      })
-      .from(assetCategoryChanges)
-      .where(eq(assetCategoryChanges.status, "PENDING_APPROVAL"));
+    let machines: { category: string; status: string }[] = [];
+    try {
+      machines = await db.select({ category: equipment.category, status: equipment.status }).from(equipment);
+    } catch (e) {
+      console.warn("Could not query equipment for category machine counts:", e);
+    }
+
+    let pending: { id: string; changeNumber: string; categoryCode: string }[] = [];
+    try {
+      pending = await db
+        .select({
+          id: assetCategoryChanges.id,
+          changeNumber: assetCategoryChanges.changeNumber,
+          categoryCode: assetCategoryChanges.categoryCode,
+        })
+        .from(assetCategoryChanges)
+        .where(eq(assetCategoryChanges.status, "PENDING_APPROVAL"));
+    } catch (e) {
+      console.warn("Could not query assetCategoryChanges for pending changes:", e);
+    }
 
     const rows = categories
       .map((c) => ({

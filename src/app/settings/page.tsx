@@ -5,6 +5,7 @@ import DateTimeField from "@/components/DateTimeField";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import TimeField from "@/components/TimeField";
 import PageHeader from "@/components/PageHeader";
+import SettingsNav from "@/components/SettingsNav";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -564,6 +565,8 @@ export default function AppSettingsPage() {
         title="App Settings"
         subtitle="Super Admin · organisation-wide configuration"
       />
+
+      <SettingsNav />
 
       <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-8 lg:items-start space-y-4 lg:space-y-0">
         {/* Mobile: horizontal pills */}
