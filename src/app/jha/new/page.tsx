@@ -6,7 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Loader2, ShieldAlert } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ShieldAlert, FileText } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import ChainPreview from "@/components/ChainPreview";
@@ -69,6 +69,7 @@ function NewJhaForm() {
   const [emergencyArrangements, setEmergencyArrangements] = useState("");
   const [ppe, setPpe] = useState<string[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([emptyStep()]);
+  const [showWmsSteps, setShowWmsSteps] = useState(true);
 
   useEffect(() => {
     fetch("/api/wms")
@@ -90,6 +91,23 @@ function NewJhaForm() {
       if (selectedWms.category) setSelectedCategory(selectedWms.category);
     }
   }, [selectedWms, title]);
+
+  const wmsSteps = useMemo(() => {
+    if (!selectedWms?.workProcedureSteps) return [];
+    try {
+      const parsed = JSON.parse(selectedWms.workProcedureSteps);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((item: any, idx: number) => {
+        if (typeof item === "string") return { step: item, description: "" };
+        return {
+          step: item.step ?? item.title ?? `Step ${idx + 1}`,
+          description: item.description ?? "",
+        };
+      });
+    } catch {
+      return [];
+    }
+  }, [selectedWms]);
 
   const setStep = (i: number, patch: Partial<StepRow>) =>
     setSteps((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -250,6 +268,63 @@ function NewJhaForm() {
           </div>
 
           <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-4">
+            {wmsSteps.length > 0 && (
+              <div className="bg-ink-50 border border-ink-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-brand-600" />
+                    <span className="text-xs font-semibold text-ink-900">
+                      Approved Method Statement Steps ({wmsSteps.length})
+                    </span>
+                    <span className="text-xs text-ink-500">
+                      Procedure reference for hazard breakdown
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowWmsSteps((v) => !v)}
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+                  >
+                    {showWmsSteps ? "Hide Steps" : "Show Steps"}
+                  </button>
+                </div>
+
+                {showWmsSteps && (
+                  <div className="space-y-2 pt-1 max-h-60 overflow-y-auto">
+                    {wmsSteps.map((ws, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 bg-surface border border-line rounded-lg text-xs flex items-start justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold text-ink-900">
+                            {idx + 1}. {ws.step}
+                          </p>
+                          {ws.description && (
+                            <p className="text-ink-600 mt-0.5 whitespace-pre-wrap">{ws.description}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (steps.length === 1 && !steps[0].step.trim()) {
+                              setStep(0, { step: ws.step });
+                            } else {
+                              setSteps([...steps, { ...emptyStep(), step: ws.step }]);
+                            }
+                            toast.success(`Copied step ${idx + 1} into hazard steps`);
+                          }}
+                          className="shrink-0 px-2.5 py-1 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold text-xs border border-brand-200 transition-colors"
+                        >
+                          + Use as Job Step
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-ink-900">Job steps</h3>

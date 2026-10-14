@@ -49,6 +49,7 @@ type Permit = {
   batchTitle?: string | null;
   coveredMachines?: number;
   approval?: { total: number; signed: number; complete: boolean };
+  jhaId?: string | null;
 };
 
 // A permit is closed when it has been handed back, or when it will never be
@@ -78,7 +79,7 @@ function RemainingBadge({ startDate, validityDays }: { startDate: string; validi
   );
 }
 
-type Scope = "OPEN" | "OVERDUE" | "EXPIRING_SOON" | "CLOSED" | "ALL";
+type Scope = "NEEDS_PERMIT" | "OPEN" | "OVERDUE" | "EXPIRING_SOON" | "CLOSED" | "ALL";
 
 export default function PermitsList() {
   const { data: session } = useSession();
@@ -88,8 +89,22 @@ export default function PermitsList() {
   const canIssue = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
 
   const { data: records, loading } = useApi<Permit[]>("/api/permits", []);
+  const { data: jhaData } = useApi<any[]>("/api/jha", []);
 
   useEffect(() => setMounted(true), []);
+
+  const pendingJhas = useMemo(() => {
+    if (!Array.isArray(jhaData)) return [];
+    const permittedJhaIds = new Set(records.map((r) => r.jhaId).filter(Boolean));
+    return jhaData.filter((j) => j.status === "APPROVED" && !permittedJhaIds.has(j.id));
+  }, [jhaData, records]);
+
+  // If there are pending JHAs needing a permit and user is HSE, default scope to NEEDS_PERMIT
+  useEffect(() => {
+    if (canIssue && pendingJhas.length > 0 && scope === "OPEN") {
+      setScope("NEEDS_PERMIT");
+    }
+  }, [canIssue, pendingJhas.length]);
 
   const open = useMemo(() => records.filter((r) => !CLOSED_STATES.has(r.status)), [records]);
   const closed = useMemo(() => records.filter((r) => CLOSED_STATES.has(r.status)), [records]);
@@ -112,6 +127,8 @@ export default function PermitsList() {
         return closed;
       case "ALL":
         return records;
+      case "NEEDS_PERMIT":
+        return [];
       case "OPEN":
       default:
         return open;
@@ -178,17 +195,39 @@ export default function PermitsList() {
           ]}
         />
 
+        {canIssue && pendingJhas.length > 0 && (
+          <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-brand-900">
+                  {pendingJhas.length} Approved Hazard Analys{pendingJhas.length === 1 ? "is" : "es"} Ready for Permit Issuance
+                </p>
+                <p className="text-xs text-brand-700 mt-0.5">
+                  Job hazard controls and risk matrices are signed and approved. HSE can now issue the live Permit to Work before work begins.
+                </p>
+              </div>
+            </div>
+            <Button href={`/permits/new?jhaId=${pendingJhas[0]?.id}`} size="sm" icon={PlusCircle}>
+              Issue PTW
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <SegmentedControl
             ariaLabel="Permit register scope"
             value={scope}
             onChange={setScope}
             options={[
-              { value: "OPEN", label: "Open", count: open.length },
-              { value: "OVERDUE", label: "Overdue", count: overdue.length },
-              { value: "EXPIRING_SOON", label: "Expiring Soon", count: expiringSoon.length },
-              { value: "CLOSED", label: "Closed", count: closed.length },
-              { value: "ALL", label: "All", count: records.length },
+              ...(pendingJhas.length > 0
+                ? [{ value: "NEEDS_PERMIT" as const, label: "Needs Permit", count: pendingJhas.length }]
+                : []),
+              { value: "OPEN" as const, label: "Open", count: open.length },
+              { value: "OVERDUE" as const, label: "Overdue", count: overdue.length },
+              { value: "EXPIRING_SOON" as const, label: "Expiring Soon", count: expiringSoon.length },
+              { value: "CLOSED" as const, label: "Closed", count: closed.length },
+              { value: "ALL" as const, label: "All", count: records.length },
             ]}
           />
         </div>
@@ -196,7 +235,7 @@ export default function PermitsList() {
         <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} cols={6} />
-          ) : rows.length === 0 ? (
+          ) : scope !== "NEEDS_PERMIT" && rows.length === 0 ? (
             <EmptyState
               icon={ShieldCheck}
               title={
@@ -227,6 +266,46 @@ export default function PermitsList() {
                   : undefined
               }
             />
+          ) : scope === "NEEDS_PERMIT" ? (
+            pendingJhas.length === 0 ? (
+              <EmptyState
+                icon={ShieldCheck}
+                title="All approved hazard analyses have permits"
+                message="Every approved Job Hazard Analysis has an associated Permit to Work."
+              />
+            ) : (
+              <div className="divide-y divide-ink-200">
+                {pendingJhas.map((j: any) => (
+                  <div
+                    key={j.id}
+                    className="p-5 flex items-center justify-between gap-4 hover:bg-ink-50 transition-colors"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-ink-500">{j.jhaNumber}</span>
+                        <span className="text-xs text-ink-400">rev {j.revision ?? 0}</span>
+                        <Badge className="bg-brand-500/10 text-brand-700 border-brand-500/20">
+                          JHA Approved
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-semibold text-ink-900 truncate">{j.title}</p>
+                      <p className="text-xs text-ink-500">
+                        {j.wmsNumber && `Method: ${j.wmsNumber} · `}
+                        {j.equipmentName && `${j.equipmentName} · `}
+                        {j.workArea && `Area: ${j.workArea} · `}
+                        Prepared by {j.preparedByName ?? "HSE"}
+                        {j.preparedDate && ` on ${formatDate(j.preparedDate)}`}
+                      </p>
+                    </div>
+                    {canIssue && (
+                      <Button href={`/permits/new?jhaId=${j.id}`} size="sm" icon={PlusCircle}>
+                        Issue PTW
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
