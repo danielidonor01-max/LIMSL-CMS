@@ -39,8 +39,8 @@ export async function syncPlanForEquipment(
   const year = opts.year ?? new Date().getFullYear();
   const notBefore = opts.notBefore === null ? null : (opts.notBefore ?? new Date().toISOString().slice(0, 10));
 
-  let anchor = machine.lastMaintenanceDate || machine.commissioningDate || null;
-  if (!anchor && machine.category) {
+  let anchor: string | null = null;
+  if (machine.category) {
     let catStart = DEFAULT_CATEGORY_START_DATES[machine.category] || null;
     try {
       const [cat] = await db
@@ -55,6 +55,9 @@ export async function syncPlanForEquipment(
     if (catStart) {
       anchor = `${year}-${catStart.slice(5, 10)}`;
     }
+  }
+  if (!anchor) {
+    anchor = machine.lastMaintenanceDate || machine.commissioningDate || null;
   }
 
   const wanted = plannedDatesFor({

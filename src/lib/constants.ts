@@ -19,7 +19,7 @@ export const EQUIPMENT_CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const DEFAULT_CATEGORY_START_DATES: Record<string, string> = {
-  CNC_HEAVY: "2026-01-26",
+  CNC_HEAVY: "2026-01-14",
   CRANE: "2026-01-20",
   PRESS_ROLL_SHEAR: "2026-01-26",
   OTHER: "2026-01-27",

@@ -13,7 +13,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar } from "lucide-react";
+import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar, Eye } from "lucide-react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
@@ -21,6 +21,7 @@ import PageHeader from "@/components/PageHeader";
 import SettingsNav from "@/components/SettingsNav";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import CategoryDetailModal from "@/components/CategoryDetailModal";
 import Select from "@/components/Select";
 import Field, { FIELD_CLASS } from "@/components/Field";
 import DateField from "@/components/DateField";
@@ -112,6 +113,7 @@ function AssetCategoriesView() {
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [viewingCategory, setViewingCategory] = useState<string | null>(null);
   // Arriving from a notification or from My Approvals, the change is named in
   // the URL. It is opened and brought into view, rather than leaving the
   // signer to find which of several pending changes is theirs.
@@ -236,8 +238,15 @@ function AssetCategoriesView() {
                   {categories.map((c) => (
                     <tr key={c.code} className="hover:bg-ink-50 transition-colors">
                       <td className="py-3 px-4">
-                        <p className="font-medium text-ink-900">{c.label}</p>
-                        <p className="text-xs text-ink-500">{c.code}</p>
+                        <button
+                          onClick={() => setViewingCategory(c.code)}
+                          className="text-left group block"
+                        >
+                          <p className="font-medium text-ink-900 group-hover:text-brand-600 transition-colors">
+                            {c.label}
+                          </p>
+                          <p className="text-xs text-ink-500">{c.code}</p>
+                        </button>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-ink-700">{freq(c.maintenanceFrequency)}</td>
                       <td className="py-3 px-4 whitespace-nowrap text-ink-700">
@@ -268,32 +277,47 @@ function AssetCategoriesView() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {canPropose && !c.pendingChange && (
-                          <KebabMenu
-                            ariaLabel={`Actions for ${c.label}`}
-                            items={[
-                              {
-                                label: "Propose a change",
-                                icon: Pencil,
-                                onClick: () =>
-                                  setDraft({
-                                    kind: "UPDATE",
-                                    categoryCode: c.code,
-                                    label: c.label,
-                                    frequency: c.maintenanceFrequency,
-                                    startDate: c.defaultStartDate || "",
-                                    reason: "",
-                                    machineCount: c.machineCount,
-                                    previous: {
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setViewingCategory(c.code)}
+                            title={`View ${c.label} details`}
+                            aria-label={`View ${c.label} details`}
+                            className="p-1.5 text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded-lg transition-colors min-w-8 min-h-8 inline-flex items-center justify-center"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {canPropose && !c.pendingChange && (
+                            <KebabMenu
+                              ariaLabel={`Actions for ${c.label}`}
+                              items={[
+                                {
+                                  label: "View details",
+                                  icon: Eye,
+                                  onClick: () => setViewingCategory(c.code),
+                                },
+                                {
+                                  label: "Propose a change",
+                                  icon: Pencil,
+                                  onClick: () =>
+                                    setDraft({
+                                      kind: "UPDATE",
+                                      categoryCode: c.code,
                                       label: c.label,
                                       frequency: c.maintenanceFrequency,
                                       startDate: c.defaultStartDate || "",
-                                    },
-                                  }),
-                              },
-                            ]}
-                          />
-                        )}
+                                      reason: "",
+                                      machineCount: c.machineCount,
+                                      previous: {
+                                        label: c.label,
+                                        frequency: c.maintenanceFrequency,
+                                        startDate: c.defaultStartDate || "",
+                                      },
+                                    }),
+                                },
+                              ]}
+                            />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -470,6 +494,32 @@ function AssetCategoriesView() {
           </div>
         )}
       </Modal>
+
+      <CategoryDetailModal
+        categoryCode={viewingCategory}
+        open={viewingCategory !== null}
+        onClose={() => setViewingCategory(null)}
+        canPropose={canPropose}
+        onProposeChange={() => {
+          const c = categories.find((cat) => cat.code === viewingCategory);
+          if (c && canPropose && !c.pendingChange) {
+            setDraft({
+              kind: "UPDATE",
+              categoryCode: c.code,
+              label: c.label,
+              frequency: c.maintenanceFrequency,
+              startDate: c.defaultStartDate || "",
+              reason: "",
+              machineCount: c.machineCount,
+              previous: {
+                label: c.label,
+                frequency: c.maintenanceFrequency,
+                startDate: c.defaultStartDate || "",
+              },
+            });
+          }
+        }}
+      />
     </div>
   );
 }

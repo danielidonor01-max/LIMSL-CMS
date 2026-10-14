@@ -18,12 +18,14 @@ export default function Modal({
   onClose,
   title,
   subtitle,
+  maxWidthClass = "max-w-lg",
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
+  maxWidthClass?: string;
   children: React.ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -107,7 +109,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-xl bg-white border border-ink-200 shadow-raised my-auto outline-none"
+        className={`w-full ${maxWidthClass} rounded-xl bg-white border border-ink-200 shadow-raised my-auto outline-none`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
