@@ -66,14 +66,39 @@ export default function JhaListPage() {
   const canCreateJha = mounted && JHA_WRITE_ROLES.includes(role ?? "");
 
   const { data, loading, error, refresh } = useApi<JhaRow[]>("/api/jha", []);
+  const { data: wmsRaw } = useApi<any[]>("/api/wms", []);
+  const wmsList = Array.isArray(wmsRaw) ? wmsRaw : [];
   const rows = Array.isArray(data) ? data : [];
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState<"open" | "approved" | "all">("open");
+  const [tab, setTab] = useState<"needs_jha" | "open" | "approved" | "all">("open");
 
   useEffect(() => setMounted(true), []);
 
+  const pendingWms = useMemo(() => {
+    return wmsList.filter(
+      (w) => w.status === "APPROVED" && (!w.hasJha || w.jhaStatus !== "APPROVED"),
+    );
+  }, [wmsList]);
+
+  // If there are pending WMS needing JHA and user is HSE, default tab to needs_jha
+  useEffect(() => {
+    if (canCreateJha && pendingWms.length > 0 && tab === "open") {
+      setTab("needs_jha");
+    }
+  }, [canCreateJha, pendingWms.length]);
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
+    if (tab === "needs_jha") {
+      return pendingWms.filter((w) => {
+        if (!term) return true;
+        return (
+          w.wmsNumber.toLowerCase().includes(term) ||
+          w.title.toLowerCase().includes(term) ||
+          (w.equipmentName ?? "").toLowerCase().includes(term)
+        );
+      });
+    }
     return rows.filter((r) => {
       if (tab === "open" && r.status !== "UNDER_REVIEW" && r.status !== "DRAFT") return false;
       if (tab === "approved" && r.status !== "APPROVED") return false;
@@ -85,7 +110,7 @@ export default function JhaListPage() {
         (r.equipmentName ?? "").toLowerCase().includes(term)
       );
     });
-  }, [rows, q, tab]);
+  }, [rows, pendingWms, q, tab]);
 
   const awaiting = rows.filter((r) => r.status === "UNDER_REVIEW").length;
   const approved = rows.filter((r) => r.status === "APPROVED").length;
@@ -137,15 +162,37 @@ export default function JhaListPage() {
           ]}
         />
 
+        {canCreateJha && pendingWms.length > 0 && (
+          <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-brand-900">
+                  {pendingWms.length} Approved Work Method Statement{pendingWms.length === 1 ? "" : "s"} Ready for Analysis
+                </p>
+                <p className="text-xs text-brand-700 mt-0.5">
+                  Management approval is complete. HSE may now break down the job hazards and controls to clear the way for permits.
+                </p>
+              </div>
+            </div>
+            <Button href={`/jha/new?wmsId=${pendingWms[0]?.id}`} size="sm" icon={PlusCircle}>
+              Draft JHA
+            </Button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <Tabs
             ariaLabel="Filter hazard analyses"
             value={tab}
             onChange={setTab}
             items={[
-              { value: "open", label: "Open", count: awaiting },
-              { value: "approved", label: "Approved", count: approved },
-              { value: "all", label: "All", count: rows.length },
+              ...(pendingWms.length > 0
+                ? [{ value: "needs_jha" as const, label: "Needs Analysis", count: pendingWms.length }]
+                : []),
+              { value: "open" as const, label: "Open", count: awaiting },
+              { value: "approved" as const, label: "Approved", count: approved },
+              { value: "all" as const, label: "All", count: rows.length },
             ]}
           />
           <div className="relative flex-1">
@@ -167,11 +214,19 @@ export default function JhaListPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={ShieldAlert}
-              title={rows.length === 0 ? "No hazard analysis yet" : "Nothing matches that"}
+              title={
+                tab === "needs_jha"
+                  ? "All approved method statements have hazard analyses"
+                  : rows.length === 0
+                    ? "No hazard analysis yet"
+                    : "Nothing matches that"
+              }
               message={
-                rows.length === 0
-                  ? "No hazard analysis yet. Each one is written against an approved method statement, and a permit needs one."
-                  : "Try a different search or tab."
+                tab === "needs_jha"
+                  ? "Every approved Work Method Statement has an associated Job Hazard Analysis in place."
+                  : rows.length === 0
+                    ? "No hazard analysis yet. Each one is written against an approved method statement, and a permit needs one."
+                    : "Try a different search or tab."
               }
               blockedBy={
                 rows.length === 0
@@ -179,9 +234,39 @@ export default function JhaListPage() {
                   : undefined
               }
             />
+          ) : tab === "needs_jha" ? (
+            <div className="divide-y divide-ink-200">
+              {filtered.map((w: any) => (
+                <div
+                  key={w.id}
+                  className="p-5 flex items-center justify-between gap-4 hover:bg-ink-50 transition-colors"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-ink-500">{w.wmsNumber}</span>
+                      <span className="text-xs text-ink-400">rev {w.revision ?? 0}</span>
+                      <Badge className="bg-brand-500/10 text-brand-700 border-brand-500/20">
+                        Method Approved
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-semibold text-ink-900 truncate">{w.title}</p>
+                    <p className="text-xs text-ink-500">
+                      Approved by {w.approvedByName ?? "Management"}
+                      {w.approvedDate && ` on ${formatDate(w.approvedDate)}`}
+                      {w.equipmentName && ` · ${w.equipmentName}`}
+                    </p>
+                  </div>
+                  {canCreateJha && (
+                    <Button href={`/jha/new?wmsId=${w.id}`} size="sm" icon={PlusCircle}>
+                      Raise JHA
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="divide-y divide-ink-200">
-              {filtered.map((r) => (
+              {filtered.map((r: any) => (
                 <Link
                   key={r.id}
                   href={`/jha/${r.id}`}
