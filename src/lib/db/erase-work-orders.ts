@@ -72,6 +72,39 @@ async function main() {
   const batches = await db.select({ id: pmBatches.id }).from(pmBatches);
   const docIds = [...woIds, ...checklistIds];
 
+  // WMS attached to any WO are hard-erased per operational reset requirement
+  const attachedWms = woIds.length
+    ? await db
+        .select({ id: wmsDocuments.id, n: wmsDocuments.wmsNumber })
+        .from(wmsDocuments)
+        .where(or(inArray(wmsDocuments.workOrderId, woIds), isNotNull(wmsDocuments.workOrderId)))
+    : [];
+  const attachedWmsIds = attachedWms.map((w) => w.id);
+
+  // JHAs linked to those WOs or attached WMS
+  const attachedJhas = await db
+    .select({ id: jhaDocuments.id, n: jhaDocuments.jhaNumber })
+    .from(jhaDocuments)
+    .where(
+      or(
+        woIds.length ? inArray(jhaDocuments.workOrderId, woIds) : sql`false`,
+        attachedWmsIds.length ? inArray(jhaDocuments.wmsId, attachedWmsIds) : sql`false`,
+      ),
+    );
+  const attachedJhaIds = attachedJhas.map((j) => j.id);
+
+  // Permits linked to those WOs or attached JHAs
+  const attachedPermits = await db
+    .select({ id: permits.id, n: permits.permitNumber })
+    .from(permits)
+    .where(
+      or(
+        woIds.length ? inArray(permits.workOrderId, woIds) : sql`false`,
+        attachedJhaIds.length ? inArray(permits.jhaId, attachedJhaIds) : sql`false`,
+      ),
+    );
+  const attachedPermitIds = attachedPermits.map((p) => p.id);
+
   const today = new Date().toISOString().slice(0, 10);
   const planRows = await db
     .select({
@@ -105,6 +138,9 @@ async function main() {
         )
       : 0,
     batches: batches.length,
+    attachedWms: attachedWms.length,
+    attachedJhas: attachedJhas.length,
+    attachedPermits: attachedPermits.length,
     movements: woIds.length
       ? await count(db.select({ id: sparePartMovements.id }).from(sparePartMovements).where(inArray(sparePartMovements.workOrderId, woIds)))
       : 0,
@@ -120,6 +156,9 @@ async function main() {
   console.log(`  hours booked to them ......... ${n.timeLogs}`);
   console.log(`  their signatures ............. ${n.signoffs}`);
   console.log(`  PM batches ................... ${n.batches}`);
+  console.log(`  WMS attached to WOs .......... ${n.attachedWms}`);
+  console.log(`  JHAs attached to WOs ......... ${n.attachedJhas}`);
+  console.log(`  permits attached to WOs ...... ${n.attachedPermits}`);
   console.log(`\nKept, link to the work order cleared`);
   console.log(`  spares movements ............. ${n.movements}   (stock figures unchanged)`);
   console.log(`  breakdown records ............ ${n.corrective}  (back to "raise the work order")`);
@@ -138,6 +177,27 @@ async function main() {
     await db.update(wmsDocuments).set({ workOrderId: null }).where(inArray(wmsDocuments.workOrderId, woIds));
     await db.update(jhaDocuments).set({ workOrderId: null }).where(inArray(jhaDocuments.workOrderId, woIds));
     await db.update(permits).set({ workOrderId: null }).where(inArray(permits.workOrderId, woIds));
+  }
+
+  // Hard delete attached permits and their signoffs/seals
+  if (attachedPermitIds.length) {
+    await db.delete(signoffs).where(and(eq(signoffs.entityType, "PERMIT"), inArray(signoffs.entityId, attachedPermitIds)));
+    await db.delete(documentSeals).where(and(eq(documentSeals.entityType, "PERMIT"), inArray(documentSeals.entityId, attachedPermitIds)));
+    await db.delete(permits).where(inArray(permits.id, attachedPermitIds));
+  }
+
+  // Hard delete attached JHAs and their signoffs/seals
+  if (attachedJhaIds.length) {
+    await db.delete(signoffs).where(and(eq(signoffs.entityType, "JHA"), inArray(signoffs.entityId, attachedJhaIds)));
+    await db.delete(documentSeals).where(and(eq(documentSeals.entityType, "JHA"), inArray(documentSeals.entityId, attachedJhaIds)));
+    await db.delete(jhaDocuments).where(inArray(jhaDocuments.id, attachedJhaIds));
+  }
+
+  // Hard delete attached WMS and their signoffs/seals
+  if (attachedWmsIds.length) {
+    await db.delete(signoffs).where(and(eq(signoffs.entityType, "WMS"), inArray(signoffs.entityId, attachedWmsIds)));
+    await db.delete(documentSeals).where(and(eq(documentSeals.entityType, "WMS"), inArray(documentSeals.entityId, attachedWmsIds)));
+    await db.delete(wmsDocuments).where(inArray(wmsDocuments.id, attachedWmsIds));
   }
 
   // The plan: unlinked, and back to what its date says it is.

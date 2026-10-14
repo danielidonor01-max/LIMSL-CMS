@@ -4,8 +4,9 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ShieldAlert } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import ChainPreview from "@/components/ChainPreview";
@@ -16,6 +17,7 @@ import MachineSelect from "@/components/MachineSelect";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
 import { LIKELIHOOD, SEVERITY, rate, BAND_LABEL, BAND_TONE } from "@/lib/hse/risk-matrix";
+import { JHA_WRITE_ROLES } from "@/lib/roles";
 
 type StepRow = {
   step: string;
@@ -45,9 +47,15 @@ const emptyStep = (): StepRow => ({
 function NewJhaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
   const [wmsList, setWmsList] = useState<any[]>([]);
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  const role = (session?.user as { role?: string })?.role ?? null;
+  const canCreate = mounted && JHA_WRITE_ROLES.includes(role ?? "");
 
   const [wmsId, setWmsId] = useState(searchParams.get("wmsId") ?? "");
   // Set when this analysis REVISES an earlier one, because the method it was
@@ -131,6 +139,50 @@ function NewJhaForm() {
       setSaving(false);
     }
   };
+
+  if (!mounted || status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-ink-500">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+      </div>
+    );
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
+        <main className={PAGE_MAIN.detail}>
+          <PageHeader
+            title="Safety Governance Restriction"
+            subtitle="Only Health, Safety & Environment (HSE) officers are authorised to raise Job Hazard Analyses"
+            backHref="/jha"
+            backLabel="Hazard analyses"
+          />
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 max-w-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="w-5 h-5 text-warn-600 shrink-0 mt-0.5" />
+              <div className="space-y-2 text-sm text-ink-600">
+                <p className="font-semibold text-ink-900">
+                  Role-based safety authorization required (HSE only)
+                </p>
+                <p>
+                  In accordance with ISO 45001 safety governance and LIMSL operational protocols, only designated HSE officers and Safety Managers can break down approved Work Method Statements into hazard steps and risk matrices.
+                </p>
+                <p className="text-xs text-ink-500">
+                  Current role: <span className="font-semibold text-ink-700">{role ?? "Unassigned"}</span>. When an approved WMS is ready for a JHA, the safety team receives automatic notification to draft and approve the document.
+                </p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <Button href="/jha" variant="secondary">
+                Return to hazard analyses
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">

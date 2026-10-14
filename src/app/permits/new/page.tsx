@@ -9,6 +9,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import TimeField from "@/components/TimeField";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ShieldCheck, Loader2, FileText, ShieldAlert, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import Select from "@/components/Select";
@@ -17,7 +18,7 @@ import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import TriStateChecklist, { type TriState } from "@/components/TriStateChecklist";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import {
   PERMIT_WORK_TYPES,
   ZONE_CLASSIFICATIONS,
@@ -35,6 +36,12 @@ type Marks = Record<string, TriState>;
 function NewPermitForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const role = (session?.user as { role?: string })?.role ?? null;
+  const canIssue = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
+
   const prefillEquipmentId = searchParams.get("equipmentId") || "";
   const prefillJhaId = searchParams.get("jhaId") || "";
   // The PM batch this permit is for. A standing hazard analysis covers a
@@ -192,10 +199,46 @@ function NewPermitForm() {
     }
   };
 
-  if (loading) {
+  if (loading || !mounted || status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center text-ink-500">
         <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+      </div>
+    );
+  }
+
+  if (!canIssue) {
+    return (
+      <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
+        <main className={PAGE_MAIN.detail}>
+          <PageHeader
+            title="Permit Authority Restriction"
+            subtitle="Only Health, Safety & Environment (HSE) officers are authorised to issue Permits to Work"
+            backHref="/permits"
+            backLabel="Permits"
+          />
+          <div className="bg-surface border border-line rounded-xl shadow-card p-6 max-w-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="w-5 h-5 text-warn-600 shrink-0 mt-0.5" />
+              <div className="space-y-2 text-sm text-ink-600">
+                <p className="font-semibold text-ink-900">
+                  Role-based safety authorization required (HSE only)
+                </p>
+                <p>
+                  In accordance with LIMSL safety protocols and statutory factory regulations, only designated HSE officers and Safety Managers are empowered to verify isolation, lock-out/tag-out, gas/hot-work precautions, and issue live Permits to Work.
+                </p>
+                <p className="text-xs text-ink-500">
+                  Current role: <span className="font-semibold text-ink-700">{role ?? "Unassigned"}</span>. Once the preparatory JHA is approved, the HSE safety desk issues the permit before physical maintenance commences.
+                </p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <Button href="/permits" variant="secondary">
+                Return to permits list
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

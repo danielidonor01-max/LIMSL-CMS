@@ -4,7 +4,8 @@
 import Tabs from "@/components/Tabs";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -15,6 +16,7 @@ import MetricPanel from "@/components/MetricPanel";
 import { Badge } from "@/components/Badge";
 import { ShieldAlert, PlusCircle, Search, ChevronRight, FileText } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { JHA_WRITE_ROLES } from "@/lib/roles";
 
 type JhaRow = {
   id: string;
@@ -58,10 +60,17 @@ const stepCount = (raw: string | null): number => {
 };
 
 export default function JhaListPage() {
+  const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  const role = (session?.user as { role?: string })?.role ?? null;
+  const canCreateJha = mounted && JHA_WRITE_ROLES.includes(role ?? "");
+
   const { data, loading, error, refresh } = useApi<JhaRow[]>("/api/jha", []);
   const rows = Array.isArray(data) ? data : [];
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"open" | "approved" | "all">("open");
+
+  useEffect(() => setMounted(true), []);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -90,9 +99,11 @@ export default function JhaListPage() {
           backHref="/"
           backLabel="Dashboard"
           actions={
-            <Button href="/jha/new" icon={PlusCircle}>
-              New Analysis
-            </Button>
+            canCreateJha ? (
+              <Button href="/jha/new" icon={PlusCircle}>
+                New Analysis
+              </Button>
+            ) : undefined
           }
         />
 

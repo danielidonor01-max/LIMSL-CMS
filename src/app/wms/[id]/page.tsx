@@ -14,7 +14,7 @@ import SignoffChain from "@/components/SignoffChain";
 import PageHeader from "@/components/PageHeader";
 import { Badge } from "@/components/Badge";
 import { WMS_STATUS_BADGE, WMS_STATUS_LABELS } from "@/lib/constants";
-import { WMS_WRITE_ROLES } from "@/lib/roles";
+import { WMS_WRITE_ROLES, JHA_WRITE_ROLES } from "@/lib/roles";
 
 export default function WmsDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -146,6 +146,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       : [currentRevision];
 
   const canRevise = mounted && !loading && (WMS_WRITE_ROLES.includes(role ?? "") || role === "SUPER_ADMIN");
+  const canRaiseJha = mounted && !loading && JHA_WRITE_ROLES.includes(role ?? "");
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -171,9 +172,15 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
                   </Button>
                 )}
                 {wms.status === "APPROVED" ? (
-                  <Button href={`/jha/new?wmsId=${wms.id}`} icon={Biohazard}>
-                    Create JHA from this WMS
-                  </Button>
+                  canRaiseJha ? (
+                    <Button href={`/jha/new?wmsId=${wms.id}`} icon={Biohazard}>
+                      Create JHA from this WMS
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-ink-500 max-w-xs text-right leading-snug">
+                      Approved. HSE creates the Job Hazard Analysis from this method statement.
+                    </span>
+                  )
                 ) : (
                   <span className="text-xs text-ink-500 max-w-xs text-right leading-snug">
                     A hazard analysis is written against an approved method statement. This one is{" "}

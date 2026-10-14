@@ -20,7 +20,7 @@ import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
 import FlowRail, { type FlowLink } from "@/components/FlowRail";
 import TableSkeleton from "@/components/TableSkeleton";
-import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES } from "@/lib/roles";
+import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { WO_STATUS_LABELS, WO_STATUS_BADGE } from "@/lib/constants";
 import type { FlowState } from "@/lib/maintenance/flow";
 import {
@@ -89,6 +89,8 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
   useEffect(() => setMounted(true), []);
 
   const canAssign = mounted && WORK_ASSIGN_ROLES.includes(role ?? "");
+  const canCreateJha = mounted && JHA_WRITE_ROLES.includes(role ?? "");
+  const canIssuePermit = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
 
   // A job is done by the people who hold the tools, so the list offers exactly
   // those and nobody else.
@@ -180,12 +182,14 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
               : undefined,
         }
       : batch.wms?.status === "APPROVED"
-        ? batch.previousJha
-          ? {
-              actionHref: `/jha/new?wmsId=${batch.wms.id}&supersedes=${batch.previousJha.id}`,
-              actionLabel: "Revise the JHA",
-            }
-          : { actionHref: `/jha/new?wmsId=${batch.wms.id}` }
+        ? canCreateJha
+          ? batch.previousJha
+            ? {
+                actionHref: `/jha/new?wmsId=${batch.wms.id}&supersedes=${batch.previousJha.id}`,
+                actionLabel: "Revise the JHA",
+              }
+            : { actionHref: `/jha/new?wmsId=${batch.wms.id}` }
+          : { waitingOn: "Waiting on HSE to raise the Job Hazard Analysis for this batch." }
         : { waitingOn: "The method statement has to be approved first." },
 
     // The permit IS per cycle, so it is raised for this batch by name. The
@@ -193,7 +197,9 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
     PERMIT: batch.permit
       ? { ref: batch.permit.permitNumber, href: `/permits/${batch.permit.id}` }
       : batch.jha?.status === "APPROVED"
-        ? { actionHref: `/permits/new?jhaId=${batch.jha.id}&batchId=${batch.id}` }
+        ? canIssuePermit
+          ? { actionHref: `/permits/new?jhaId=${batch.jha.id}&batchId=${batch.id}` }
+          : { waitingOn: "Waiting on HSE to issue the Permit to Work for this batch." }
         : { waitingOn: "The hazard analysis has to be approved first." },
     WORK: {
       waitingOn: batch.permit
