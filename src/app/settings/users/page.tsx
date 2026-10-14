@@ -43,7 +43,9 @@ import {
   ROLE_RANK,
   ROLE_ALLOWED_PATHS,
   MAINTENANCE_WRITE_ROLES,
+  PERMIT_ISSUE_ROLES,
   PERMIT_WRITE_ROLES,
+  JHA_WRITE_ROLES,
   TRAINING_WRITE_ROLES,
   COMPLIANCE_WRITE_ROLES,
   WMS_WRITE_ROLES,
@@ -69,10 +71,11 @@ type User = {
 // `short` is the column head in the matrix, where horizontal room is scarce.
 const PERMISSION_SETS: { label: string; short: string; roles: string[] }[] = [
   { label: "Maintenance write", short: "Maintenance", roles: MAINTENANCE_WRITE_ROLES },
-  { label: "Permits (issue/close)", short: "Permits", roles: PERMIT_WRITE_ROLES },
+  { label: "Permits to Work (PTW)", short: "PTW", roles: PERMIT_ISSUE_ROLES },
+  { label: "Job Hazard Analysis (JHA)", short: "JHA", roles: JHA_WRITE_ROLES },
   { label: "Training & competency", short: "Training", roles: TRAINING_WRITE_ROLES },
   { label: "Compliance records", short: "Compliance", roles: COMPLIANCE_WRITE_ROLES },
-  { label: "WMS", short: "WMS", roles: WMS_WRITE_ROLES },
+  { label: "Method Statements (WMS)", short: "WMS", roles: WMS_WRITE_ROLES },
   { label: "App settings & users", short: "Admin", roles: SETTINGS_WRITE_ROLES },
 ];
 

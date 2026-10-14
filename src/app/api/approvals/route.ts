@@ -54,6 +54,7 @@ export async function GET() {
           // silently drop a signature somebody is waiting on.
           title: d?.title ?? "Record not found",
           code: d?.code ?? null,
+          subtitle: d?.subtitle ?? null,
         };
       }),
     );

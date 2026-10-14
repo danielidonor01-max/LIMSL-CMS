@@ -22,7 +22,7 @@ import {
 import { inArray } from "drizzle-orm";
 import { entityHref } from "./inbox";
 
-export type Description = { title: string; code: string | null; href: string };
+export type Description = { title: string; code: string | null; href: string; subtitle?: string | null };
 
 const FREQ: Record<string, string> = {
   MONTHLY: "monthly",
@@ -32,7 +32,7 @@ const FREQ: Record<string, string> = {
   ANNUAL: "annually",
 };
 
-type Describer = { title: string; code: string | null; href?: string };
+type Describer = { title: string; code: string | null; href?: string; subtitle?: string | null };
 
 export async function describeEntities(
   items: { entityType: string; entityId: string }[],
@@ -40,7 +40,12 @@ export async function describeEntities(
   const out = new Map<string, Description>();
   const need = (t: string) => [...new Set(items.filter((m) => m.entityType === t).map((m) => m.entityId))];
   const put = (type: string, id: string, d: Describer) =>
-    out.set(`${type}:${id}`, { title: d.title, code: d.code, href: d.href ?? entityHref(type, id) });
+    out.set(`${type}:${id}`, {
+      title: d.title,
+      code: d.code,
+      href: d.href ?? entityHref(type, id),
+      subtitle: d.subtitle ?? null,
+    });
 
   const load = async <T extends { id: string }>(type: string, table: any, describe: (r: T) => Describer) => {
     const ids = need(type);
@@ -50,15 +55,36 @@ export async function describeEntities(
   };
 
   await Promise.all([
-    load("WORK_ORDER", workOrders, (r: any) => ({ title: r.title, code: r.workOrderNumber })),
+    load("WORK_ORDER", workOrders, (r: any) => ({
+      title: r.title,
+      code: r.workOrderNumber,
+      subtitle: r.equipmentName ?? null,
+    })),
     load("CORRECTIVE", correctiveMaintenance, (r: any) => ({
       title: r.faultDescription || r.equipmentName || "Corrective record",
       code: r.cmrfNumber,
+      subtitle: r.equipmentName ?? null,
     })),
-    load("WMS", wmsDocuments, (r: any) => ({ title: r.title, code: r.wmsNumber })),
-    load("JHA", jhaDocuments, (r: any) => ({ title: r.title, code: r.jhaNumber })),
-    load("PERMIT", permits, (r: any) => ({ title: r.workDescription, code: r.permitNumber })),
-    load("PERMIT_CLOSEOUT", permits, (r: any) => ({ title: r.workDescription, code: r.permitNumber })),
+    load("WMS", wmsDocuments, (r: any) => ({
+      title: r.title,
+      code: r.wmsNumber,
+      subtitle: r.categoryName ? `Category: ${r.categoryName}` : null,
+    })),
+    load("JHA", jhaDocuments, (r: any) => ({
+      title: r.title,
+      code: r.jhaNumber,
+      subtitle: r.categoryName ? `Category: ${r.categoryName}` : null,
+    })),
+    load("PERMIT", permits, (r: any) => ({
+      title: r.workDescription,
+      code: r.permitNumber,
+      subtitle: r.equipmentName ? `Equipment: ${r.equipmentName}` : null,
+    })),
+    load("PERMIT_CLOSEOUT", permits, (r: any) => ({
+      title: r.workDescription,
+      code: r.permitNumber,
+      subtitle: r.equipmentName ? `Equipment: ${r.equipmentName}` : null,
+    })),
     load("NON_CONFORMITY", nonConformities, (r: any) => ({ title: r.description, code: r.ncNumber })),
     load("PROCEDURE", procedureRevisions, (r: any) => ({
       title: r.title || "Maintenance procedure",

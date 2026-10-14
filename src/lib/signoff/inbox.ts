@@ -29,6 +29,7 @@ export type SignoffRow = {
   status: string;
   signerUserId?: string | null;
   signerUserName?: string | null;
+  createdAt?: string | null;
 };
 
 export type Actor = { id?: string | null; role?: string | null };
@@ -53,15 +54,35 @@ export const ENTITY_META: Record<string, { label: string; href: (id: string) => 
 export const entityLabel = (t: string) => ENTITY_META[t]?.label ?? t.toLowerCase().replace(/_/g, " ");
 export const entityHref = (t: string, id: string) => ENTITY_META[t]?.href(id) ?? "/";
 
+export type PriorityTier = "urgent" | "operational" | "review";
+
+export function getPriorityTier(entityType: string, personal: boolean): PriorityTier {
+  if (personal || entityType === "PERMIT" || entityType === "PERMIT_CLOSEOUT" || entityType === "SAFETY_INCIDENT") {
+    return "urgent";
+  }
+  if (
+    entityType === "WORK_ORDER" ||
+    entityType === "JHA" ||
+    entityType === "CORRECTIVE" ||
+    entityType === "PM_CHECKLIST"
+  ) {
+    return "operational";
+  }
+  return "review";
+}
+
 export type InboxItem = {
   signoffId: string;
   entityType: string;
   entityId: string;
   stepOrder: number;
+  totalSteps?: number;
   role: string;
   roleLabel: string;
   /** True when this step names this person specifically rather than their role. */
   personal: boolean;
+  createdAt?: string | null;
+  priorityTier: PriorityTier;
 };
 
 /**
@@ -82,6 +103,7 @@ export function pendingFor(rows: SignoffRow[], actor: Actor): InboxItem[] {
 
   for (const chain of byEntity.values()) {
     const ordered = [...chain].sort((a, b) => a.stepOrder - b.stepOrder);
+    const totalSteps = ordered.filter((s) => s.required !== false).length || ordered.length;
 
     for (const step of ordered) {
       if (step.status !== "PENDING") continue;
@@ -97,14 +119,18 @@ export function pendingFor(rows: SignoffRow[], actor: Actor): InboxItem[] {
 
       if (!isStepUnlocked(ordered, step.stepOrder)) continue;
 
+      const personal = !!step.signerUserId;
       out.push({
         signoffId: step.id,
         entityType: step.entityType,
         entityId: step.entityId,
         stepOrder: step.stepOrder,
+        totalSteps,
         role: step.role,
         roleLabel: step.roleLabel,
-        personal: !!step.signerUserId,
+        personal,
+        createdAt: step.createdAt ?? null,
+        priorityTier: getPriorityTier(step.entityType, personal),
       });
     }
   }
@@ -128,11 +154,14 @@ const URGENCY: Record<string, number> = {
   PROCEDURE: 9,
 };
 
-export function sortInbox<T extends { entityType: string; personal: boolean }>(items: T[]): T[] {
+export function sortInbox<T extends { entityType: string; personal: boolean; createdAt?: string | null }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     // Something addressed to you by name comes first whatever it is: nobody
     // else can clear it.
     if (a.personal !== b.personal) return a.personal ? -1 : 1;
-    return (URGENCY[a.entityType] ?? 50) - (URGENCY[b.entityType] ?? 50);
+    const diff = (URGENCY[a.entityType] ?? 50) - (URGENCY[b.entityType] ?? 50);
+    if (diff !== 0) return diff;
+    if (a.createdAt && b.createdAt) return a.createdAt.localeCompare(b.createdAt);
+    return 0;
   });
 }
