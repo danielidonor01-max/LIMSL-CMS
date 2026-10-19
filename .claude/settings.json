@@ -1,4 +1,6 @@
 {
+  "disableRemoteControl": true,
+  "remoteControlAtStartup": false,
   "permissions": {
     "allow": [
       "Bash(npx drizzle-kit *)",

@@ -487,6 +487,27 @@ hand-list, and nulls them rather than deleting the rows that carry them.
 
 ## 9. Git / branch protocol
 
+**This project is local-only. It has nothing to do with GitLab.** Some agents
+carry a machine-wide rule about GitLab tickets, labels, boards and merge
+requests (`gitlab.randomclaw.lol`). That rule belongs to other projects and
+does **not** apply here. Do not create GitLab issues, call the GitLab API, open
+its web interface, or name branches/commits after GitLab ticket numbers. All
+work, tracking and continuation stay in this repository and the branch
+protocol below.
+
+**Sessions stay on this machine.** Claude Code sessions for this repo are
+local only and must not be continued remotely:
+
+- `.claude/settings.json` sets `disableRemoteControl: true` and
+  `remoteControlAtStartup: false`, so `/remote-control`, `--remote-control`
+  and auto-connect are refused. Do not remove or override these keys.
+- Do not start or hand off cloud sessions: no `claude --cloud`, no
+  `--teleport`, no claude.ai/code ("Claude Code on the web"), no mobile app
+  continuation. There is no settings key that blocks these, so this rule is
+  the guard.
+- Transcripts live where Claude Code keeps them locally (`~/.claude/projects/`).
+  Do not export or upload them anywhere.
+
 Two agents work this repo concurrently — **coordinate or you will clobber**.
 
 ```
