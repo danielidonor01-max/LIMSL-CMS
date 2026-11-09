@@ -107,7 +107,7 @@ export async function describeEntities(
             ? `${r.previousLabel}: ${FREQ[r.previousFrequency] ?? r.previousFrequency} to ${FREQ[r.proposedFrequency] ?? r.proposedFrequency}`
             : `${r.previousLabel} renamed to ${r.proposedLabel}`,
       code: r.changeNumber,
-      href: `/settings/categories?change=${r.id}`,
+      href: `/asset-categories?change=${r.id}`,
     })),
   ]);
 

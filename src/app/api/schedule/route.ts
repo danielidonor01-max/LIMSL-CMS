@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { maintenanceSchedule, equipment, workOrders, auditLog } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { SCHEDULE_WRITE_ROLES } from "@/lib/roles";
@@ -84,10 +85,13 @@ export async function POST(request: Request) {
     const [eq0] = await db.select().from(equipment).where(eq(equipment.id, body.equipmentId)).limit(1);
     if (!eq0) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
 
-    const d = new Date(`${String(body.plannedDate).slice(0, 10)}T00:00:00`);
-    if (Number.isNaN(d.getTime())) {
+    const asked = String(body.plannedDate).slice(0, 10);
+    if (Number.isNaN(new Date(`${asked}T00:00:00`).getTime())) {
       return NextResponse.json({ error: "Invalid planned date" }, { status: 400 });
     }
+    // The weekend rule the annual plan follows applies to work added by hand too.
+    const plannedDate = toWorkingDay(asked);
+    const d = new Date(`${plannedDate}T00:00:00`);
 
     const row = {
       id: nanoid(),
@@ -95,7 +99,7 @@ export async function POST(request: Request) {
       year: d.getFullYear(),
       quarter: Math.floor(d.getMonth() / 3) + 1,
       month: d.getMonth() + 1,
-      plannedDate: body.plannedDate.slice(0, 10),
+      plannedDate,
       activityType: body.activityType,
       taskDescription: body.taskDescription || null,
       // Falls back to the machine's own frequency, then to what its criticality
@@ -119,7 +123,7 @@ export async function POST(request: Request) {
       entityDescription: `${row.activityType} scheduled for ${eq0.assetId} on ${row.plannedDate}`,
     });
 
-    return NextResponse.json(row, { status: 201 });
+    return NextResponse.json(plannedDate !== asked ? { ...row, movedFromWeekend: asked } : row, { status: 201 });
   } catch (error) {
     console.error("Failed to create schedule activity:", error);
     return NextResponse.json({ error: "Failed to create schedule activity" }, { status: 500 });

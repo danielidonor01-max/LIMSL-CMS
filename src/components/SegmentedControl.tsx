@@ -22,7 +22,8 @@
 // exactly one option is always chosen.
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
+import { m, useReducedMotion } from "motion/react";
 
 export type SegmentOption<T extends string> = {
   value: T;
@@ -48,6 +49,10 @@ export default function SegmentedControl<T extends string>({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion() ?? false;
+  // Per instance, not per label, for the same reason as Tabs: a shared id
+  // lets the highlight leave one control and land in another.
+  const highlightId = useId();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const i = options.findIndex((o) => o.value === value);
@@ -86,17 +91,27 @@ export default function SegmentedControl<T extends string>({
             tabIndex={active ? 0 : -1}
             title={o.title}
             onClick={() => onChange(o.value)}
-            className={`inline-flex items-center gap-1.5 px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
- active ? "bg-surface text-brand-700 shadow-card" : "text-ink-600 hover:text-ink-900"
- }`}
+            className={`relative inline-flex items-center gap-1.5 px-3 min-h-9 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              active ? "text-brand-700" : "text-ink-600 hover:text-ink-900"
+            }`}
           >
-            {Icon && <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
-            {o.label}
-            {o.count !== undefined && (
-              <span className={`tabular-nums font-normal ${active ? "text-ink-500" : "text-ink-500"}`}>
-                {o.count}
-              </span>
+            {active && (
+              <m.span
+                layoutId={highlightId}
+                aria-hidden="true"
+                className="absolute inset-0 bg-surface rounded-lg shadow-card border border-line/40"
+                transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 450, damping: 32 }}
+              />
             )}
+            <span className="relative z-10 inline-flex items-center gap-1.5">
+              {Icon && <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
+              {o.label}
+              {o.count !== undefined && (
+                <span className="tabular-nums font-normal text-ink-500">
+                  {o.count}
+                </span>
+              )}
+            </span>
           </button>
         );
       })}

@@ -16,6 +16,27 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { m, useReducedMotion } from "motion/react";
+import AnimatedCounter from "@/components/AnimatedCounter";
+import { parseFigure } from "@/lib/figure";
+
+// Rolls the number only when it can be drawn back exactly. parseFloat used to
+// decide this, and it turned "92%" into "92" and "3.5" into "4".
+function Figure({ value, duration }: { value: number | string; duration: number }) {
+  const f = parseFigure(value);
+  if (!f) return <>{value}</>;
+  return (
+    <AnimatedCounter
+      value={f.num}
+      decimals={f.decimals}
+      padStart={f.padStart}
+      separator={f.separator}
+      prefix={f.prefix || undefined}
+      suffix={f.suffix || undefined}
+      duration={duration}
+    />
+  );
+}
 
 export type LeadTone = "good" | "warn" | "bad";
 
@@ -59,6 +80,7 @@ export default function PageLead({
   meta?: React.ReactNode;
   headingId?: string;
 }) {
+  const reduced = useReducedMotion() ?? false;
   return (
     <section
       aria-labelledby={headingId}
@@ -110,7 +132,9 @@ export default function PageLead({
           </p>
 
           <div className="flex items-end gap-2 mt-4">
-            <span className="text-3xl font-semibold leading-none tabular-nums">{figure.value}</span>
+            <span className="text-3xl font-semibold leading-none tabular-nums">
+              <Figure value={figure.value} duration={0.6} />
+            </span>
             {figure.unit && (
               <span className="text-xl text-nav-text leading-none mb-1">{figure.unit}</span>
             )}
@@ -118,13 +142,19 @@ export default function PageLead({
 
           {figure.progress !== undefined && (
             <div
-              className="mt-4 h-1 rounded-full bg-nav-active overflow-hidden"
+              className="mt-4 h-1.5 rounded-full bg-nav-active overflow-hidden"
               role="img"
               aria-label={`${Math.round(figure.progress)} percent`}
             >
-              <span
-                className={`block h-full rounded-full ${BAR[figure.tone ?? "good"]}`}
+              {/* Grown with scaleX, not width: width re-lays out the panel on
+                  every frame of the spring, a transform does not. Later changes
+                  to the figure ease the width in CSS. */}
+              <m.span
+                className={`block h-full rounded-full origin-left transition-[width] duration-500 ${BAR[figure.tone ?? "good"]}`}
                 style={{ width: `${Math.max(0, Math.min(100, figure.progress))}%` }}
+                initial={reduced ? false : { scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ type: "spring", stiffness: 120, damping: 20 }}
               />
             </div>
           )}
@@ -132,8 +162,8 @@ export default function PageLead({
           {stats.length > 0 && (
             <dl
               className={`grid gap-3 mt-5 pt-4 border-t border-nav-line ${
- stats.length >= 3 ? "grid-cols-3" : stats.length === 2 ? "grid-cols-2" : "grid-cols-1"
- }`}
+                stats.length >= 3 ? "grid-cols-3" : stats.length === 2 ? "grid-cols-2" : "grid-cols-1"
+              }`}
             >
               {stats.map((s) => (
                 <LeadStatCell key={s.label} {...s} />
@@ -160,7 +190,9 @@ function LeadStatCell({ label, value, tone = "plain" }: LeadStat) {
         : "text-white";
   return (
     <div>
-      <dd className={`text-xl font-semibold leading-none tabular-nums ${colour}`}>{value}</dd>
+      <dd className={`text-xl font-semibold leading-none tabular-nums ${colour}`}>
+        <Figure value={value} duration={0.5} />
+      </dd>
       <dt className="text-xs text-nav-text mt-1.5">{label}</dt>
     </div>
   );

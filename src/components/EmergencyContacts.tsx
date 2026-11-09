@@ -12,7 +12,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Phone, Plus, Trash2, PhoneOff } from "lucide-react";
+import { Phone, Plus, PhoneOff } from "lucide-react";
+import { DeleteButton } from "@/components/DeleteButton";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Select from "@/components/Select";
@@ -154,14 +155,10 @@ export default function EmergencyContacts({ canWrite }: { canWrite: boolean }) {
                   </Button>
                 )}
                 {canWrite && (
-                  <button
-                    onClick={() => remove(c)}
+                  <DeleteButton
+                    onConfirm={() => remove(c)}
                     aria-label={`Remove ${c.name}`}
-                    title={`Remove ${c.name}`}
-                    className="p-2 text-ink-400 hover:text-danger-600 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  />
                 )}
               </div>
             </div>

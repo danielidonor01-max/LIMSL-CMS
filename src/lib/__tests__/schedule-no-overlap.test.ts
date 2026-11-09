@@ -8,7 +8,7 @@ import {
   DEFAULT_CATEGORY_FREQUENCIES,
   EQUIPMENT_CATEGORY_LABELS,
 } from "../constants";
-import { plannedDatesFor } from "../maintenance/plan-generation";
+import { plannedDatesFor, categoryCalendar } from "../maintenance/plan-generation";
 
 test("all official equipment categories have defined start dates and frequencies", () => {
   const codes = Object.keys(EQUIPMENT_CATEGORY_LABELS);
@@ -53,19 +53,20 @@ test("no two equipment categories have overlapping PM dates across the entire an
   const year = 2026;
   const dateToCategories = new Map<string, string[]>();
 
-  for (const [code, startDate] of Object.entries(DEFAULT_CATEGORY_START_DATES)) {
-    const frequency = DEFAULT_CATEGORY_FREQUENCIES[code] || "QUARTERLY";
-    const activities = plannedDatesFor({
-      frequency,
-      anchorDate: startDate,
-      year,
-    });
-
-    for (const act of activities) {
-      const date = act.plannedDate;
-      if (!dateToCategories.has(date)) {
-        dateToCategories.set(date, []);
-      }
+  // Through the shared calendar, which is how the plan is built: a category
+  // planned on its own cannot know that its Sunday shifts onto a Monday that
+  // another category already owns.
+  const calendar = categoryCalendar(
+    Object.entries(DEFAULT_CATEGORY_START_DATES).map(([code, start]) => ({
+      code,
+      maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] ?? "QUARTERLY",
+      defaultStartDate: start,
+    })),
+    year,
+  );
+  for (const [code, dates] of calendar.dates) {
+    for (const date of dates) {
+      if (!dateToCategories.has(date)) dateToCategories.set(date, []);
       dateToCategories.get(date)!.push(code);
     }
   }

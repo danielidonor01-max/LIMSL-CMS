@@ -5,7 +5,7 @@ import MetricPanel from "@/components/MetricPanel";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import Tabs from "@/components/Tabs";
 import DateField from "@/components/DateField";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useCategoryLabels } from "@/lib/use-category-labels";
 import { useApi } from "@/lib/api-cache";
@@ -25,8 +25,10 @@ import {
   BellOff,
   PauseCircle,
   ClipboardList,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
@@ -40,7 +42,7 @@ import ScheduleCalendar from "@/components/ScheduleCalendar";
 import KebabMenu from "@/components/KebabMenu";
 import AssignPeople from "@/components/AssignPeople";
 import { formatDate } from "@/lib/utils";
-import { ROLE_LABELS, WORK_ASSIGN_ROLES, SCHEDULE_WRITE_ROLES } from "@/lib/roles";
+import { ROLE_LABELS, WORK_ASSIGN_ROLES, SCHEDULE_WRITE_ROLES, MAINTENANCE_WRITE_ROLES, canAccessPath } from "@/lib/roles";
 import {
   ACTIVITY_TYPE_BADGE,
   ACTIVITY_TYPE_LABELS,
@@ -118,7 +120,7 @@ const emptyCreate = {
   responsiblePersonName: "",
 };
 
-export default function SchedulePage() {
+function SchedulePageView() {
   const router = useRouter();
   const { data: rowsData, loading, error, refresh } = useApi<ScheduleRow[]>("/api/schedule", []);
   // Names as the register holds them, including categories added in Settings.
@@ -134,10 +136,19 @@ export default function SchedulePage() {
   // Naming who does a job, and adding a job to the plan, are the same kind of
   // decision and belong to the same hands.
   const canAssign = mounted && WORK_ASSIGN_ROLES.includes(role ?? "");
+  // Rescheduling, deferring and raising a work order are what the schedule
+  // route accepts from MAINTENANCE_WRITE_ROLES. QA/QC and HSE were offered all
+  // three and refused every time; a control that is always refused is worse
+  // than no control.
+  const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
   const canSchedule = mounted && SCHEDULE_WRITE_ROLES.includes(role ?? "");
   const [tab, setTab] = useState<"upcoming" | "all" | "deferred">("upcoming");
   const [view, setView] = useState<"list" | "calendar">("list");
-  const [q, setQ] = useState("");
+  // Arriving from a category page or a machine's menu, the URL names what to
+  // narrow to, so the first screen is already the one they came for.
+  const searchParams = useSearchParams();
+  const [q, setQ] = useState(() => searchParams.get("q") ?? "");
+  const [categoryFilter, setCategoryFilter] = useState(() => searchParams.get("category") ?? "ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [quarterFilter, setQuarterFilter] = useState("ALL");
@@ -152,8 +163,10 @@ export default function SchedulePage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreate);
   const [saving, setSaving] = useState(false);
-  const [reschedule, setReschedule] = useState<{ row: ScheduleRow; date: string } | null>(null);
-  const [defer, setDefer] = useState<{ row: ScheduleRow; reason: string; reviewDate: string } | null>(
+  // `group` moves every machine of the category on that day, not just the
+  // row the menu happened to be opened from.
+  const [reschedule, setReschedule] = useState<{ row: ScheduleRow; date: string; group?: boolean } | null>(null);
+  const [defer, setDefer] = useState<{ row: ScheduleRow; reason: string; reviewDate: string; group?: boolean } | null>(
     null,
   );
   const [snooze, setSnooze] = useState<{ row: ScheduleRow; reason: string; until: string } | null>(null);
@@ -163,6 +176,12 @@ export default function SchedulePage() {
     categoryLabel: string;
     plannedDate: string;
     rows: ScheduleRow[];
+    activityType: string;
+    status: string;
+    category: string | null;
+    responsiblePersonName: string | null;
+    assistantIds: string | null;
+    batchId: string | null;
   } | null>(null);
 
   const raiseBatch = async (r: ScheduleRow) => {
@@ -273,7 +292,11 @@ export default function SchedulePage() {
         toast.error(d.error || "Failed to schedule activity.");
         return;
       }
-      toast.success("Activity scheduled.");
+      toast.success(
+        d.movedFromWeekend
+          ? `Scheduled for ${formatDate(d.plannedDate)}. ${formatDate(d.movedFromWeekend)} is a weekend, so it moved to the next working day.`
+          : "Activity scheduled.",
+      );
       setShowCreate(false);
       setCreateForm(emptyCreate);
       load();
@@ -291,14 +314,18 @@ export default function SchedulePage() {
       const res = await fetch(`/api/schedule/${reschedule.row.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plannedDate: reschedule.date }),
+        body: JSON.stringify({ plannedDate: reschedule.date, applyToCategory: reschedule.group === true }),
       });
       const d = await res.json();
       if (!res.ok) {
         toast.error(d.error || "Failed to reschedule.");
         return;
       }
-      toast.success("Activity rescheduled.");
+      toast.success(
+        d.movedFromWeekend
+          ? `Rescheduled to ${formatDate(d.plannedDate)}. ${formatDate(d.movedFromWeekend)} is a weekend, so it moved to the next working day.`
+          : "Activity rescheduled.",
+      );
       setReschedule(null);
       load();
     } catch {
@@ -319,6 +346,7 @@ export default function SchedulePage() {
           action: "defer",
           deferredReason: defer.reason,
           deferredReviewDate: defer.reviewDate,
+          applyToCategory: defer.group === true,
         }),
       });
       const d = await res.json();
@@ -360,7 +388,7 @@ export default function SchedulePage() {
   // reached the same way everything else here is. What the row still SAYS,
   // in its own column, is whether one exists.
 
-  const rowActions = (r: ScheduleRow) => [
+  const rowActions = (r: ScheduleRow, group = false) => [
     // Assigning names who carries the job. A technician may raise a work
     // order, move a date and record a deferral, but not put somebody else's
     // name on the work — the route refuses it either way, and a control that
@@ -368,16 +396,16 @@ export default function SchedulePage() {
     ...(canAssign && r.status !== "COMPLETED"
       ? [{ label: "Assign people", icon: Users, onClick: () => setAssign(r) }]
       : []),
-    ...(r.status !== "COMPLETED"
+    ...(canWrite && r.status !== "COMPLETED"
       ? [
           {
-            label: "Reschedule",
+            label: group ? "Reschedule all" : "Reschedule",
             icon: CalendarClock,
-            onClick: () => setReschedule({ row: r, date: r.plannedDate }),
+            onClick: () => setReschedule({ row: r, date: r.plannedDate, group }),
           },
         ]
       : []),
-    ...(r.status === "OVERDUE"
+    ...(canWrite && r.status === "OVERDUE"
       ? [
           {
             label: "Quieten reminders",
@@ -391,7 +419,7 @@ export default function SchedulePage() {
           },
         ]
       : []),
-    ...(r.status !== "COMPLETED" && r.status !== "DEFERRED"
+    ...(canWrite && r.status !== "COMPLETED" && r.status !== "DEFERRED"
       ? [
           {
             label: "Defer with a reason",
@@ -401,6 +429,7 @@ export default function SchedulePage() {
                 row: r,
                 reason: "",
                 reviewDate: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+                group,
               }),
           },
         ]
@@ -428,7 +457,10 @@ export default function SchedulePage() {
             href: `/work-orders/${r.workOrderId}`,
           },
         ]
-      : [{ label: "Raise a work order", icon: Plus, href: `/work-orders/new?scheduleId=${r.id}` }]),
+      : // A category's machines go through one batch, not a work order each.
+        canWrite && !group
+        ? [{ label: "Raise a work order", icon: Plus, href: `/work-orders/new?scheduleId=${r.id}` }]
+        : []),
   ];
 
   const filtered = useMemo(() => {
@@ -445,6 +477,7 @@ export default function SchedulePage() {
     } else {
       out = [...out].sort((a, b) => b.plannedDate.localeCompare(a.plannedDate));
     }
+    if (categoryFilter !== "ALL") out = out.filter((r) => r.category === categoryFilter);
     if (typeFilter !== "ALL") out = out.filter((r) => r.activityType === typeFilter);
     if (statusFilter !== "ALL") out = out.filter((r) => r.status === statusFilter);
     if (quarterFilter !== "ALL") out = out.filter((r) => String(r.quarter) === quarterFilter);
@@ -454,21 +487,54 @@ export default function SchedulePage() {
         (r) =>
           r.equipmentName?.toLowerCase().includes(term) ||
           r.assetId?.toLowerCase().includes(term) ||
-          r.responsiblePersonName?.toLowerCase().includes(term),
+          r.responsiblePersonName?.toLowerCase().includes(term) ||
+          (r.category ? (EQUIPMENT_CATEGORY_LABELS[r.category] ?? r.category).toLowerCase().includes(term) : false),
       );
     }
     return out;
-  }, [rows, tab, typeFilter, statusFilter, quarterFilter, q]);
+  }, [rows, tab, categoryFilter, typeFilter, statusFilter, quarterFilter, q, EQUIPMENT_CATEGORY_LABELS]);
 
   const deferredCount = rows.filter((r) => r.status === "DEFERRED").length;
 
-  const filtersActive =
-    q.trim() !== "" || typeFilter !== "ALL" || statusFilter !== "ALL" || quarterFilter !== "ALL";
-  const clearFilters = () => {
-    setQ("");
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set(rows.map((r) => r.category).filter((c): c is string => Boolean(c))))
+        .map((code) => [code, EQUIPMENT_CATEGORY_LABELS[code] ?? code] as const)
+        .sort((x, y) => x[1].localeCompare(y[1])),
+    [rows, EQUIPMENT_CATEGORY_LABELS],
+  );
+
+  // Each narrowing filter that is on, as a chip that turns it off. Search is
+  // not one: its box already shows what it holds.
+  const activeFilters = [
+    categoryFilter !== "ALL" && {
+      key: "category",
+      label: EQUIPMENT_CATEGORY_LABELS[categoryFilter] ?? categoryFilter,
+      clear: () => setCategoryFilter("ALL"),
+    },
+    typeFilter !== "ALL" && {
+      key: "type",
+      label: ACTIVITY_TYPE_LABELS[typeFilter] ?? typeFilter,
+      clear: () => setTypeFilter("ALL"),
+    },
+    statusFilter !== "ALL" && {
+      key: "status",
+      label: SCHEDULE_STATUS_LABELS[statusFilter] ?? statusFilter,
+      clear: () => setStatusFilter("ALL"),
+    },
+    quarterFilter !== "ALL" && { key: "quarter", label: `Q${quarterFilter}`, clear: () => setQuarterFilter("ALL") },
+  ].filter((f): f is { key: string; label: string; clear: () => void } => Boolean(f));
+
+  const filtersActive = q.trim() !== "" || activeFilters.length > 0;
+  const clearNarrowing = () => {
+    setCategoryFilter("ALL");
     setTypeFilter("ALL");
     setStatusFilter("ALL");
     setQuarterFilter("ALL");
+  };
+  const clearFilters = () => {
+    setQ("");
+    clearNarrowing();
   };
 
   type CategoryGroup = {
@@ -608,8 +674,11 @@ export default function SchedulePage() {
 
         {view === "list" && (
         <>
-        {/* Tabs + filters */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* The time window decides what the table is about, so it leads. How
+            rows are grouped is a setting of the same table and sits at the end
+            of the same line. Search and the narrowing filters belong to the
+            table and live on it, below, where they were crowding this row. */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between border-b border-line">
           <Tabs
             ariaLabel="Filter scheduled activities"
             value={tab}
@@ -620,50 +689,80 @@ export default function SchedulePage() {
               { value: "deferred", label: "Deferred", count: deferredCount || undefined },
             ]}
           />
-
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="pb-2 shrink-0">
             <SegmentedControl
               ariaLabel="Schedule view grouping"
               value={tableMode}
               onChange={setTableMode}
               options={[
-                { value: "category", label: "By Category" },
-                { value: "individual", label: "All Equipment" },
+                { value: "category", label: "By category" },
+                { value: "individual", label: "By machine" },
               ]}
             />
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-ink-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search equipment / tag…"
-                className="pl-8 pr-3 py-1.5 bg-ink-100 border border-ink-200 rounded-lg text-xs text-ink-900 placeholder:text-ink-500 focus:outline-none focus:border-brand-500/40 w-48"
-              />
-            </div>
-            <FilterSelect value={typeFilter} onChange={setTypeFilter} label="Type">
-              <option value="ALL">All types</option>
-              {Object.entries(ACTIVITY_TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect value={statusFilter} onChange={setStatusFilter} label="Status">
-              <option value="ALL">All statuses</option>
-              {Object.entries(SCHEDULE_STATUS_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </FilterSelect>
-            <FilterSelect value={quarterFilter} onChange={setQuarterFilter} label="Quarter">
-              <option value="ALL">All quarters</option>
-              <option value="1">Q1</option>
-              <option value="2">Q2</option>
-              <option value="3">Q3</option>
-              <option value="4">Q4</option>
-            </FilterSelect>
           </div>
         </div>
 
         {/* Table */}
         <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-line">
+            <div className="relative flex-1 min-w-[12rem] max-w-md">
+              <Search className="w-4 h-4 text-ink-400 absolute left-2.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                aria-label="Search the schedule"
+                placeholder="Search machine, tag, category or person"
+                className="w-full h-9 pl-8 pr-3 bg-canvas border border-line rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/15"
+              />
+            </div>
+            <FilterPopover activeCount={activeFilters.length} onClear={clearNarrowing}>
+              <FilterField label="Category" value={categoryFilter} onChange={setCategoryFilter}>
+                <option value="ALL">All categories</option>
+                {categoryOptions.map(([code, label]) => (
+                  <option key={code} value={code}>{label}</option>
+                ))}
+              </FilterField>
+              <FilterField label="Type" value={typeFilter} onChange={setTypeFilter}>
+                <option value="ALL">All types</option>
+                {Object.entries(ACTIVITY_TYPE_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </FilterField>
+              <FilterField label="Status" value={statusFilter} onChange={setStatusFilter}>
+                <option value="ALL">All statuses</option>
+                {Object.entries(SCHEDULE_STATUS_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </FilterField>
+              <FilterField label="Quarter" value={quarterFilter} onChange={setQuarterFilter}>
+                <option value="ALL">All quarters</option>
+                <option value="1">Q1</option>
+                <option value="2">Q2</option>
+                <option value="3">Q3</option>
+                <option value="4">Q4</option>
+              </FilterField>
+            </FilterPopover>
+            {activeFilters.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={f.clear}
+                aria-label={`Remove filter ${f.label}`}
+                className="inline-flex items-center gap-1 h-7 pl-2.5 pr-1.5 rounded-full bg-brand-50 border border-brand-200 text-xs font-medium text-brand-700 hover:bg-brand-100 transition-colors"
+              >
+                {f.label}
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+              </button>
+            ))}
+            {!loading && (
+              <span className="ml-auto text-xs text-ink-500 tabular-nums whitespace-nowrap" aria-live="polite">
+                {tableMode === "category"
+                  ? `${categoryGroups.length} group${categoryGroups.length === 1 ? "" : "s"}, ${filtered.length} machine${filtered.length === 1 ? "" : "s"}`
+                  : `${filtered.length} activit${filtered.length === 1 ? "y" : "ies"}`}
+              </span>
+            )}
+          </div>
           {error && !loading ? (
             <LoadError what="the maintenance schedule" onRetry={refresh} />
           ) : loading ? (
@@ -675,8 +774,8 @@ export default function SchedulePage() {
                 title="No activities match these filters"
                 message={
                   tab === "upcoming"
-                    ? "Nothing in the next 60 days matches the current search, type, status and quarter."
-                    : "No scheduled activity matches the current search, type, status and quarter."
+                    ? "Nothing in the next 60 days matches the current search and filters."
+                    : "No scheduled activity matches the current search and filters."
                 }
                 actionLabel="Clear filters"
                 onAction={clearFilters}
@@ -732,20 +831,30 @@ export default function SchedulePage() {
                           {g.month ? MONTH_NAMES[g.month - 1] : ""} · Q{g.quarter}
                         </div>
                       </td>
+                      {/* The category is the row's name, and the name opens it,
+                          the way every other register here works. The count
+                          and the first tags under it say what is inside
+                          without a pill and two icons around a number. */}
                       <td className="py-3.5 px-5 max-w-0 w-full">
-                        <div className="font-semibold text-ink-900 truncate">
-                          {g.categoryLabel}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setViewingCategoryGroup(g)}
-                            className="inline-flex items-center gap-1 text-xs text-brand-700 hover:text-brand-900 font-medium px-2 py-0.5 rounded bg-brand-50 border border-brand-200 hover:bg-brand-100"
-                          >
-                            <Layers className="w-3 h-3" />
-                            {g.rows.length} equipment in schedule →
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setViewingCategoryGroup(g)}
+                          className="block max-w-full text-left group/cov"
+                        >
+                          <span className="block font-semibold text-ink-900 truncate group-hover/cov:text-brand-700 group-hover/cov:underline underline-offset-2">
+                            {g.categoryLabel}
+                          </span>
+                          <span className="block text-xs text-ink-500 truncate mt-0.5">
+                            {g.rows.length} machine{g.rows.length === 1 ? "" : "s"}
+                            {" · "}
+                            {g.rows
+                              .slice(0, 3)
+                              .map((r) => r.assetId ?? r.equipmentName)
+                              .filter(Boolean)
+                              .join(", ")}
+                            {g.rows.length > 3 ? ` +${g.rows.length - 3}` : ""}
+                          </span>
+                        </button>
                       </td>
                       <td className="py-3.5 px-5">
                         <Badge className={ACTIVITY_TYPE_BADGE[g.activityType]}>
@@ -772,7 +881,7 @@ export default function SchedulePage() {
                             href={`/pm-batches/${g.batchId}`}
                             className="text-brand-700 font-semibold hover:underline"
                           >
-                            Open Batch →
+                            Open batch
                           </Link>
                         ) : canAssign && g.category && (g.activityType === "PM" || g.activityType === "INS") ? (
                           <button
@@ -780,26 +889,20 @@ export default function SchedulePage() {
                             disabled={saving}
                             className="text-xs text-brand-600 hover:underline font-semibold"
                           >
-                            Raise PM Batch →
+                            Raise PM batch
                           </button>
                         ) : (
                           <span className="text-ink-400">Not batched</span>
                         )}
                       </td>
                       <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => setViewingCategoryGroup(g)}
-                          >
-                            View
-                          </Button>
-                          <KebabMenu
-                            ariaLabel={`Actions for ${g.categoryLabel} on ${g.plannedDate}`}
-                            items={rowActions(g.firstRow)}
-                          />
-                        </div>
+                        <KebabMenu
+                          ariaLabel={`Actions for ${g.categoryLabel} on ${g.plannedDate}`}
+                          items={[
+                            { label: "View machines", icon: Layers, onClick: () => setViewingCategoryGroup(g) },
+                            ...rowActions(g.firstRow, true),
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -1013,7 +1116,7 @@ export default function SchedulePage() {
         </Modal>
 
         {/* Reschedule an activity */}
-        <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
+        <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.group && reschedule.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[reschedule.row.category] ?? reschedule.row.category} machine on this day` : reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
           {reschedule && (
             <div className="space-y-4">
               <p className="text-xs text-ink-500">
@@ -1083,7 +1186,7 @@ export default function SchedulePage() {
           open={!!defer}
           onClose={() => setDefer(null)}
           title="Defer this activity"
-          subtitle={defer ? `${defer.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[defer.row.activityType] ?? defer.row.activityType}` : ""}
+          subtitle={defer ? `${defer.group && defer.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[defer.row.category] ?? defer.row.category} machine on this day` : defer.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[defer.row.activityType] ?? defer.row.activityType}` : ""}
         >
           {defer && (
             <div className="space-y-4">
@@ -1113,119 +1216,126 @@ export default function SchedulePage() {
           )}
         </Modal>
 
-        {/* Category Equipment Breakdown Modal */}
+        {/* One category, one day. What it is, who has it, which machines,
+            and one thing to do about it. The table it used to be put five
+            columns and a link per machine in front of a single decision. */}
         <Modal
           open={!!viewingCategoryGroup}
           onClose={() => setViewingCategoryGroup(null)}
-          title={viewingCategoryGroup?.categoryLabel ?? "Category Equipment Coverage"}
+          title={viewingCategoryGroup?.categoryLabel ?? "Category"}
           subtitle={
             viewingCategoryGroup
-              ? `Planned for ${formatDate(viewingCategoryGroup.plannedDate)} · ${viewingCategoryGroup.rows.length} equipment in schedule`
+              ? `${ACTIVITY_TYPE_LABELS[viewingCategoryGroup.activityType] ?? viewingCategoryGroup.activityType} · ${formatDate(viewingCategoryGroup.plannedDate)}`
               : ""
           }
         >
-          {viewingCategoryGroup && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-ink-100">
-                <span className="text-xs text-ink-600">
-                  All equipment scheduled in this category batch for{" "}
-                  <strong>{formatDate(viewingCategoryGroup.plannedDate)}</strong>:
-                </span>
-                {viewingCategoryGroup.rows[0]?.batchId ? (
-                  <Link
-                    href={`/pm-batches/${viewingCategoryGroup.rows[0].batchId}`}
-                    className="text-xs font-semibold text-brand-700 hover:underline inline-flex items-center gap-1"
-                  >
-                    Open PM Batch →
-                  </Link>
-                ) : canAssign && viewingCategoryGroup.rows[0]?.category && (viewingCategoryGroup.rows[0].activityType === "PM" || viewingCategoryGroup.rows[0].activityType === "INS") ? (
-                  <Button
-                    size="sm"
-                    loading={saving}
-                    onClick={() => {
-                      const first = viewingCategoryGroup.rows[0];
-                      setViewingCategoryGroup(null);
-                      raiseBatch(first);
-                    }}
-                  >
-                    Raise PM Batch
-                  </Button>
-                ) : null}
-              </div>
+          {viewingCategoryGroup &&
+            (() => {
+              const g = viewingCategoryGroup;
+              const first = g.rows[0];
+              const helpers = safeIds(g.assistantIds).length;
+              const assignable = canAssign && g.status !== "COMPLETED";
+              const more = [
+                ...(canAccessPath(role, "/asset-categories") && g.category
+                  ? [{ label: "Category page", icon: Layers, href: `/asset-categories/${encodeURIComponent(g.category)}` }]
+                  : []),
+                ...rowActions(first, true).filter((i) => i.label !== "Assign people"),
+              ];
+              return (
+                <div className="space-y-5">
+                  <dl className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <dt className="text-xs text-ink-500">Status</dt>
+                      <dd className="mt-1">
+                        <Badge className={SCHEDULE_STATUS_BADGE[g.status]}>
+                          {SCHEDULE_STATUS_LABELS[g.status] ?? g.status}
+                        </Badge>
+                      </dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-ink-500">Responsible</dt>
+                      <dd className={`mt-1 truncate ${g.responsiblePersonName ? "text-ink-900 font-medium" : "text-ink-400"}`}>
+                        {g.responsiblePersonName ?? "Unassigned"}
+                        {helpers > 0 && <span className="text-ink-500 font-normal"> +{helpers}</span>}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-ink-500">PM batch</dt>
+                      <dd className="mt-1">
+                        {g.batchId ? (
+                          <Link href={`/pm-batches/${g.batchId}`} className="text-brand-700 font-medium hover:underline">
+                            Open batch
+                          </Link>
+                        ) : (
+                          <span className="text-ink-400">Not raised</span>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
 
-              <div className="border border-line rounded-lg overflow-hidden max-h-80 overflow-y-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-canvas sticky top-0 border-b border-ink-200 text-ink-500">
-                    <tr>
-                      <th className="py-2.5 px-3 font-medium">Equipment</th>
-                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Asset ID</th>
-                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Status</th>
-                      <th className="py-2.5 px-3 font-medium whitespace-nowrap">Work Order</th>
-                      <th className="py-2.5 px-3 font-medium text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ink-100">
-                    {viewingCategoryGroup.rows.map((row) => (
-                      <tr key={row.id} className="hover:bg-ink-50">
-                        <td className="py-2.5 px-3 font-medium text-ink-900">
-                          {row.equipmentName ?? "Unnamed equipment"}
-                        </td>
-                        <td className="py-2.5 px-3 text-ink-600 tabular-nums">
-                          {row.assetId ?? "-"}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <Badge className={SCHEDULE_STATUS_BADGE[row.status]}>
-                            {SCHEDULE_STATUS_LABELS[row.status] ?? row.status}
-                          </Badge>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          {row.workOrderNumber ? (
+                  <section aria-labelledby="coverage-machines">
+                    <h4 id="coverage-machines" className="text-xs font-semibold text-ink-700 mb-2">
+                      {g.rows.length} machine{g.rows.length === 1 ? "" : "s"}
+                    </h4>
+                    <ul className="divide-y divide-line border-y border-line max-h-72 overflow-y-auto">
+                      {g.rows.map((row) => (
+                        <li key={row.id} className="flex items-center justify-between gap-3 py-2.5">
+                          <div className="min-w-0">
                             <Link
-                              href={`/work-orders/${row.workOrderId}`}
-                              className="text-brand-700 hover:underline font-medium"
+                              href={`/equipment/${(row.assetId ?? row.equipmentId).replace(/\//g, "-")}`}
+                              className="block text-sm font-medium text-ink-900 truncate hover:text-brand-700 hover:underline underline-offset-2"
                             >
-                              {row.workOrderNumber}
+                              {row.equipmentName ?? "Unnamed equipment"}
                             </Link>
-                          ) : (
-                            <span className="text-ink-400">None</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {row.equipmentId && (
-                              <Link
-                                href={`/equipment/${row.equipmentId}`}
-                                className="text-xs text-ink-600 hover:text-ink-900 px-2 py-0.5 rounded hover:bg-ink-100"
-                              >
-                                Asset card
-                              </Link>
-                            )}
-                            <KebabMenu
-                              ariaLabel={`Actions for ${row.equipmentName ?? row.assetId}`}
-                              items={rowActions(row)}
-                            />
+                            <span className="block text-xs text-ink-500 tabular-nums">{row.assetId ?? "-"}</span>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          {row.workOrderId ? (
+                            <Link href={`/work-orders/${row.workOrderId}`} className="text-xs font-medium text-brand-700 hover:underline shrink-0">
+                              {row.workOrderNumber ?? "Work order"}
+                            </Link>
+                          ) : row.status !== g.status ? (
+                            <Badge className={SCHEDULE_STATUS_BADGE[row.status]}>
+                              {SCHEDULE_STATUS_LABELS[row.status] ?? row.status}
+                            </Badge>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
 
-              <div className="flex justify-end pt-2">
-                <Button variant="secondary" onClick={() => setViewingCategoryGroup(null)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
+                  <div className="flex items-center justify-between gap-3">
+                    {more.length > 0 ? (
+                      <KebabMenu ariaLabel={`More actions for ${g.categoryLabel}`} items={more} />
+                    ) : (
+                      <span />
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" onClick={() => setViewingCategoryGroup(null)}>
+                        Close
+                      </Button>
+                      {assignable && (
+                        <Button
+                          icon={Users}
+                          onClick={() => {
+                            setViewingCategoryGroup(null);
+                            setAssign(first);
+                          }}
+                        >
+                          {g.responsiblePersonName ? "Reassign" : "Assign"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
         </Modal>
       </main>
     </div>
   );
 }
 
-function FilterSelect({
+function FilterField({
   value,
   onChange,
   label,
@@ -1237,12 +1347,102 @@ function FilterSelect({
   children: React.ReactNode;
 }) {
   return (
-    <Select
-      ariaLabel={label}
-      value={value}
-      onChange={(v) => onChange(v)}
-    >
-      {children}
-    </Select>
+    <div className="space-y-1">
+      <span className={LABEL_CLASS}>{label}</span>
+      <Select ariaLabel={label} value={value} onChange={onChange} className="w-full">
+        {children}
+      </Select>
+    </div>
+  );
+}
+
+// Four narrowing filters behind one control. Each is used now and then; the
+// search box is used constantly, and it was getting a quarter of the row.
+function FilterPopover({
+  activeCount,
+  onClear,
+  children,
+}: {
+  activeCount: number;
+  onClear: () => void;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border text-sm font-medium transition-colors ${
+          activeCount > 0
+            ? "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100"
+            : "border-line bg-surface text-ink-700 hover:bg-ink-50"
+        }`}
+      >
+        <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
+        Filters
+        {activeCount > 0 && (
+          <span className="min-w-5 h-5 px-1 rounded-full bg-brand-600 text-white text-xs font-semibold grid place-items-center tabular-nums">
+            {activeCount}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Filter the schedule"
+          className="absolute left-0 top-full mt-1.5 z-40 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-surface shadow-raised p-4 space-y-3"
+        >
+          {children}
+          <div className="flex justify-between items-center pt-1">
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={activeCount === 0}
+              className="text-xs font-semibold text-ink-500 hover:text-ink-900 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Clear all
+            </button>
+            <Button size="sm" onClick={() => setOpen(false)}>
+              Done
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// useSearchParams suspends, so the page needs a boundary or the build cannot
+// prerender it.
+export default function SchedulePage() {
+  return (
+    <Suspense fallback={null}>
+      <SchedulePageView />
+    </Suspense>
   );
 }

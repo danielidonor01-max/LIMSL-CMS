@@ -6,9 +6,11 @@
 //    from the activity's frequency, so the programme perpetuates itself.
 // nextPlannedDate() is pure and covered by the frequency table below.
 import { db } from "@/lib/db";
-import { maintenanceSchedule } from "@/lib/db/schema";
+import { maintenanceSchedule, equipment } from "@/lib/db/schema";
 import { and, eq, inArray, lt, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { toWorkingDay } from "@/lib/maintenance/working-days";
+import { nextCategoryDate } from "@/lib/maintenance/plan-sync";
 
 // Frequency → interval. Keys match equipment.maintenanceFrequency plus common aliases.
 const FREQ_MONTHS: Record<string, number> = {
@@ -147,6 +149,16 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date(),
     if (!n || n === next) break;
     next = n;
   }
+
+  // On the category's own calendar when it has one; otherwise counted from the
+  // row, with a weekend date moved to the working day after it.
+  const [machine] = await dbc
+    .select({ category: equipment.category })
+    .from(equipment)
+    .where(eq(equipment.id, row.equipmentId))
+    .limit(1);
+  const onCalendar = machine?.category ? await nextCategoryDate(machine.category, row.plannedDate, today) : null;
+  next = onCalendar ?? toWorkingDay(next);
 
   // Don't duplicate an occurrence that already exists for this machine + activity.
   const existing = await dbc

@@ -13,6 +13,7 @@ import { FIELD_CLASS } from "@/components/Field";
 import { useSession } from "next-auth/react";
 import SegmentedControl from "@/components/SegmentedControl";
 import { PIN_LENGTH } from "@/lib/signing-pin";
+import { OtpInput } from "@/components/OtpInput";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { invalidateApi } from "@/lib/api-cache";
@@ -44,6 +45,10 @@ export default function QuickSignModal({
   const [action, setAction] = useState<"sign" | "reject">("sign");
   const [pin, setPin] = useState("");
   const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [comments, setComments] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const userName = (session?.user as { name?: string })?.name ?? "You";
 
@@ -59,11 +64,6 @@ export default function QuickSignModal({
       .then((d) => setHasPin(!!d?.hasPin))
       .catch(() => setHasPin(false));
   }, [open]);
-
-  const [comments, setComments] = useState("");
-  const [overrideReason, setOverrideReason] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   if (!target) return null;
 
@@ -192,19 +192,20 @@ export default function QuickSignModal({
             </div>
 
             {hasPin && (
-              <div className="space-y-1">
-                <label htmlFor="quick-sign-pin" className="block text-sm font-medium text-ink-700">
+              <div className="space-y-2 py-1">
+                <p id="quick-sign-pin-label" className="block text-sm font-medium text-ink-700">
                   Signing PIN
-                </label>
-                <input
-                  id="quick-sign-pin"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={PIN_LENGTH}
+                </p>
+                <OtpInput
+                  labelId="quick-sign-pin-label"
+                  length={PIN_LENGTH}
                   value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                  placeholder={`${PIN_LENGTH} digits`}
-                  className={`${FIELD_CLASS} bg-surface w-40 tracking-[0.3em]`}
+                  onChange={setPin}
+                  type="numbers"
+                  mask
+                  size="sm"
+                  status={error ? "error" : "idle"}
+                  autoFocus
                 />
                 <p className="text-xs text-ink-500">Change or remove it in Account settings.</p>
               </div>

@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   equipment,
-  assetCategories,
   maintenanceSchedule,
   pmBatches,
   workOrders,
@@ -19,11 +18,10 @@ import {
   wmsDocuments,
   jhaDocuments,
 } from "@/lib/db/schema";
-import { eq, inArray, desc, asc, and, gte } from "drizzle-orm";
+import { eq, inArray, notInArray, desc, asc, and, ne } from "drizzle-orm";
 import { auth } from "@/auth";
 import { getCategory } from "@/lib/maintenance/asset-categories";
-import { DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
-import { plannedDatesFor } from "@/lib/maintenance/plan-generation";
+import { nextCategoryDate } from "@/lib/maintenance/plan-sync";
 
 export async function GET(
   request: NextRequest,
@@ -76,7 +74,6 @@ export async function GET(
 
     // 3. Maintenance schedule, pending PMs & next due date
     const today = new Date().toISOString().slice(0, 10);
-    const thisYear = new Date().getFullYear();
 
     let scheduleItems: any[] = [];
     if (machineIds.length > 0) {
@@ -127,28 +124,11 @@ export async function GET(
 
     let nextDueDate: string | null = upcomingScheduled[0] ?? null;
 
-    // If no future items exist in DB schedule table, calculate next occurrence from category start date & frequency
+    // Nothing on the plan yet: the category's own calendar says when it would
+    // be, after the weekend rule, rather than a raw date nobody will work on.
     if (!nextDueDate) {
-      const anchor = cat.defaultStartDate || DEFAULT_CATEGORY_START_DATES[categoryCode] || `${thisYear}-01-01`;
-      const plannedDates = plannedDatesFor({
-        frequency: cat.maintenanceFrequency,
-        anchorDate: anchor,
-        year: thisYear,
-        notBefore: today,
-      });
-      if (plannedDates.length > 0) {
-        nextDueDate = plannedDates[0].plannedDate;
-      } else {
-        // Look into next year
-        const nextYearPlanned = plannedDatesFor({
-          frequency: cat.maintenanceFrequency,
-          anchorDate: anchor,
-          year: thisYear + 1,
-        });
-        if (nextYearPlanned.length > 0) {
-          nextDueDate = nextYearPlanned[0].plannedDate;
-        }
-      }
+      const dayBefore = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      nextDueDate = await nextCategoryDate(categoryCode, dayBefore, today).catch(() => null);
     }
 
     let daysUntilNextDue: number | null = null;
@@ -297,7 +277,48 @@ export async function GET(
       }
     }
 
+    // The collision-free promise, checked against the plan as written rather
+    // than asserted: any day this category's PMs share with another
+    // category's PMs. Empty is the promise kept.
+    const pmDates = [...new Set(scheduleItems.filter((s) => s.activityType === "PM").map((s) => s.plannedDate))];
+    let sharedDays: { date: string; category: string }[] = [];
+    if (pmDates.length > 0 && machineIds.length > 0) {
+      try {
+        const rows = await db
+          .selectDistinct({ date: maintenanceSchedule.plannedDate, category: equipment.category })
+          .from(maintenanceSchedule)
+          .innerJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id))
+          .where(
+            and(
+              inArray(maintenanceSchedule.plannedDate, pmDates),
+              eq(maintenanceSchedule.activityType, "PM"),
+              notInArray(maintenanceSchedule.equipmentId, machineIds),
+              ne(equipment.category, categoryCode),
+            ),
+          );
+        sharedDays = rows
+          .filter((r: { category: string | null }) => r.category)
+          .map((r: { date: string; category: string }) => ({ date: r.date, category: r.category }))
+          .sort((x: { date: string }, y: { date: string }) => x.date.localeCompare(y.date));
+      } catch (e) {
+        console.warn("Error checking shared PM days:", e);
+      }
+    }
+
     return NextResponse.json({
+      schedule: scheduleItems.map((s) => ({
+        id: s.id,
+        plannedDate: s.plannedDate,
+        activityType: s.activityType,
+        status: s.status,
+        equipmentName: machineMap.get(s.equipmentId)?.name ?? null,
+        assetId: machineMap.get(s.equipmentId)?.assetId ?? null,
+        responsiblePersonName: s.responsiblePersonName,
+        workOrderId: s.workOrderId,
+        batchId: s.batchId,
+        category: categoryCode,
+      })),
+      sharedDays,
       category: {
         code: cat.code,
         label: cat.label,

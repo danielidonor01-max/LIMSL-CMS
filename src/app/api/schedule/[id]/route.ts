@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import { validateDeferral } from "@/lib/maintenance/deferral";
+import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { notify } from "@/lib/notifications";
 
 // Reschedule an activity (move its planned date) or adjust its remarks. Completion
@@ -27,6 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const set: Partial<typeof maintenanceSchedule.$inferInsert> = {};
+    let movedFrom: string | null = null;
     if (body.plannedDate) {
       const d = new Date(`${String(body.plannedDate).slice(0, 10)}T00:00:00`);
       if (Number.isNaN(d.getTime())) {
@@ -40,10 +42,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (String(body.plannedDate).slice(0, 10) < today) {
         return NextResponse.json({ error: "The new planned date must be today or later." }, { status: 400 });
       }
-      set.plannedDate = body.plannedDate.slice(0, 10);
-      set.year = d.getFullYear();
-      set.quarter = Math.floor(d.getMonth() / 3) + 1;
-      set.month = d.getMonth() + 1;
+      // Nobody is on the floor at the weekend, so a reschedule onto one moves
+      // to the next working day, the same rule the annual plan follows. Said
+      // back in the response so the screen can tell the person who picked it.
+      const asked = String(body.plannedDate).slice(0, 10);
+      const planned = toWorkingDay(asked);
+      if (planned !== asked) movedFrom = asked;
+      const pd = new Date(`${planned}T00:00:00`);
+      set.plannedDate = planned;
+      set.year = pd.getFullYear();
+      set.quarter = Math.floor(pd.getMonth() / 3) + 1;
+      set.month = pd.getMonth() + 1;
       set.status = "RESCHEDULED";
     }
     // ── Deferral ──────────────────────────────────────────────────────────
@@ -201,7 +210,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const [updated] = await db.select().from(maintenanceSchedule).where(eq(maintenanceSchedule.id, id)).limit(1);
-    return NextResponse.json(updated);
+    return NextResponse.json(movedFrom ? { ...updated, movedFromWeekend: movedFrom } : updated);
   } catch (error) {
     console.error("Failed to update schedule activity:", error);
     return NextResponse.json({ error: "Failed to update activity" }, { status: 500 });

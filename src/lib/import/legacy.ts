@@ -22,6 +22,7 @@ import {
   HISTORY_TICK_CATEGORY,
   type LegacyCategoryInfo,
 } from "./legacy-parse";
+import { toWorkingDay } from "@/lib/maintenance/working-days";
 
 export type LegacyKind = "register" | "history" | "schedule";
 
@@ -411,12 +412,15 @@ async function processSchedule(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
 
   const expand = (
     cat: LegacyCategoryInfo,
-    plannedDate: string,
+    sheetDate: string,
     activityType: string,
     taskDescription: string | null,
     responsible: string | null,
     sourceLabel: string,
   ) => {
+    // The workbook was planned by hand and some of its dates are weekends. A
+    // PM brought in from it follows the same rule as one the plan generates.
+    const plannedDate = activityType === "PM" ? toWorkingDay(sheetDate) : sheetDate;
     if (cat.assetNames.length === 0) {
       preview.push({
         row: ++n,

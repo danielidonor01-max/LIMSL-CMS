@@ -131,9 +131,9 @@ const UNIVERSAL_PATHS = ["/login", "/change-password", "/notifications", "/accou
 // takes the Maintenance Manager's and the QA/QC Supervisor's signatures
 // before it touches anything; this is who may open the page and ask.
 //
-// The page sits under /settings, which is otherwise Super Admin only. The two
-// approvers have to be able to open the change they are asked to sign, so
-// this one page is carved out for them rather than moved out of settings.
+// The page lives at /asset-categories, under Assets. It used to sit under
+// /settings, and that put the maintenance regime of every machine among the
+// administrator's switches, where the people who own it never looked.
 export const ASSET_CATEGORY_ROLES = [
   "SUPER_ADMIN",
   "FACTORY_MANAGER",
@@ -141,15 +141,20 @@ export const ASSET_CATEGORY_ROLES = [
   "QA_QC",
 ];
 
+const isUnder = (pathname: string, base: string) => pathname === base || pathname.startsWith(`${base}/`);
+
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
   if (!role) return true; // unauthenticated is handled by middleware
   if (UNIVERSAL_PATHS.includes(pathname)) return true;
+  // The old /settings/categories address only redirects now, but sign-off
+  // notifications already sent still point at it, so the approvers must be
+  // let through to reach the redirect.
+  if (isUnder(pathname, "/asset-categories") || isUnder(pathname, "/settings/categories")) {
+    return ASSET_CATEGORY_ROLES.includes(role);
+  }
   // Administration lives under /settings, even "full access" roles must not
   // reach it by direct URL. Mirrors SETTINGS_WRITE_ROLES, which gates the
   // settings API routes.
-  if (pathname === "/settings/categories" || pathname.startsWith("/settings/categories/")) {
-    return ASSET_CATEGORY_ROLES.includes(role);
-  }
   if (pathname === "/settings" || pathname.startsWith("/settings/")) {
     return SETTINGS_WRITE_ROLES.includes(role);
   }
@@ -251,8 +256,13 @@ export const REPAIR_AUTHORISE_ROUTINE_ROLES = [
   "FOREMAN",
 ];
 
+// Everyone who reaches the schedule may assign except QA/QC, HSE and the
+// technician (LIMSL, November 2026): QA/QC and HSE take part by signing, and a
+// technician carries the work rather than deciding who carries it. VIEWER
+// never reaches the schedule at all.
 export const WORK_ASSIGN_ROLES = [
   "SUPER_ADMIN",
+  "COO",
   "FACTORY_MANAGER",
   "MAINTENANCE_MANAGER",
   "FOREMAN",

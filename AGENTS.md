@@ -286,9 +286,28 @@ second signature; then `applyCategoryChange()` runs once, from the sign route,
 and every machine in the category takes the new interval. One pending change
 per category.
 
-`/settings/categories` is the one page under /settings that is not Super Admin
-only — `ASSET_CATEGORY_ROLES` can open it, because the two approvers have to be
-able to read the change they are asked to sign.
+The page is `/asset-categories`, under Assets in the sidebar — NOT under
+/settings (it moved out in November 2026; `/settings/categories` only
+redirects, for notifications already sent). `ASSET_CATEGORY_ROLES` can open
+it, because the two approvers have to be able to read the change they are
+asked to sign.
+
+### No PM on a weekend (the category calendar)
+
+A plan date that lands on a Saturday or Sunday moves to the next working day
+(`toWorkingDay`, `src/lib/maintenance/working-days.ts`). Counting still runs
+from the category's start date, so one shifted date never drags the rest.
+
+Shifting can land on another category's day, so category dates are resolved
+together: `categoryCalendar()` in `plan-generation.ts` fixes every weekday
+date first, then moves weekend dates onto the next day no other category
+holds. **Plan sync, the collision check (server and the proposal form),
+recurrence after a PM is completed and the category page all read this one
+calendar.** Do not plan a category on its own with `plannedDatesFor` — that
+is how a Sunday moves onto another category's Monday. `calendarCollision()`
+refuses a proposal that would share a day or displace another category's
+shifted day. Manual schedule/reschedule and the legacy import apply the same
+rule; the API returns `movedFromWeekend` so the screen can say so.
 
 **Replanning** (`replanMachine`, rule in `isReplannable`) removes only future
 rows nobody has touched — SCHEDULED, no work order, not batched, not deferred —

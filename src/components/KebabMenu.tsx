@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoreVertical } from "lucide-react";
+import { m, AnimatePresence, useReducedMotion } from "motion/react";
 
 export type KebabItem = {
   label: string;
@@ -17,10 +18,11 @@ export type KebabItem = {
 // clipped by a scrolling table container.
 export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items: KebabItem[]; ariaLabel?: string }) {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{ top: number; left: number; above: boolean }>({ top: 0, left: 0, above: false });
 
   const toggle = () => {
     if (!open && btnRef.current) {
@@ -31,11 +33,9 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
       // decision misjudges and the menu still runs off the bottom.
       const estHeight = items.length * 44 + 10;
       const below = r.bottom + 4;
-      const top =
-        below + estHeight > window.innerHeight - 8
-          ? Math.max(8, r.top - 4 - estHeight)
-          : below;
-      setPos({ top, left: Math.max(8, Math.min(r.right - 176, window.innerWidth - 176 - 8)) });
+      const above = below + estHeight > window.innerHeight - 8;
+      const top = above ? Math.max(8, r.top - 4 - estHeight) : below;
+      setPos({ top, left: Math.max(8, Math.min(r.right - 176, window.innerWidth - 176 - 8)), above });
     }
     setOpen((o) => !o);
   };
@@ -86,33 +86,45 @@ export default function KebabMenu({ items, ariaLabel = "Row actions" }: { items:
         <MoreVertical className="w-4 h-4" />
       </button>
 
-      {open && (
-        <div
-          ref={menuRef}
-          style={{ position: "fixed", top: pos.top, left: pos.left, width: 176 }}
-          role="menu"
-          className="z-[100] bg-white border border-ink-200 rounded-lg shadow-raised overflow-hidden py-1"
-        >
-          {items.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={i}
-                role="menuitem"
-                onClick={() => run(item)}
-                className={`w-full flex items-center gap-2.5 px-3 min-h-11 text-xs font-medium text-left transition-colors ${
- item.danger
- ? "text-danger-600 hover:bg-danger-50"
- : "text-ink-700 hover:bg-ink-100"
- }`}
-              >
-                {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          // The menu grows out of the trigger: from its top edge when it opens
+          // below, from its bottom edge when it has flipped above for the last
+          // rows of a table. Growing the wrong way reads as the menu falling
+          // away from the button that opened it.
+          <m.div
+            ref={menuRef}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: pos.above ? 4 : -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: pos.above ? 4 : -4 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            style={{ position: "fixed", top: pos.top, left: pos.left, width: 176 }}
+            role="menu"
+            className={`z-[100] bg-white border border-ink-200 rounded-lg shadow-raised overflow-hidden py-1 ${
+              pos.above ? "origin-bottom-right" : "origin-top-right"
+            }`}
+          >
+            {items.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={i}
+                  role="menuitem"
+                  onClick={() => run(item)}
+                  className={`w-full flex items-center gap-2.5 px-3 min-h-11 text-xs font-medium text-left transition-colors ${
+                    item.danger
+                      ? "text-danger-600 hover:bg-danger-50"
+                      : "text-ink-700 hover:bg-ink-100"
+                  }`}
+                >
+                  {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
+                  {item.label}
+                </button>
+              );
+            })}
+          </m.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

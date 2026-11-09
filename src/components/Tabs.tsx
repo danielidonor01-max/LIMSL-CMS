@@ -17,7 +17,8 @@
 // buttons that happen to look like them.
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
+import { m, useReducedMotion } from "motion/react";
 
 export type TabItem<T extends string> = {
   value: T;
@@ -41,6 +42,11 @@ export default function Tabs<T extends string>({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+  // Per instance, not per label: two tab bars sharing a label (or the same
+  // label on the next route) would otherwise hand the underline between them
+  // and it would fly across the page.
+  const underlineId = useId();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const i = items.findIndex((t) => t.value === value);
@@ -78,17 +84,29 @@ export default function Tabs<T extends string>({
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(t.value)}
-            className={`relative -mb-px flex items-center gap-2 border-b-2 pb-2.5 pt-1 text-sm transition-colors whitespace-nowrap shrink-0 ${
- active
- ? "border-brand-600 text-ink-900 font-semibold"
- : "border-transparent text-ink-500 font-medium hover:text-ink-900"
- }`}
+            className={`relative flex items-center gap-2 pb-2.5 pt-1 text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              active
+                ? "text-ink-900 font-semibold"
+                : "text-ink-500 font-medium hover:text-ink-900"
+            }`}
           >
             {t.label}
             {t.count !== undefined && (
               <span className={`text-xs tabular-nums ${active ? "text-ink-500" : "text-ink-400"}`}>
                 {t.count}
               </span>
+            )}
+            {active && (
+              <m.span
+                layoutId={underlineId}
+                aria-hidden="true"
+                className="absolute inset-x-0 -bottom-px h-0.5 bg-brand-600 rounded-full"
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 450, damping: 32 }
+                }
+              />
             )}
           </button>
         );

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { m, LayoutGroup, useReducedMotion } from "motion/react";
 import {
     LayoutDashboard,
   Layers,
@@ -59,7 +60,7 @@ const NAV_SECTIONS: NavSection[] = [
     section: "Assets",
     items: [
       { href: "/equipment", label: "Equipment", icon: Layers },
-      { href: "/settings/categories", label: "Asset Categories", icon: Tags },
+      { href: "/asset-categories", label: "Asset Categories", icon: Tags },
       { href: "/documents", label: "Documents", icon: FolderOpen },
       { href: "/procedure", label: "Maint. Procedure", icon: BookText },
     ],
@@ -168,13 +169,13 @@ export default function Sidebar({
       section: "Administration",
       items: [
         { href: "/settings/users", label: "Users", icon: Users },
-        { href: "/settings/categories", label: "Asset Categories", icon: Tags },
         { href: "/settings/import", label: "Data Import", icon: Database },
         { href: "/settings", label: "App Settings", icon: SlidersHorizontal, exact: true },
       ],
     });
   }
 
+  const reduced = useReducedMotion() ?? false;
   const isActive = (item: { href: string; exact?: boolean }) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
@@ -233,6 +234,7 @@ export default function Sidebar({
  narrow ? "px-3 lg:px-0 lg:[scrollbar-gutter:stable_both-edges]" : "px-3"
  }`}
       >
+        <LayoutGroup id="sidebar">
         {sections.map((s, si) => (
           <div key={s.section ?? `s-${si}`} className="space-y-0.5">
             {/* The section labels stay. The reference product has six
@@ -251,28 +253,49 @@ export default function Sidebar({
               const Icon = item.icon;
               const active = isActive(item);
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  aria-current={active ? "page" : undefined}
-                  title={narrow ? item.label : undefined}
-                  aria-label={narrow ? item.label : undefined}
-                  className={`flex items-center gap-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-colors ${
- narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
- } ${
- active
- ? "bg-nav-active text-nav-text-active font-semibold"
- : "text-nav-text font-medium hover:text-white hover:bg-nav-raised"
- }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? "text-brand-400" : "text-nav-text"}`} />
-                  <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
-                </Link>
+                <div key={item.href} className="relative">
+                  {/* One highlight that slides between items, so the eye follows
+                      the move instead of re-finding where it is. Named inside
+                      the "sidebar" LayoutGroup so no other layoutId on the
+                      page can claim it and fly the highlight across the screen. */}
+                  {active && (
+                    <m.div
+                      layoutId="active-indicator"
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-nav-active rounded-lg"
+                      transition={
+                        reduced
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 380, damping: 30, mass: 0.8 }
+                      }
+                    />
+                  )}
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    title={narrow ? item.label : undefined}
+                    aria-label={narrow ? item.label : undefined}
+                    className={`relative z-10 flex items-center gap-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-[color,background-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 ${
+                      narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
+                    } ${
+                      active
+                        ? "text-nav-text-active font-semibold"
+                        : "text-nav-text font-medium hover:text-white hover:bg-nav-raised/50"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-brand-400" : "text-nav-text"}`} />
+                    <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
+                    {active && !narrow && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 shrink-0" aria-hidden="true" />
+                    )}
+                  </Link>
+                </div>
               );
             })}
           </div>
         ))}
+        </LayoutGroup>
       </nav>
 
       {/* The foot of the column: who is signed in, what they are signed in as,

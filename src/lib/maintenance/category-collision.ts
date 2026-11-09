@@ -4,7 +4,11 @@
 // Categories stagger maintenance across the annual calendar so that teams,
 // tools and facilities are not overloaded on the same day. For example, cranes
 // and welding machines cannot land on the same scheduled day.
-import { plannedDatesFor } from "./plan-generation";
+//
+// The days compared are the days AFTER the weekend rule, from the same shared
+// calendar the plan is written from (plan-generation.ts). Comparing raw dates
+// missed a Sunday that moves onto a Monday another category already owns.
+import { calendarCollision, type CalendarCategory } from "./plan-generation";
 import { listCategories } from "./asset-categories";
 import { DEFAULT_CATEGORY_START_DATES, DEFAULT_CATEGORY_FREQUENCIES, EQUIPMENT_CATEGORY_LABELS } from "../constants";
 
@@ -18,7 +22,7 @@ export type CollisionCheckResult = {
 
 /**
  * Checks whether a proposed category schedule (frequency + start date) collides
- * with any other active category on the annual schedule.
+ * with any other active category on the annual schedule, this year or next.
  */
 export async function checkCategoryScheduleCollision(input: {
   categoryCode: string;
@@ -27,26 +31,13 @@ export async function checkCategoryScheduleCollision(input: {
   startDate: string | null;
   year?: number;
 }): Promise<CollisionCheckResult> {
-  const year = input.year ?? new Date().getFullYear();
-  if (!input.startDate) {
-    return { collides: false };
-  }
+  if (!input.startDate) return { collides: false };
 
-  const proposedDates = plannedDatesFor({
-    frequency: input.frequency,
-    anchorDate: input.startDate,
-    year,
-  }).map((p) => p.plannedDate);
-
-  if (proposedDates.length === 0) return { collides: false };
-
-  // Load existing categories from DB or fallback
-  let allCats: Array<{ code: string; label: string; maintenanceFrequency: string; defaultStartDate: string | null }> = [];
+  let all: (CalendarCategory & { label: string })[] = [];
   try {
-    allCats = await listCategories();
+    all = await listCategories();
   } catch {
-    // fallback to static defaults
-    allCats = Object.keys(DEFAULT_CATEGORY_START_DATES).map((code) => ({
+    all = Object.keys(DEFAULT_CATEGORY_START_DATES).map((code) => ({
       code,
       label: EQUIPMENT_CATEGORY_LABELS[code] ?? code,
       maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] ?? "QUARTERLY",
@@ -54,29 +45,26 @@ export async function checkCategoryScheduleCollision(input: {
     }));
   }
 
-  for (const other of allCats) {
-    if (other.code === input.categoryCode) continue; // skip self
-    const otherStart = other.defaultStartDate ?? DEFAULT_CATEGORY_START_DATES[other.code];
-    if (!otherStart) continue;
-
-    const otherDates = plannedDatesFor({
-      frequency: other.maintenanceFrequency,
-      anchorDate: otherStart,
-      year,
-    }).map((p) => p.plannedDate);
-
-    const common = proposedDates.filter((d) => otherDates.includes(d));
-    if (common.length > 0) {
-      const catName = input.label || EQUIPMENT_CATEGORY_LABELS[input.categoryCode] || input.categoryCode;
-      return {
-        collides: true,
-        collidingCategoryCode: other.code,
-        collidingCategoryLabel: other.label,
-        collidingDates: common,
-        message: `Schedule collision detected: "${catName}" and "${other.label}" both have PM planned on ${common.join(", ")}. Different categories cannot share scheduled maintenance days.`,
-      };
-    }
+  const proposal = { code: input.categoryCode, maintenanceFrequency: input.frequency, defaultStartDate: input.startDate };
+  // Weekdays fall differently every year, so a start date that is clean this
+  // year can collide next year. Both are checked; the plan is only ever written
+  // a year at a time, so further out is not yet a promise anybody relies on.
+  const year = input.year ?? new Date().getFullYear();
+  for (const y of [year, year + 1]) {
+    const hit = calendarCollision(all, proposal, y);
+    if (!hit) continue;
+    const other = all.find((c) => c.code === hit.code);
+    const otherLabel = other?.label ?? EQUIPMENT_CATEGORY_LABELS[hit.code] ?? hit.code;
+    const catName = input.label || EQUIPMENT_CATEGORY_LABELS[input.categoryCode] || input.categoryCode;
+    return {
+      collides: true,
+      collidingCategoryCode: hit.code,
+      collidingCategoryLabel: otherLabel,
+      collidingDates: hit.dates,
+      message:
+        `Schedule collision detected: "${catName}" and "${otherLabel}" would both have PM on ${hit.dates.join(", ")} ` +
+        `(weekend dates move to the next free working day). Different categories cannot share scheduled maintenance days.`,
+    };
   }
-
   return { collides: false };
 }

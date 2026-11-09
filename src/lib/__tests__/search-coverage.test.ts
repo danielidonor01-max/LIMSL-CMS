@@ -71,6 +71,10 @@ test("no page-level module has appeared without being considered for search", ()
     // A lookup BY code, which is its whole purpose. Indexing it would put a
     // form in the results rather than a record.
     "verify",
+    // A dozen categories, each reached from the register and from every
+    // machine in it. It was exempt while it lived under settings, and moving
+    // it out did not give it anything a search would find faster.
+    "asset-categories",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",

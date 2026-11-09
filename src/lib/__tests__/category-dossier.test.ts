@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_CATEGORY_START_DATES, DEFAULT_CATEGORY_FREQUENCIES } from "../constants";
-import { plannedDatesFor } from "../maintenance/plan-generation";
+import { plannedDatesFor, categoryCalendar } from "../maintenance/plan-generation";
 
 test("CRANE and WELDING categories never share PM days or months", () => {
   const craneDates = plannedDatesFor({
@@ -35,19 +35,21 @@ test("CRANE and WELDING categories never share PM days or months", () => {
 test("all 12 categories have distinct staggered dates with zero day collisions across 2026", () => {
   const allDatesByDay = new Map<string, string[]>();
 
-  for (const [code, start] of Object.entries(DEFAULT_CATEGORY_START_DATES)) {
-    const freq = DEFAULT_CATEGORY_FREQUENCIES[code] ?? "QUARTERLY";
-    const planned = plannedDatesFor({
-      frequency: freq,
-      anchorDate: start,
-      year: 2026,
-    });
-
-    for (const p of planned) {
-      if (!allDatesByDay.has(p.plannedDate)) {
-        allDatesByDay.set(p.plannedDate, []);
-      }
-      allDatesByDay.get(p.plannedDate)!.push(code);
+  // Through the shared calendar, which is how the plan is built: a category
+  // planned on its own cannot know that its Sunday shifts onto a Monday that
+  // another category already owns.
+  const calendar = categoryCalendar(
+    Object.entries(DEFAULT_CATEGORY_START_DATES).map(([code, start]) => ({
+      code,
+      maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] ?? "QUARTERLY",
+      defaultStartDate: start,
+    })),
+    2026,
+  );
+  for (const [code, dates] of calendar.dates) {
+    for (const date of dates) {
+      if (!allDatesByDay.has(date)) allDatesByDay.set(date, []);
+      allDatesByDay.get(date)!.push(code);
     }
   }
 

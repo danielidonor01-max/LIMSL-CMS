@@ -8,5 +8,5 @@ export default async function EquipmentCategoryRedirect({
   params: Promise<{ code: string }> | { code: string };
 }) {
   const resolved = await params;
-  redirect(`/settings/categories/${encodeURIComponent(resolved.code)}`);
+  redirect(`/asset-categories/${encodeURIComponent(resolved.code)}`);
 }

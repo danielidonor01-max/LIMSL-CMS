@@ -1,13 +1,13 @@
 // src/components/SettingsNav.tsx
 // Cohesive top navigation for the settings suite.
 //
-// Unifies App Settings, Users & Roles, Asset Categories, and Data Import into a
+// Unifies App Settings, Users & Roles and Data Import into a
 // single, clear Giov-style navigation bar across administrative and governance screens.
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SlidersHorizontal, Users, Tags, Database } from "lucide-react";
+import { SlidersHorizontal, Users, Database } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { canAccessPath } from "@/lib/roles";
 
@@ -21,7 +21,6 @@ type SettingsNavItem = {
 const ITEMS: SettingsNavItem[] = [
   { href: "/settings", label: "App Settings", icon: SlidersHorizontal, exact: true },
   { href: "/settings/users", label: "Users & Roles", icon: Users },
-  { href: "/settings/categories", label: "Asset Categories", icon: Tags },
   { href: "/settings/import", label: "Data Import", icon: Database },
 ];
 

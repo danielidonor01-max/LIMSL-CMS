@@ -52,18 +52,24 @@ const addDays = (d: Date, n: number) => {
   return x;
 };
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+// Hatched, the convention for "not available", so a weekend reads as a day the
+// plan skips rather than one that happens to be empty.
+const WEEKEND_FILL =
+  "bg-[repeating-linear-gradient(135deg,var(--color-ink-100)_0_3px,var(--color-surface)_3px_7px)]";
 
 export default function ScheduleCalendar({
   rows,
   canRaiseBatch = false,
+  initialView = "month",
 }: {
   rows: Row[];
   /** Raising a batch commits other people's time, so it is a foreman's act and above. */
   canRaiseBatch?: boolean;
+  initialView?: View;
 }) {
   const [raising, setRaising] = useState<string | null>(null);
   const router = useRouter();
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>(initialView);
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<string | null>(null); // YYYY-MM-DD
 
@@ -242,6 +248,9 @@ export default function ScheduleCalendar({
             <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[k]}`} /> {l}
           </span>
         ))}
+        <span className="flex items-center gap-1.5">
+          <span className={`w-2.5 h-2.5 rounded border border-ink-200 ${WEEKEND_FILL}`} /> Weekend, no PM planned
+        </span>
         <span className="ml-auto">Click any day to view category batches & equipment</span>
       </div>
 
@@ -374,6 +383,9 @@ function DayCell({
 }) {
   const key = ymd(date);
   const isToday = key === todayStr;
+  // Shaded rather than hidden: the plan never puts a PM here, and a reader
+  // checking why Monday is busy can see the weekend it came from.
+  const weekend = date.getDay() === 0 || date.getDay() === 6;
 
   const dayGroups = useMemo(() => {
     const map = new Map<string, { label: string; activityType: string; count: number; status: string }>();
@@ -397,7 +409,7 @@ function DayCell({
       onClick={() => onPick(key)}
       className={`relative border border-ink-100 rounded-lg text-left transition-colors hover:bg-brand-50 ${
         compact ? "h-9 p-1" : "min-h-[76px] p-1.5"
-      } ${inMonth ? "bg-white" : "bg-ink-50/60"}`}
+      } ${!inMonth ? "bg-ink-50/60" : weekend ? WEEKEND_FILL : "bg-white"}`}
     >
       <span
         className={`inline-flex items-center justify-center text-xs ${compact ? "" : "font-semibold"} ${

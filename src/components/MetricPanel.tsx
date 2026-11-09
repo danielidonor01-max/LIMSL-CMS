@@ -17,6 +17,8 @@
 import type { ElementType } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { EMPTY_TONE } from "@/lib/status-tone";
+import AnimatedCounter from "@/components/AnimatedCounter";
+import { parseFigure } from "@/lib/figure";
 
 export type Metric = {
   key: string;
@@ -100,7 +102,7 @@ export default function MetricPanel({
                 {m.label}
               </p>
               {m.trend ? (
-                <Trend {...m} />
+                <Trend trend={m.trend} trendGood={m.trendGood} />
               ) : (
                 Icon && (
                   <span className="w-7 h-7 rounded-lg border border-line grid place-items-center shrink-0">
@@ -114,7 +116,7 @@ export default function MetricPanel({
               <span
                 className={`text-3xl font-semibold tracking-[-0.02em] tabular-nums leading-none ${toneFor(m)}`}
               >
-                {m.value}
+                <Figure value={m.value} />
               </span>
               {/* Only ever a comparator target, "≥ 200 hrs". A bare number here
                   reads as a fraction: "4 / 0" for four overdue against a target
@@ -131,5 +133,23 @@ export default function MetricPanel({
         );
       })}
     </section>
+  );
+}
+
+// Rolls the number only when it can be drawn back exactly; anything else, an
+// ID, a date, "None planned", stays as the text it was given.
+function Figure({ value }: { value: string }) {
+  const f = parseFigure(value);
+  if (!f) return <>{value}</>;
+  return (
+    <AnimatedCounter
+      value={f.num}
+      decimals={f.decimals}
+      padStart={f.padStart}
+      separator={f.separator}
+      prefix={f.prefix || undefined}
+      suffix={f.suffix || undefined}
+      duration={0.6}
+    />
   );
 }

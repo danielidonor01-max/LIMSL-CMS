@@ -11,11 +11,18 @@
 // overwrote them would erase those decisions silently, which is worse than
 // having no generator at all.
 import { db } from "@/lib/db";
-import { maintenanceSchedule, auditLog, assetCategories } from "@/lib/db/schema";
+import { maintenanceSchedule, auditLog } from "@/lib/db/schema";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { DEFAULT_CATEGORY_START_DATES } from "@/lib/constants";
-import { plannedDatesFor, missingDates } from "./plan-generation";
+import { DEFAULT_CATEGORY_START_DATES, DEFAULT_CATEGORY_FREQUENCIES } from "@/lib/constants";
+import {
+  plannedDatesFor,
+  missingDates,
+  categoryCalendar,
+  type CalendarCategory,
+  type PlannedActivity,
+} from "./plan-generation";
+import { listCategories } from "./asset-categories";
 
 export type PlanSyncResult = { added: number; dates: string[]; skipped: number };
 
@@ -39,33 +46,47 @@ export async function syncPlanForEquipment(
   const year = opts.year ?? new Date().getFullYear();
   const notBefore = opts.notBefore === null ? null : (opts.notBefore ?? new Date().toISOString().slice(0, 10));
 
-  let anchor: string | null = null;
+  let wanted: PlannedActivity[] = [];
+  let byCategory = false;
   if (machine.category) {
-    let catStart = DEFAULT_CATEGORY_START_DATES[machine.category] || null;
+    // A category's machines are serviced on the category's days, and those
+    // days are resolved against every other category at once, so a weekend
+    // date moved to Monday never lands on a Monday somebody else owns.
+    let categories: CalendarCategory[] = [];
     try {
-      const [cat] = await db
-        .select({ defaultStartDate: assetCategories.defaultStartDate })
-        .from(assetCategories)
-        .where(eq(assetCategories.code, machine.category))
-        .limit(1);
-      if (cat?.defaultStartDate) catStart = cat.defaultStartDate;
+      categories = await listCategories();
     } catch {
-      // fallback to DEFAULT_CATEGORY_START_DATES
+      categories = Object.entries(DEFAULT_CATEGORY_START_DATES).map(([code, defaultStartDate]) => ({
+        code,
+        maintenanceFrequency: DEFAULT_CATEGORY_FREQUENCIES[code] ?? null,
+        defaultStartDate,
+      }));
     }
-    if (catStart) {
-      anchor = `${year}-${catStart.slice(5, 10)}`;
+    const own = categories.find((c) => c.code === machine.category);
+    if (own?.defaultStartDate) {
+      byCategory = true;
+      // The category owns the interval as well as the start date, so the
+      // machine's own copy of the interval is not consulted here.
+      const calendar = categoryCalendar(categories, year);
+      wanted = (calendar.dates.get(own.code) ?? [])
+        .filter((d) => !notBefore || d >= notBefore.slice(0, 10))
+        .map((plannedDate) => {
+          const month = Number(plannedDate.slice(5, 7));
+          return { plannedDate, month, quarter: Math.floor((month - 1) / 3) + 1, activityType: "PM" as const };
+        });
     }
   }
-  if (!anchor) {
-    anchor = machine.lastMaintenanceDate || machine.commissioningDate || null;
+  // Only a machine whose category has no start date counts from its own
+  // commissioning or last service. A category machine with nothing left this
+  // year has nothing left; it does not fall back to a date of its own.
+  if (!byCategory) {
+    wanted = plannedDatesFor({
+      frequency: machine.maintenanceFrequency,
+      anchorDate: machine.lastMaintenanceDate || machine.commissioningDate || null,
+      year,
+      notBefore,
+    });
   }
-
-  const wanted = plannedDatesFor({
-    frequency: machine.maintenanceFrequency,
-    anchorDate: anchor,
-    year,
-    notBefore,
-  });
   if (wanted.length === 0) return { added: 0, dates: [], skipped: 0 };
 
   const existing = await db
@@ -111,4 +132,24 @@ export async function syncPlanForEquipment(
   });
 
   return { added: gaps.length, dates: gaps.map((g) => g.plannedDate), skipped: existing.length };
+}
+
+/**
+ * A category's next PM day after `after`, and not before `notBefore`.
+ *
+ * Completing a PM rolls the series on, and rolling it from the date it was
+ * done on would let one weekend shift drag every later date a day or two
+ * further from the category's start date. The calendar is counted from the
+ * start date every time, so the series stays on it. Null when the category has
+ * no start date, and the caller falls back to counting from the row.
+ */
+export async function nextCategoryDate(code: string, after: string, notBefore: string): Promise<string | null> {
+  const categories = await listCategories();
+  if (!categories.find((c) => c.code === code)?.defaultStartDate) return null;
+  const from = Number(after.slice(0, 4));
+  for (const year of [from, from + 1, from + 2]) {
+    const hit = (categoryCalendar(categories, year).dates.get(code) ?? []).find((d) => d > after && d >= notBefore);
+    if (hit) return hit;
+  }
+  return null;
 }

@@ -10,8 +10,14 @@ import { Loader2 } from "lucide-react";
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "subtle" | "dark";
 export type ButtonSize = "sm" | "md" | "lg";
 
+// The press is CSS, not a motion component. Every button in every table row
+// is one of these, and a JS gesture handler on each of several hundred of them
+// costs real time on a site tablet for a 150ms squeeze the compositor can do
+// alone. No hover scale either: a 1% scale resamples the label and blurs it.
 const BASE =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition-all " +
+  "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold cursor-pointer " +
+  "transition-[color,background-color,border-color,box-shadow,transform] duration-150 " +
+  "active:scale-[0.97] motion-reduce:active:scale-100 disabled:active:scale-100 " +
   "disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none whitespace-nowrap";
 
 // md and lg carry a 44px minimum height, the platform touch-target floor. A

@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { FileText, Download, FileWarning, Upload, Loader2, Plus } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
+import { FolderComponent } from "@/components/FolderComponent";
 import { formatDate } from "@/lib/utils";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
@@ -202,7 +203,10 @@ export default function EquipmentDocuments({
       {loading ? (
         <p className="text-xs text-ink-400 py-4">Loading documents…</p>
       ) : docs.length === 0 ? (
-        <p className="text-xs text-ink-400 py-4">No documents registered for this machine.</p>
+        <div className="py-6 flex flex-col items-center justify-center gap-3 text-center">
+          <FolderComponent size="sm" color="emerald" className="max-w-[210px] h-[175px]" />
+          <p className="text-xs text-ink-400">No documents registered for this machine.</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {docs.map((d) => (

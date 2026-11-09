@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
+import { m, AnimatePresence, useReducedMotion } from "motion/react";
 import { useUserPrefs } from "@/components/PreferencesProvider";
 import Tooltip from "@/components/Tooltip";
 
@@ -98,6 +99,8 @@ export default function NotificationBell() {
     };
   }, [mounted, pathname, prefs.notifyInApp]);
 
+  const reduced = useReducedMotion() ?? false;
+
   if (!mounted) return null;
 
   return (
@@ -114,14 +117,32 @@ export default function NotificationBell() {
             ? `Notifications, ${unread} unread`
             : "Notifications, none unread"
         }
-        className="relative grid place-items-center w-10 h-10 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100 transition-colors"
+        className="relative grid place-items-center w-10 h-10 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-ink-100 transition-colors group"
       >
-        <Bell className="w-5 h-5" />
-        {prefs.notifyInApp && unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger-500 text-white text-xs font-bold flex items-center justify-center">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
+        {/* Fills the hit area so the ring answers the whole control, not only
+            the pointer landing on the 20px glyph. A shaking bell is exactly
+            the kind of motion a reduced-motion setting asks to be spared. */}
+        <m.span
+          className="grid place-items-center w-full h-full"
+          whileHover={reduced ? undefined : { rotate: [0, -12, 12, -8, 8, -4, 4, 0] }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          <Bell className="w-5 h-5 transition-colors group-hover:text-ink-900" />
+        </m.span>
+        <AnimatePresence>
+          {prefs.notifyInApp && unread > 0 && (
+            <m.span
+              key="unread-badge"
+              initial={reduced ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={reduced ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+              transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 500, damping: 24 }}
+              className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger-500 text-white text-xs font-bold flex items-center justify-center shadow-xs"
+            >
+              {unread > 9 ? "9+" : unread}
+            </m.span>
+          )}
+        </AnimatePresence>
       </Link>
     </Tooltip>
   );

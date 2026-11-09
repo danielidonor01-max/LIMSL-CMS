@@ -9,6 +9,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
+import { m, AnimatePresence, useReducedMotion } from "motion/react";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -96,37 +97,55 @@ export default function Modal({
     };
   }, [open]);
 
-  if (!open) return null;
+  const reduced = useReducedMotion() ?? false;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-900/40 p-4 sm:p-8"
-      onClick={onClose}
-    >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        className={`w-full ${maxWidthClass} rounded-xl bg-white border border-ink-200 shadow-raised my-auto outline-none`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
-          <div>
-            <h3 id={titleId} className="text-base font-semibold text-ink-900">{title}</h3>
-            {subtitle && <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>}
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="p-1.5 -m-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-900 hover:bg-ink-100 transition-colors"
+    <AnimatePresence>
+      {open && (
+        <m.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          // While it fades out the closed dialog must not swallow the click
+          // somebody aims at the page underneath it.
+          exit={{ opacity: 0, pointerEvents: "none" }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-900/40 p-4 sm:p-8"
+          onClick={onClose}
+        >
+          <m.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 6 }}
+            transition={
+              reduced
+                ? { duration: 0.15 }
+                : { type: "spring", stiffness: 420, damping: 28, mass: 0.7 }
+            }
+            className={`w-full ${maxWidthClass} rounded-xl bg-white border border-ink-200 shadow-raised my-auto outline-none`}
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
+            <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
+              <div>
+                <h3 id={titleId} className="text-base font-semibold text-ink-900">{title}</h3>
+                {subtitle && <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>}
+              </div>
+              <button
+                onClick={onClose}
+                aria-label="Close dialog"
+                className="p-1.5 -m-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-900 hover:bg-ink-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5">{children}</div>
+          </m.div>
+        </m.div>
+      )}
+    </AnimatePresence>
   );
 }
