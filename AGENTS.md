@@ -341,6 +341,9 @@ permit (a WORKED renewal mark for today). Clocking OFF is never refused.
 
 A technician cannot revalidate; they ask (`/api/permits/[id]/revalidation-request`,
 once a day) and the Maintenance Manager signs today's renewal on the permit.
+**Only** the Maintenance Manager: `PERMIT_RENEW_ROLES` is that one role, by
+LIMSL's decision (November 2026) — not the foreman, HSE, the Factory Manager
+or Super Admin. `schedule-roles.test.ts` holds it there.
 A renewal is signed by the signed-in renewer — it no longer needs a drawn
 image, which the grid stopped sending when drawn signatures were retired and
 which had made revalidation impossible from the screen.
@@ -360,6 +363,17 @@ technician record their own work will also let them put a job on somebody else
 unless it is gated separately. `WORK_ASSIGN_ROLES` is that gate, and it is
 applied on the schedule, on the batch and on the corrective record. If you add
 a third place work can be assigned, gate it there too.
+
+Who holds it: Super Admin, Factory Manager, Maintenance Manager, Foreman. Not
+QA/QC or HSE (they sign), not the technician (they carry the work; they may
+still reschedule and defer their own), not the COO (views and observes).
+
+**Assigning a category's PM on the schedule raises its batch.** A name on
+plan rows with no batch is a job with nothing for the WMS, JHA and permit to
+hang off, so the schedule route calls `raisePmBatch()` then `assignPmBatch()`
+(`src/lib/maintenance/pm-batch.ts`, the same code the batch routes use).
+Raising the batch does not let work start: its work orders still need the
+WMS, JHA and permit approved before `readinessToWork()` lets anyone clock on.
 
 ### Parts consumed
 

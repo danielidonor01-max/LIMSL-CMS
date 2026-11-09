@@ -183,17 +183,14 @@ export const PERMIT_ISSUE_ROLES = ["SUPER_ADMIN", "HSE"];
 // authority, the issuer owns the permit lifecycle.
 export const PERMIT_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
-// Roles permitted to RENEW a permit for a further day. The AHS block on the
-// paper form is the Maintenance Manager. A foreman may renew a day he is
-// supervising, and Super Admin covers an absence, but a technician cannot
-// authorise another day of his own work.
-export const PERMIT_RENEW_ROLES = [
-  "SUPER_ADMIN",
-  "FACTORY_MANAGER",
-  "MAINTENANCE_MANAGER",
-  "FOREMAN",
-  "HSE",
-];
+// Who may RENEW a permit for a further day inside its window: the
+// Maintenance Manager, and nobody else (LIMSL, November 2026). The AHS block
+// on the paper form is theirs. The foreman, HSE, the Factory Manager and
+// Super Admin could all sign a day before; a renewal is the Maintenance
+// Manager's statement that the job is still safe to carry on, and a second
+// hand on it dilutes whose statement that is. A technician asks for it
+// (revalidation-request), which already goes to the Maintenance Manager.
+export const PERMIT_RENEW_ROLES = ["MAINTENANCE_MANAGER"];
 
 // Roles permitted to ACCEPT a hand-back, taking the equipment back into custody
 // and closing the permit. Handing back is the working party's act and follows
@@ -256,13 +253,12 @@ export const REPAIR_AUTHORISE_ROUTINE_ROLES = [
   "FOREMAN",
 ];
 
-// Everyone who reaches the schedule may assign except QA/QC, HSE and the
-// technician (LIMSL, November 2026): QA/QC and HSE take part by signing, and a
-// technician carries the work rather than deciding who carries it. VIEWER
-// never reaches the schedule at all.
+// Not QA/QC or HSE, who take part by signing; not the technician, who carries
+// the work rather than deciding who carries it; and not the COO, whose seat is
+// to view and observe (LIMSL, November 2026). Assigning a category's PM on the
+// schedule also raises its batch, so this is who may do that too.
 export const WORK_ASSIGN_ROLES = [
   "SUPER_ADMIN",
-  "COO",
   "FACTORY_MANAGER",
   "MAINTENANCE_MANAGER",
   "FOREMAN",

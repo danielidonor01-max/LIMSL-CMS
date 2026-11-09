@@ -9,13 +9,10 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   pmBatches,
-  maintenanceSchedule,
   equipment,
   workOrders,
-  wmsDocuments,
   jhaDocuments,
   permits,
-  users,
   auditLog,
   pmChecklists,
   workOrderTimeLogs,
@@ -25,7 +22,7 @@ import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { requireRoles } from "@/lib/authz";
 import { WORK_ASSIGN_ROLES } from "@/lib/roles";
-import { notify } from "@/lib/notifications";
+import { assignPmBatch } from "@/lib/maintenance/pm-batch";
 import { pmFlowState } from "@/lib/maintenance/flow";
 import { standingPairFor, latestWmsForCategory } from "@/lib/hse/standing-documents";
 import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
@@ -192,95 +189,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       const gate = await requireRoles(WORK_ASSIGN_ROLES);
       if (gate.res) return gate.res;
 
-      let assignedToName: string | null = null;
-      if (body.assignedToId) {
-        const [person] = await db
-          .select({ id: users.id, name: users.name, isActive: users.isActive })
-          .from(users)
-          .where(eq(users.id, String(body.assignedToId)))
-          .limit(1);
-        if (!person) {
-          return NextResponse.json({ error: "That person was not found." }, { status: 400 });
-        }
-        if (person.isActive === false) {
-          return NextResponse.json(
-            { error: `${person.name} is no longer an active account.` },
-            { status: 409 },
-          );
-        }
-        assignedToName = person.name;
-      }
-
-      const now = new Date().toISOString();
-      await db
-        .update(pmBatches)
-        .set({
-          assignedToId: body.assignedToId || null,
-          assignedToName,
-          assignedById: body.assignedToId ? (gate.actor?.id ?? null) : null,
-          assignedByName: body.assignedToId ? (gate.actor?.name ?? null) : null,
-          assignedAt: body.assignedToId ? now : null,
-          assistantIds:
-            body.assistantIds !== undefined ? JSON.stringify(body.assistantIds ?? []) : batch.assistantIds,
-          status: body.assignedToId ? "ASSIGNED" : "PLANNED",
-          updatedAt: now,
-        })
-        .where(eq(pmBatches.id, id));
-
-      // The assignment is not real until it reaches the work orders. This is
-      // the line that makes "assigning one person" mean all five machines.
-      const woIds = (
-        await db.select({ id: workOrders.id }).from(workOrders).where(eq(workOrders.batchId, id))
-      ).map((w) => w.id);
-
-      if (woIds.length > 0) {
-        await db
-          .update(workOrders)
-          .set({
-            technicianId: body.assignedToId || null,
-            technicianName: assignedToName,
-            assistantIds:
-              body.assistantIds !== undefined ? JSON.stringify(body.assistantIds ?? []) : undefined,
-          })
-          .where(inArray(workOrders.id, woIds));
-      }
-
-      // And onto the plan, so the schedule shows the same name as the job.
-      await db
-        .update(maintenanceSchedule)
-        .set({ responsiblePersonId: body.assignedToId || null, responsiblePersonName: assignedToName })
-        .where(eq(maintenanceSchedule.batchId, id));
-
-      await db.insert(auditLog).values({
-        id: nanoid(),
-        userId: gate.actor?.id ?? null,
-        userName: gate.actor?.name || "System",
-        action: "UPDATE",
-        entityType: "pm_batch",
-        entityId: id,
-        entityDescription: body.assignedToId
-          ? `${batch.batchNumber} assigned to ${assignedToName}, ${woIds.length} work order${woIds.length === 1 ? "" : "s"} stamped`
-          : `${batch.batchNumber} assignment cleared`,
+      const assigned = await assignPmBatch({
+        batchId: id,
+        assignedToId: body.assignedToId === undefined ? batch.assignedToId : body.assignedToId,
+        assistantIds: body.assistantIds,
+        actor: gate.actor ?? {},
       });
-
-      if (body.assignedToId) {
-        try {
-          await notify({
-            event: "GENERAL",
-            title: `PM assigned to you, ${batch.batchNumber}`,
-            body:
-              `${batch.title}. ${woIds.length} machine${woIds.length === 1 ? "" : "s"} planned for ` +
-              `${batch.plannedDate}. The method statement, hazard analysis and permit for this batch ` +
-              `cover all of them, and work cannot start until the permit is raised.`,
-            linkPath: `/pm-batches/${id}`,
-            relatedEntityType: "pm_batch",
-            relatedEntityId: id,
-            userIds: [String(body.assignedToId)],
-          });
-        } catch (err) {
-          console.warn("pm-batch assign: notify failed", err);
-        }
-      }
+      if (!assigned.ok) return NextResponse.json({ error: assigned.error }, { status: assigned.status });
 
       return NextResponse.json(await loadBatch(id));
     }

@@ -12,20 +12,13 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   pmBatches,
-  maintenanceSchedule,
-  equipment,
   workOrders,
-  wmsDocuments,
-  jhaDocuments,
   permits,
-  auditLog,
 } from "@/lib/db/schema";
-import { eq, and, inArray, desc, isNull } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { inArray, desc } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
 import { WORK_ASSIGN_ROLES } from "@/lib/roles";
-import { nextDocNumber } from "@/lib/doc-number";
-import { raiseWorkOrder } from "@/lib/maintenance/raise-work-order";
+import { raisePmBatch } from "@/lib/maintenance/pm-batch";
 import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
 import { standingPairFor } from "@/lib/hse/standing-documents";
 import { auth } from "@/auth";
@@ -115,101 +108,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // The machines in the batch are whatever the plan says is due that day for
-    // that category and has not already been rolled into a batch. Read from the
-    // plan rather than taken from the request, so a stale screen cannot quietly
-    // leave a machine out of the permit that is supposed to cover it.
-    const due = await db
-      .select({
-        scheduleId: maintenanceSchedule.id,
-        equipmentId: maintenanceSchedule.equipmentId,
-        activityType: maintenanceSchedule.activityType,
-        taskDescription: maintenanceSchedule.taskDescription,
-        status: maintenanceSchedule.status,
-        assetId: equipment.assetId,
-        name: equipment.name,
-        category: equipment.category,
-      })
-      .from(maintenanceSchedule)
-      .innerJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id))
-      .where(
-        and(
-          eq(maintenanceSchedule.plannedDate, plannedDate),
-          eq(equipment.category, category),
-          isNull(maintenanceSchedule.batchId),
-        ),
-      );
-
-    const machines = due.filter(
-      (r) => r.status !== "COMPLETED" && r.status !== "CANCELLED" && (r.activityType === "PM" || r.activityType === "INS"),
-    );
-
-    if (machines.length === 0) {
-      return NextResponse.json(
-        {
-          error:
-            "Nothing is due for that category on that date, or it has already been rolled into a batch.",
-        },
-        { status: 409 },
-      );
-    }
-
-    const categoryLabel = (await categoryLabelMap())[category] ?? category;
-    const id = nanoid();
-    const batchNumber = await nextDocNumber("PMB");
-    const activityType = machines.every((m) => m.activityType === "INS") ? "INS" : "PM";
-    const title = `${activityType === "INS" ? "Inspection" : "PM"}, ${categoryLabel}, ${plannedDate}`;
-
-    await db.insert(pmBatches).values({
-      id,
-      batchNumber,
-      title,
-      category,
-      plannedDate,
-      year: Number(plannedDate.slice(0, 4)) || new Date().getFullYear(),
-      activityType,
-      status: "PLANNED",
-      createdBy: gate.actor?.id ?? null,
-    });
-
-    // One work order per machine, all pointing at the batch.
-    const raised: Array<{ id: string; workOrderNumber: string; equipmentId: string }> = [];
-    for (const m of machines) {
-      const wo = await raiseWorkOrder({
-        type: activityType === "INS" ? "INSPECTION" : "PREVENTIVE",
-        equipmentId: m.equipmentId,
-        title: `${activityType === "INS" ? "Inspection" : "PM"}, ${m.assetId} ${m.name}`,
-        description: m.taskDescription || `Planned ${activityType} under batch ${batchNumber}.`,
-        plannedDate,
-        scheduleId: m.scheduleId,
-        batchId: id,
-        actor: gate.actor ?? {},
-        origin: `raised under PM batch ${batchNumber}`,
-      });
-      raised.push({ id: wo.id, workOrderNumber: wo.workOrderNumber, equipmentId: m.equipmentId });
-
-      await db
-        .update(maintenanceSchedule)
-        .set({ batchId: id })
-        .where(eq(maintenanceSchedule.id, m.scheduleId));
-    }
-
-    await db.insert(auditLog).values({
-      id: nanoid(),
-      userId: gate.actor?.id ?? null,
-      userName: gate.actor?.name || "System",
-      action: "CREATE",
-      entityType: "pm_batch",
-      entityId: id,
-      entityDescription:
-        `${batchNumber}, ${title}, ${machines.length} machine${machines.length === 1 ? "" : "s"}, ` +
-        `work orders ${raised.map((r) => r.workOrderNumber).join(", ")}`,
-    });
-
-    return NextResponse.json(
-      { id, batchNumber, title, machineCount: machines.length, workOrders: raised },
-      { status: 201 },
-    );
+    const raised = await raisePmBatch({ category, plannedDate, actor: gate.actor ?? {} });
+    if (!raised.ok) return NextResponse.json({ error: raised.error }, { status: raised.status });
+    const { ok: _ok, ...batch } = raised;
+    void _ok;
+    return NextResponse.json(batch, { status: 201 });
   } catch (error) {
     console.error("Failed to raise PM batch:", error);
     return NextResponse.json({ error: "Failed to raise PM batch" }, { status: 500 });

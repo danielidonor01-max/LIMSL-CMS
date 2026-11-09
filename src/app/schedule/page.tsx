@@ -231,10 +231,15 @@ function SchedulePageView() {
         toast.error(d.error || "Could not save the assignment.");
         return;
       }
+      const who = `${next.leadName}${next.assistantIds.length ? ` with ${next.assistantIds.length} other(s)` : ""}`;
       toast.success(
-        next.leadId
-          ? `Assigned to ${next.leadName}${next.assistantIds.length ? ` with ${next.assistantIds.length} other(s)` : ""}.`
-          : "Left unassigned. Only managers will be reminded.",
+        !next.leadId
+          ? "Left unassigned. Only managers will be reminded."
+          : d.batch?.raised
+            ? `Assigned to ${who}. ${d.batch.batchNumber} raised with ${d.batch.workOrders} work order${d.batch.workOrders === 1 ? "" : "s"}; work starts once its WMS, JHA and permit are approved.`
+            : d.batch
+              ? `Assigned to ${who} on ${d.batch.batchNumber}.`
+              : `Assigned to ${who}.`,
       );
       setAssign(null);
       load();

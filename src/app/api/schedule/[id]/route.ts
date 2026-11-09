@@ -1,7 +1,17 @@
 // src/app/api/schedule/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { maintenanceSchedule, auditLog, equipment, workOrders } from "@/lib/db/schema";
+import { maintenanceSchedule, auditLog, equipment, workOrders, pmBatches } from "@/lib/db/schema";
+import { raisePmBatch, assignPmBatch } from "@/lib/maintenance/pm-batch";
+
+const safeIdList = (raw: string): string[] => {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+};
 import { eq, and, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -122,7 +132,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     // If applyToCategory is requested, find all schedule rows for that category and date
     let targetIds = [id];
-    let categoryLabel: string | null = null;
     const [eqItem] = await db
       .select({ category: equipment.category })
       .from(equipment)
@@ -165,6 +174,44 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
+    // Putting a person on a category's PM raises its batch (LIMSL, November
+    // 2026). A name against plan rows with no batch is a job with nothing to
+    // hang the method statement, hazard analysis and permit off, so it could
+    // never start. The batch's work orders still cannot start until those
+    // documents are approved: raising it is the start of the paperwork, not
+    // permission to pick up a spanner.
+    let batch: { id: string; batchNumber: string; raised: boolean; workOrders: number } | null = null;
+    if (
+      body.applyToCategory &&
+      set.responsiblePersonId &&
+      eqItem?.category &&
+      (row.activityType === "PM" || row.activityType === "INS") &&
+      row.status !== "COMPLETED"
+    ) {
+      const actor = gate.actor ?? {};
+      let batchId = row.batchId;
+      let raisedNow = false;
+      if (!batchId) {
+        const raised = await raisePmBatch({ category: eqItem.category, plannedDate: row.plannedDate, actor });
+        if (raised.ok) {
+          batchId = raised.id;
+          raisedNow = true;
+        } else if (raised.status !== 409) {
+          console.warn("schedule assign: could not raise the batch", raised.error);
+        }
+      }
+      if (batchId) {
+        const assigned = await assignPmBatch({
+          batchId,
+          assignedToId: String(set.responsiblePersonId),
+          assistantIds: set.assistantIds ? safeIdList(set.assistantIds) : undefined,
+          actor,
+        });
+        const [b] = await db.select({ batchNumber: pmBatches.batchNumber }).from(pmBatches).where(eq(pmBatches.id, batchId)).limit(1);
+        if (assigned.ok && b) batch = { id: batchId, batchNumber: b.batchNumber, raised: raisedNow, workOrders: assigned.workOrders };
+      }
+    }
+
     await db.insert(auditLog).values({
       id: nanoid(),
       userId: gate.actor?.id ?? null,
@@ -187,7 +234,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       set.responsiblePersonId && set.responsiblePersonId !== row.responsiblePersonId
         ? [String(set.responsiblePersonId)]
         : [];
-    const recipients = [...newLead, ...addedHelpers];
+    // With a batch, the lead has already been told by the batch, with a link to
+    // the job itself; telling them twice teaches people to ignore both.
+    const recipients = batch ? addedHelpers : [...newLead, ...addedHelpers];
     if (recipients.length) {
       try {
         const when = set.plannedDate ?? row.plannedDate;
@@ -210,7 +259,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const [updated] = await db.select().from(maintenanceSchedule).where(eq(maintenanceSchedule.id, id)).limit(1);
-    return NextResponse.json(movedFrom ? { ...updated, movedFromWeekend: movedFrom } : updated);
+    return NextResponse.json({
+      ...updated,
+      ...(movedFrom ? { movedFromWeekend: movedFrom } : {}),
+      ...(batch ? { batch } : {}),
+    });
   } catch (error) {
     console.error("Failed to update schedule activity:", error);
     return NextResponse.json({ error: "Failed to update activity" }, { status: 500 });
