@@ -5,11 +5,10 @@ import { signoffs, auditLog, users, workOrders, wmsDocuments } from "@/lib/db/sc
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
-import { canSignStep } from "@/lib/roles";
 import { verifyPassword } from "@/lib/password";
 import { hasSigningPin } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
-import { chainSummary } from "@/lib/signoff/chains";
+import { chainSummary, canSignChainStep, isOverrideSignature, passOf } from "@/lib/signoff/chains";
 import { sealDocument } from "@/lib/signoff/seal";
 import { applyCategoryChange } from "@/lib/maintenance/asset-categories";
 import { notify, notifyNextSigner } from "@/lib/notifications";
@@ -56,7 +55,7 @@ export async function POST(
       );
     }
 
-    if (!step.signerUserId && !canSignStep(user.role, step.role)) {
+    if (!step.signerUserId && !canSignChainStep(user.role, step.entityType, step)) {
       return NextResponse.json(
         { error: `This step must be signed by ${step.roleLabel}. Your role is not authorised.` },
         { status: 403 },
@@ -74,8 +73,17 @@ export async function POST(
       // Segregation of duties: a multi-level chain means multiple PEOPLE.
       // Seniority lets a manager cover a junior step, which previously let one
       // senior sign an entire chain alone, including the HSE safety step,       // collapsing the control the chain exists to provide.
+      // Per pass: a controlled document is signed twice (review, then
+      // implementation), and the same three people sign both. What may not
+      // happen is one person filling two columns of the same pass.
+      const pass = passOf(step.entityType, step);
       const alreadySigned = chain.find(
-        (s) => s.id !== step.id && s.status === "SIGNED" && s.signedById && s.signedById === user.id,
+        (s) =>
+          s.id !== step.id &&
+          s.status === "SIGNED" &&
+          s.signedById &&
+          s.signedById === user.id &&
+          passOf(step.entityType, s) === pass,
       );
       if (alreadySigned) {
         return NextResponse.json(
@@ -119,7 +127,7 @@ export async function POST(
     // their role: they are exactly who the step asks for. Anyone else is.
     const isOverride =
       action === "sign" &&
-      (step.signerUserId ? step.signerUserId !== user.id : user.role !== step.role);
+      (step.signerUserId ? step.signerUserId !== user.id : isOverrideSignature(user.role, step.entityType, step));
     const overrideReason = String(body.overrideReason ?? "").trim();
     if (isOverride && overrideReason.length < 10) {
       return NextResponse.json(

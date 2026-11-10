@@ -8,8 +8,8 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, Printer } from "lucide-react";
 import Markdown from "@/components/Markdown";
 import DocumentSeal from "@/components/DocumentSeal";
-import WmsDocumentHeader, { type RevisionEntry } from "@/components/WmsDocumentHeader";
-import { formatDate } from "@/lib/utils";
+import WmsDocumentHeader from "@/components/WmsDocumentHeader";
+import { useDocumentHistory } from "@/lib/use-document-history";
 
 export default function ProcedureRevisionPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +29,15 @@ export default function ProcedureRevisionPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // This revision's history: everything issued up to and including it, so an
+  // old revision's printout shows the record as it stood then.
+  const issued = rev && !rev.error
+    ? (allRevs.length > 0 ? allRevs : [rev]).filter(
+        (r) => r.status !== "REJECTED" && r.status !== "DRAFT" && (r.revision ?? 0) <= (rev.revision ?? 0),
+      )
+    : [];
+  const history = useDocumentHistory("PROCEDURE", issued);
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-ink-500">
@@ -45,23 +54,6 @@ export default function ProcedureRevisionPage() {
     );
   }
 
-  const headerRevisions: RevisionEntry[] = (allRevs.length > 0 ? allRevs : [rev]).map((r) => ({
-    rev: r.revision,
-    date: formatDate(r.effectiveDate ?? r.createdAt),
-    description: r.changeSummary || "ISSUED FOR IMPLEMENTATION AND CONTROL",
-    preparedBy: {
-      name: r.preparedByName || "Originator",
-      title: "Originator / QA/QC",
-    },
-    reviewedBy: {
-      name: "Maintenance Manager",
-      title: "Maintenance Manager",
-    },
-    approvedBy: {
-      name: "Factory Manager / COO",
-      title: "QA/QC Document Control",
-    },
-  }));
 
   return (
     <div className={PAGE_MAIN.detail}>
@@ -78,10 +70,8 @@ export default function ProcedureRevisionPage() {
         <WmsDocumentHeader
           docNumber={rev.code}
           title={rev.title}
-          revNo={rev.revision}
-          dateRevised={formatDate(rev.effectiveDate ?? rev.createdAt)}
-          procedureLabel="EQUIPMENT MAINTENANCE PROCEDURE"
-          revisions={headerRevisions}
+          rows={history.rows}
+          loading={history.loading}
         />
 
         <article className="pt-2">

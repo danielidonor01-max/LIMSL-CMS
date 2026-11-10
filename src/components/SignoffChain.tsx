@@ -13,15 +13,15 @@
 "use client";
 
 import Button from "@/components/Button";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Check, Lock, Loader2, PenLine, ShieldCheck, Undo2, X } from "lucide-react";
 import SignatureBlock from "@/components/SignatureBlock";
 import { Badge } from "@/components/Badge";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
-import { canSignStep, ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
-import { isStepUnlocked, chainSummary } from "@/lib/signoff/chains";
+import { ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
+import { isStepUnlocked, chainSummary, canSignChainStep, passOf } from "@/lib/signoff/chains";
 import { PIN_LENGTH } from "@/lib/signing-pin";
 import { invalidateApi } from "@/lib/api-cache";
 
@@ -213,7 +213,7 @@ export default function SignoffChain({
             // click and be refused.
             const mine = step.signerUserId
               ? step.signerUserId === userId || role === "SUPER_ADMIN"
-              : canSignStep(role, step.role);
+              : canSignChainStep(role, entityType, step);
             const returned = step.status === "REJECTED";
             const signed = step.status === "SIGNED";
             const canSign = (step.status === "PENDING" || returned) && unlocked && mine;
@@ -222,14 +222,28 @@ export default function SignoffChain({
             // the eye should land on when the page opens.
             const current = !signed && unlocked && !returned;
 
+            // Two-pass documents read as two stages. The heading says which,
+            // so the step itself can drop the prefix the inbox needs.
+            const pass = passOf(entityType, step);
+            const passStarts = !!pass && (i === 0 || passOf(entityType, chain[i - 1]) !== pass);
+            const label = pass ? step.roleLabel.replace(/^Issue for (review|implementation): /, "") : step.roleLabel;
+
             return (
-              <li key={step.id} className={current && !isOpen ? "bg-brand-50/40" : undefined}>
+              <Fragment key={step.id}>
+              {passStarts && (
+                <li className="px-6 pt-4 pb-1 bg-canvas">
+                  <p className="text-xs font-semibold text-ink-700">
+                    {pass === "REVIEW" ? "Pass 1 · Issue for review and approval" : "Pass 2 · Issue for implementation"}
+                  </p>
+                </li>
+              )}
+              <li className={current && !isOpen ? "bg-brand-50/40" : undefined}>
                 <div className="px-6 py-4 flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
                     <StepMarker index={i + 1} signed={signed} returned={returned} unlocked={unlocked} />
 
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-ink-900 leading-snug">{step.roleLabel}</p>
+                      <p className="text-sm font-semibold text-ink-900 leading-snug">{label}</p>
 
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         <Badge className={ROLE_BADGE[step.role] ?? "bg-ink-100 text-ink-500 border-ink-200"}>
@@ -413,6 +427,7 @@ export default function SignoffChain({
                   </div>
                 )}
               </li>
+              </Fragment>
             );
           })}
         </ol>

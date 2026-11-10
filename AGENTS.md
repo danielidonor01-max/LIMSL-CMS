@@ -222,13 +222,33 @@ Each of those is a named act with its own gate and its own audit line, taken at
 - **The assigned person raises the work order.** A manager may do it on their
   behalf; another technician may not.
 
+### Controlled documents: two passes, fixed signatories (LIMSL, 10 Nov 2026)
+
+WMS, JHA and Procedure are signed in **two separate passes** by the same
+people: pass 1 "Issue for review and approval", pass 2 "Issue for
+implementation". Only pass 2 completing approves the document. `ChainStep.pass`
+marks the pass; segregation (one person, one step) applies **per pass**.
+
+- **WMS:** originator (Foreman, or Super Admin) → Maintenance Manager → Factory Manager.
+- **JHA:** HSE Supervisor (or Super Admin) → the Foreman who originated the
+  linked WMS (`signer: "WMS_ORIGINATOR"`, bound when the chain is created) →
+  Factory Manager.
+- **Procedure:** QA/QC → Maintenance Manager → Factory Manager → COO, two passes.
+- `ChainStep.signableBy` lists exactly who may sign a step, with no seniority
+  cover and no Super Admin stand-in. The Maintenance Manager's and Factory
+  Manager's steps are theirs alone. Use `canSignChainStep()` (chains.ts), not
+  `canSignStep()`, anywhere a stored step is checked.
+- The document header's revision history (`lib/document-control.ts`) prints
+  one row per pass from these signatures; titles come from each signer's
+  account job title. Nothing in the header is typed in.
+
 ### The WMS is a standing document, not a form (do not make it per-job again)
 
 How you service a CNC light-duty machine does not change because it is
 October rather than March. So a method statement is written ONCE for a
 CATEGORY, approved, and then it stands — every PM of those machines runs
-under it until somebody revises it. It is a controlled document, which is why
-QA/QC now sit in `WMS_CHAIN` as they do on the maintenance procedure.
+under it until somebody revises it. It is a controlled document, signed in the
+two passes described under the sign-off engine above.
 
 `wms_documents.category` is what makes it standing. A WMS with no category is
 a one-off: a breakdown repair on a single machine.

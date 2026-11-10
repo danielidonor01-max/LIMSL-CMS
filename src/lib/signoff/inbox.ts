@@ -15,8 +15,7 @@
 // Dropping (2) is the tempting simplification and it is wrong: it fills the
 // inbox with steps that cannot be signed yet, which is exactly the noise that
 // makes people stop reading an inbox.
-import { canSignStep } from "@/lib/roles";
-import { isStepUnlocked } from "@/lib/signoff/chains";
+import { isStepUnlocked, canSignChainStep } from "@/lib/signoff/chains";
 
 export type SignoffRow = {
   id: string;
@@ -113,7 +112,7 @@ export function pendingFor(rows: SignoffRow[], actor: Actor): InboxItem[] {
       // him, so role seniority does not open it either.
       if (step.signerUserId) {
         if (step.signerUserId !== actor.id) continue;
-      } else if (!canSignStep(actor.role, step.role)) {
+      } else if (!canSignChainStep(actor.role, step.entityType, step)) {
         continue;
       }
 

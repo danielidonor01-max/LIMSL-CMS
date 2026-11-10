@@ -170,7 +170,18 @@ test("every declared chain is non-empty, uses canonical roles and has a required
     // a named person, and the affected custodian). Person-level segregation is
     // enforced at signing time, so the repeat still means two humans.
     const roles = chain.map((s) => s.role);
-    if (entityType !== "PERMIT") {
+    //
+    // Controlled documents (WMS, JHA, Procedure) are the other: they are signed
+    // in two passes by the same people, so each role appears once PER PASS.
+    // That is checked pass by pass, so a role repeated inside one pass is still
+    // caught.
+    if (chain.some((s) => s.pass)) {
+      for (const pass of ["REVIEW", "IMPLEMENTATION"] as const) {
+        const inPass = chain.filter((s) => s.pass === pass).map((s) => s.role);
+        assert.ok(inPass.length > 0, `${entityType} has no ${pass} pass`);
+        assert.equal(new Set(inPass).size, inPass.length, `${entityType} repeats a role within its ${pass} pass`);
+      }
+    } else if (entityType !== "PERMIT") {
       assert.equal(new Set(roles).size, roles.length, `${entityType} repeats a role in its chain`);
     }
   }
@@ -206,15 +217,19 @@ test("the permit chain matches the signature blocks on the printed form", () => 
 test("the permit holder step is bound to a person, not to a role", () => {
   const ph = CHAINS.PERMIT.find((s) => s.roleLabel.startsWith("Permit Holder"));
   assert.equal(ph?.signer, "PERMIT_HOLDER");
-  // Nothing else in any chain is person-bound; a stray binding would silently
-  // lock a step to whoever happened to be named on the record.
+  // The only other binding is the JHA's Foreman step, which belongs to the
+  // Foreman who originated the WMS (LIMSL, November 2026). Anything else
+  // person-bound is a stray: it would silently lock a step to whoever
+  // happened to be named on the record.
+  const expected: Record<string, string> = { PERMIT: "PERMIT_HOLDER", JHA: "WMS_ORIGINATOR" };
   for (const [entityType, chain] of Object.entries(CHAINS)) {
     for (const s of chain) {
       if (s.signer) {
-        assert.equal(entityType, "PERMIT", `${entityType} has an unexpected person-bound step`);
+        assert.equal(s.signer, expected[entityType], `${entityType} has an unexpected person-bound step`);
       }
     }
   }
+  assert.ok(CHAINS.JHA.filter((s) => s.signer === "WMS_ORIGINATOR").every((s) => s.role === "FOREMAN"));
 });
 
 test("the document chain runs work order, then WMS, then JHA, then permit", () => {

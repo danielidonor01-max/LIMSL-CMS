@@ -16,12 +16,12 @@ import {
   UserCheck,
   AlertTriangle,
   CheckCircle2,
+  CheckCheck,
   FileText,
   Clock,
   ShieldAlert,
   ArrowRight,
   Layers,
-  Sparkles,
   PenLine,
 } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
@@ -255,34 +255,14 @@ export default function ApprovalsPage() {
             />
 
             {count === 0 ? (
-              <div className="bg-surface border border-line rounded-xl shadow-card p-10 text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 flex items-center justify-center mx-auto">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-ink-900">
-                    Your approval queue is completely clear, {userName}
-                  </h3>
-                  <p className="text-xs text-ink-500 max-w-md mx-auto">
-                    No safety permits, work orders, or method statements are waiting on your signature.
-                    All current operations have been authorized.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <Link
-                    href="/schedule"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-white text-xs font-semibold transition-colors"
-                  >
-                    <span>View master schedule</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link
-                    href="/equipment"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-line hover:border-ink-300 text-ink-700 text-xs font-semibold transition-colors"
-                  >
-                    <span>Equipment registry</span>
-                  </Link>
-                </div>
+              <div className="bg-surface border border-line rounded-xl shadow-card">
+                <EmptyState
+                  icon={CheckCheck}
+                  title={`Nothing is waiting on your signature, ${userName}`}
+                  message="No permits, work orders, method statements or procedures need you right now."
+                  actionLabel="View the schedule"
+                  actionHref="/schedule"
+                />
               </div>
             ) : (
               <div className="space-y-4">

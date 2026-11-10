@@ -6,6 +6,8 @@
 // These are intentionally data-driven so the exact roles/steps can be tuned
 // later without touching the sign-off engine.
 
+import { canSignStep } from "@/lib/roles";
+
 // `signer: "PERMIT_HOLDER"` binds the step to the one person the record names
 // rather than to a role. The permit holder signs the permit issued to him, and
 // no other technician can sign it in his place.
@@ -13,8 +15,23 @@ export type ChainStep = {
   role: string;
   roleLabel: string;
   required: boolean;
-  signer?: "PERMIT_HOLDER";
+  signer?: "PERMIT_HOLDER" | "WMS_ORIGINATOR";
+  // Controlled documents are signed twice (LIMSL, November 2026): once to
+  // issue them for review and approval, then again to issue them for
+  // implementation. The pass is what the revision history prints.
+  pass?: "REVIEW" | "IMPLEMENTATION";
+  // Exactly who may sign this step, with no seniority cover and no Super Admin
+  // stand-in unless listed. The Maintenance Manager's and Factory Manager's
+  // signatures on a controlled document are theirs alone: that is the SOP.
+  signableBy?: string[];
 };
+
+// One controlled-document pass, built twice so the two cannot drift apart.
+function twoPasses(steps: Omit<ChainStep, "pass" | "roleLabel">[], labels: string[]): ChainStep[] {
+  const pass = (p: "REVIEW" | "IMPLEMENTATION", prefix: string) =>
+    steps.map((st, i) => ({ ...st, pass: p, roleLabel: `${prefix}: ${labels[i]}` }));
+  return [...pass("REVIEW", "Issue for review"), ...pass("IMPLEMENTATION", "Issue for implementation")];
+}
 
 // Preventive Maintenance checklist sign-off:
 //   Technician performs → Foreman verifies → QA/QC checks records → Maintenance
@@ -40,29 +57,41 @@ export const CM_CHAIN: ChainStep[] = [
 
 // Work Method Statement authorisation — three action parties, matching the
 // Prepared / Reviewed / Approved columns on the LIMSL paper WMS:
-//   Originator (Foreman) → Factory Supervisor / Maintenance Manager →
-//   Factory Coordinator.
+//   Originator (Foreman, or a Super Admin) → Maintenance Manager →
+//   Factory Manager, signed twice: issue for review, then issue for
+//   implementation. Only the second pass approves the statement.
 // HSE and QA/QC are not signatories on the method statement. HSE's safety
 // review happens on the JHA written against the approved WMS.
 //
 // There is no separate Factory Supervisor or Factory Coordinator role in the
 // system: the review step is held by MAINTENANCE_MANAGER and the approval
 // step by FACTORY_MANAGER, whose accounts those people sign under.
-export const WMS_CHAIN: ChainStep[] = [
-  { role: "FOREMAN", roleLabel: "Prepared by (Originator / Foreman)", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Factory Supervisor / Maintenance Manager)", required: true },
-  { role: "FACTORY_MANAGER", roleLabel: "Approved by (Factory Coordinator)", required: true },
-];
+export const WMS_CHAIN: ChainStep[] = twoPasses(
+  [
+    { role: "FOREMAN", required: true, signableBy: ["FOREMAN", "SUPER_ADMIN"] },
+    { role: "MAINTENANCE_MANAGER", required: true, signableBy: ["MAINTENANCE_MANAGER"] },
+    { role: "FACTORY_MANAGER", required: true, signableBy: ["FACTORY_MANAGER"] },
+  ],
+  ["Prepared by (Originator)", "Reviewed by (Maintenance Manager)", "Approved by (Factory Manager)"],
+);
 
 // Equipment Maintenance Procedure revision control:
 //   QA/QC authorises the change (document control) → Maintenance Manager →
 //   Factory Manager → COO sign off before the revision becomes effective.
-export const PROCEDURE_CHAIN: ChainStep[] = [
-  { role: "QA_QC", roleLabel: "Authorised by (QA/QC, document control)", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "Signed off (Maintenance Manager)", required: true },
-  { role: "FACTORY_MANAGER", roleLabel: "Signed off (Factory Manager)", required: true },
-  { role: "COO", roleLabel: "Approved (COO)", required: true },
-];
+export const PROCEDURE_CHAIN: ChainStep[] = twoPasses(
+  [
+    { role: "QA_QC", required: true },
+    { role: "MAINTENANCE_MANAGER", required: true, signableBy: ["MAINTENANCE_MANAGER"] },
+    { role: "FACTORY_MANAGER", required: true, signableBy: ["FACTORY_MANAGER"] },
+    { role: "COO", required: true },
+  ],
+  [
+    "Authorised by (QA/QC, document control)",
+    "Signed off (Maintenance Manager)",
+    "Signed off (Factory Manager)",
+    "Approved (COO)",
+  ],
+);
 
 // Permit-to-Work authorisation, matching the signature blocks on the printed
 // LIMSL permit. HSE issues the permit, so HSE does not appear as a step: raising
@@ -87,15 +116,19 @@ export const PTW_CHAIN: ChainStep[] = [
   { role: "TECHNICIAN", roleLabel: "Affected Custodian (AC)", required: false },
 ];
 
-// Job Hazard Analysis approval. HSE prepares it from an approved Work Method
-// Statement; the Maintenance Manager confirms the job is described as it will
-// actually be done, and the Factory Manager approves it. No permit may be raised
-// against a JHA that has not finished this.
-export const JHA_CHAIN: ChainStep[] = [
-  { role: "HSE", roleLabel: "Prepared by (HSE)", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "Reviewed by (Maintenance Manager)", required: true },
-  { role: "FACTORY_MANAGER", roleLabel: "Approved by (Factory Manager)", required: true },
-];
+// Job Hazard Analysis approval, in the same two passes as the WMS. HSE
+// prepares it from an approved Work Method Statement; the Foreman who
+// originated that WMS confirms the job is described as it will actually be
+// done (the step is bound to him, not to any foreman); the Factory Manager
+// approves. No permit may be raised against a JHA that has not finished this.
+export const JHA_CHAIN: ChainStep[] = twoPasses(
+  [
+    { role: "HSE", required: true, signableBy: ["HSE", "SUPER_ADMIN"] },
+    { role: "FOREMAN", required: true, signer: "WMS_ORIGINATOR" },
+    { role: "FACTORY_MANAGER", required: true, signableBy: ["FACTORY_MANAGER"] },
+  ],
+  ["Prepared by (HSE Supervisor)", "Reviewed by (Foreman, originator of the WMS)", "Approved by (Factory Manager)"],
+);
 
 // Management authorising commencement. This is what a work order IS at LIMSL,
 // and until now it was implied by the work order merely existing.
@@ -178,4 +211,42 @@ export function chainSummary(chain: { required: boolean | null; status: string }
   const signed = requiredSteps.filter((s) => s.status === "SIGNED").length;
   const complete = requiredSteps.length > 0 && signed === requiredSteps.length;
   return { total: requiredSteps.length, signed, complete };
+}
+
+// The definition behind a stored step. Rows carry their role and label but not
+// the rules, so the rules are read back from the chain by position, and only
+// trusted while the row still matches it (an older chain keeps the old rules).
+export function stepRule(entityType: string, step: { stepOrder: number; role: string }): ChainStep | undefined {
+  const rule = chainFor(entityType)[step.stepOrder - 1];
+  return rule && rule.role === step.role ? rule : undefined;
+}
+
+export function passOf(entityType: string, step: { stepOrder: number; role: string }) {
+  return stepRule(entityType, step)?.pass ?? null;
+}
+
+// Whether someone in `userRole` may sign this step. A step that lists who signs
+// it means exactly that list; every other step keeps the general rule (own
+// role, a Super Admin, or a strictly more senior role in the chain).
+export function canSignChainStep(
+  userRole: string | null | undefined,
+  entityType: string,
+  step: { stepOrder: number; role: string },
+): boolean {
+  const rule = stepRule(entityType, step);
+  if (rule?.signableBy) return !!userRole && rule.signableBy.includes(userRole);
+  return canSignStep(userRole, step.role);
+}
+
+// A signature is an override when it comes from outside the step's own role,
+// unless the step names that role as one of its signatories: a Super Admin
+// originating a WMS is the SOP, not an exception to it.
+export function isOverrideSignature(
+  userRole: string | null | undefined,
+  entityType: string,
+  step: { stepOrder: number; role: string },
+): boolean {
+  if (userRole === step.role) return false;
+  const rule = stepRule(entityType, step);
+  return !(rule?.signableBy && userRole && rule.signableBy.includes(userRole));
 }

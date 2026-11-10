@@ -18,7 +18,7 @@ import {
   normalizeCalibrationEnum,
   outOfToleranceNcDescription,
   syncEquipmentCalibration,
-  traceabilityError,
+  certificateError,
   type CalibrationEvent,
 } from "@/lib/calibration";
 
@@ -70,8 +70,9 @@ export async function POST(request: Request) {
 
     const traceableTo = trimOrNull(body.traceableTo);
     const labName = trimOrNull(body.labName);
-    const traceErr = traceabilityError({ traceableTo, labName });
-    if (traceErr) return NextResponse.json({ error: traceErr }, { status: 400 });
+    const certErr = certificateError({ certificateFileKey: body.certificateFileKey });
+    if (certErr) return NextResponse.json({ error: certErr }, { status: 400 });
+    const certificateUrl = `/api/files/${String(body.certificateFileKey).trim()}`;
 
     const asFound = normalizeCalibrationEnum(body.asFound, AS_FOUND_VALUES, "NOT_CHECKED");
     if (!asFound) {
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
         calibrationInterval: interval,
         calibratedBy: trimOrNull(body.calibratedBy) ?? gate.actor?.name ?? null,
         certificateNumber: trimOrNull(body.certificateNumber),
-        certificateUrl: trimOrNull(body.certificateUrl),
+        certificateUrl,
         status: deriveInstrumentStatus({ verdict, asFound, nextCalibrationDate }),
         traceableTo,
         referenceStandardId: trimOrNull(body.referenceStandardId),
@@ -187,7 +188,9 @@ export async function POST(request: Request) {
         calibrationInterval: interval,
         calibratedBy: newest.calibratedBy,
         certificateNumber: newest.certificateNumber,
-        certificateUrl: trimOrNull(body.certificateUrl) ?? master.certificateUrl,
+        // Follows the newest event, like every other cached field: a back-dated
+        // certificate recorded today must not replace the current one.
+        certificateUrl: newest.certificateFileKey ? `/api/files/${newest.certificateFileKey}` : certificateUrl,
         traceableTo: newest.traceableTo,
         referenceStandardId: trimOrNull(body.referenceStandardId) ?? master.referenceStandardId,
         labName: newest.labName,

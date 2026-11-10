@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import SignoffChain from "@/components/SignoffChain";
+import WmsDocumentHeader from "@/components/WmsDocumentHeader";
+import { useDocumentHistory } from "@/lib/use-document-history";
 import { formatDate } from "@/lib/utils";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
@@ -81,6 +83,7 @@ export default function JhaDetailPage() {
   const canRaisePermit = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
   const [jha, setJha] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [sigTick, setSigTick] = useState(0);
 
   useEffect(() => setMounted(true), []);
 
@@ -91,6 +94,9 @@ export default function JhaDetailPage() {
       .then((d) => setJha(d))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // A JHA is not revised in place, so its history is its own two stages.
+  const history = useDocumentHistory("JHA", jha && !jha.error ? [jha] : [], sigTick);
 
   if (loading) {
     return (
@@ -142,6 +148,13 @@ export default function JhaDetailPage() {
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to hazard analyses
         </Link>
+
+        <WmsDocumentHeader
+          docNumber={jha.jhaNumber ?? "Not numbered"}
+          title={jha.title}
+          rows={history.rows}
+          loading={history.loading}
+        />
 
         <div className="bg-surface border border-line rounded-xl shadow-card p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -286,7 +299,12 @@ export default function JhaDetailPage() {
           </div>
         )}
 
-        <SignoffChain entityType="JHA" entityId={String(id)} title="Hazard analysis approval" />
+        <SignoffChain
+          entityType="JHA"
+          entityId={String(id)}
+          title="Hazard analysis approval"
+          onChange={() => setSigTick((t) => t + 1)}
+        />
 
         {/* Prints with the page. Nothing renders until the analysis is fully
             approved, so a draft never carries a code. */}

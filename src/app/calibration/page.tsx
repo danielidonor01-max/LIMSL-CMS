@@ -4,7 +4,7 @@
 import MetricPanel from "@/components/MetricPanel";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Tabs from "@/components/Tabs";
 import KebabMenu from "@/components/KebabMenu";
@@ -23,7 +23,7 @@ import {
   FileCheck2,
   Scale,
   History,
-  ShieldCheck,
+  ExternalLink,
   FileClock,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
@@ -36,6 +36,7 @@ import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { formatDate } from "@/lib/utils";
 import Modal from "@/components/Modal";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { FILE_ACCEPT, FILE_CLASS, uploadProof } from "@/components/calibration/shared";
 import { toast } from "sonner";
 
 type Cal = {
@@ -50,6 +51,7 @@ type Cal = {
   calibratedBy: string | null;
   certificateNumber: string | null;
   status: string | null;
+  certificateUrl: string | null;
   traceableTo: string | null;
   referenceStandardId: string | null;
   labName: string | null;
@@ -66,6 +68,7 @@ type CalEvent = {
   verdict: string;
   calibratedBy: string | null;
   certificateNumber: string | null;
+  certificateFileKey: string | null;
   traceableTo: string | null;
   labName: string | null;
   labAccreditationNo: string | null;
@@ -81,12 +84,14 @@ const STATUS_BADGE: Record<string, string> = {
   DUE_SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
   OVERDUE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   OUT_OF_SERVICE: "bg-ink-500/10 text-ink-600 border-ink-500/20",
+  NOT_CALIBRATED: "bg-ink-500/10 text-ink-600 border-ink-500/20",
 };
 const STATUS_LABEL: Record<string, string> = {
   CURRENT: "Current",
   DUE_SOON: "Due Soon",
   OVERDUE: "Overdue",
   OUT_OF_SERVICE: "Out of Service",
+  NOT_CALIBRATED: "Not calibrated",
 };
 
 const AS_FOUND_LABEL: Record<string, string> = {
@@ -148,6 +153,7 @@ function CalibrationModule() {
   const [asLeft, setAsLeft] = useState("IN_TOLERANCE");
   const [verdict, setVerdict] = useState("PASS");
   const [history, setHistory] = useState<Cal | null>(null);
+  const certRef = useRef<HTMLInputElement>(null);
 
   const { data: events, loading: eventsLoading } = useApi<CalEvent[]>(
     history ? `/api/calibration/${history.id}/events` : null,
@@ -169,14 +175,14 @@ function CalibrationModule() {
     const traceableTo = String(fd.get("traceableTo") ?? "").trim();
     const labName = String(fd.get("labName") ?? "").trim();
     // Mirrors the server rule so the user is told before the round trip.
-    if (!traceableTo && !labName) {
-      toast.error(
-        "Traceability is required (ISO 9001 7.1.5.2), name the standard traced to, or the calibration laboratory.",
-      );
+    const certificate = certRef.current?.files?.[0];
+    if (!certificate) {
+      toast.error("Attach the calibration certificate. It is the record that this calibration happened.");
       return;
     }
     setSaving(true);
     try {
+      const cert = await uploadProof(certificate);
       const res = await fetch("/api/calibration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -190,6 +196,7 @@ function CalibrationModule() {
           calibrationInterval: fd.get("calibrationInterval") ? Number(fd.get("calibrationInterval")) : 365,
           calibratedBy: fd.get("calibratedBy"),
           certificateNumber: fd.get("certificateNumber"),
+          certificateFileKey: cert.key,
           asFound,
           asLeft,
           verdict,
@@ -218,13 +225,15 @@ function CalibrationModule() {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error || "Failed to record calibration.");
       }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to record calibration.");
     } finally {
       setSaving(false);
     }
   }
 
   const summary = useMemo(() => {
-    const c = { CURRENT: 0, DUE_SOON: 0, OVERDUE: 0 } as Record<string, number>;
+    const c = { CURRENT: 0, DUE_SOON: 0, OVERDUE: 0, NOT_CALIBRATED: 0 } as Record<string, number>;
     rows.forEach((r) => (c[r.status ?? "CURRENT"] = (c[r.status ?? "CURRENT"] ?? 0) + 1));
     return c;
   }, [rows]);
@@ -280,9 +289,18 @@ function CalibrationModule() {
             )}
 
             <MetricPanel
-              columns={3}
+              columns={4}
               label="Calibration status"
               metrics={[
+                {
+                  key: "none",
+                  label: "Not calibrated",
+                  count: summary.NOT_CALIBRATED ?? 0,
+                  value: String(summary.NOT_CALIBRATED ?? 0),
+                  status: "plain",
+                  icon: Gauge,
+                  description: "No certificate on record yet",
+                },
                 {
                   key: "current",
                   label: "Current",
@@ -323,7 +341,6 @@ function CalibrationModule() {
                       <th className="py-3.5 px-5 font-medium">Last Cal.</th>
                       <th className="py-3.5 px-5 font-medium">Next Cal.</th>
                       <th className="py-3.5 px-5 font-medium">Interval</th>
-                      <th className="py-3.5 px-5 font-medium">Certificate / Traceability</th>
                       <th className="py-3.5 px-5 font-medium">Status</th>
                       <th className="py-3.5 px-5 font-medium w-14"><span className="sr-only">Actions</span></th>
                     </tr>
@@ -331,7 +348,7 @@ function CalibrationModule() {
                   <tbody className="divide-y divide-ink-200">
                     {rows.length === 0 && (
                       <tr>
-                        <td colSpan={8}>
+                        <td colSpan={7}>
                           <EmptyState
                             icon={Gauge}
                             title="No measuring instruments registered"
@@ -344,7 +361,6 @@ function CalibrationModule() {
                     )}
                     {rows.map((r) => {
                       const d = daysUntil(r.nextCalibrationDate);
-                      const traceability = r.traceableTo || r.labName;
                       return (
                         <tr key={r.id} className="hover:bg-ink-50">
                           <td className="py-3 px-5">
@@ -356,7 +372,7 @@ function CalibrationModule() {
                           <td className="py-3.5 px-5 text-ink-700">
                             {r.make} {r.model}
                           </td>
-                          <td className="py-3.5 px-5 tabular-nums text-ink-500">{formatDate(r.lastCalibrationDate)}</td>
+                          <td className="py-3.5 px-5 tabular-nums text-ink-500">{r.lastCalibrationDate ? formatDate(r.lastCalibrationDate) : "-"}</td>
                           <td className="py-3.5 px-5 tabular-nums text-ink-700">
                             {formatDate(r.nextCalibrationDate)}
                             {d !== null && (
@@ -365,30 +381,22 @@ function CalibrationModule() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-5 text-ink-500">{r.calibrationInterval ?? "-"} d</td>
+                          <td className="py-3.5 px-5 text-ink-500">{r.calibrationInterval ? `${r.calibrationInterval} d` : "-"}</td>
                           <td className="py-3.5 px-5">
-                            <div className="text-ink-500">{r.certificateNumber ?? "-"}</div>
-                            {traceability ? (
-                              <div className="text-xs text-ink-500 flex items-center gap-1 mt-0.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
-                                <span className="truncate max-w-[14rem]">{traceability}</span>
-                              </div>
-                            ) : (
-                              <div className="text-xs text-warn-600 flex items-center gap-1 mt-0.5">
-                                <AlertTriangle className="w-3.5 h-3.5" /> No traceability on record
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-5">
-                            <Badge className={STATUS_BADGE[r.status ?? "CURRENT"]}>
-                              {STATUS_LABEL[r.status ?? "CURRENT"] ?? r.status}
+                            <Badge className={STATUS_BADGE[r.status ?? "NOT_CALIBRATED"]}>
+                              {STATUS_LABEL[r.status ?? "NOT_CALIBRATED"] ?? r.status}
                             </Badge>
                           </td>
                           <td className="py-3.5 px-5 text-right">
                             <KebabMenu
                               ariaLabel={`Actions for ${r.instrumentName}`}
                               items={[
-                                ...(canWrite ? [{ label: "Recalibrate", icon: RotateCw, onClick: () => openForm(r) }] : []),
+                                ...(canWrite
+                                  ? [{ label: r.lastCalibrationDate ? "Recalibrate" : "Calibrate", icon: RotateCw, onClick: () => openForm(r) }]
+                                  : []),
+                                ...(r.certificateUrl
+                                  ? [{ label: "View certificate", icon: ExternalLink, onClick: () => window.open(r.certificateUrl!, "_blank", "noopener") }]
+                                  : []),
                                 { label: "History", icon: History, onClick: () => setHistory(r) },
                               ]}
                             />
@@ -407,7 +415,7 @@ function CalibrationModule() {
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
-        title={editing?.id ? "Record Calibration" : "Register Instrument"}
+        title={editing?.id ? (editing.lastCalibrationDate ? "Recalibrate" : "Record First Calibration") : "Register Instrument"}
         subtitle={editing?.id ? `New calibration event for ${editing.instrumentName ?? "instrument"}` : "New measuring instrument"}
       >
         <form onSubmit={submitCalibration} className="space-y-4">
@@ -484,12 +492,16 @@ function CalibrationModule() {
             )}
           </div>
 
-          <div className="pt-1 space-y-3">
-            <p className={sectionCls}>Traceability · ISO 9001 7.1.5.2</p>
-            <p className="text-xs text-ink-500">
-              Record the standard this calibration was traced to, or the laboratory that performed it. One of the two
-              is required.
+          <div>
+            <label className={LABEL_CLASS}>Calibration certificate</label>
+            <input ref={certRef} type="file" required accept={FILE_ACCEPT} className={FILE_CLASS} />
+            <p className="text-xs text-ink-400 mt-1">
+              Required. The certificate is the record of the calibration and what it was traced to.
             </p>
+          </div>
+
+          <div className="pt-1 space-y-3">
+            <p className={sectionCls}>Traceability details (optional) · ISO 9001 7.1.5.2</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={LABEL_CLASS}>Traceable To</label>
@@ -622,6 +634,16 @@ function CalibrationModule() {
                     <Meta label="Recorded" value={ev.createdAt ? formatDate(ev.createdAt) : null} mono />
                   </dl>
                   {ev.notes && <p className="text-xs text-ink-600 border-t border-ink-200 pt-2">{ev.notes}</p>}
+                  {ev.certificateFileKey && (
+                    <a
+                      href={`/api/files/${ev.certificateFileKey}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block text-xs font-medium text-brand-700 hover:underline"
+                    >
+                      View certificate
+                    </a>
+                  )}
                 </div>
               );
             })}

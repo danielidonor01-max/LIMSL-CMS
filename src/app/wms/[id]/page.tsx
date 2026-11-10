@@ -3,7 +3,7 @@
 
 import DocumentSeal from "@/components/DocumentSeal";
 import WmsDocumentHeader from "@/components/WmsDocumentHeader";
-import type { RevisionEntry } from "@/components/WmsDocumentHeader";
+import { useDocumentHistory } from "@/lib/use-document-history";
 import { pageMain } from "@/lib/page-shell";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -25,6 +25,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const [wms, setWms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [chain, setChain] = useState<any[]>([]);
+  const [sigTick, setSigTick] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -54,6 +55,11 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
       .then((d) => setChain(Array.isArray(d) ? d : []))
       .catch(() => setChain([]));
   }, [wmsId]);
+
+  // Every revision's signatures, for the revision history at the top of the
+  // document. Refetched when this revision's chain is created or signed.
+  const docRevisions = wms ? (Array.isArray(wms.revisions) && wms.revisions.length > 0 ? wms.revisions : [wms]) : [];
+  const history = useDocumentHistory("WMS", docRevisions, `${chain.length}:${sigTick}`);
 
   if (loading) {
     return (
@@ -93,57 +99,6 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
   const procedureSteps = safeParse(wms.workProcedureSteps);
   const tools = safeParse(wms.equipmentAndTools);
   const materials = safeParse(wms.materials);
-
-  // Build revision history from the WMS data and the live sign-off chain.
-  // The chain has 3 steps, one per column on the paper header: Originator
-  // (Foreman) = Prepared, Factory Supervisor / Maintenance Manager = Reviewed,
-  // Factory Coordinator = Approved.
-  const stepByRole = (role: string) => chain.find((s) => s.role === role);
-  const foreman = stepByRole("FOREMAN");
-  const maintMgr = stepByRole("MAINTENANCE_MANAGER");
-  const factoryMgr = stepByRole("FACTORY_MANAGER");
-
-  const currentRevision: RevisionEntry = {
-    rev: wms.revision ?? 0,
-    date: (wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join("-"),
-    description: wms.changeSummary || "ISSUED FOR REVIEW AND APPROVAL",
-    preparedBy: {
-      name: foreman?.signedByName ?? wms.preparedByName ?? "—",
-      title: foreman?.signedByName ? "Foreman" : (wms.preparedByName ? "Maintenance Tech." : "—"),
-    },
-    reviewedBy: {
-      name: maintMgr?.signedByName ?? "—",
-      title: maintMgr?.signedByName ? "Factory Supervisor / Maint. Mgr" : "Factory Supervisor",
-    },
-    approvedBy: {
-      name: factoryMgr?.signedByName ?? "—",
-      title: "Factory Coord.",
-    },
-  };
-
-  const revisions: RevisionEntry[] =
-    Array.isArray(wms.revisions) && wms.revisions.length > 0
-      ? wms.revisions.map((r: any) => {
-          const isCurrent = r.id === wms.id;
-          return {
-            rev: r.revision ?? 0,
-            date: (r.effectiveDate ?? r.preparedDate ?? r.createdAt ?? "").slice(0, 10).split("-").reverse().join("."),
-            description: r.changeSummary || (r.revision === 0 ? "ISSUED FOR REVIEW AND APPROVAL" : "REVISED WORK PROCEDURE"),
-            preparedBy: {
-              name: isCurrent ? (foreman?.signedByName ?? r.preparedByName ?? "—") : (r.preparedByName ?? "—"),
-              title: isCurrent && foreman?.signedByName ? "Foreman" : (r.preparedByName ? "Maintenance Tech." : "—"),
-            },
-            reviewedBy: {
-              name: isCurrent ? (maintMgr?.signedByName ?? r.reviewedByName ?? "—") : (r.reviewedByName ?? "—"),
-              title: isCurrent && maintMgr?.signedByName ? "Factory Supervisor / Maint. Mgr" : "Factory Supervisor",
-            },
-            approvedBy: {
-              name: isCurrent ? (factoryMgr?.signedByName ?? r.approvedByName ?? "—") : (r.approvedByName ?? "—"),
-              title: "Factory Coord.",
-            },
-          };
-        })
-      : [currentRevision];
 
   const canRevise = mounted && !loading && (WMS_WRITE_ROLES.includes(role ?? "") || role === "SUPER_ADMIN");
   const canRaiseJha = mounted && !loading && JHA_WRITE_ROLES.includes(role ?? "");
@@ -227,12 +182,10 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
         {/* ─── Corporate document header (matches the LIMSL paper format) ─── */}
         <div className="lg:col-span-3">
           <WmsDocumentHeader
-            docNumber={wms.wmsNumber ?? "LIMSL-MAIN-WMS-XXX"}
+            docNumber={wms.wmsNumber ?? "Not numbered"}
             title={wms.title}
-            revNo={wms.revision ?? 0}
-            dateRevised={(wms.preparedDate ?? "").slice(0, 10).split("-").reverse().join(".")}
-            procedureLabel="WORK METHOD STATEMENT"
-            revisions={revisions}
+            rows={history.rows}
+            loading={history.loading}
           />
         </div>
 
@@ -323,6 +276,7 @@ export default function WmsDetail({ params }: { params: Promise<{ id: string }> 
               entityType="WMS"
               entityId={wmsId}
               title="Method statement authorisation"
+              onChange={() => setSigTick((t) => t + 1)}
             />
           </div>
           {/* Prints with the page, and only once the statement is approved. */}

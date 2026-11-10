@@ -17,7 +17,7 @@ import { signoffs, auditLog, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { canSignStep } from "@/lib/roles";
+import { canSignChainStep } from "@/lib/signoff/chains";
 import { notify } from "@/lib/notifications";
 
 // Who may hand a signature to somebody else. Deliberately the same authority
@@ -79,7 +79,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // The point of delegating is that the person can actually sign it. Handing
     // a Maintenance Manager's step to a technician would produce a step nobody
     // can complete, and the refusal would arrive later, to somebody else.
-    if (!canSignStep(person.role, step.role)) {
+    if (!canSignChainStep(person.role, step.entityType, step)) {
       return NextResponse.json(
         {
           error:

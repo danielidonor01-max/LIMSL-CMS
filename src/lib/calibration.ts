@@ -39,6 +39,18 @@ export const TRACEABILITY_REQUIRED_MESSAGE =
   "(e.g. \"NIST via reference standard SN-4471\") or the calibration laboratory that performed it. A calibration with neither " +
   "cannot be shown to be traceable to a national or international measurement standard.";
 
+// The certificate is the evidence (LIMSL, November 2026). It names the
+// laboratory and the standard the instrument was traced to, so a calibration
+// is recorded with the certificate attached or not at all. A typed-in
+// "traced to" line was the next best thing when there was no file; with the
+// file required it is optional context, not the proof.
+export const CERTIFICATE_REQUIRED_MESSAGE =
+  "Attach the calibration certificate. It is the record that this calibration happened and what it was traced to.";
+
+export function certificateError(input: { certificateFileKey?: unknown }): string | null {
+  return String(input.certificateFileKey ?? "").trim() ? null : CERTIFICATE_REQUIRED_MESSAGE;
+}
+
 export function traceabilityError(input: { traceableTo?: unknown; labName?: unknown }): string | null {
   const tracedTo = String(input.traceableTo ?? "").trim();
   const lab = String(input.labName ?? "").trim();
@@ -64,7 +76,9 @@ export function addDays(iso: string, days: number): string {
 }
 
 export function statusForNextDate(nextDate: string | null | undefined, now: number = Date.now()): string {
-  if (!nextDate) return "CURRENT";
+  // No due date means no calibration on record, which is not the same as being
+  // in date: an instrument nobody has calibrated must not read as "Current".
+  if (!nextDate) return "NOT_CALIBRATED";
   const days = Math.round((new Date(nextDate).getTime() - now) / 864e5);
   if (days < 0) return "OVERDUE";
   if (days <= 30) return "DUE_SOON";

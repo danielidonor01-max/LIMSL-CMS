@@ -1,12 +1,36 @@
 // src/lib/signoff/service.ts
 import { db } from "@/lib/db";
-import { signoffs } from "@/lib/db/schema";
+import { signoffs, jhaDocuments, wmsDocuments } from "@/lib/db/schema";
 import { and, eq, asc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { chainFor, isStepUnlocked } from "./chains";
 import { notifyNextSigner } from "@/lib/notifications";
 
 export { isStepUnlocked };
+
+type Person = { id: string; name: string };
+type BoundSigners = { PERMIT_HOLDER?: Person | null; WMS_ORIGINATOR?: Person | null };
+
+// The Foreman whose method statement a JHA is written against signs its review
+// step (LIMSL, November 2026): he is the one who knows whether the hazards
+// listed are the job as it will be done. That is the person who originated the
+// WMS, read from its first signature, or its preparer if it predates them.
+async function wmsOriginatorFor(jhaId: string): Promise<Person | null> {
+  const [jha] = await db.select({ wmsId: jhaDocuments.wmsId }).from(jhaDocuments).where(eq(jhaDocuments.id, jhaId)).limit(1);
+  if (!jha?.wmsId) return null;
+  const [first] = await db
+    .select()
+    .from(signoffs)
+    .where(and(eq(signoffs.entityType, "WMS"), eq(signoffs.entityId, jha.wmsId), eq(signoffs.stepOrder, 1)))
+    .limit(1);
+  if (first?.status === "SIGNED" && first.signedById) return { id: first.signedById, name: first.signedByName ?? "" };
+  const [wms] = await db
+    .select({ id: wmsDocuments.preparedById, name: wmsDocuments.preparedByName })
+    .from(wmsDocuments)
+    .where(eq(wmsDocuments.id, jha.wmsId))
+    .limit(1);
+  return wms?.id ? { id: wms.id, name: wms.name ?? "" } : null;
+}
 
 // Create the sign-off chain rows for an entity if they don't already exist.
 // On first creation, notify whoever must sign the first step.
@@ -15,7 +39,7 @@ export async function ensureSignoffChain(
   entityId: string,
   reference?: string,
   // Named signers for steps the chain binds to a person rather than a role.
-  boundSigners?: { PERMIT_HOLDER?: { id: string; name: string } | null },
+  boundSigners?: BoundSigners,
 ) {
   const existing = await db
     .select()
@@ -41,6 +65,9 @@ export async function ensureSignoffChain(
 
   const steps = chainFor(entityType);
   if (steps.length === 0) return [];
+  if (steps.some((s) => s.signer === "WMS_ORIGINATOR") && boundSigners?.WMS_ORIGINATOR === undefined) {
+    boundSigners = { ...boundSigners, WMS_ORIGINATOR: await wmsOriginatorFor(entityId) };
+  }
 
   const rows = steps.map((s, i) => {
     const bound = s.signer ? boundSigners?.[s.signer] : null;
@@ -97,7 +124,7 @@ export async function resetSignoffChain(
   entityType: string,
   entityId: string,
   reference?: string,
-  boundSigners?: { PERMIT_HOLDER?: { id: string; name: string } | null },
+  boundSigners?: BoundSigners,
 ) {
   await db
     .delete(signoffs)

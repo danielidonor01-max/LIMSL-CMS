@@ -18,7 +18,8 @@ import {
 import Markdown from "@/components/Markdown";
 import SignoffChain from "@/components/SignoffChain";
 import DocumentSeal from "@/components/DocumentSeal";
-import WmsDocumentHeader, { type RevisionEntry } from "@/components/WmsDocumentHeader";
+import WmsDocumentHeader from "@/components/WmsDocumentHeader";
+import { useDocumentHistory } from "@/lib/use-document-history";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import { PROCEDURE_CONTROL_ROLES } from "@/lib/roles";
@@ -67,6 +68,14 @@ export default function ProcedurePage() {
   const current = procData.current ?? null;
   const pending = procData.pending ?? null;
   const revisions = procData.revisions ?? [];
+  const [sigTick, setSigTick] = useState(0);
+  // The header describes the procedure on screen, the current approved one, so
+  // a revision still in sign-off is not in its history yet. A rejected one was
+  // never issued.
+  const issued = revisions.filter(
+    (r) => r.status !== "REJECTED" && r.status !== "DRAFT" && (!current || r.revision <= current.revision),
+  );
+  const history = useDocumentHistory("PROCEDURE", issued.length > 0 ? issued : current ? [current] : [], sigTick);
   const [showHistory, setShowHistory] = useState(false);
 
   const [editing, setEditing] = useState(false);
@@ -182,7 +191,15 @@ export default function ProcedurePage() {
             <Clock className="w-4 h-4" />
             Revision {pending.revision} is pending sign-off. It becomes effective once QA/QC, Maintenance Manager, Factory Manager and COO have signed.
           </div>
-          <SignoffChain entityType="PROCEDURE" entityId={pending.id} title="Procedure revision sign-off" />
+          <SignoffChain
+            entityType="PROCEDURE"
+            entityId={pending.id}
+            title="Procedure revision sign-off"
+            onChange={() => {
+              setSigTick((t) => t + 1);
+              refresh();
+            }}
+          />
         </div>
       )}
 
@@ -281,50 +298,8 @@ export default function ProcedurePage() {
         <WmsDocumentHeader
           docNumber={current?.code ?? "LIMSL-MAIN-PROC-001"}
           title={current?.title ?? "Equipment and System Maintenance Procedure"}
-          revNo={current?.revision ?? 1}
-          dateRevised={formatDate(current?.effectiveDate ?? current?.createdAt)}
-          procedureLabel="EQUIPMENT MAINTENANCE PROCEDURE"
-          revisions={
-            (revisions && revisions.length > 0)
-              ? revisions.map((r) => ({
-                  rev: r.revision,
-                  date: formatDate(r.effectiveDate ?? r.createdAt),
-                  description: r.changeSummary || "ISSUED FOR IMPLEMENTATION AND CONTROL",
-                  preparedBy: {
-                    name: r.preparedByName || "Originator",
-                    title: "Originator / QA/QC",
-                  },
-                  reviewedBy: {
-                    name: "Maintenance Manager",
-                    title: "Maintenance Manager",
-                  },
-                  approvedBy: {
-                    name: "Factory Manager / COO",
-                    title: "QA/QC Document Control",
-                  },
-                }))
-              : current
-              ? [
-                  {
-                    rev: current.revision ?? 1,
-                    date: formatDate(current.effectiveDate ?? current.createdAt),
-                    description: current.changeSummary || "APPROVED FOR USE",
-                    preparedBy: {
-                      name: current.preparedByName || "Originator",
-                      title: "Originator / QA/QC",
-                    },
-                    reviewedBy: {
-                      name: "Maintenance Manager",
-                      title: "Maintenance Manager",
-                    },
-                    approvedBy: {
-                      name: "Factory Manager / COO",
-                      title: "QA/QC Document Control",
-                    },
-                  },
-                ]
-              : []
-          }
+          rows={history.rows}
+          loading={history.loading}
         />
 
         <article className="pt-2">

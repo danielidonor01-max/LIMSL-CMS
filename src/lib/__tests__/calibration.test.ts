@@ -15,6 +15,7 @@ import {
   normalizeCalibrationEnum,
   outOfToleranceNcDescription,
   statusForNextDate,
+  certificateError,
   traceabilityError,
 } from "@/lib/calibration";
 
@@ -43,7 +44,7 @@ test("due-date status keeps the 30-day due-soon window", () => {
   assert.equal(statusForNextDate("2026-12-31", NOW), "CURRENT");
   assert.equal(statusForNextDate("2026-08-20", NOW), "DUE_SOON");
   assert.equal(statusForNextDate("2026-07-01", NOW), "OVERDUE");
-  assert.equal(statusForNextDate(null, NOW), "CURRENT");
+  assert.equal(statusForNextDate(null, NOW), "NOT_CALIBRATED");
 });
 
 test("a failed or out-of-tolerance instrument is out of service, not due-soon", () => {
@@ -114,4 +115,10 @@ test("with no prior passing calibration the NC falls back to the registration da
 test("the next due date is the calibration date plus the interval", () => {
   assert.equal(addDays("2026-08-01", 365), "2027-08-01");
   assert.equal(addDays("2026-08-01", 182), "2027-01-30");
+});
+
+test("a calibration is recorded with its certificate or not at all", () => {
+  assert.match(certificateError({ certificateFileKey: "" })!, /certificate/);
+  assert.match(certificateError({})!, /certificate/);
+  assert.equal(certificateError({ certificateFileKey: "abc123-cert.pdf" }), null);
 });
