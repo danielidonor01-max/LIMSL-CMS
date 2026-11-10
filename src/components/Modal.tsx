@@ -20,6 +20,7 @@ export default function Modal({
   title,
   subtitle,
   maxWidthClass = "max-w-lg",
+  headerActions,
   children,
 }: {
   open: boolean;
@@ -27,6 +28,10 @@ export default function Modal({
   title: string;
   subtitle?: string;
   maxWidthClass?: string;
+  // Secondary actions (a kebab) belong beside the close button, where every
+  // app puts them. Left in the body they end up in a bottom corner, which is
+  // the one place nobody looks for "more".
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -130,17 +135,20 @@ export default function Modal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-ink-200">
-              <div>
+              <div className="min-w-0">
                 <h3 id={titleId} className="text-base font-semibold text-ink-900">{title}</h3>
                 {subtitle && <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>}
               </div>
-              <button
-                onClick={onClose}
-                aria-label="Close dialog"
-                className="p-1.5 -m-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-900 hover:bg-ink-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0 -m-1.5">
+                {headerActions}
+                <button
+                  onClick={onClose}
+                  aria-label="Close dialog"
+                  className="p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-900 hover:bg-ink-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className="p-5">{children}</div>
           </m.div>

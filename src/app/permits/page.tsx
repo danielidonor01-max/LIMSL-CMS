@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
-import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers, MapPin } from "lucide-react";
+import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers, MapPin, BadgeCheck, FileKey2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -237,7 +237,7 @@ export default function PermitsList() {
             <TableSkeleton rows={5} cols={6} />
           ) : scope !== "NEEDS_PERMIT" && rows.length === 0 ? (
             <EmptyState
-              icon={ShieldCheck}
+              icon={FileKey2}
               title={
                 records.length === 0
                   ? "No permits raised yet"
@@ -269,7 +269,7 @@ export default function PermitsList() {
           ) : scope === "NEEDS_PERMIT" ? (
             pendingJhas.length === 0 ? (
               <EmptyState
-                icon={ShieldCheck}
+                icon={BadgeCheck}
                 title="All approved hazard analyses have permits"
                 message="Every approved Job Hazard Analysis has an associated Permit to Work."
               />

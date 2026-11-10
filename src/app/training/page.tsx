@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   CalendarClock,
   Award,
+  GraduationCap,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { formatDate } from "@/lib/utils";
@@ -279,7 +280,7 @@ export default function TrainingPage() {
               </div>
               {people.length === 0 ? (
                 <EmptyState
-                  icon={ClipboardCheck}
+                  icon={Award}
                   title="No competency assessments recorded"
                   message="No assessments recorded. The skills matrix builds itself once you record the first one."
                   actionLabel={canWrite ? "Record Assessment" : undefined}
@@ -357,7 +358,7 @@ export default function TrainingPage() {
               </div>
               {trainings.length === 0 ? (
                 <EmptyState
-                  icon={CalendarClock}
+                  icon={GraduationCap}
                   title="No training booked or completed"
                   message="Schedule training against a person to close a competency gap and keep certificates current."
                   actionLabel={canWrite ? "Schedule Training" : undefined}

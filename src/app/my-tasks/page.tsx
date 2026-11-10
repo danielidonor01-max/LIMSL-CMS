@@ -10,7 +10,7 @@
 import Link from "next/link";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useMemo } from "react";
-import { ChevronRight, ClipboardCheck, Lock } from "lucide-react";
+import { ChevronRight, ClipboardCheck, Lock, ListTodo } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
 import PageHeader from "@/components/PageHeader";
 import PageLead from "@/components/PageLead";
@@ -90,7 +90,7 @@ export default function MyTasksPage() {
 
             {total === 0 ? (
               <EmptyState
-                icon={ClipboardCheck}
+                icon={ListTodo}
                 title="No work assigned to you"
                 message="Jobs appear here as soon as a supervisor puts your name on a work order or a scheduled activity."
               />

@@ -10,7 +10,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, GitPullRequestArrow } from "lucide-react";
+import { ChevronRight, GitPullRequestArrow, Signature } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
@@ -86,7 +86,7 @@ export default function ApprovalFlows() {
           <TableSkeleton rows={4} cols={3} />
         ) : rows.length === 0 ? (
           <EmptyState
-            icon={GitPullRequestArrow}
+            icon={Signature}
             title={
               scope === "IN_PROGRESS"
                 ? "Nothing is moving through sign-off"

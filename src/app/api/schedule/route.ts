@@ -1,7 +1,7 @@
 // src/app/api/schedule/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { maintenanceSchedule, equipment, workOrders, auditLog } from "@/lib/db/schema";
+import { maintenanceSchedule, equipment, workOrders, auditLog, pmBatches } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { nanoid } from "nanoid";
@@ -49,12 +49,15 @@ export async function GET() {
         // Whether this row has already been rolled into a PM batch, so the
         // schedule can offer to raise one exactly once.
         batchId: maintenanceSchedule.batchId,
+        batchNumber: pmBatches.batchNumber,
+        batchStatus: pmBatches.status,
         criticality: equipment.criticality,
         location: equipment.location,
       })
       .from(maintenanceSchedule)
       .leftJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id))
       .leftJoin(workOrders, eq(maintenanceSchedule.workOrderId, workOrders.id))
+      .leftJoin(pmBatches, eq(maintenanceSchedule.batchId, pmBatches.id))
       .orderBy(desc(maintenanceSchedule.plannedDate));
 
     return NextResponse.json(rows);

@@ -21,6 +21,8 @@ import {
   AlertCircle,
   Clock,
   ExternalLink,
+  ClipboardPen,
+  FilterX,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
@@ -319,7 +321,7 @@ export default function WorkOrdersPage() {
           ) : filtered.length === 0 ? (
             filtersActive ? (
               <EmptyState
-                icon={Search}
+                icon={FilterX}
                 title="No work orders match these filters"
                 message="There are work orders on file, but none match the current search, status and type."
                 actionLabel="Clear filters"
@@ -327,7 +329,7 @@ export default function WorkOrdersPage() {
               />
             ) : (
               <EmptyState
-                icon={ClipboardList}
+                icon={ClipboardPen}
                 title="No work orders yet"
                 message="Planned and corrective jobs will appear here once the first work order is raised."
                 actionLabel="New Work Order"

@@ -16,7 +16,8 @@ import { nanoid } from "nanoid";
 
 export type LogCategory =
   | "PM" | "CM" | "INSPECTION" | "ACCIDENT" | "TRANSFER"
-  | "DIAGNOSIS" | "STATUS" | "NOTE" | "CALIBRATION" | "DOCUMENT" | "METER" | "OTHER";
+  | "DIAGNOSIS" | "STATUS" | "NOTE" | "CALIBRATION" | "DOCUMENT" | "METER" | "OTHER"
+  | "PREMOB" | "VERIFICATION";
 
 export type TimelineEvent = {
   id: string;

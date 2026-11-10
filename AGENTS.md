@@ -375,6 +375,32 @@ hang off, so the schedule route calls `raisePmBatch()` then `assignPmBatch()`
 Raising the batch does not let work start: its work orders still need the
 WMS, JHA and permit approved before `readinessToWork()` lets anyone clock on.
 
+**Nobody is assigned ahead of time** (LIMSL, 10 Nov 2026). Staff change, so a
+plan row carries no name until it is assigned when due. The importers no
+longer read the workbook's "responsible" column, recurrence does not carry the
+last assignee forward, and `src/lib/db/clear-preassigned.ts` strips the names
+the workbook had put on open rows (batched and completed rows keep theirs).
+The schedule shows "Not assigned" rather than a guessed name.
+
+### Premob and verification (calibration module tabs)
+
+`/calibration` has three tabs: Calibration, Premob, Verification (`?tab=`).
+
+- **Premob** is for cranes (`PREMOB_CATEGORIES`): date, vendor, certificate
+  upload (required) and next due date. The project is deliberately not recorded.
+- **Verification** is for welding machines and cranes
+  (`VERIFICATION_CATEGORIES`): the machine's readings against a reference
+  instrument from the calibration register. The route refuses a reference that
+  was out of service or out of calibration on the verification date.
+- **Neither changes machine status.** Both write an `equipment_log` line
+  (categories `PREMOB`, `VERIFICATION`) so they appear on the machine's history.
+  A failed verification says so there; if the machine is unsafe, that is a
+  breakdown report, which is the path that changes status.
+
+The tables come from `src/lib/db/apply-premob-verification.ts` (additive,
+idempotent). Until it has been run against a database, both registers show a
+setup notice and refuse to save (`src/lib/db/missing-table.ts`) rather than 500.
+
 ### Parts consumed
 
 Booking a part against a work order is what moves the stock, via

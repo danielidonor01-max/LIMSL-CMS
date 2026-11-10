@@ -11,7 +11,6 @@ import { useCategoryLabels } from "@/lib/use-category-labels";
 import { useApi } from "@/lib/api-cache";
 import { useSession } from "next-auth/react";
 import {
-  Calendar,
   ShieldCheck,
   AlertTriangle,
   Clock,
@@ -27,6 +26,8 @@ import {
   ClipboardList,
   SlidersHorizontal,
   X,
+  CalendarCheck,
+  FilterX,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -88,6 +89,8 @@ type ScheduleRow = {
   assetId: string | null;
   category: string | null;
   batchId: string | null;
+  batchNumber: string | null;
+  batchStatus: string | null;
   criticality: string | null;
   location: string | null;
   deferredReason: string | null;
@@ -172,17 +175,7 @@ function SchedulePageView() {
   const [snooze, setSnooze] = useState<{ row: ScheduleRow; reason: string; until: string } | null>(null);
   const [assign, setAssign] = useState<ScheduleRow | null>(null);
   const [tableMode, setTableMode] = useState<"category" | "individual">("category");
-  const [viewingCategoryGroup, setViewingCategoryGroup] = useState<{
-    categoryLabel: string;
-    plannedDate: string;
-    rows: ScheduleRow[];
-    activityType: string;
-    status: string;
-    category: string | null;
-    responsiblePersonName: string | null;
-    assistantIds: string | null;
-    batchId: string | null;
-  } | null>(null);
+  const [viewingCategoryGroup, setViewingCategoryGroup] = useState<CategoryGroup | null>(null);
 
   const raiseBatch = async (r: ScheduleRow) => {
     if (!r.category) {
@@ -468,6 +461,19 @@ function SchedulePageView() {
         : []),
   ];
 
+  // The modal's kebab: the category page, then the row actions minus the two
+  // the modal already shows as its main button (assign, open batch). Reassign
+  // stays here because once a batch exists the main button is the batch.
+  const groupModalActions = (g: CategoryGroup) => [
+    ...(canAccessPath(role, "/asset-categories") && g.category
+      ? [{ label: "Category page", icon: Layers, href: `/asset-categories/${encodeURIComponent(g.category)}` }]
+      : []),
+    ...(canAssign && g.batchId && g.status !== "COMPLETED"
+      ? [{ label: "Reassign", icon: Users, onClick: () => { setViewingCategoryGroup(null); setAssign(g.firstRow); } }]
+      : []),
+    ...rowActions(g.firstRow, true).filter((i) => i.label !== "Assign people" && i.label !== "Open the PM batch"),
+  ];
+
   const filtered = useMemo(() => {
     let out = rows;
     if (tab === "upcoming") {
@@ -555,6 +561,8 @@ function SchedulePageView() {
     assistantIds: string | null;
     status: string;
     batchId: string | null;
+    batchNumber: string | null;
+    batchStatus: string | null;
     firstRow: ScheduleRow;
     rows: ScheduleRow[];
   };
@@ -577,13 +585,19 @@ function SchedulePageView() {
           assistantIds: r.assistantIds,
           status: r.status,
           batchId: r.batchId,
+          batchNumber: r.batchNumber,
+          batchStatus: r.batchStatus,
           firstRow: r,
           rows: [],
         });
       }
       const g = map.get(catKey)!;
       g.rows.push(r);
-      if (!g.batchId && r.batchId) g.batchId = r.batchId;
+      if (!g.batchId && r.batchId) {
+        g.batchId = r.batchId;
+        g.batchNumber = r.batchNumber;
+        g.batchStatus = r.batchStatus;
+      }
       if (r.status === "OVERDUE" || r.status === "MISSED") g.status = "OVERDUE";
     }
     return Array.from(map.values());
@@ -775,7 +789,7 @@ function SchedulePageView() {
           ) : filtered.length === 0 ? (
             filtersActive ? (
               <EmptyState
-                icon={Search}
+                icon={FilterX}
                 title="No activities match these filters"
                 message={
                   tab === "upcoming"
@@ -787,7 +801,7 @@ function SchedulePageView() {
               />
             ) : tab === "deferred" ? (
               <EmptyState
-                icon={ShieldCheck}
+                icon={CalendarCheck}
                 title="Nothing is being deferred"
                 message="Nothing has been deferred. When work has to wait, defer it here rather than letting it run overdue."
                 actionLabel="View all activities"
@@ -795,7 +809,7 @@ function SchedulePageView() {
               />
             ) : tab === "upcoming" ? (
               <EmptyState
-                icon={Calendar}
+                icon={CalendarCheck}
                 title="Nothing due in the next 60 days"
                 message="No preventive activity falls inside the next 60 days. Switch to All Activities to see the rest of the plan."
                 actionLabel="Schedule PM"
@@ -805,7 +819,7 @@ function SchedulePageView() {
               />
             ) : (
               <EmptyState
-                icon={Calendar}
+                icon={CalendarPlus}
                 title="No maintenance scheduled"
                 message="The annual plan is empty. Schedule preventive maintenance against a machine to start building it."
                 actionLabel="Schedule PM"
@@ -821,7 +835,7 @@ function SchedulePageView() {
                     <th className="py-3.5 px-5 font-medium">Category & Equipment Coverage</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Activity</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Freq.</th>
-                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Responsible</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Assigned to</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Status</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">PM Batch</th>
                     <th className="py-3.5 px-5 font-medium text-right">Actions</th>
@@ -870,7 +884,7 @@ function SchedulePageView() {
                         {FREQUENCY_LABELS[g.maintenanceFrequency ?? ""] ?? g.maintenanceFrequency ?? "-"}
                       </td>
                       <td className="py-3.5 px-5 text-ink-700">
-                        {g.responsiblePersonName ?? "-"}
+                        {g.responsiblePersonName ?? <span className="text-ink-400">Not assigned</span>}
                         {safeIds(g.assistantIds).length > 0 && (
                           <span className="text-ink-400"> +{safeIds(g.assistantIds).length}</span>
                         )}
@@ -923,7 +937,7 @@ function SchedulePageView() {
                     <th className="py-3.5 px-5 font-medium">Equipment</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Activity</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Freq.</th>
-                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Responsible</th>
+                    <th className="py-3.5 px-5 font-medium whitespace-nowrap">Assigned to</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Status</th>
                     <th className="py-3.5 px-5 font-medium whitespace-nowrap">Work order</th>
                     <th className="py-3.5 px-5 font-medium text-right">Action</th>
@@ -966,7 +980,7 @@ function SchedulePageView() {
                         {FREQUENCY_LABELS[r.maintenanceFrequency ?? ""] ?? r.maintenanceFrequency ?? "-"}
                       </td>
                       <td className="py-3.5 px-5 text-ink-700">
-                        {r.responsiblePersonName ?? "-"}
+                        {r.responsiblePersonName ?? <span className="text-ink-400">Not assigned</span>}
                         {safeIds(r.assistantIds).length > 0 && (
                           <span className="text-ink-400"> +{safeIds(r.assistantIds).length}</span>
                         )}
@@ -1221,9 +1235,12 @@ function SchedulePageView() {
           )}
         </Modal>
 
-        {/* One category, one day. What it is, who has it, which machines,
-            and one thing to do about it. The table it used to be put five
-            columns and a link per machine in front of a single decision. */}
+        {/* One category, one day, read top to bottom in the order it is
+            needed: when and how it stands, the one thing to do next, then the
+            machines it covers. Nobody is named against a plan row ahead of
+            time (staff change), so "who" appears only once it is assigned, and
+            assigning is what raises the batch. Everything else sits in the
+            kebab beside the close button. */}
         <Modal
           open={!!viewingCategoryGroup}
           onClose={() => setViewingCategoryGroup(null)}
@@ -1233,69 +1250,119 @@ function SchedulePageView() {
               ? `${ACTIVITY_TYPE_LABELS[viewingCategoryGroup.activityType] ?? viewingCategoryGroup.activityType} · ${formatDate(viewingCategoryGroup.plannedDate)}`
               : ""
           }
+          headerActions={
+            viewingCategoryGroup ? (
+              <KebabMenu
+                ariaLabel={`More actions for ${viewingCategoryGroup.categoryLabel}`}
+                items={groupModalActions(viewingCategoryGroup)}
+              />
+            ) : undefined
+          }
         >
           {viewingCategoryGroup &&
             (() => {
               const g = viewingCategoryGroup;
-              const first = g.rows[0];
               const helpers = safeIds(g.assistantIds).length;
-              const assignable = canAssign && g.status !== "COMPLETED";
-              const more = [
-                ...(canAccessPath(role, "/asset-categories") && g.category
-                  ? [{ label: "Category page", icon: Layers, href: `/asset-categories/${encodeURIComponent(g.category)}` }]
-                  : []),
-                ...rowActions(first, true).filter((i) => i.label !== "Assign people"),
-              ];
+              const batchable = !!g.category && (g.activityType === "PM" || g.activityType === "INS");
+              const days = Math.round(
+                (new Date(`${g.plannedDate}T00:00:00`).getTime() - new Date(`${TODAY}T00:00:00`).getTime()) / 864e5,
+              );
+              const when =
+                g.status === "COMPLETED"
+                  ? null
+                  : days === 0
+                    ? "Due today"
+                    : days > 0
+                      ? `Due in ${days} day${days === 1 ? "" : "s"}`
+                      : `${-days} day${days === -1 ? "" : "s"} overdue`;
               return (
                 <div className="space-y-5">
-                  <dl className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <dt className="text-xs text-ink-500">Status</dt>
-                      <dd className="mt-1">
-                        <Badge className={SCHEDULE_STATUS_BADGE[g.status]}>
-                          {SCHEDULE_STATUS_LABELS[g.status] ?? g.status}
-                        </Badge>
-                      </dd>
-                    </div>
-                    <div className="min-w-0">
-                      <dt className="text-xs text-ink-500">Responsible</dt>
-                      <dd className={`mt-1 truncate ${g.responsiblePersonName ? "text-ink-900 font-medium" : "text-ink-400"}`}>
-                        {g.responsiblePersonName ?? "Unassigned"}
-                        {helpers > 0 && <span className="text-ink-500 font-normal"> +{helpers}</span>}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs text-ink-500">PM batch</dt>
-                      <dd className="mt-1">
-                        {g.batchId ? (
-                          <Link href={`/pm-batches/${g.batchId}`} className="text-brand-700 font-medium hover:underline">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+                    <Badge className={SCHEDULE_STATUS_BADGE[g.status]}>
+                      {SCHEDULE_STATUS_LABELS[g.status] ?? g.status}
+                    </Badge>
+                    {when && (
+                      <span className={days < 0 ? "text-danger-700 font-medium" : "text-ink-700"}>{when}</span>
+                    )}
+                    {g.maintenanceFrequency && (
+                      <span className="text-ink-500">
+                        {FREQUENCY_LABELS[g.maintenanceFrequency] ?? g.maintenanceFrequency}
+                      </span>
+                    )}
+                  </div>
+
+                  {g.status !== "COMPLETED" && (
+                    <section
+                      aria-label="Next step"
+                      className="rounded-lg border border-line bg-canvas p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between"
+                    >
+                      {g.batchId ? (
+                        <>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-ink-900">
+                              {g.responsiblePersonName ? `Assigned to ${g.responsiblePersonName}` : "Batch raised, not assigned"}
+                              {helpers > 0 && <span className="font-normal text-ink-500"> +{helpers}</span>}
+                            </p>
+                            <p className="text-xs text-ink-500 mt-0.5">
+                              {g.batchNumber ?? "PM batch"}
+                              {g.batchStatus ? ` · ${g.batchStatus.replace(/_/g, " ").toLowerCase()}` : ""}
+                              {" · "}work starts once its method statement, hazard analysis and permit are approved.
+                            </p>
+                          </div>
+                          <Button href={`/pm-batches/${g.batchId}`} className="shrink-0">
                             Open batch
-                          </Link>
-                        ) : (
-                          <span className="text-ink-400">Not raised</span>
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-ink-900">Not assigned yet</p>
+                            <p className="text-xs text-ink-500 mt-0.5">
+                              {canAssign
+                                ? batchable
+                                  ? `Assigning raises the PM batch for ${g.rows.length === 1 ? "this machine" : `all ${g.rows.length} machines`}. Work starts once its documents are approved.`
+                                  : "Assigning names who carries this out."
+                                : "A foreman or manager assigns this when it is due, which raises its PM batch."}
+                            </p>
+                          </div>
+                          {canAssign && (
+                            <Button
+                              icon={Users}
+                              className="shrink-0"
+                              onClick={() => {
+                                setViewingCategoryGroup(null);
+                                setAssign(g.firstRow);
+                              }}
+                            >
+                              Assign
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </section>
+                  )}
 
                   <section aria-labelledby="coverage-machines">
-                    <h4 id="coverage-machines" className="text-xs font-semibold text-ink-700 mb-2">
-                      {g.rows.length} machine{g.rows.length === 1 ? "" : "s"}
+                    <h4 id="coverage-machines" className="text-xs font-semibold text-ink-500 mb-1">
+                      Machines · {g.rows.length}
                     </h4>
-                    <ul className="divide-y divide-line border-y border-line max-h-72 overflow-y-auto">
+                    <ul className="divide-y divide-line max-h-72 overflow-y-auto">
                       {g.rows.map((row) => (
                         <li key={row.id} className="flex items-center justify-between gap-3 py-2.5">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/equipment/${(row.assetId ?? row.equipmentId).replace(/\//g, "-")}`}
-                              className="block text-sm font-medium text-ink-900 truncate hover:text-brand-700 hover:underline underline-offset-2"
-                            >
+                          <Link
+                            href={`/equipment/${(row.assetId ?? row.equipmentId).replace(/\//g, "-")}`}
+                            className="min-w-0 group/m"
+                          >
+                            <span className="block text-sm font-medium text-ink-900 truncate group-hover/m:text-brand-700 group-hover/m:underline underline-offset-2">
                               {row.equipmentName ?? "Unnamed equipment"}
-                            </Link>
+                            </span>
                             <span className="block text-xs text-ink-500 tabular-nums">{row.assetId ?? "-"}</span>
-                          </div>
+                          </Link>
                           {row.workOrderId ? (
-                            <Link href={`/work-orders/${row.workOrderId}`} className="text-xs font-medium text-brand-700 hover:underline shrink-0">
+                            <Link
+                              href={`/work-orders/${row.workOrderId}`}
+                              className="text-xs font-medium text-brand-700 hover:underline shrink-0 tabular-nums"
+                            >
                               {row.workOrderNumber ?? "Work order"}
                             </Link>
                           ) : row.status !== g.status ? (
@@ -1307,30 +1374,6 @@ function SchedulePageView() {
                       ))}
                     </ul>
                   </section>
-
-                  <div className="flex items-center justify-between gap-3">
-                    {more.length > 0 ? (
-                      <KebabMenu ariaLabel={`More actions for ${g.categoryLabel}`} items={more} />
-                    ) : (
-                      <span />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" onClick={() => setViewingCategoryGroup(null)}>
-                        Close
-                      </Button>
-                      {assignable && (
-                        <Button
-                          icon={Users}
-                          onClick={() => {
-                            setViewingCategoryGroup(null);
-                            setAssign(first);
-                          }}
-                        >
-                          {g.responsiblePersonName ? "Reassign" : "Assign"}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
                 </div>
               );
             })()}

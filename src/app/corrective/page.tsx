@@ -11,7 +11,7 @@ import MetricPanel from "@/components/MetricPanel";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
-import { AlertTriangle, PlusCircle, ChevronRight } from "lucide-react";
+import { PlusCircle, ChevronRight, Wrench } from "lucide-react";
 
 export default function CorrectiveMaintenanceList() {
   const { data: records, loading, error, refresh } = useApi<any[]>("/api/corrective", []);
@@ -123,7 +123,7 @@ export default function CorrectiveMaintenanceList() {
                 })
               ) : (
                 <EmptyState
-                  icon={AlertTriangle}
+                  icon={Wrench}
                   title="No breakdowns logged"
                   message="No breakdowns reported. When a machine fails, report it here so the fault and the repair are on record."
                   actionLabel="Report Machinery Fault"

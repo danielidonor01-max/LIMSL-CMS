@@ -72,7 +72,11 @@ export default function Tabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
-      className={`flex items-center gap-6 border-b border-line overflow-x-auto ${className}`}
+      // overflow-y-hidden: with overflow-x alone the browser computes
+      // overflow-y to auto, and the active underline hanging a pixel below the
+      // strip drew a vertical scrollbar after the last tab. The horizontal one
+      // stays (styled in globals.css) for a narrow screen with many tabs.
+      className={`flex items-center gap-6 border-b border-line overflow-x-auto overflow-y-hidden ${className}`}
     >
       {items.map((t) => {
         const active = t.value === value;
@@ -100,7 +104,7 @@ export default function Tabs<T extends string>({
               <m.span
                 layoutId={underlineId}
                 aria-hidden="true"
-                className="absolute inset-x-0 -bottom-px h-0.5 bg-brand-600 rounded-full"
+                className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-600 rounded-full"
                 transition={
                   prefersReducedMotion
                     ? { duration: 0 }

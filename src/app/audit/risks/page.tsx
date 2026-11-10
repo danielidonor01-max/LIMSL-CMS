@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { pageMain } from "@/lib/page-shell";
-import { ShieldCheck, Search } from "lucide-react";
+import { ShieldCheck, Search, MousePointerClick, Radar, SearchX } from "lucide-react";
 import { useApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -89,7 +89,7 @@ export default function RiskRegister() {
             ) : filteredRisks.length === 0 ? (
               search.trim() ? (
                 <EmptyState
-                  icon={Search}
+                  icon={SearchX}
                   title="No risks match your search"
                   message="Nothing in the risk log matches that risk number or description."
                   actionLabel="Clear search"
@@ -97,7 +97,7 @@ export default function RiskRegister() {
                 />
               ) : (
                 <EmptyState
-                  icon={ShieldCheck}
+                  icon={Radar}
                   title="No risks recorded"
                   message="No risks logged. Raise one to record its likelihood, consequence and controls."
                 />
@@ -183,7 +183,7 @@ export default function RiskRegister() {
               </form>
             ) : (
               <EmptyState
-                icon={ShieldCheck}
+                icon={MousePointerClick}
                 title="No risk selected"
                 message="Pick a risk to record its controls or review its scores."
               />

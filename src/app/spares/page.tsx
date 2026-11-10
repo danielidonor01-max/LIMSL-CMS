@@ -7,7 +7,7 @@ import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale, Trash2, Eye } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, Download, ArrowDownToLine, ArrowUpFromLine, Scale, Trash2, Eye, PackageCheck, PackageOpen, PackageSearch } from "lucide-react";
 import { toast } from "sonner";
 import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
@@ -379,7 +379,7 @@ function SparesRegister() {
           ) : !filtered.length ? (
             q.trim() || riskOnly ? (
               <EmptyState
-                icon={Search}
+                icon={riskOnly ? PackageCheck : PackageSearch}
                 title={riskOnly ? "Nothing is below its minimum" : "No parts match that search"}
                 message={
                   riskOnly
@@ -394,7 +394,7 @@ function SparesRegister() {
               />
             ) : (
               <EmptyState
-                icon={Package}
+                icon={PackageOpen}
                 title="No spares registered yet"
                 message="No spares registered. Start with the parts for your critical machines, and set a minimum level so you are warned before the shelf is empty."
                 actionLabel={canWrite ? "Add the first part" : undefined}

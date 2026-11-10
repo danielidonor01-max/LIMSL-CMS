@@ -6,7 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/lib/api-cache";
-import { FolderOpen, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText } from "lucide-react";
+import { FolderOpen, Search, FileWarning, CheckCircle2, Clock, Download, ChevronRight, FileText, FileStack, FilterX } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
@@ -187,7 +187,7 @@ export default function DocumentsPage() {
             {groups.length === 0 ? (
               filtersActive ? (
                 <EmptyState
-                  icon={Search}
+                  icon={FilterX}
                   title="No documents match these filters"
                   message="Nothing in the register matches the current search, type and status."
                   actionLabel="Clear filters"
@@ -195,7 +195,7 @@ export default function DocumentsPage() {
                 />
               ) : (
                 <EmptyState
-                  icon={FolderOpen}
+                  icon={FileStack}
                   title="No documents on file"
                   message="Schematics, manuals, SOPs and certificates are attached to a machine from its equipment record."
                   actionLabel="Go to Equipment Registry"

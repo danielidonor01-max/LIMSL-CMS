@@ -10,6 +10,9 @@ import {
   Play,
   FileCheck,
   Search,
+  BadgeCheck,
+  FilterX,
+  MousePointerClick,
 } from "lucide-react";
 import Select from "@/components/Select";
 import SignoffChain from "@/components/SignoffChain";
@@ -170,7 +173,7 @@ export default function NonConformityRegister() {
                   })
                 ) : search.trim() || statusFilter !== "ALL" ? (
                   <EmptyState
-                    icon={Search}
+                    icon={FilterX}
                     title="No non-conformities match these filters"
                     message="Nothing in the registry matches the current search and status filter."
                     actionLabel="Clear filters"
@@ -181,7 +184,7 @@ export default function NonConformityRegister() {
                   />
                 ) : (
                   <EmptyState
-                    icon={ShieldAlert}
+                    icon={BadgeCheck}
                     title="No non-conformities recorded"
                     message="Nothing has been raised against the standard. Run a compliance audit scan to check the system for gaps."
                     actionLabel="Trigger Compliance Audit Scan"
@@ -270,7 +273,7 @@ export default function NonConformityRegister() {
               </div>
             ) : (
               <EmptyState
-                icon={FileCheck}
+                icon={MousePointerClick}
                 title="No non-conformity selected"
                 message="Pick one from the registry to record its root cause and corrective action, or to review the sign-off chain."
               />

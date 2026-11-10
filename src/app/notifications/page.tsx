@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   MessageCircle,
   Mail,
+  BellOff,
 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
@@ -178,7 +179,7 @@ export default function NotificationsPage() {
             <TableSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
             <EmptyState
-              icon={Bell}
+              icon={CheckCheck}
               title="Nothing to read"
               message="Sign-off requests, breakdown alerts and expiry reminders will appear here as they are raised."
               actionLabel="Go to Dashboard"
@@ -186,7 +187,7 @@ export default function NotificationsPage() {
             />
           ) : visible.length === 0 ? (
             <EmptyState
-              icon={Bell}
+              icon={BellOff}
               title="Nothing in this category"
               message="Try another category, or All."
             />

@@ -15,6 +15,9 @@ import {
   ClipboardCheck,
   Siren,
   MapPin,
+  BadgeCheck,
+  FireExtinguisher,
+  SearchX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useApi } from "@/lib/api-cache";
@@ -367,7 +370,7 @@ export default function EmergencyPage() {
             ) : !filtered.length ? (
               q.trim() || notReadyOnly ? (
                 <EmptyState
-                  icon={Search}
+                  icon={notReadyOnly ? BadgeCheck : SearchX}
                   title={notReadyOnly ? "Everything is ready for use" : "Nothing matches that search"}
                   message={
                     notReadyOnly
@@ -382,7 +385,7 @@ export default function EmergencyPage() {
                 />
               ) : (
                 <EmptyState
-                  icon={ShieldAlert}
+                  icon={FireExtinguisher}
                   title="No emergency or safety equipment registered"
                   message="No safety equipment registered yet. Add the fire alarms, smoke detectors, lightning arrestors, earthing and spill kits to start the inspection record."
                   actionLabel={canWrite ? "Add the first item" : undefined}

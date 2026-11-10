@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Wrench, AlertTriangle, ClipboardCheck, Truck, Stethoscope, Activity,
-  FileText, StickyNote, Gauge, CircleDot, Plus, Loader2, ExternalLink, Filter,
+  FileText, StickyNote, Gauge, CircleDot, Plus, Loader2, ExternalLink, Filter, FileCheck2, Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
@@ -39,13 +39,15 @@ const CATEGORY_META: Record<string, { label: string; icon: typeof Wrench; color:
   DIAGNOSIS: { label: "Diagnosis", icon: Stethoscope, color: "text-indigo-600", ring: "bg-indigo-50 border-indigo-200" },
   STATUS: { label: "Status", icon: Activity, color: "text-warn-600", ring: "bg-warn-50 border-warn-200" },
   CALIBRATION: { label: "Calibration", icon: Gauge, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
+  PREMOB: { label: "Premob", icon: FileCheck2, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
+  VERIFICATION: { label: "Verification", icon: Scale, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
   DOCUMENT: { label: "Document", icon: FileText, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
   METER: { label: "Meter", icon: Gauge, color: "text-cyan-600", ring: "bg-cyan-50 border-cyan-200" },
   NOTE: { label: "Note", icon: StickyNote, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
   OTHER: { label: "Other", icon: CircleDot, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
 };
 
-const FILTERS = ["ALL", "PM", "CM", "INSPECTION", "ACCIDENT", "TRANSFER", "DIAGNOSIS", "STATUS", "DOCUMENT", "NOTE"];
+const FILTERS = ["ALL", "PM", "CM", "INSPECTION", "CALIBRATION", "PREMOB", "VERIFICATION", "ACCIDENT", "TRANSFER", "DIAGNOSIS", "STATUS", "DOCUMENT", "NOTE"];
 const MANUAL_CATEGORIES = [
   { value: "NOTE", label: "Note / observation" },
   { value: "ACCIDENT", label: "Accident / incident" },

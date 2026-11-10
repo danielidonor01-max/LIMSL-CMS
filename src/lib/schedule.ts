@@ -185,8 +185,9 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date(),
     activityType: row.activityType,
     taskDescription: row.taskDescription,
     maintenanceFrequency: row.maintenanceFrequency,
-    responsiblePersonId: row.responsiblePersonId,
-    responsiblePersonName: row.responsiblePersonName,
+    // Nobody is carried forward. Staff change between one occurrence and the
+    // next, so the next one is assigned when it comes round, which is also
+    // what raises its batch (LIMSL, November 2026).
     status: "SCHEDULED",
   });
   return next;

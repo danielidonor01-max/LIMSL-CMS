@@ -1040,6 +1040,56 @@ export const calibrationEvents = pgTable(
   (t) => [index("calibration_events_instrument_idx").on(t.instrumentId, t.calibrationDate)],
 );
 
+// A crane is pre-mobilised (inspected and certified by a third party) before it
+// goes out on a project. LIMSL tracks when, by whom, the certificate, and when
+// the next one falls due; the project itself is not recorded (Nov 2026). It is
+// evidence on the machine's history, not a gate on its status.
+export const premobRecords = pgTable(
+  "premob_records",
+  {
+    id: text("id").primaryKey(),
+    equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+    premobDate: text("premob_date").notNull(),
+    vendor: text("vendor").notNull(),
+    nextDueDate: text("next_due_date").notNull(),
+    certificateNumber: text("certificate_number"),
+    proofFileKey: text("proof_file_key").notNull(),
+    proofFileName: text("proof_file_name"),
+    proofMimeType: text("proof_mime_type"),
+    notes: text("notes"),
+    recordedById: text("recorded_by_id"),
+    recordedByName: text("recorded_by_name"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("premob_records_equipment_idx").on(t.equipmentId, t.premobDate)],
+);
+
+// In-house verification of a welding machine or crane: its own readings checked
+// against an instrument that is itself in calibration. The reference is the
+// point, so it is a foreign key and its calibration state is snapshotted at the
+// time, because a verification against an instrument that later lapsed was
+// still good on the day. Like premob, it records; it does not change status.
+export const equipmentVerifications = pgTable(
+  "equipment_verifications",
+  {
+    id: text("id").primaryKey(),
+    equipmentId: text("equipment_id").notNull().references(() => equipment.id),
+    verificationDate: text("verification_date").notNull(),
+    referenceInstrumentId: text("reference_instrument_id").notNull().references(() => calibrationRecords.id),
+    referenceSnapshot: text("reference_snapshot"), // "Clamp meter · S/N 123 · cal due 2027-03-01"
+    readings: text("readings"), // JSON [{parameter, machine, reference, tolerance}]
+    result: text("result").notNull(), // PASS | FAIL
+    nextDueDate: text("next_due_date"),
+    proofFileKey: text("proof_file_key"),
+    proofFileName: text("proof_file_name"),
+    notes: text("notes"),
+    verifiedById: text("verified_by_id"),
+    verifiedByName: text("verified_by_name"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [index("equipment_verifications_equipment_idx").on(t.equipmentId, t.verificationDate)],
+);
+
 // ISO 45001 8.1.2: an isolation is a list of energy sources made safe, each
 // with a lock/tag and a named person who applied and removed it. It was one
 // boolean (permits.lotoApplied), indefensible for a shop with electrical,

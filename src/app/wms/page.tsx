@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   Layers,
+  ScrollText,
 } from "lucide-react";
 
 import { JHA_WRITE_ROLES } from "@/lib/roles";
@@ -222,7 +223,7 @@ export default function WmsList() {
                 })
               ) : (
                 <EmptyState
-                  icon={FileText}
+                  icon={ScrollText}
                   title={filterTab === "READY_FOR_JHA" ? "No WMS awaiting JHA" : "No work method statements match this filter"}
                   message={
                     filterTab === "READY_FOR_JHA"

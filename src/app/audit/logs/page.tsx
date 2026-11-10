@@ -16,6 +16,8 @@ import {
   Shield,
   User,
   X,
+  FilterX,
+  ScrollText,
 } from "lucide-react";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
@@ -276,7 +278,7 @@ export default function AuditTrailLogs() {
           <div className="bg-surface border border-line rounded-xl shadow-card">
             {filtered ? (
               <EmptyState
-                icon={Search}
+                icon={FilterX}
                 title="No entries match these filters"
                 message="Nothing in the trail falls inside the current date range, record type, action and search."
                 actionLabel="Clear filters"
@@ -284,7 +286,7 @@ export default function AuditTrailLogs() {
               />
             ) : (
               <EmptyState
-                icon={Shield}
+                icon={ScrollText}
                 title="No activity recorded yet"
                 message="Every create, update, sign-off and approval lands here automatically as people start using the system."
               />

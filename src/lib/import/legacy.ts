@@ -506,7 +506,8 @@ async function processSchedule(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
         activityType: e.activityType,
         taskDescription: e.taskDescription,
         maintenanceFrequency: e.frequency,
-        responsiblePersonName: e.responsible,
+        // The workbook's "responsible" column is not imported: a plan row is
+        // assigned when its day comes round, not a year ahead (LIMSL, Nov 2026).
         status: past ? "COMPLETED" : "SCHEDULED",
         completedDate: past ? e.plannedDate : null,
         remarks: `Imported from legacy schedule (${e.sourceLabel})`,

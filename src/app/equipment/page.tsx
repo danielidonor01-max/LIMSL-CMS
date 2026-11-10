@@ -20,6 +20,8 @@ import {
   AlertTriangle,
   Download,
   ArchiveX,
+  Factory,
+  FilterX,
 } from "lucide-react";
 import KebabMenu from "@/components/KebabMenu";
 import EquipmentEditModal from "@/components/EquipmentEditModal";
@@ -223,7 +225,7 @@ export default function EquipmentList() {
 
   const emptyState = filtersActive ? (
     <EmptyState
-      icon={Search}
+      icon={FilterX}
       title="Nothing matches these filters"
       message="No asset on the register matches the current search, type, category and status."
       actionLabel="Clear filters"
@@ -231,7 +233,7 @@ export default function EquipmentList() {
     />
   ) : (
     <EmptyState
-      icon={Layers}
+      icon={Factory}
       title="No assets registered yet"
       message="The register is empty. Add your first machine or facility system to start raising work orders against it."
       actionLabel="Add an asset"

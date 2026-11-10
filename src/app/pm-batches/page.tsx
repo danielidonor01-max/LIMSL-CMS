@@ -19,7 +19,7 @@ import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import MetricPanel from "@/components/MetricPanel";
 import SegmentedControl from "@/components/SegmentedControl";
-import { Layers, CalendarClock } from "lucide-react";
+import { Layers, CalendarClock, Boxes } from "lucide-react";
 import { pmFlowState } from "@/lib/maintenance/flow";
 
 type Doc = { id: string; status: string; wmsNumber?: string; jhaNumber?: string; permitNumber?: string } | null;
@@ -152,7 +152,7 @@ export default function PmBatchesPage() {
             <TableSkeleton rows={5} cols={6} />
           ) : rows.length === 0 ? (
             <EmptyState
-              icon={Layers}
+              icon={Boxes}
               title={batches.length === 0 ? "No PM batches raised yet" : "Nothing here"}
               message={
                 batches.length === 0

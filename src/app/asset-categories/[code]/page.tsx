@@ -34,7 +34,8 @@ import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import PageSkeleton from "@/components/Skeleton";
 import { formatDate } from "@/lib/utils";
-import { FREQUENCY_LABELS } from "@/lib/constants";
+import { FREQUENCY_LABELS, EQUIPMENT_STATUS_BADGE, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
+import Criticality from "@/components/Criticality";
 import { ASSET_CATEGORY_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
 import KebabMenu, { type KebabItem } from "@/components/KebabMenu";
 import ScheduleCalendar from "@/components/ScheduleCalendar";
@@ -435,7 +436,6 @@ export default function CategoryDetailPage({
                       </tr>
                     ) : (
                       data.machines.map((m) => {
-                        const isWorking = m.status === "OPERATIONAL";
                         return (
                           <tr key={m.id} className="hover:bg-ink-50 transition-colors">
                             <td className="py-3 px-4 font-semibold text-ink-900">
@@ -448,38 +448,13 @@ export default function CategoryDetailPage({
                             </td>
                             <td className="py-3 px-4 text-ink-900 font-medium">{m.name}</td>
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${
-                                  isWorking
-                                    ? "bg-success-500/10 text-success-700 border border-success-500/20"
-                                    : "bg-danger-500/10 text-danger-700 border border-danger-500/20"
-                                }`}
-                              >
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    isWorking ? "bg-success-500" : "bg-danger-500"
-                                  }`}
-                                />
-                                <span>{m.status.replace(/_/g, " ")}</span>
-                              </span>
+                              <Badge className={EQUIPMENT_STATUS_BADGE[m.status] ?? EQUIPMENT_STATUS_BADGE.DECOMMISSIONED}>
+                                {EQUIPMENT_STATUS_LABELS[m.status] ?? m.status.replace(/_/g, " ")}
+                              </Badge>
                             </td>
                             <td className="py-3 px-4 text-ink-600 text-xs">{m.location || "—"}</td>
                             <td className="py-3 px-4">
-                              {m.criticality ? (
-                                <span
-                                  className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                                    m.criticality === "CRITICAL"
-                                      ? "bg-danger-100 text-danger-700"
-                                      : m.criticality === "HIGH"
-                                      ? "bg-warn-100 text-warn-700"
-                                      : "bg-ink-100 text-ink-700"
-                                  }`}
-                                >
-                                  {m.criticality}
-                                </span>
-                              ) : (
-                                "—"
-                              )}
+                              <Criticality value={m.criticality} />
                             </td>
                             <td className="py-3 px-4 text-right">
                               <KebabMenu ariaLabel={`Actions for ${m.assetId}`} items={machineActions(m)} />

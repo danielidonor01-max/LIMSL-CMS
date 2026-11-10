@@ -210,7 +210,6 @@ async function processSchedule(rows: Row[], actor: Actor, commit: boolean): Prom
         activityType,
         taskDescription: field(r, "Task Description", "Task", "Description") || null,
         maintenanceFrequency: (field(r, "Frequency", "Maintenance Frequency") || "").toUpperCase().replace(/\s+/g, "_") || null,
-        responsiblePersonName: field(r, "Responsible", "Responsible Person", "Assigned To") || null,
       };
       const existingId = existingByKey.get(keyOf(equipmentId, activityType, plannedDate));
       if (existingId) {

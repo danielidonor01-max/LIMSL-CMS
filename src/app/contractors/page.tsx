@@ -6,7 +6,7 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { HardHat, Plus, Search, AlertTriangle, Download, ShieldOff, ShieldCheck, UserPlus } from "lucide-react";
+import { HardHat, Plus, Search, AlertTriangle, Download, ShieldOff, ShieldCheck, UserPlus, SearchX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useApi, invalidateApi } from "@/lib/api-cache";
 import Button from "@/components/Button";
@@ -273,7 +273,7 @@ export default function ContractorsPage() {
           <div className="bg-surface border border-line rounded-xl shadow-card">
             {q.trim() || blockedOnly ? (
               <EmptyState
-                icon={Search}
+                icon={blockedOnly ? UserCheck : SearchX}
                 title={blockedOnly ? "Nobody is blocked" : "No contractor matches that search"}
                 message={
                   blockedOnly

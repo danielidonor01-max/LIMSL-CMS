@@ -4,7 +4,12 @@
 import MetricPanel from "@/components/MetricPanel";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Tabs from "@/components/Tabs";
+import KebabMenu from "@/components/KebabMenu";
+import PremobPanel from "@/components/calibration/PremobPanel";
+import VerificationPanel from "@/components/calibration/VerificationPanel";
 import { useSession } from "next-auth/react";
 import { invalidateApi, useApi } from "@/lib/api-cache";
 import {
@@ -15,8 +20,11 @@ import {
   AlertTriangle,
   Plus,
   RotateCw,
+  FileCheck2,
+  Scale,
   History,
   ShieldCheck,
+  FileClock,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
@@ -69,10 +77,10 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const sectionCls = "text-xs   text-ink-500";
 
 const STATUS_BADGE: Record<string, string> = {
-  CURRENT: "bg-brand-500/10 text-brand-600 border-brand-500/20",
-  DUE_SOON: "bg-warn-500/10 text-warn-600 border-warn-500/20",
-  OVERDUE: "bg-danger-500/10 text-danger-600 border-danger-500/20",
-  OUT_OF_SERVICE: "bg-ink-500/10 text-ink-500 border-ink-500/20",
+  CURRENT: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  DUE_SOON: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  OVERDUE: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  OUT_OF_SERVICE: "bg-ink-500/10 text-ink-600 border-ink-500/20",
 };
 const STATUS_LABEL: Record<string, string> = {
   CURRENT: "Current",
@@ -95,8 +103,38 @@ const AS_LEFT_LABEL: Record<string, string> = {
 const daysUntil = (d: string | null) =>
   d ? Math.round((new Date(d).getTime() - Date.now()) / 864e5) : null;
 
+type ModuleTab = "calibration" | "premob" | "verification";
+const MODULE_TABS: readonly { value: ModuleTab; label: string }[] = [
+  { value: "calibration", label: "Calibration" },
+  { value: "premob", label: "Premob" },
+  { value: "verification", label: "Verification" },
+];
+const isModuleTab = (v: string | null): v is ModuleTab =>
+  v === "calibration" || v === "premob" || v === "verification";
+
+// useSearchParams needs a Suspense boundary under the App Router, or the page
+// bails out of static rendering with a build error.
 export default function CalibrationPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalibrationModule />
+    </Suspense>
+  );
+}
+
+function CalibrationModule() {
   const { data: session } = useSession();
+  const router = useRouter();
+  const params = useSearchParams();
+  // In the URL so the history log's links, and a shared link, land on the
+  // right register.
+  const tab: ModuleTab = isModuleTab(params.get("tab")) ? (params.get("tab") as ModuleTab) : "calibration";
+  const setTab = (next: ModuleTab) =>
+    router.replace(next === "calibration" ? "/calibration" : `/calibration?tab=${next}`, { scroll: false });
+  // Each register owns its own form; the header button asks the visible one to
+  // open it.
+  const [openPremob, setOpenPremob] = useState(0);
+  const [openVerification, setOpenVerification] = useState(0);
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
@@ -196,17 +234,39 @@ export default function CalibrationPage() {
       <main className={PAGE_MAIN.register}>
         <PageHeader
           title="Calibration Management"
-          subtitle="Measuring instrument register with traceable calibration history"
+          subtitle={
+            tab === "premob"
+              ? "Crane pre-mobilisation: when, by whom, the certificate and when it falls due"
+              : tab === "verification"
+                ? "In-house verification of welding machines and cranes against calibrated instruments"
+                : "Measuring instrument register with traceable calibration history"
+          }
           actions={
             canWrite ? (
-              <Button icon={Plus} onClick={() => openForm({})}>
-                Record Calibration
-              </Button>
+              tab === "premob" ? (
+                <Button icon={FileCheck2} onClick={() => setOpenPremob((n) => n + 1)}>
+                  Record Premob
+                </Button>
+              ) : tab === "verification" ? (
+                <Button icon={Scale} onClick={() => setOpenVerification((n) => n + 1)}>
+                  Record Verification
+                </Button>
+              ) : (
+                <Button icon={Plus} onClick={() => openForm({})}>
+                  Record Calibration
+                </Button>
+              )
             ) : undefined
           }
         />
 
-        {loading ? (
+        <Tabs items={MODULE_TABS} value={tab} onChange={setTab} ariaLabel="Calibration module" />
+
+        {tab === "premob" ? (
+          <PremobPanel canWrite={canWrite} openNew={openPremob} />
+        ) : tab === "verification" ? (
+          <VerificationPanel canWrite={canWrite} openNew={openVerification} />
+        ) : loading ? (
           <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
             <TableSkeleton rows={6} cols={7} />
           </div>
@@ -265,7 +325,7 @@ export default function CalibrationPage() {
                       <th className="py-3.5 px-5 font-medium">Interval</th>
                       <th className="py-3.5 px-5 font-medium">Certificate / Traceability</th>
                       <th className="py-3.5 px-5 font-medium">Status</th>
-                      <th className="py-3.5 px-5 font-medium"></th>
+                      <th className="py-3.5 px-5 font-medium w-14"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-200">
@@ -324,23 +384,14 @@ export default function CalibrationPage() {
                               {STATUS_LABEL[r.status ?? "CURRENT"] ?? r.status}
                             </Badge>
                           </td>
-                          <td className="py-3.5 px-5">
-                            <div className="flex items-center gap-1 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={History}
-                                onClick={() => setHistory(r)}
-                                title={`Calibration history for ${r.instrumentName}`}
-                              >
-                                History
-                              </Button>
-                              {canWrite && (
-                                <Button variant="ghost" size="sm" icon={RotateCw} onClick={() => openForm(r)}>
-                                  Recalibrate
-                                </Button>
-                              )}
-                            </div>
+                          <td className="py-3.5 px-5 text-right">
+                            <KebabMenu
+                              ariaLabel={`Actions for ${r.instrumentName}`}
+                              items={[
+                                ...(canWrite ? [{ label: "Recalibrate", icon: RotateCw, onClick: () => openForm(r) }] : []),
+                                { label: "History", icon: History, onClick: () => setHistory(r) },
+                              ]}
+                            />
                           </td>
                         </tr>
                       );
@@ -502,7 +553,7 @@ export default function CalibrationPage() {
           </div>
         ) : events.length === 0 ? (
           <EmptyState
-            icon={History}
+            icon={FileClock}
             title="No calibration events recorded yet"
             message={
               history?.lastCalibrationDate

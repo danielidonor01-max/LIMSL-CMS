@@ -14,7 +14,7 @@ import TableSkeleton from "@/components/TableSkeleton";
 import LoadError from "@/components/LoadError";
 import MetricPanel from "@/components/MetricPanel";
 import { Badge } from "@/components/Badge";
-import { ShieldAlert, PlusCircle, Search, ChevronRight, FileText } from "lucide-react";
+import { ShieldAlert, PlusCircle, Search, ChevronRight, FileText, BadgeCheck, TriangleAlert } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { JHA_WRITE_ROLES } from "@/lib/roles";
 
@@ -213,7 +213,7 @@ export default function JhaListPage() {
             <TableSkeleton rows={5} cols={4} />
           ) : filtered.length === 0 ? (
             <EmptyState
-              icon={ShieldAlert}
+              icon={tab === "needs_jha" ? BadgeCheck : TriangleAlert}
               title={
                 tab === "needs_jha"
                   ? "All approved method statements have hazard analyses"
