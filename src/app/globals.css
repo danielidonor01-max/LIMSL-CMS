@@ -443,3 +443,55 @@ select[size]:not([size="1"]) {
     margin: 10mm;
   }
 }
+
+/* ─── Toasts (AppToaster.tsx) ───────────────────────────────────────────────
+   RareUI's arrival: a spring with a little overshoot, coming into focus out of
+   a slight blur, and a fine line along the foot that runs down while the toast
+   waits. Sonner owns the stacking and the timer; these only dress its states.
+   The doubled attribute raises specificity over sonner's own transition. */
+[data-sonner-toaster] [data-sonner-toast].app-toast {
+  transition:
+    transform 450ms cubic-bezier(0.34, 1.36, 0.64, 1),
+    opacity 300ms ease-out,
+    height 300ms ease-out,
+    filter 350ms ease-out;
+}
+[data-sonner-toaster] [data-sonner-toast].app-toast[data-mounted="false"],
+[data-sonner-toaster] [data-sonner-toast].app-toast[data-removed="true"] {
+  filter: blur(4px);
+}
+
+/* The running line. Coloured by tone, emptied over the toast's own duration,
+   held while the stack is hovered (sonner pauses its timer then too), and
+   absent on a loading toast, which has no end to count down to. */
+[data-sonner-toast].app-toast::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  background: var(--color-ink-300);
+  animation: toast-run var(--toast-duration, 5000ms) linear forwards;
+}
+[data-sonner-toast].app-toast[data-type="success"]::after { background: var(--color-brand-500); }
+[data-sonner-toast].app-toast[data-type="error"]::after { background: var(--color-danger-500); }
+[data-sonner-toast].app-toast[data-type="warning"]::after { background: var(--color-warn-500); }
+[data-sonner-toast].app-toast[data-type="info"]::after { background: var(--color-info-500); }
+[data-sonner-toast].app-toast[data-type="loading"]::after { display: none; }
+[data-sonner-toaster]:hover [data-sonner-toast].app-toast::after { animation-play-state: paused; }
+/* Behind the front toast the line would be counting a toast nobody can read. */
+[data-sonner-toast].app-toast[data-front="false"]::after { opacity: 0; }
+
+@keyframes toast-run {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toaster] [data-sonner-toast].app-toast {
+    transition: opacity 150ms linear;
+    filter: none !important;
+  }
+}

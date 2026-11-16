@@ -54,6 +54,10 @@ function NewPermitForm() {
   const [userList, setUserList] = useState<any[]>([]);
   const [jhaList, setJhaList] = useState<any[]>([]);
   const [workOrderList, setWorkOrderList] = useState<any[]>([]);
+  const [batchList, setBatchList] = useState<any[]>([]);
+  // The PM batch this permit covers. One permit, every machine in the batch.
+  const [batchId, setBatchId] = useState(prefillBatchId);
+  const [batchDetail, setBatchDetail] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -89,8 +93,10 @@ function NewPermitForm() {
       fetch("/api/users").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/jha").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/work-orders").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/pm-batches").then((r) => (r.ok ? r.json() : { batches: [] })),
     ])
-      .then(([eqs, users, jhas, wos]) => {
+      .then(([eqs, users, jhas, wos, pmb]) => {
+        setBatchList(Array.isArray(pmb?.batches) ? pmb.batches : []);
         setEquipmentList(Array.isArray(eqs) ? eqs : []);
         setUserList(Array.isArray(users) ? users : []);
         setJhaList(Array.isArray(jhas) ? jhas.filter((j: any) => j.status === "APPROVED") : []);
@@ -110,6 +116,41 @@ function NewPermitForm() {
   }, [prefillEquipmentId]);
 
   const selectedJha = useMemo(() => jhaList.find((j) => j.id === jhaId), [jhaList, jhaId]);
+
+  // A standing analysis is written for a PM category, and a PM permit covers a
+  // batch of that category: the batch says which machines and carries the
+  // approval the permit rests on.
+  const standing = !!selectedJha?.category;
+  const openBatches = useMemo(
+    () =>
+      batchList.filter(
+        (b) =>
+          (!selectedJha?.category || b.category === selectedJha.category) &&
+          b.status !== "COMPLETED" &&
+          (!b.permit || b.permit.status === "REJECTED" || b.permit.status === "CANCELLED" || b.id === batchId),
+      ),
+    [batchList, selectedJha, batchId],
+  );
+  useEffect(() => {
+    if (!batchId) return;
+    let live = true;
+    fetch(`/api/pm-batches/${batchId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => live && setBatchDetail(d))
+      .catch(() => live && setBatchDetail(null));
+    return () => {
+      live = false;
+    };
+  }, [batchId]);
+  const batchMachines: any[] =
+    batchId && batchDetail?.id === batchId
+      ? (batchDetail.workOrders ?? []).filter((w: any) => w.status !== "CANCELLED")
+      : [];
+  const firstLocation = batchMachines[0]?.location as string | undefined;
+  useEffect(() => {
+    if (firstLocation && !workArea) setWorkArea(firstLocation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstLocation]);
 
   // The analysis already names the machine, the area, PPE, and control measures.
   // Auto-populating them onto the permit ensures safety alignment and reduces data re-entry.
@@ -230,18 +271,18 @@ function NewPermitForm() {
 
   // Ask for the work order unless it is already known: from a batch (the server
   // takes the batch's own), or from a one-off analysis raised with its job.
-  const needsWorkOrder =
-    !!selectedJha && !prefillBatchId && (!selectedJha.workOrderId || !!selectedJha.category);
+  const needsWorkOrder = !!selectedJha && !standing && !selectedJha.workOrderId;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!jhaId) return toast.error("Select the approved Job Hazard Analysis this permit is issued against.");
+    if (standing && !batchId) return toast.error("Choose the PM batch this permit covers.");
     if (needsWorkOrder && !workOrderId) {
       return toast.error("Select the approved work order that authorises this job.");
     }
     if (workTypes.length === 0) return toast.error("Select at least one type of work.");
-    if (!equipmentId) return toast.error("Select the machine or system being worked on.");
+    if (!standing && !equipmentId) return toast.error("Select the machine or system being worked on.");
     if (!workDescription.trim()) return toast.error("Describe the work.");
     if (!permitHolderId) return toast.error("Name the permit holder.");
     if (missing.length > 0) {
@@ -256,13 +297,13 @@ function NewPermitForm() {
         body: JSON.stringify({
           jhaId,
           workOrderId: workOrderId || undefined,
-          batchId: prefillBatchId || undefined,
+          batchId: standing ? batchId || undefined : undefined,
           taskNo: taskNo.trim() || null,
           workTypes,
           facility: facility.trim() || null,
           workArea: workArea.trim() || null,
           zoneClassification,
-          equipmentId,
+          equipmentId: standing ? undefined : equipmentId,
           workDescription: workDescription.trim(),
           startDate,
           startTime,
@@ -387,6 +428,25 @@ function NewPermitForm() {
                 this is the last point at which the work order can be missing.
                 It is inherited when the chain started from a raised job, and
                 asked for when the paperwork ran ahead of it. */}
+            {standing && (
+              <div className="space-y-2 pt-2 border-t border-line">
+                <label className="text-sm font-medium text-ink-700">PM batch</label>
+                <Select value={batchId} onChange={setBatchId} ariaLabel="PM batch" className="w-full">
+                  <option value="">Select the PM batch this permit covers</option>
+                  {openBatches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {(b.workOrderNumber ?? b.batchNumber) + " · " + b.title + " · " + b.machineCount + (b.machineCount === 1 ? " machine" : " machines")}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-ink-500">
+                  One permit covers every machine in the batch. The batch work order, approved once by the
+                  Maintenance Manager, is what authorises it.
+                  {openBatches.length === 0 && " No open batch of this category is waiting for a permit."}
+                </p>
+              </div>
+            )}
+
             {needsWorkOrder && (
               <div className="space-y-2 pt-2 border-t border-line">
                 <label className="text-sm font-medium text-ink-700">Approved work order</label>
@@ -467,17 +527,39 @@ function NewPermitForm() {
               </div>
             </div>
 
-            <MachineSelect
-              label="Machine or system"
-              required
-              value={equipmentId}
-              onChange={setEquipmentId}
-              equipmentList={equipmentList}
-              selectedCategory={selectedJha?.category || undefined}
-              onLocationInferred={(loc) => {
-                if (!workArea) setWorkArea(loc);
-              }}
-            />
+            {standing ? (
+              <div>
+                <p className={LABEL_CLASS}>
+                  Machines covered{batchMachines.length ? ` (${batchMachines.length})` : ""}
+                </p>
+                {batchMachines.length ? (
+                  <ul className="mt-1 flex flex-wrap gap-1.5">
+                    {batchMachines.map((w: any) => (
+                      <li
+                        key={w.id}
+                        className="text-xs px-2 py-1 rounded-lg bg-ink-100 text-ink-700 border border-line"
+                      >
+                        {w.assetId} · {w.machineName}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-ink-500 mt-1">Choose the batch above and its machines are listed here.</p>
+                )}
+              </div>
+            ) : (
+              <MachineSelect
+                label="Machine or system"
+                required
+                value={equipmentId}
+                onChange={setEquipmentId}
+                equipmentList={equipmentList}
+                selectedCategory={selectedJha?.category || undefined}
+                onLocationInferred={(loc) => {
+                  if (!workArea) setWorkArea(loc);
+                }}
+              />
+            )}
 
             <div>
               <label className={LABEL_CLASS}>Description of work</label>

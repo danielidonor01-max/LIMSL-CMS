@@ -27,7 +27,7 @@ import {
   CATEGORY_TONE,
   CATEGORY_FILTERS,
 } from "@/lib/notifications/categories";
-import { formatDate } from "@/lib/utils";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 import SegmentedControl from "@/components/SegmentedControl";
 
@@ -224,7 +224,10 @@ export default function NotificationsPage() {
                       </div>
                       <p className="text-xs text-ink-500 mt-0.5">{n.body}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-500 flex-wrap">
-                        <span className="tabular-nums">{formatDate(n.createdAt)}</span>
+                        <time dateTime={n.createdAt} className="tabular-nums">
+                          {formatDateTime(n.createdAt)}
+                          {timeAgo(n.createdAt) && <span className="text-ink-400"> · {timeAgo(n.createdAt)}</span>}
+                        </time>
                         {/* Only when it needs a decision. A message that went
                             out as expected is not news, and saying so on every
                             row buried the two states that are. */}

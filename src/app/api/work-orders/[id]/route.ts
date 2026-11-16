@@ -8,8 +8,9 @@ import {
   pmChecklists,
   permits,
   auditLog,
+  pmBatches,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { loadReadiness } from "@/lib/maintenance/work-readiness-db";
@@ -56,11 +57,24 @@ export async function GET(
       .where(eq(pmChecklists.workOrderId, id))
       .limit(1);
 
+    // The batch a line belongs to. On a batch raised as one work order the
+    // approval is the batch's, so the page shows that chain, not one of its own.
+    let batch = null;
+    if (wo[0].batchId) {
+      const [b] = await db
+        .select({ id: pmBatches.id, batchNumber: pmBatches.batchNumber, workOrderNumber: pmBatches.workOrderNumber })
+        .from(pmBatches)
+        .where(eq(pmBatches.id, wo[0].batchId))
+        .limit(1);
+      batch = b ?? null;
+    }
+
     return NextResponse.json({
       ...wo[0],
       equipment: eq1 ?? null,
       schedule,
       checklist: checklist[0] ?? null,
+      batch,
     });
   } catch (error) {
     console.error("Failed to fetch work order:", error);
@@ -133,7 +147,12 @@ export async function PATCH(
 
     if (body.status === "IN_PROGRESS") {
       await reconcilePermits();
-      const linked = await db.select().from(permits).where(eq(permits.workOrderId, id));
+      // A batch line is covered by the batch's permit, which names the
+      // batch's first line as its work order.
+      const linked = await db
+        .select()
+        .from(permits)
+        .where(current.batchId ? or(eq(permits.workOrderId, id), eq(permits.batchId, current.batchId)) : eq(permits.workOrderId, id));
       if (linked.length > 0 && !linked.some((p) => p.status === "ACTIVE")) {
         const blocking = linked[0];
         return NextResponse.json(

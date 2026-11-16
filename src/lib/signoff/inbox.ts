@@ -38,6 +38,7 @@ export type Actor = { id?: string | null; role?: string | null };
 // here shows up as an obviously-unlabelled row rather than a broken link.
 export const ENTITY_META: Record<string, { label: string; href: (id: string) => string }> = {
   WORK_ORDER: { label: "Work order", href: (id) => `/work-orders/${id}` },
+  PM_BATCH: { label: "Batch work order", href: (id) => `/pm-batches/${id}` },
   PM_CHECKLIST: { label: "PM checklist", href: (id) => `/work-orders/${id}` },
   CORRECTIVE: { label: "Corrective record", href: (id) => `/corrective/${id}` },
   WMS: { label: "Method statement", href: (id) => `/wms/${id}` },
@@ -61,6 +62,7 @@ export function getPriorityTier(entityType: string, personal: boolean): Priority
   }
   if (
     entityType === "WORK_ORDER" ||
+    entityType === "PM_BATCH" ||
     entityType === "JHA" ||
     entityType === "CORRECTIVE" ||
     entityType === "PM_CHECKLIST"
@@ -145,6 +147,7 @@ const URGENCY: Record<string, number> = {
   PERMIT_CLOSEOUT: 1,
   SAFETY_INCIDENT: 2,
   WORK_ORDER: 3,
+  PM_BATCH: 3,
   JHA: 4,
   WMS: 5,
   CORRECTIVE: 6,

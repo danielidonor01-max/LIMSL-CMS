@@ -26,6 +26,7 @@ import { assignPmBatch } from "@/lib/maintenance/pm-batch";
 import { pmFlowState } from "@/lib/maintenance/flow";
 import { standingPairFor, latestWmsForCategory } from "@/lib/hse/standing-documents";
 import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
+import { batchAuthorisation } from "@/lib/work-order-approval";
 
 async function loadBatch(id: string) {
   const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, id)).limit(1);
@@ -135,6 +136,7 @@ async function loadBatch(id: string) {
     batchId: batch.id,
     assignedToId: batch.assignedToId,
     workOrderCount: wos.length,
+    workOrderApproved: batchAuthorisation(wos).ok,
     wmsStatus: wms?.status ?? null,
     // An analysis written against an older revision of the method does not
     // count as done, because the permit route will refuse it.

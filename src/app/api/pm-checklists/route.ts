@@ -10,6 +10,7 @@ import {
   auditLog,
   signoffs,
   correctiveMaintenance,
+  pmBatches,
 } from "@/lib/db/schema";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -23,6 +24,7 @@ import { logEquipmentEvent } from "@/lib/equipment-log";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { notifyNextSigner } from "@/lib/notifications";
+import { notifyBatchComplete } from "@/lib/signoff/trail";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -237,7 +239,34 @@ export async function POST(request: Request) {
       console.warn("pm-checklists: equipment log failed (non-fatal)", err);
     }
 
-    return NextResponse.json({ ...checklist, id: checklistId }, { status: 201 });
+    // The last machine's checklist finishes the batch. It used to wait for
+    // somebody to remember to close it by hand, which left finished batches
+    // reading as in progress and the rest of the trail never hearing.
+    let batchCompleted: { batchNumber: string } | null = null;
+    if (wo?.batchId) {
+      try {
+        const lines = await db
+          .select({ status: workOrders.status })
+          .from(workOrders)
+          .where(eq(workOrders.batchId, wo.batchId));
+        const live = lines.filter((l) => l.status !== "CANCELLED");
+        if (live.length > 0 && live.every((l) => l.status === "COMPLETED")) {
+          const [b] = await db
+            .update(pmBatches)
+            .set({ status: "COMPLETED", completedDate: today, updatedAt: new Date().toISOString() })
+            .where(and(eq(pmBatches.id, wo.batchId), ne(pmBatches.status, "COMPLETED")))
+            .returning({ batchNumber: pmBatches.batchNumber });
+          if (b) {
+            batchCompleted = b;
+            await notifyBatchComplete(wo.batchId, gate.actor?.id);
+          }
+        }
+      } catch (err) {
+        console.warn("pm-checklists: batch completion failed (non-fatal)", err);
+      }
+    }
+
+    return NextResponse.json({ ...checklist, id: checklistId, batchCompleted }, { status: 201 });
   } catch (error) {
     console.error("Failed to submit PM checklist:", error);
     return NextResponse.json(

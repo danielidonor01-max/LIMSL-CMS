@@ -45,6 +45,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // When the fault happened, as the reporter's local "YYYY-MM-DDTHH:MM".
+    // A breakdown is often written up hours or days later, and downtime and
+    // MTTR are only true when they run from the fault, not from the paperwork.
+    const occurred = typeof body.faultOccurredAt === "string" ? body.faultOccurredAt.trim() : "";
+    if (occurred) {
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(occurred) || isNaN(Date.parse(`${occurred}:00`))) {
+        return NextResponse.json({ error: "The fault date and time could not be read." }, { status: 400 });
+      }
+      // A few hours of slack for clock differences between devices.
+      if (Date.parse(`${occurred}:00Z`) > Date.now() + 14 * 3_600_000) {
+        return NextResponse.json({ error: "The fault cannot have happened in the future." }, { status: 400 });
+      }
+    }
+
     const cmrfNumber = await nextDocNumber("CMRF");
 
     const newCorrective = {
@@ -55,6 +69,7 @@ export async function POST(request: Request) {
       reportedById: gate.actor?.id ?? null,
       reportedByName: gate.actor?.name || "Unknown",
       reportedDate: body.reportedDate || new Date().toISOString().split("T")[0],
+      downStartAt: occurred || null,
       faultType: body.faultType || "UNKNOWN",
       urgency: body.urgency || "MEDIUM",
       origin: scheduled ? "SCHEDULED" : "REPORTED",

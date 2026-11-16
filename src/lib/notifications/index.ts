@@ -15,6 +15,7 @@ import { parsePrefs } from "@/lib/user-prefs";
 import { sendWhatsApp } from "./whatsapp";
 import { sendEmail } from "./email";
 import { entityHref, entityLabel } from "@/lib/signoff/inbox";
+import { nextPendingStep, stepAudience } from "@/lib/signoff/chains";
 
 export type NotifyEvent =
   | "PTW_SIGN_REQUEST"
@@ -25,6 +26,8 @@ export type NotifyEvent =
   | "WO_SIGN_REQUEST"
   | "BREAKDOWN"
   | "ESCALATION"
+  | "SIGN_PING"
+  | "MILESTONE"
   | "GENERAL";
 
 type NotifyInput = {
@@ -156,6 +159,7 @@ const ENTITY_LABEL: Record<string, string> = {
   PM_CHECKLIST: "PM checklist",
   CORRECTIVE: "Corrective record",
   WORK_ORDER: "Work Order",
+  PM_BATCH: "Batch work order",
 };
 const ENTITY_EVENT: Record<string, NotifyEvent> = {
   PERMIT: "PTW_SIGN_REQUEST",
@@ -165,6 +169,7 @@ const ENTITY_EVENT: Record<string, NotifyEvent> = {
   PM_CHECKLIST: "PM_SIGN_REQUEST",
   CORRECTIVE: "CORRECTIVE_SIGN_REQUEST",
   WORK_ORDER: "WO_SIGN_REQUEST",
+  PM_BATCH: "WO_SIGN_REQUEST",
 };
 const ENTITY_LINK: Record<string, (id: string) => string> = {
   PERMIT: (id) => `/permits/${id}`,
@@ -173,6 +178,7 @@ const ENTITY_LINK: Record<string, (id: string) => string> = {
   PROCEDURE: (id) => `/procedure/${id}`,
   CORRECTIVE: (id) => `/corrective/${id}`,
   WORK_ORDER: (id) => `/work-orders/${id}`,
+  PM_BATCH: (id) => `/pm-batches/${id}`,
 };
 
 // Notify whoever must sign the next pending step of a sign-off chain. Called when
@@ -181,18 +187,18 @@ const ENTITY_LINK: Record<string, (id: string) => string> = {
 export async function notifyNextSigner(
   entityType: string,
   entityId: string,
-  chain: { stepOrder: number; role: string; roleLabel: string; required: boolean | null; status: string }[],
+  chain: {
+    stepOrder: number;
+    role: string;
+    roleLabel: string;
+    required: boolean | null;
+    status: string;
+    signerUserId?: string | null;
+  }[],
   reference?: string,
 ) {
-  // Find the earliest still-pending required step whose predecessors are all signed.
-  const pending = chain
-    .filter((s) => s.required && s.status !== "SIGNED" && s.status !== "REJECTED")
-    .sort((a, b) => a.stepOrder - b.stepOrder)[0];
+  const pending = nextPendingStep(chain);
   if (!pending) return;
-  const earlierUnsigned = chain.some(
-    (s) => s.required && s.stepOrder < pending.stepOrder && s.status !== "SIGNED",
-  );
-  if (earlierUnsigned) return;
 
   // Every chain type gets a name and a link. The lists above cover the older
   // ones; anything newer falls back to the inbox's map rather than to its raw
@@ -221,6 +227,6 @@ export async function notifyNextSigner(
     linkPath: ENTITY_LINK[entityType]?.(entityId) ?? entityHref(entityType, entityId),
     relatedEntityType: entityType,
     relatedEntityId: entityId,
-    roles: [pending.role],
+    ...stepAudience(entityType, pending),
   });
 }

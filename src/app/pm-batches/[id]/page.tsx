@@ -19,6 +19,7 @@ import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
 import FlowRail, { type FlowLink } from "@/components/FlowRail";
+import SignoffChain from "@/components/SignoffChain";
 import TableSkeleton from "@/components/TableSkeleton";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { WO_STATUS_LABELS, WO_STATUS_BADGE } from "@/lib/constants";
@@ -57,6 +58,8 @@ type BatchWo = {
 type Batch = {
   id: string;
   batchNumber: string;
+  /** The batch's one work order. Null on batches raised one work order per machine. */
+  workOrderNumber?: string | null;
   title: string;
   categoryLabel: string;
   plannedDate: string;
@@ -150,9 +153,15 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
     ASSIGN: batch.assignedToName
       ? { ref: batch.assignedToName }
       : { onAction: () => setAssignOpen(true), actionLabel: "Assign this batch" },
-    WORK_ORDER: {
-      ref: `${batch.workOrders.length} raised`,
-    },
+    // One approval for the batch, signed in the panel on this page.
+    WORK_ORDER: batch.workOrderNumber
+      ? batch.flow.done.includes("WORK_ORDER")
+        ? { ref: `${batch.workOrderNumber} approved` }
+        : {
+            ref: batch.workOrderNumber,
+            waitingOn: "Waiting on the batch approval: the Foreman raises it and the Maintenance Manager approves it, on this page.",
+          }
+      : { ref: `${batch.workOrders.length} raised` },
     // The method statement belongs to the category and is reused cycle after
     // cycle, so an approved one is simply done here — nobody is asked to write
     // it again because the month changed. Its revision is shown so a reader can
@@ -213,7 +222,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.detail}>
         <PageHeader
-          title={batch.batchNumber}
+          title={batch.workOrderNumber ? `${batch.batchNumber} · ${batch.workOrderNumber}` : batch.batchNumber}
           subtitle={`${batch.categoryLabel} · planned ${formatDate(batch.plannedDate)} · ${batch.workOrders.length} machine${batch.workOrders.length === 1 ? "" : "s"}`}
           backHref="/pm-batches"
           backLabel="PM Batches"
@@ -276,7 +285,17 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
               )}
             </section>
 
-            {/* The machines, which is what the batch actually is */}
+            {/* One work order for the batch, approved once. Each machine below is
+                a line of it, numbered under it, with no approval of its own. */}
+            {batch.workOrderNumber && (
+              <SignoffChain
+                entityType="PM_BATCH"
+                entityId={batch.id}
+                title={`Batch work order ${batch.workOrderNumber}, approval to commence`}
+                onChange={refresh}
+              />
+            )}
+
             {/* The machines, which is what the batch actually is */}
             <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
               <header className="px-4 py-3 border-b border-line flex items-center justify-between gap-4 flex-wrap">

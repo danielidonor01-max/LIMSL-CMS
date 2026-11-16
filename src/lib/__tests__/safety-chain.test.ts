@@ -55,9 +55,16 @@ test("the permit refuses a job management has not approved", () => {
   // anywhere, so it went on passing after the gate was replaced with `if
   // (false)` and only the emergency test noticed. A guard that survives the
   // deletion of the thing it guards is worse than none: it certifies the bug.
+  // A single job is checked on its own work order; a PM batch on the batch's
+  // one approval, which covers every machine (LIMSL, 16 Nov 2026). Both gates
+  // must stand: losing either reopens permits on unapproved work.
   assert.ok(
-    /if \(permitWo\.status === "PENDING_APPROVAL"\)/.test(PERMITS),
+    /if \(!permitBatchId && permitWo\.status === "PENDING_APPROVAL"\)/.test(PERMITS),
     "the permit route no longer checks work-order approval, so nothing does",
+  );
+  assert.ok(
+    /const authorised = batchAuthorisation\(batchWos\);\s*if \(!authorised\.ok\)/.test(PERMITS),
+    "a batch permit no longer checks that the batch work order was approved",
   );
   assert.ok(
     /return NextResponse\.json\(\{ error: approvalBlockMessage\(/.test(PERMITS),

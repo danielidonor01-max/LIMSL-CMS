@@ -197,14 +197,28 @@ whichever machines of that category are due — say five. **They are one job.**
 One person is assigned and that assigns all five, one method statement covers
 all five, one hazard analysis covers it, and one permit authorises it.
 
-`pm_batches` is that job. Raising a batch from the schedule fans out **one work
-order per machine** underneath it, because equipment history, PM checklists and
-parts consumption are all per machine. The batch is what the WMS, JHA and PTW
-hang off; the work orders are what the technician ticks off.
+`pm_batches` is that job, and **the batch is ONE work order** (LIMSL, 16 Nov
+2026). Raising a batch draws one WO number (`pm_batches.work_order_number`)
+and one approval, the `PM_BATCH` chain (Foreman raises, Maintenance Manager
+approves), signed once for every machine. Each machine still gets a line in
+`work_orders`, numbered under the batch (`WO-2026-0035/1`, `/2` …), because
+equipment history, PM checklists and parts are per machine; a line has **no
+approval chain of its own** and opens when the batch is approved
+(`approveBatchLines`). Batches raised before this have their own number per
+machine, each approved one by one, and keep working (`batchAuthorisation`
+accepts both).
 
-A batch permit names one machine in `permits.equipment_id` because the column
-requires one. **`batch_id` is what says it covers all of them.** Do not read
-`equipment_id` as the scope of a batch permit.
+**One permit covers the batch.** `permits.equipment_ids` lists every machine;
+`equipment_id` is only the first, because the column requires one. A permit on
+a standing (category) JHA must name its batch, and the batch's approval is its
+authorisation; there is no single work order to pick. Read machine coverage
+through `lib/hse/permit-machines.ts`, never from `equipment_id` alone. The
+last machine's checklist completes the batch and tells the trail.
+
+**No method statement is tied to a single PM machine.** PM runs under the
+category's standing WMS; `POST /api/wms` refuses a PREVENTIVE/INSPECTION or
+batch work order. Only CM gets a one-off WMS → JHA → PTW for its one work
+order.
 
 ### CM: a breakdown is one machine
 
@@ -241,6 +255,30 @@ marks the pass; segregation (one person, one step) applies **per pass**.
 - The document header's revision history (`lib/document-control.ts`) prints
   one row per pass from these signatures; titles come from each signer's
   account job title. Nothing in the header is typed in.
+- A JHA is revised like a WMS: a new JHA naming the one it replaces
+  (`supersedesId`, with a required "what changed"); approving it marks the old
+  one SUPERSEDED.
+
+### Signing feedback, Ping, attention dots, toasts (LIMSL, 16 Nov 2026)
+
+- Every signature returns its `milestone` (`lib/signoff/milestones.ts`); the
+  signer gets a toast and, when a pass or the document completes, the trail
+  (earlier signers, the batch crew, the permit holder) gets a `MILESTONE`
+  notification (`lib/signoff/trail.ts`). The bell toasts new arrivals.
+- **Ping:** anyone who has signed a document (or a Super Admin) can remind the
+  next signer, **once per document every 30 minutes** (`lib/signoff/ping.ts`,
+  `/api/signoffs/ping`). The limit is read from `SIGN_PING` notifications, not
+  a separate ledger. Notifications to a step use `stepAudience()`, so a bound
+  step reaches that one person.
+- **Sidebar dots** (`/api/attention`, `lib/attention.ts`) come from the state
+  of the work: signatures waiting on you, documents your role must raise for an
+  open batch, your own open work. Never from unread notifications.
+- **Toasts** stay on `sonner` (call `toast.success/error/warning`), dressed in
+  `components/AppToaster.tsx` and the `.app-toast` rules in globals.css, in
+  the RareUI manner. A toast with a custom `duration` sets `--toast-duration`
+  to match so its running line empties on time.
+- **Document Control** (`/document-control`) is a read-only view over every
+  numbered record and what it traces to; it stores nothing.
 
 ### The WMS is a standing document, not a form (do not make it per-job again)
 

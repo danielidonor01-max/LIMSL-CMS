@@ -23,6 +23,25 @@ export async function GET(request: Request) {
       return NextResponse.json({ unread: row?.unread ?? 0 });
     }
 
+    // `?latest=1`: the few newest unread, for the arrival toast. Only what a
+    // toast shows, for the same reason countOnly exists.
+    if (new URL(request.url).searchParams.get("latest")) {
+      const latest = await db
+        .select({
+          id: notifications.id,
+          event: notifications.event,
+          title: notifications.title,
+          body: notifications.body,
+          linkPath: notifications.linkPath,
+          createdAt: notifications.createdAt,
+        })
+        .from(notifications)
+        .where(and(eq(notifications.userId, user.id), isNull(notifications.readAt)))
+        .orderBy(desc(notifications.createdAt))
+        .limit(5);
+      return NextResponse.json({ latest });
+    }
+
     const rows = await db
       .select()
       .from(notifications)

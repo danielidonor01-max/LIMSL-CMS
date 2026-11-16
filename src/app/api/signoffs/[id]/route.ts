@@ -12,6 +12,9 @@ import { chainSummary, canSignChainStep, isOverrideSignature, passOf } from "@/l
 import { sealDocument } from "@/lib/signoff/seal";
 import { applyCategoryChange } from "@/lib/maintenance/asset-categories";
 import { notify, notifyNextSigner } from "@/lib/notifications";
+import { milestoneAfterSign, type Milestone } from "@/lib/signoff/milestones";
+import { notifyTrail } from "@/lib/signoff/trail";
+import { approveBatchLines, BATCH_APPROVAL_ENTITY } from "@/lib/work-order-approval";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
 // Enforces: authenticated, role matches the step (or senior/super-admin), and
@@ -231,6 +234,11 @@ export async function POST(
             await applyCategoryChange(step.entityId, { id: user.id ?? null, name: user.name ?? null });
           }
 
+          // One approval for the whole batch opens every machine's line.
+          if (step.entityType === BATCH_APPROVAL_ENTITY) {
+            await approveBatchLines(step.entityId);
+          }
+
           if (step.entityType === "WORK_ORDER") {
             const [wo] = await db.select().from(workOrders).where(eq(workOrders.id, step.entityId)).limit(1);
             if (wo) {
@@ -317,10 +325,13 @@ export async function POST(
     // After a signature, notify whoever must sign next. After a rejection,
     // notify the preparing role (step 1), a rejection means rework, and the
     // person who owns the document must hear about it, not silence. Best-effort.
+    let milestone: Milestone | null = null;
     if (action === "sign") {
       try {
         const fresh = await getSignoffChain(step.entityType, step.entityId);
+        milestone = milestoneAfterSign(step.entityType, fresh, step.stepOrder);
         await notifyNextSigner(step.entityType, step.entityId, fresh);
+        await notifyTrail(step.entityType, step.entityId, fresh, milestone, user.id);
       } catch (err) {
         console.warn("signoff: notify next signer failed", err);
       }
@@ -354,7 +365,9 @@ export async function POST(
     }
 
     const [updated] = await db.select().from(signoffs).where(eq(signoffs.id, id)).limit(1);
-    return NextResponse.json(updated);
+    // The milestone rides along so the signer's own screen can say what the
+    // signature achieved; the row itself is unchanged for older callers.
+    return NextResponse.json({ ...updated, milestone });
   } catch (error) {
     console.error("Failed to sign:", error);
     return NextResponse.json({ error: "Failed to sign" }, { status: 500 });

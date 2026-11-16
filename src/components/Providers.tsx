@@ -2,7 +2,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "sonner";
+import AppToaster from "@/components/AppToaster";
 import { LazyMotion } from "motion/react";
 import PreferencesProvider from "@/components/PreferencesProvider";
 
@@ -20,13 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <LazyMotion features={loadMotionFeatures} strict>
         <PreferencesProvider>{children}</PreferencesProvider>
       </LazyMotion>
-      <Toaster
-        position="top-right"
-        richColors
-        toastOptions={{
-          style: { fontFamily: "var(--font-sans)", fontSize: "13px" },
-        }}
-      />
+      <AppToaster />
     </SessionProvider>
   );
 }

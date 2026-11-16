@@ -9,15 +9,23 @@
 // Both routes and the schedule call these, so "raised" and "assigned" mean the
 // same thing wherever they happen.
 //
-// Raising a batch does not let anybody start work. The work orders it fans out
-// still need the batch's WMS, JHA and permit approved before readinessToWork()
-// lets anyone clock on (work-readiness.ts) — no document, no work.
+// A batch is ONE work order (LIMSL, 16 Nov 2026): one number, approved once by
+// the Foreman and the Maintenance Manager on the PM_BATCH chain. Each machine
+// gets a line numbered under it (WO-2026-0035/1, /2 …) that carries its own
+// checklist and history but no approval of its own; the batch's approval
+// opens every line together. Batches raised before this have one approved
+// work order per machine and no batch number, and keep working that way.
+//
+// Raising a batch does not let anybody start work. The lines still need the
+// batch's WMS, JHA and permit approved before readinessToWork() lets anyone
+// clock on (work-readiness.ts) — no document, no work.
 import { db } from "@/lib/db";
 import { pmBatches, maintenanceSchedule, equipment, workOrders, users, auditLog } from "@/lib/db/schema";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { nextDocNumber } from "@/lib/doc-number";
-import { notify } from "@/lib/notifications";
+import { notify, notifyNextSigner } from "@/lib/notifications";
+import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { raiseWorkOrder } from "./raise-work-order";
 import { categoryLabelMap } from "./asset-categories";
 
@@ -78,12 +86,15 @@ export async function raisePmBatch(input: {
   const categoryLabel = (await categoryLabelMap())[category] ?? category;
   const id = nanoid();
   const batchNumber = await nextDocNumber("PMB");
+  // One work order for the batch. Each machine's line is numbered under it.
+  const workOrderNumber = await nextDocNumber("WO");
   const activityType = machines.every((m) => m.activityType === "INS") ? "INS" : "PM";
   const title = `${activityType === "INS" ? "Inspection" : "PM"}, ${categoryLabel}, ${plannedDate}`;
 
   await db.insert(pmBatches).values({
     id,
     batchNumber,
+    workOrderNumber,
     title,
     category,
     plannedDate,
@@ -93,9 +104,10 @@ export async function raisePmBatch(input: {
     createdBy: actor.id ?? null,
   });
 
-  // One work order per machine, all pointing at the batch.
+  // One line per machine under the batch's work order. A line carries the
+  // machine's own checklist and history; the authorisation is the batch's.
   const raised: RaisedBatch["workOrders"] = [];
-  for (const m of machines) {
+  for (const [i, m] of machines.entries()) {
     const wo = await raiseWorkOrder({
       type: activityType === "INS" ? "INSPECTION" : "PREVENTIVE",
       equipmentId: m.equipmentId,
@@ -106,6 +118,7 @@ export async function raisePmBatch(input: {
       batchId: id,
       actor,
       origin: `raised under PM batch ${batchNumber}`,
+      batchLine: { workOrderNumber: `${workOrderNumber}/${i + 1}` },
     });
     raised.push({ id: wo.id, workOrderNumber: wo.workOrderNumber, equipmentId: m.equipmentId });
     await db.update(maintenanceSchedule).set({ batchId: id }).where(eq(maintenanceSchedule.id, m.scheduleId));
@@ -120,8 +133,17 @@ export async function raisePmBatch(input: {
     entityId: id,
     entityDescription:
       `${batchNumber}, ${title}, ${machines.length} machine${machines.length === 1 ? "" : "s"}, ` +
-      `work orders ${raised.map((r) => r.workOrderNumber).join(", ")}`,
+      `work order ${workOrderNumber} with lines ${raised.map((r) => r.workOrderNumber).join(", ")}`,
   });
+
+  // The batch's approval: raised by the Foreman, approved by the Maintenance
+  // Manager, once for every machine.
+  await ensureSignoffChain("PM_BATCH", id, workOrderNumber);
+  try {
+    await notifyNextSigner("PM_BATCH", id, await getSignoffChain("PM_BATCH", id), workOrderNumber);
+  } catch (err) {
+    console.warn("pm-batch: notify approver failed", err);
+  }
 
   return { ok: true, id, batchNumber, title, machineCount: machines.length, workOrders: raised };
 }

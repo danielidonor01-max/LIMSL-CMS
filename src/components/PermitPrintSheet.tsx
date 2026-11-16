@@ -96,6 +96,7 @@ export default function PermitPrintSheet({
     acceptedAt: string | null;
     closureNote: string | null;
     equipment: { name: string; assetId: string } | null;
+    machines?: { assetId: string; name: string }[];
     validity: { days: string[]; marks: Record<string, RenewalDay> } | null;
   };
   chain: SignoffStep[];
@@ -174,7 +175,11 @@ export default function PermitPrintSheet({
               <div style={{ marginBottom: "3pt" }}>
                 <strong style={{ fontWeight: 600 }}>Description of work</strong>{" "}
                 {permit.workDescription}
-                {permit.equipment ? ` (${permit.equipment.assetId}, ${permit.equipment.name})` : ""}
+                {(permit.machines?.length ?? 0) > 1
+                  ? ` (${permit.machines!.map((m) => `${m.assetId} ${m.name}`).join("; ")})`
+                  : permit.equipment
+                    ? ` (${permit.equipment.assetId}, ${permit.equipment.name})`
+                    : ""}
               </div>
               <div style={{ marginBottom: "3pt" }}>
                 <Row label="Start Date" value={dmy(permit.startDate)} />

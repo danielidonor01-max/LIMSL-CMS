@@ -16,6 +16,7 @@ import { PIN_LENGTH } from "@/lib/signing-pin";
 import { OtpInput } from "@/components/OtpInput";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { milestoneDetail, milestoneHeadline, type Milestone } from "@/lib/signoff/milestones";
 import { invalidateApi } from "@/lib/api-cache";
 
 export type QuickSignTarget = {
@@ -108,11 +109,11 @@ export default function QuickSignModal({
         return;
       }
 
-      toast.success(
-        submitAction === "sign"
-          ? `${target.code ?? target.kind} signed successfully.`
-          : `${target.code ?? target.kind} returned for changes.`,
-      );
+      const doc = target.code ?? target.kind;
+      const m = d.milestone as Milestone | null | undefined;
+      if (submitAction !== "sign") toast.success(`${doc} returned for changes.`);
+      else if (m && m.kind !== "SIGNED") toast.success(milestoneHeadline(m, doc), { description: milestoneDetail(m) });
+      else toast.success(`${doc} signed.`, { description: m ? milestoneDetail(m) : undefined });
 
       invalidateApi("/api/approvals");
       invalidateApi("/api/approvals/flows");

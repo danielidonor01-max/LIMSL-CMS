@@ -30,6 +30,39 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     const chain = await getSignoffChain("JHA", id);
 
+    // Every revision of this analysis: followed both ways along supersedesId,
+    // so opening any revision shows the whole history.
+    const all = await db
+      .select({
+        id: jhaDocuments.id,
+        jhaNumber: jhaDocuments.jhaNumber,
+        title: jhaDocuments.title,
+        revision: jhaDocuments.revision,
+        status: jhaDocuments.status,
+        changeSummary: jhaDocuments.changeSummary,
+        preparedByName: jhaDocuments.preparedByName,
+        preparedDate: jhaDocuments.preparedDate,
+        approvedAt: jhaDocuments.approvedAt,
+        createdAt: jhaDocuments.createdAt,
+        supersedesId: jhaDocuments.supersedesId,
+      })
+      .from(jhaDocuments);
+    const lineage = new Set<string>([row.id]);
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const d of all) {
+        const linked =
+          (lineage.has(d.id) && d.supersedesId && !lineage.has(d.supersedesId)) ||
+          (!lineage.has(d.id) && d.supersedesId && lineage.has(d.supersedesId));
+        if (!linked) continue;
+        lineage.add(lineage.has(d.id) ? d.supersedesId! : d.id);
+        grew = true;
+      }
+    }
+    const revisions = all
+      .filter((d) => lineage.has(d.id))
+      .sort((a, b) => (b.revision ?? 0) - (a.revision ?? 0));
+
     return NextResponse.json({
       ...row,
       wms: wms ? { id: wms.id, wmsNumber: wms.wmsNumber, title: wms.title, status: wms.status } : null,
@@ -38,6 +71,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         : null,
       equipment: eqRow ? { id: eqRow.id, name: eqRow.name, assetId: eqRow.assetId } : null,
       approval: chainSummary(chain),
+      revisions,
     });
   } catch (error) {
     console.error("Failed to fetch JHA:", error);

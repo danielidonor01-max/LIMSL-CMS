@@ -18,6 +18,7 @@ import {
   procedureRevisions,
   pmChecklists,
   assetCategoryChanges,
+  pmBatches,
 } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { entityHref } from "./inbox";
@@ -59,6 +60,11 @@ export async function describeEntities(
       title: r.title,
       code: r.workOrderNumber,
       subtitle: r.equipmentName ?? null,
+    })),
+    load("PM_BATCH", pmBatches, (r: any) => ({
+      title: r.title,
+      code: r.workOrderNumber ?? r.batchNumber,
+      subtitle: `Batch ${r.batchNumber}`,
     })),
     load("CORRECTIVE", correctiveMaintenance, (r: any) => ({
       title: r.faultDescription || r.equipmentName || "Corrective record",

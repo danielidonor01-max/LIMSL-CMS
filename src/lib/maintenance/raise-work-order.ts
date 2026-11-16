@@ -39,6 +39,12 @@ export type RaiseWorkOrderInput = {
   actor: { id?: string | null; name?: string | null; role?: string | null };
   /** Added to the audit line, so the record says what caused the job to exist. */
   origin?: string;
+  /**
+   * A machine's line inside a batch work order: numbered under the batch
+   * (WO-2026-0035/3) rather than drawing its own number, and approved with the
+   * batch rather than on its own chain.
+   */
+  batchLine?: { workOrderNumber: string };
 };
 
 export type RaisedWorkOrder = {
@@ -52,7 +58,7 @@ export type RaisedWorkOrder = {
 
 export async function raiseWorkOrder(input: RaiseWorkOrderInput): Promise<RaisedWorkOrder> {
   const id = nanoid();
-  const workOrderNumber = await nextDocNumber("WO");
+  const workOrderNumber = input.batchLine?.workOrderNumber ?? (await nextDocNumber("WO"));
 
   const [eqRow] = await db
     .select({ criticality: equipment.criticality })
@@ -109,7 +115,9 @@ export async function raiseWorkOrder(input: RaiseWorkOrderInput): Promise<Raised
       .where(eq(maintenanceSchedule.id, input.scheduleId));
   }
 
-  await ensureSignoffChain(WO_APPROVAL_ENTITY, id, workOrderNumber);
+  // A batch line is authorised by the batch's own approval, signed once for
+  // every machine in it.
+  if (!input.batchLine) await ensureSignoffChain(WO_APPROVAL_ENTITY, id, workOrderNumber);
 
   await db.insert(auditLog).values({
     id: nanoid(),

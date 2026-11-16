@@ -26,7 +26,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { equipment, permits, emergencyContacts } from "@/lib/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
+import { permitCovers } from "@/lib/hse/permit-machines";
 import { EQUIPMENT_CATEGORY_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 import { ppeForCategory } from "@/lib/hse/category-ppe";
 // Which kinds a stranger at a machine may need, held with the labels rather
@@ -52,10 +53,14 @@ export async function GET(
 
     if (!eq_) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
 
-    const active = await db
-      .select({ id: permits.id, lotoApplied: permits.lotoApplied })
-      .from(permits)
-      .where(and(eq(permits.equipmentId, eq_.id), eq(permits.status, "ACTIVE")));
+    // A batch permit covers every machine it lists, not only the first, so a
+    // machine on it is under permit and isolation like the lead one is.
+    const active = (
+      await db
+        .select({ id: permits.id, lotoApplied: permits.lotoApplied, equipmentId: permits.equipmentId, equipmentIds: permits.equipmentIds })
+        .from(permits)
+        .where(eq(permits.status, "ACTIVE"))
+    ).filter((p) => p.equipmentId === eq_.id || permitCovers(p.equipmentIds, eq_.id));
 
     const hasLoto = active.some((p) => p.lotoApplied);
     const isSafeToOperate =

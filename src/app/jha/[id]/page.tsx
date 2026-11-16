@@ -15,6 +15,7 @@ import {
   Wrench,
   ShieldCheck,
   Printer,
+  FilePlus2,
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
@@ -22,7 +23,7 @@ import SignoffChain from "@/components/SignoffChain";
 import WmsDocumentHeader from "@/components/WmsDocumentHeader";
 import { useDocumentHistory } from "@/lib/use-document-history";
 import { formatDate } from "@/lib/utils";
-import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import { PERMIT_ISSUE_ROLES, JHA_WRITE_ROLES } from "@/lib/roles";
 import { PPE_REQUIREMENTS } from "@/lib/hse/permit-form";
 import { rate, BAND_LABEL, BAND_TONE, bandFromLegacy } from "@/lib/hse/risk-matrix";
 
@@ -95,8 +96,17 @@ export default function JhaDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // A JHA is not revised in place, so its history is its own two stages.
-  const history = useDocumentHistory("JHA", jha && !jha.error ? [jha] : [], sigTick);
+  // A JHA is revised the way a WMS is: each revision is its own document that
+  // names the one it replaces. The header prints the lineage up to the one
+  // being read, each revision's review and implementation passes in turn.
+  const lineage: any[] =
+    jha && !jha.error
+      ? (Array.isArray(jha.revisions) && jha.revisions.length ? jha.revisions : [jha]).filter(
+          (r: any) => (r.revision ?? 0) <= (jha.revision ?? 0),
+        )
+      : [];
+  const history = useDocumentHistory("JHA", lineage, sigTick);
+  const newerRevision: any = jha?.revisions?.find?.((r: any) => (r.revision ?? 0) > (jha.revision ?? 0)) ?? null;
 
   if (loading) {
     return (
@@ -138,6 +148,7 @@ export default function JhaDetailPage() {
   })();
 
   const approved = jha.status === "APPROVED";
+  const canRevise = mounted && JHA_WRITE_ROLES.includes(role ?? "") && approved && !newerRevision;
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
@@ -185,8 +196,45 @@ export default function JhaDetailPage() {
                   Raise Permit
                 </Button>
               )}
+              {canRevise && (
+                <Button variant="secondary" icon={FilePlus2} href={`/jha/new?wmsId=${jha.wmsId}&supersedes=${jha.id}`}>
+                  Revise
+                </Button>
+              )}
             </div>
           </div>
+
+          {/* Every revision, so the reader can walk the analysis back to what
+              HSE assessed before each change. */}
+          {(jha.revisions?.length ?? 0) > 1 && (
+            <div className="mt-6 pt-4 border-t border-ink-200 no-print">
+              <p className="text-xs font-semibold text-ink-500 mb-2">Revisions</p>
+              <ul className="divide-y divide-ink-100">
+                {jha.revisions.map((r: any) => (
+                  <li key={r.id} className="py-2 flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                      <span className="font-semibold text-ink-900">Rev {r.revision ?? 0}</span>
+                      <span className="text-ink-700">{r.jhaNumber}</span>
+                      <Badge className={STATUS_BADGE[r.status] ?? STATUS_BADGE.DRAFT}>
+                        {String(r.status).replace(/_/g, " ").toLowerCase()}
+                      </Badge>
+                      <span className="text-ink-500 truncate">{r.changeSummary || "First issue"}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-ink-400 tabular-nums">{formatDate(r.approvedAt ?? r.preparedDate ?? r.createdAt)}</span>
+                      {r.id === jha.id ? (
+                        <span className="text-ink-400 font-semibold">This one</span>
+                      ) : (
+                        <Link href={`/jha/${r.id}`} className="text-brand-600 hover:underline">
+                          View
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-ink-200">
             <div>

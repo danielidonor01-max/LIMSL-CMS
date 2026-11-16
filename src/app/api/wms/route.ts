@@ -1,7 +1,7 @@
 // src/app/api/wms/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { wmsDocuments, jhaDocuments, equipment, workOrders, pmBatches, auditLog, permits } from "@/lib/db/schema";
+import { wmsDocuments, jhaDocuments, equipment, workOrders, pmBatches, auditLog, permits, correctiveMaintenance } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -88,6 +88,17 @@ export async function GET() {
       }).from(permits),
     ]);
 
+    // The job a one-off method statement was written for, and the fault that
+    // raised it, so the register can say what each CM method is for.
+    const woRows = await db
+      .select({ id: workOrders.id, workOrderNumber: workOrders.workOrderNumber, cmsId: workOrders.cmsId })
+      .from(workOrders);
+    const woById = new Map(woRows.map((w) => [w.id, w]));
+    const cmRows = await db
+      .select({ id: correctiveMaintenance.id, cmrfNumber: correctiveMaintenance.cmrfNumber })
+      .from(correctiveMaintenance);
+    const cmById = new Map(cmRows.map((c) => [c.id, c]));
+
     const jhaByWmsId = new Map<string, typeof jhaRows>();
     for (const j of jhaRows) {
       if (j.wmsId) {
@@ -125,8 +136,16 @@ export async function GET() {
       const jhaPermits = primaryJha ? (permitsByJhaId.get(primaryJha.id) ?? []) : [];
       const primaryPtw = jhaPermits.find((p) => p.status === "ACTIVE") ?? jhaPermits[0] ?? null;
 
+      const wo = w.workOrderId ? woById.get(w.workOrderId) : undefined;
+      const cm = wo?.cmsId ? cmById.get(wo.cmsId) : undefined;
       return {
         ...w,
+        // PM methods are standing documents for a category; anything else is
+        // a one-off written for a corrective job.
+        type: w.category ? "PM" : "CM",
+        workOrderNumber: wo?.workOrderNumber ?? null,
+        cmrfNumber: cm?.cmrfNumber ?? null,
+        correctiveId: cm?.id ?? null,
         equipmentName: names.join(", ") || null,
         hasJha: !!primaryJha,
         jhaId: primaryJha?.id ?? null,
@@ -179,6 +198,19 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      // No method statement is tied to a single PM machine (LIMSL, 16 Nov
+      // 2026). PM is done in batches under the category's standing method;
+      // only a corrective job gets a method statement of its own.
+      if (wo.batchId || wo.type === "PREVENTIVE" || wo.type === "INSPECTION") {
+        return NextResponse.json(
+          {
+            error:
+              `${wo.workOrderNumber} is planned maintenance. PM runs under the standing method statement ` +
+              `for its category, raised from the PM batch, not one per machine.`,
+          },
+          { status: 409 },
+        );
+      }
       workOrderId = wo.id;
     }
 
@@ -207,14 +239,9 @@ export async function POST(request: Request) {
       if (!batch) return NextResponse.json({ error: "PM batch not found." }, { status: 400 });
       batchId = batch.id;
       category = category ?? batch.category;
-      if (!workOrderId) {
-        const [lead] = await db
-          .select({ id: workOrders.id })
-          .from(workOrders)
-          .where(eq(workOrders.batchId, batch.id))
-          .limit(1);
-        if (lead) workOrderId = lead.id;
-      }
+      // Deliberately no work order: the method belongs to the category, and
+      // pinning it to the batch's first machine is what made a standing PM
+      // method look like one machine's document.
     }
 
     let revision = Number(body.revision ?? 0) || 0;

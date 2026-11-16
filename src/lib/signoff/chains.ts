@@ -137,6 +137,12 @@ export const WORK_ORDER_CHAIN: ChainStep[] = [
   { role: "MAINTENANCE_MANAGER", roleLabel: "Approved to commence (Maintenance Manager)", required: true },
 ];
 
+// A PM batch is one work order (LIMSL, 16 Nov 2026). The machines in it are
+// serviced together under one method statement, one hazard analysis and one
+// permit, so management authorises them together too: one approval for the
+// batch, not one per machine. The same two people as any work order.
+export const PM_BATCH_CHAIN: ChainStep[] = WORK_ORDER_CHAIN.map((s) => ({ ...s }));
+
 // Permit-to-Work close-out. Raised once the permit is ACTIVE and the job is done:
 // the work party confirms the area is clear, then HSE confirms the isolation is
 // removed and the equipment is safe to re-energise. A permit cannot reach CLOSED
@@ -187,6 +193,7 @@ export const CHAINS: Record<string, ChainStep[]> = {
   WMS: WMS_CHAIN,
   JHA: JHA_CHAIN,
   WORK_ORDER: WORK_ORDER_CHAIN,
+  PM_BATCH: PM_BATCH_CHAIN,
   PROCEDURE: PROCEDURE_CHAIN,
   PERMIT: PTW_CHAIN,
   PERMIT_CLOSEOUT: PTW_CLOSEOUT_CHAIN,
@@ -249,4 +256,29 @@ export function isOverrideSignature(
   if (userRole === step.role) return false;
   const rule = stepRule(entityType, step);
   return !(rule?.signableBy && userRole && rule.signableBy.includes(userRole));
+}
+
+// The signature a chain is waiting on: the earliest required step still
+// pending, provided everything before it is signed. A returned chain is
+// waiting on rework, not on a signer, so it has none.
+export function nextPendingStep<T extends StepState>(chain: T[]): T | null {
+  if (chain.some((s) => s.status === "REJECTED")) return null;
+  const next = [...chain]
+    .filter((s) => s.required && s.status === "PENDING")
+    .sort((a, b) => a.stepOrder - b.stepOrder)[0];
+  return next && isStepUnlocked(chain, next.stepOrder) ? next : null;
+}
+
+// Who a pending step is waiting on, addressed the way notify() takes it. A
+// step bound to a person is that person and nobody else: the JHA waits on the
+// Foreman who wrote the WMS, not on every Foreman. A step that names its
+// signatories waits on those roles, less the Super Admin, who can cover an
+// originator's step but is not who the step is for.
+export function stepAudience(
+  entityType: string,
+  step: { stepOrder: number; role: string; signerUserId?: string | null },
+): { userIds?: string[]; roles?: string[] } {
+  if (step.signerUserId) return { userIds: [step.signerUserId] };
+  const named = stepRule(entityType, step)?.signableBy?.filter((r) => r !== "SUPER_ADMIN");
+  return { roles: named?.length ? named : [step.role] };
 }

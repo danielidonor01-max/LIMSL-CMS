@@ -622,14 +622,26 @@ export default function WorkOrderDetailPage() {
           />
         )}
         {/* Management authorising commencement. This is what the work order IS,
-            and until it is signed nothing downstream may proceed. */}
-        <SignoffChain
-          entityType="WORK_ORDER"
-          entityId={String(id)}
-          title={
-            wo.approvalRetrospective ? "Retrospective approval, required" : "Approval to commence"
-          }
-        />
+            and until it is signed nothing downstream may proceed. A line of a
+            batch work order is authorised by the batch's one approval, so
+            that is the chain shown, and signing it here signs it for every
+            machine in the batch. */}
+        {wo.batch?.workOrderNumber ? (
+          <SignoffChain
+            entityType="PM_BATCH"
+            entityId={wo.batch.id}
+            title={`Batch approval to commence, ${wo.batch.workOrderNumber} (every machine in ${wo.batch.batchNumber})`}
+            onChange={load}
+          />
+        ) : (
+          <SignoffChain
+            entityType="WORK_ORDER"
+            entityId={String(id)}
+            title={
+              wo.approvalRetrospective ? "Retrospective approval, required" : "Approval to commence"
+            }
+          />
+        )}
       </main>
 
       <AssignPeople

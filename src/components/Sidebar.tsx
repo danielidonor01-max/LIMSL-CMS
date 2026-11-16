@@ -38,6 +38,7 @@ import {
   PenLine,
   ClipboardCheck,
   LifeBuoy,
+  FileSearch,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath } from "@/lib/roles";
 import AccountMenu from "@/components/AccountMenu";
@@ -62,6 +63,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/equipment", label: "Equipment", icon: Layers },
       { href: "/asset-categories", label: "Asset Categories", icon: Tags },
       { href: "/documents", label: "Documents", icon: FolderOpen },
+      { href: "/document-control", label: "Document Control", icon: FileSearch },
       { href: "/procedure", label: "Maint. Procedure", icon: BookText },
     ],
   },
@@ -149,6 +151,29 @@ export default function Sidebar({
   // Collapsing is a desktop affordance. On a phone the sidebar is a drawer that
   // is already hidden, and an icon-only rail there would just be a second menu.
   const narrow = collapsed && !mobileOpen;
+
+  // Modules with something waiting on this person: a signature, a document to
+  // raise, work on their list. The dot stays until the work is done, not until
+  // a notification is read, so it is re-read on every move and once a minute.
+  const [attention, setAttention] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!mounted || !user) return;
+    let live = true;
+    const read = () =>
+      fetch("/api/attention")
+        .then((r) => (r.ok ? r.json() : { modules: [] }))
+        .then((d: { modules?: string[] }) => live && setAttention(new Set(d.modules ?? [])))
+        .catch(() => {});
+    read();
+    const t = setInterval(read, 60_000);
+    const onFocus = () => document.visibilityState === "visible" && read();
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      live = false;
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [mounted, user, pathname]);
 
   // The mobile drawer could only be dismissed by tapping the backdrop, no key
   // closed it, which for a keyboard user is a dead end.
@@ -252,6 +277,7 @@ export default function Sidebar({
             {s.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
+              const waiting = attention.has(item.href);
               return (
                 <div key={item.href} className="relative">
                   {/* One highlight that slides between items, so the eye follows
@@ -275,7 +301,9 @@ export default function Sidebar({
                     onClick={onClose}
                     aria-current={active ? "page" : undefined}
                     title={narrow ? item.label : undefined}
-                    aria-label={narrow ? item.label : undefined}
+                    aria-label={
+                      narrow || waiting ? `${item.label}${waiting ? ", needs your attention" : ""}` : undefined
+                    }
                     className={`relative z-10 flex items-center gap-3 min-h-11 lg:min-h-0 lg:py-2 rounded-lg text-sm transition-[color,background-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 ${
                       narrow ? "lg:justify-center lg:px-0 px-3" : "px-3"
                     } ${
@@ -284,10 +312,28 @@ export default function Sidebar({
                         : "text-nav-text font-medium hover:text-white hover:bg-nav-raised/50"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-brand-400" : "text-nav-text"}`} />
+                    <span className="relative shrink-0">
+                      <Icon className={`w-4 h-4 transition-colors ${active ? "text-brand-400" : "text-nav-text"}`} />
+                      {/* On the narrow rail the label is hidden, so the dot
+                          rides on the icon instead. */}
+                      {waiting && narrow && (
+                        <span
+                          className="hidden lg:block absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand-500 ring-2 ring-nav"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </span>
                     <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
-                    {active && !narrow && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 shrink-0" aria-hidden="true" />
+                    {waiting ? (
+                      <span
+                        className={`ml-auto w-2 h-2 rounded-full bg-brand-500 ring-2 ring-brand-500/25 shrink-0 ${narrow ? "lg:hidden" : ""}`}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      active &&
+                      !narrow && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 shrink-0" aria-hidden="true" />
+                      )
                     )}
                   </Link>
                 </div>

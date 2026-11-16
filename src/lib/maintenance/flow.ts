@@ -83,9 +83,9 @@ export const PM_FLOW: FlowStep[] = [
     label: "Work orders",
     doc: "WORK_ORDER",
     roles: [],
-    action: "Sign the work orders raised for the machines in this batch",
-    cta: "Open work orders",
-    because: "A work order is the authorisation to do the job. No PM starts without one.",
+    action: "Approve the batch work order, once for every machine in the batch",
+    cta: "Open the approval",
+    because: "The work order is the authorisation to do the job. The Foreman raises it and the Maintenance Manager approves it; no permit is issued and no PM starts without it.",
   },
   {
     key: "WMS",
@@ -245,6 +245,8 @@ export type FlowFacts = {
   assignedToId?: string | null;
   /** Work orders belonging to the job. */
   workOrderCount?: number;
+  /** PM only: the batch work order is approved (or, on an older batch, every machine's). */
+  workOrderApproved?: boolean;
   wmsStatus?: string | null;
   jhaStatus?: string | null;
   permitStatus?: string | null;
@@ -292,7 +294,7 @@ export function pmFlowState(facts: FlowFacts): FlowState {
       case "ASSIGN":
         return !!facts.assignedToId;
       case "WORK_ORDER":
-        return (facts.workOrderCount ?? 0) > 0;
+        return facts.workOrderApproved ?? (facts.workOrderCount ?? 0) > 0;
       case "WMS":
         return APPROVED(facts.wmsStatus);
       case "JHA":

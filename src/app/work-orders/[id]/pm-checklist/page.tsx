@@ -215,7 +215,16 @@ export default function PMChecklistPage() {
         throw new Error(d.error || "Submit failed");
       }
       clearDraft();
-      toast.success("PM checklist filed.");
+      const filed = await outcome.response.json().catch(() => ({}));
+      // The last machine in a batch finishes the batch: say so, it is the
+      // milestone the whole crew was working towards.
+      if (filed?.batchCompleted?.batchNumber) {
+        toast.success(`PM batch ${filed.batchCompleted.batchNumber} completed`, {
+          description: "Every machine in the batch has its checklist filed. They now go for verification.",
+        });
+      } else {
+        toast.success("PM checklist filed.");
+      }
       router.push(`/work-orders/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");

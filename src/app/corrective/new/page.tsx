@@ -11,6 +11,14 @@ import MachineSelect from "@/components/MachineSelect";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import Field, { FIELD_CLASS } from "@/components/Field";
+import DateTimeField from "@/components/DateTimeField";
+
+// "YYYY-MM-DDTHH:MM" in the plant's own clock, the shape the record stores.
+const localNow = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
 import { submitOrQueue } from "@/lib/offline/use-outbox";
 import { invalidateApi } from "@/lib/api-cache";
 
@@ -28,6 +36,11 @@ export default function NewCorrectiveRequest() {
   const [operatingStatusAtFailure, setOperatingStatusAtFailure] = useState("RUNNING");
   const [errorCodes, setErrorCodes] = useState("");
   const [environmentalCondition, setEnvironmentalCondition] = useState("");
+  // When the fault happened, which is often not when it is reported: a night
+  // shift breakdown gets written up in the morning. Set after mount so the
+  // server render and the first client paint agree.
+  const [faultOccurredAt, setFaultOccurredAt] = useState("");
+  useEffect(() => setFaultOccurredAt(localNow()), []);
 
   useEffect(() => {
     async function loadEquipment() {
@@ -55,6 +68,8 @@ export default function NewCorrectiveRequest() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!equipmentId) return;
+    if (!faultOccurredAt) return toast.error("Say when the fault happened.");
+    if (faultOccurredAt > localNow()) return toast.error("The fault cannot have happened in the future.");
 
     setSaving(true);
     try {
@@ -72,6 +87,7 @@ export default function NewCorrectiveRequest() {
           operatingStatusAtFailure,
           errorCodes,
           environmentalCondition,
+          faultOccurredAt,
         },
       });
 
@@ -176,6 +192,19 @@ export default function NewCorrectiveRequest() {
               </Select>
             </Field>
           </div>
+
+          <Field
+            label="When did the fault happen?"
+            required
+            help="Set the real date and time if you are reporting it later. Downtime is counted from here, not from when the report was written."
+          >
+            <DateTimeField
+              value={faultOccurredAt}
+              onChange={setFaultOccurredAt}
+              max={localNow()}
+              ariaLabel="When the fault happened"
+            />
+          </Field>
 
           {/* Fault Description */}
           <Field

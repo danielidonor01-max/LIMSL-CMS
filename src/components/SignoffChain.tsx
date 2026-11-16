@@ -15,15 +15,27 @@
 import Button from "@/components/Button";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Check, Lock, Loader2, PenLine, ShieldCheck, Undo2, X } from "lucide-react";
+import { BellRing, Check, Lock, Loader2, PenLine, ShieldCheck, Undo2, X } from "lucide-react";
+import { toast } from "sonner";
 import SignatureBlock from "@/components/SignatureBlock";
 import { Badge } from "@/components/Badge";
 import Field, { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
-import { formatDate } from "@/lib/utils";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 import { ROLE_BADGE, ROLE_LABELS } from "@/lib/roles";
 import { isStepUnlocked, chainSummary, canSignChainStep, passOf } from "@/lib/signoff/chains";
 import { PIN_LENGTH } from "@/lib/signing-pin";
 import { invalidateApi } from "@/lib/api-cache";
+import { entityLabel } from "@/lib/signoff/inbox";
+import { milestoneDetail, milestoneHeadline, type Milestone } from "@/lib/signoff/milestones";
+
+type PingState = {
+  canPing: boolean;
+  reason: string | null;
+  waitingOn: { stepOrder: number; roleLabel: string; who: string } | null;
+  lastPingAt: string | null;
+  allowed: boolean;
+  nextAt: string | null;
+};
 
 type Step = {
   id: string;
@@ -73,13 +85,55 @@ export default function SignoffChain({
   const [overrideReason, setOverrideReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ping, setPing] = useState<PingState | null>(null);
+  const [pinging, setPinging] = useState(false);
+
+  const loadPing = useCallback(() => {
+    fetch(`/api/signoffs/ping?entityType=${entityType}&entityId=${entityId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: PingState | null) => setPing(d))
+      .catch(() => setPing(null));
+  }, [entityType, entityId]);
 
   const load = useCallback(() => {
     fetch(`/api/signoffs?entityType=${entityType}&entityId=${entityId}`)
       .then((r) => r.json())
       .then((d) => setChain(Array.isArray(d) ? d : []))
       .finally(() => setLoading(false));
-  }, [entityType, entityId]);
+    loadPing();
+  }, [entityType, entityId, loadPing]);
+
+  // Re-read when the half hour is up, so the button comes back on its own.
+  useEffect(() => {
+    if (!ping?.nextAt) return;
+    const wait = Math.max(1_000, Date.parse(ping.nextAt) - Date.now() + 1_000);
+    const t = setTimeout(loadPing, wait);
+    return () => clearTimeout(t);
+  }, [ping?.nextAt, loadPing]);
+
+  // Reminding the next signer. The server holds the 30-minute rule; the
+  // button only mirrors it so nobody presses into a refusal.
+  const sendPing = async () => {
+    setPinging(true);
+    try {
+      const res = await fetch("/api/signoffs/ping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType, entityId }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not send the ping");
+      } else {
+        toast.success(`Pinged ${d.waitingOn?.who ?? "the next signer"}`, {
+          description: "They have been notified. You can ping again in 30 minutes.",
+        });
+      }
+      if (d && typeof d === "object" && "canPing" in d) setPing(d as PingState);
+    } finally {
+      setPinging(false);
+    }
+  };
 
   useEffect(load, [load]);
 
@@ -125,10 +179,20 @@ export default function SignoffChain({
       }),
     });
     setSaving(false);
+    const d = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const d = await res.json();
       setError(d.error || (action === "reject" ? "Failed to return" : "Failed to sign"));
       return;
+    }
+    // Say what the signature did. Signing used to change one marker and
+    // nothing else, which left people unsure it had gone through.
+    if (action === "reject") {
+      toast.success("Returned for rework", { description: "Whoever raised it has been told what needs changing." });
+    } else {
+      const m = d.milestone as Milestone | null | undefined;
+      const doc = entityLabel(entityType);
+      if (m && m.kind !== "SIGNED") toast.success(milestoneHeadline(m, doc), { description: milestoneDetail(m) });
+      else toast.success("Signed", { description: m ? milestoneDetail(m) : undefined });
     }
     setOpenStep(null);
     setPin("");
@@ -257,7 +321,7 @@ export default function SignoffChain({
 
                       {signed && step.signedByName && (
                         <p className="text-xs text-ink-500 mt-1.5">
-                          Signed by {step.signedByName} · {formatDate(step.signedAt)}
+                          Signed by {step.signedByName} · {formatDateTime(step.signedAt)}
                         </p>
                       )}
 
@@ -287,6 +351,26 @@ export default function SignoffChain({
                         drawn={step.signatureData}
                         className="hidden sm:block max-w-[13rem]"
                       />
+                    )}
+                    {current && !canSign && ping?.canPing && ping.waitingOn?.stepOrder === step.stepOrder && (
+                      <div className="flex flex-col items-end gap-1">
+                        <Button
+                          onClick={sendPing}
+                          icon={BellRing}
+                          size="sm"
+                          loading={pinging}
+                          disabled={!ping.allowed}
+                        >
+                          {ping.allowed ? "Ping" : "Pinged"}
+                        </Button>
+                        {ping.lastPingAt && (
+                          <span className="text-xs text-ink-500 text-right">
+                            Last ping {timeAgo(ping.lastPingAt) || formatDateTime(ping.lastPingAt)}
+                            {ping.nextAt &&
+                              ` · again at ${new Date(ping.nextAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`}
+                          </span>
+                        )}
+                      </div>
                     )}
                     {canSign && !isOpen && (
                       <Button

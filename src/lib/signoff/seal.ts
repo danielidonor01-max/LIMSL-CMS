@@ -62,6 +62,11 @@ async function contentFor(entityType: string, entityId: string): Promise<Content
           validityDays: r.validityDays,
           permitHolderId: r.permitHolderId,
           workTypes: r.workTypes,
+          // Every machine a batch permit covers is part of what was signed.
+          // Added only when present, so a seal taken before these existed
+          // still recomputes to the same hash.
+          ...(r.equipmentIds ? { equipmentIds: r.equipmentIds } : {}),
+          ...(r.batchId ? { batchId: r.batchId } : {}),
         },
       };
     }

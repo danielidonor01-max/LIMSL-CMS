@@ -86,6 +86,8 @@ type Permit = {
   closureReason: string | null;
   closureNote: string | null;
   equipment: { name: string; assetId: string; location: string | null } | null;
+  machines?: { id: string; name: string; assetId: string; location: string | null }[];
+  batch?: { id: string; batchNumber: string; workOrderNumber: string | null; title: string } | null;
   wms: { id: string; wmsNumber: string; title: string; status: string } | null;
   jhaDocument: { id: string; jhaNumber: string; title: string; status: string; steps: string | null } | null;
   workOrder: { id: string; workOrderNumber: string; title: string; status: string } | null;
@@ -291,6 +293,33 @@ export default function PermitDetail() {
                   </span>
                 )}
               </div>
+              {(permit.machines?.length ?? 0) > 1 ? (
+                <div className="mt-2">
+                  <h2 className="text-xl font-bold tracking-tight">
+                    {permit.batch ? (
+                      <Link href={`/pm-batches/${permit.batch.id}`} className="hover:text-brand-600 hover:underline">
+                        {permit.batch.workOrderNumber ?? permit.batch.batchNumber}
+                      </Link>
+                    ) : null}
+                    {permit.batch ? " · " : ""}
+                    {permit.machines!.length} machines
+                  </h2>
+                  {/* One permit, every machine in the batch: each is named, so
+                      nobody has to open the batch to learn what is isolated. */}
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {permit.machines!.map((m) => (
+                      <li key={m.id}>
+                        <Link
+                          href={`/equipment/${m.assetId.replace(/\//g, "-")}`}
+                          className="text-xs px-2 py-1 rounded-lg bg-ink-100 text-ink-700 border border-line hover:border-brand-400 inline-block"
+                        >
+                          {m.assetId} · {m.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
               <h2 className="text-xl font-bold tracking-tight mt-2">
                 {permit.equipment?.assetId ? (
                   <Link
@@ -303,6 +332,7 @@ export default function PermitDetail() {
                 {"-"}
                 {permit.equipment?.name}
               </h2>
+              )}
             </div>
             <div className="flex flex-col gap-2 shrink-0 no-print">
               <button

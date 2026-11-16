@@ -137,6 +137,11 @@ export const users = pgTable("users", {
 export const pmBatches = pgTable("pm_batches", {
   id: text("id").primaryKey(),
   batchNumber: text("batch_number").notNull().unique(), // PMB-2026-XXXX
+  // The batch's one work order number (LIMSL, 16 Nov 2026). Each machine's
+  // line is numbered under it, WO-2026-0035/1, /2 and so on, and the batch is
+  // approved once. Null on batches raised before that, whose machines carry
+  // their own numbers and were approved one by one.
+  workOrderNumber: text("work_order_number").unique(),
   title: text("title").notNull(),
   category: text("category").notNull(), // equipment.category
   plannedDate: text("planned_date").notNull(),
@@ -537,6 +542,10 @@ export const permits = pgTable("permits", {
   closedAt: text("closed_at"),
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   batchId: text("batch_id"),
+  // Every machine the permit covers, as a JSON array of equipment ids. A PM
+  // batch is serviced under one permit, so the permit names all of them;
+  // equipmentId above stays the first, for the screens that show one.
+  equipmentIds: text("equipment_ids"),
 });
 
 // ─── Corrective Maintenance (full lifecycle) ────────────────────────────────

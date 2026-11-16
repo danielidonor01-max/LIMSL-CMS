@@ -1,8 +1,9 @@
 // src/app/api/permits/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, auditLog, wmsDocuments, jhaDocuments, workOrders } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { permits, equipment, auditLog, wmsDocuments, jhaDocuments, workOrders, pmBatches } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { permitMachines } from "@/lib/hse/permit-machines";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { PERMIT_WRITE_ROLES } from "@/lib/roles";
@@ -29,6 +30,28 @@ export async function GET(
       .from(equipment)
       .where(eq(equipment.id, permit.equipmentId))
       .limit(1);
+
+    // Every machine the permit covers, in the order the permit lists them.
+    const machineIds = permitMachines(permit.equipmentIds, permit.equipmentId);
+    const machineRows = machineIds.length
+      ? await db
+          .select({ id: equipment.id, assetId: equipment.assetId, name: equipment.name, location: equipment.location })
+          .from(equipment)
+          .where(inArray(equipment.id, machineIds))
+      : [];
+    const machines = machineIds
+      .map((mid) => machineRows.find((m) => m.id === mid))
+      .filter((m): m is (typeof machineRows)[number] => !!m);
+
+    let batch = null;
+    if (permit.batchId) {
+      const [b] = await db
+        .select({ id: pmBatches.id, batchNumber: pmBatches.batchNumber, workOrderNumber: pmBatches.workOrderNumber, title: pmBatches.title })
+        .from(pmBatches)
+        .where(eq(pmBatches.id, permit.batchId))
+        .limit(1);
+      batch = b ?? null;
+    }
 
     const approvalChain = await getSignoffChain("PERMIT", id);
     const closeoutChain = await getSignoffChain("PERMIT_CLOSEOUT", id);
@@ -85,6 +108,8 @@ export async function GET(
     return NextResponse.json({
       ...permit,
       equipment: eq1 ?? null,
+      machines,
+      batch,
       wms,
       jhaDocument: jha,
       workOrder,

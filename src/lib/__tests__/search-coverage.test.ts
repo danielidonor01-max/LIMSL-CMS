@@ -68,6 +68,9 @@ test("no page-level module has appeared without being considered for search", ()
     // here. Indexing it would return the same work order twice.
     "approvals",
     "my-tasks",
+    // The document control register: a view over every numbered record of
+    // the modules above, each already findable in search under its own type.
+    "document-control",
     // A lookup BY code, which is its whole purpose. Indexing it would put a
     // form in the results rather than a record.
     "verify",

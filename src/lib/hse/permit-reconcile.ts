@@ -62,6 +62,10 @@ async function raiseSuccessor(previous: PermitRow, today: string) {
     taskNo: previous.taskNo,
     workOrderId: previous.workOrderId,
     equipmentId: previous.equipmentId,
+    // A batch permit's successor covers the same batch and the same machines;
+    // without these it would reach only the batch's first machine.
+    batchId: previous.batchId,
+    equipmentIds: previous.equipmentIds,
     workDescription: previous.workDescription,
     hazardsIdentified: previous.hazardsIdentified,
     controlMeasures: previous.controlMeasures,

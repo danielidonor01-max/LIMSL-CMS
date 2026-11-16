@@ -15,7 +15,7 @@
 // authorising, and the permit is what allows that.
 import { db } from "@/lib/db";
 import { workOrders } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 
@@ -35,6 +35,14 @@ export async function reconcileWorkOrderApprovals() {
   const retrospective = (
     await db.select().from(workOrders).where(eq(workOrders.approvalRetrospective, true))
   ).filter((wo) => !wo.approvedAt && wo.status !== "CANCELLED");
+
+  // A batch's lines carry no chain of their own; the batch's approval is
+  // theirs. Each approved batch opens all of its lines at once.
+  const batchIds = [...new Set(waiting.filter((w) => w.batchId).map((w) => w.batchId!))];
+  for (const batchId of batchIds) {
+    const chain = await getSignoffChain(BATCH_APPROVAL_ENTITY, batchId);
+    if (chain.length && chainSummary(chain).complete) await approveBatchLines(batchId);
+  }
 
   for (const wo of [...waiting, ...retrospective]) {
     const chain = await getSignoffChain(WO_APPROVAL_ENTITY, wo.id);
@@ -60,6 +68,33 @@ export async function reconcileWorkOrderApprovals() {
       .where(eq(workOrders.id, wo.id));
   }
 }
+
+export const BATCH_APPROVAL_ENTITY = "PM_BATCH";
+
+// Open every line of an approved batch. The approver of record is whoever
+// signed the batch's last step, exactly as for a single work order.
+export async function approveBatchLines(batchId: string) {
+  const chain = await getSignoffChain(BATCH_APPROVAL_ENTITY, batchId);
+  if (!chain.length || !chainSummary(chain).complete) return 0;
+  const approver = [...chain]
+    .filter((s) => s.status === "SIGNED")
+    .sort((a, b) => b.stepOrder - a.stepOrder)[0];
+  const now = new Date().toISOString();
+  const opened = await db
+    .update(workOrders)
+    .set({
+      status: "OPEN",
+      approvedById: approver?.signedById ?? null,
+      approvedByName: approver?.signedByName ?? null,
+      approvedAt: now,
+      updatedAt: now,
+    })
+    .where(and(eq(workOrders.batchId, batchId), eq(workOrders.status, "PENDING_APPROVAL")))
+    .returning({ id: workOrders.id });
+  return opened.length;
+}
+
+export { batchAuthorisation } from "@/lib/maintenance/batch-authorisation";
 
 // Work orders created before the gate existed are already OPEN and stay OPEN.
 // Retro-fitting an approval requirement onto live jobs would strand work in the

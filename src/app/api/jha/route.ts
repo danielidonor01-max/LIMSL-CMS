@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { jhaDocuments, wmsDocuments, equipment, auditLog, pmBatches } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { rate, blockingSteps } from "@/lib/hse/risk-matrix";
@@ -28,6 +28,14 @@ export async function reconcileJha() {
         .update(jhaDocuments)
         .set({ status: "APPROVED", approvedAt: new Date().toISOString() })
         .where(eq(jhaDocuments.id, r.id));
+      // A revision in force retires the one it replaced. The old one stays on
+      // record as SUPERSEDED, the way a revised WMS is kept.
+      if (r.supersedesId) {
+        await db
+          .update(jhaDocuments)
+          .set({ status: "SUPERSEDED" })
+          .where(and(eq(jhaDocuments.id, r.supersedesId), eq(jhaDocuments.status, "APPROVED")));
+      }
     } else if (chain.some((s) => s.status === "REJECTED")) {
       await db.update(jhaDocuments).set({ status: "REJECTED" }).where(eq(jhaDocuments.id, r.id));
     }
@@ -54,6 +62,12 @@ export async function GET() {
         wmsId: jhaDocuments.wmsId,
         wmsNumber: wmsDocuments.wmsNumber,
         workOrderId: jhaDocuments.workOrderId,
+        // The permit form reads these to tell a standing PM analysis, which
+        // covers a batch, from a one-off CM analysis, which covers one job.
+        // Without them every analysis looked like a one-off.
+        category: jhaDocuments.category,
+        batchId: jhaDocuments.batchId,
+        supersedesId: jhaDocuments.supersedesId,
         equipmentId: jhaDocuments.equipmentId,
         equipmentName: equipment.name,
         assetId: equipment.assetId,

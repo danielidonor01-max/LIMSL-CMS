@@ -37,6 +37,8 @@ export const NOTIFY_EVENTS: Array<{
   { event: "PM_SIGN_REQUEST", label: "PM sign-off requests", desc: "A PM checklist approval step is ready", personal: false, defaultRoles: null },
   { event: "PROCEDURE_SIGN_REQUEST", label: "Procedure sign-off requests", desc: "A procedure revision step is ready", personal: false, defaultRoles: null },
   { event: "WO_SIGN_REQUEST", label: "Work order sign-off requests", desc: "Approval to commence or raise a work order", personal: false, defaultRoles: null },
+  { event: "SIGN_PING", label: "Sign-off reminders (Ping)", desc: "Someone who has signed a document reminds the next signer, at most every 30 minutes", personal: true, defaultRoles: null },
+  { event: "MILESTONE", label: "Progress milestones", desc: "A document finishes a signing pass, a batch is cleared to start, a PM batch is completed", personal: true, defaultRoles: null },
   { event: "GENERAL", label: "General & assignments", desc: "Work-order assignments, rejections and other direct notices", personal: true, defaultRoles: null },
 ];
 

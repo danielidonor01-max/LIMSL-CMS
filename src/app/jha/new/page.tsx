@@ -70,6 +70,41 @@ function NewJhaForm() {
   const [ppe, setPpe] = useState<string[]>([]);
   const [steps, setSteps] = useState<StepRow[]>([emptyStep()]);
   const [showWmsSteps, setShowWmsSteps] = useState(true);
+  // What changed in this revision. Required on a revision: the revision
+  // history prints it, and "Rev 2" with no reason is not traceability.
+  const [changeSummary, setChangeSummary] = useState("");
+  const [revising, setRevising] = useState<{ jhaNumber: string; revision: number } | null>(null);
+
+  // A revision starts from the analysis it revises, not from a blank page:
+  // the hazards already assessed stay assessed unless someone changes them.
+  useEffect(() => {
+    if (!supersedesId) return;
+    fetch(`/api/jha/${supersedesId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((prev) => {
+        if (!prev) return;
+        setRevising({ jhaNumber: prev.jhaNumber, revision: prev.revision ?? 0 });
+        if (prev.wmsId && !searchParams.get("wmsId")) setWmsId(prev.wmsId);
+        setTitle((t) => t || prev.title || "");
+        if (prev.equipmentId) setEquipmentId(prev.equipmentId);
+        if (prev.workArea) setWorkArea(prev.workArea);
+        if (prev.emergencyArrangements) setEmergencyArrangements(prev.emergencyArrangements);
+        try {
+          const p = JSON.parse(prev.ppeRequired ?? "[]");
+          if (Array.isArray(p)) setPpe(p);
+        } catch {
+          // keep the defaults
+        }
+        try {
+          const st = JSON.parse(prev.steps ?? "[]");
+          if (Array.isArray(st) && st.length) setSteps(st.map((x: Partial<StepRow>) => ({ ...emptyStep(), ...x })));
+        } catch {
+          // keep the defaults
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supersedesId]);
 
   useEffect(() => {
     fetch("/api/wms")
@@ -121,6 +156,10 @@ function NewJhaForm() {
       toast.error("Select the approved Work Method Statement this analysis covers.");
       return;
     }
+    if (supersedesId && changeSummary.trim().length < 5) {
+      toast.error("Say what changed in this revision.");
+      return;
+    }
     const usable = steps.filter((s) => s.step.trim() && s.hazards.trim() && s.controls.trim());
     if (usable.length === 0) {
       toast.error("Add at least one job step with its hazards and controls.");
@@ -135,6 +174,7 @@ function NewJhaForm() {
         body: JSON.stringify({
           wmsId,
           supersedesId: supersedesId || undefined,
+          changeSummary: supersedesId ? changeSummary.trim() : undefined,
           title: title.trim(),
           equipmentId: equipmentId || null,
           category: selectedCategory || null,
@@ -230,6 +270,25 @@ function NewJhaForm() {
                   : "Only approved method statements appear here. Analysing an unapproved method assesses work that may still change."}
               </p>
             </div>
+
+            {supersedesId && (
+              <div>
+                <label className={LABEL_CLASS} htmlFor="jha-change">
+                  What changed{revising ? ` from ${revising.jhaNumber} rev ${revising.revision}` : ""}
+                </label>
+                <input
+                  id="jha-change"
+                  value={changeSummary}
+                  onChange={(e) => setChangeSummary(e.target.value)}
+                  placeholder="e.g. Added working-at-height controls for the new gantry"
+                  className={FIELD_CLASS}
+                />
+                <p className="text-xs text-ink-500 mt-1">
+                  Printed in the revision history. The earlier revision stays on record and is retired once
+                  this one is approved.
+                </p>
+              </div>
+            )}
 
             <div>
               <label className={LABEL_CLASS}>Title</label>

@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import { m, AnimatePresence, useReducedMotion } from "motion/react";
 import { useUserPrefs } from "@/components/PreferencesProvider";
@@ -16,6 +17,10 @@ import Tooltip from "@/components/Tooltip";
 // reachable) but the badge is hidden and polling stops.
 export default function NotificationBell() {
   const pathname = usePathname();
+  const router = useRouter();
+  // Notifications already toasted, so a refocus or a route change never shows
+  // the same one twice.
+  const toasted = useRef<Set<string>>(new Set());
   const { prefs } = useUserPrefs();
   const [mounted, setMounted] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -62,6 +67,32 @@ export default function NotificationBell() {
     }
   };
 
+  // What just arrived, said on screen. The badge counts; the toast tells you
+  // what happened: a WMS signed, a batch cleared to start, a ping waiting on
+  // you, so nobody has to open the inbox to learn their next move.
+  const toastArrivals = async (delta: number) => {
+    try {
+      const res = await fetch("/api/notifications?latest=1");
+      if (!res.ok) return;
+      const { latest } = (await res.json()) as {
+        latest?: { id: string; event: string; title: string; body: string; linkPath: string | null }[];
+      };
+      const fresh = (latest ?? []).filter((n) => !toasted.current.has(n.id)).slice(0, Math.min(delta, 3));
+      for (const n of fresh) {
+        toasted.current.add(n.id);
+        const show = n.event === "MILESTONE" ? toast.success : n.event === "SIGN_PING" ? toast.warning : toast;
+        show(n.title, {
+          description: n.body,
+          duration: 8000,
+          style: { "--toast-duration": "8000ms" } as React.CSSProperties,
+          action: n.linkPath ? { label: "Open", onClick: () => router.push(n.linkPath!) } : undefined,
+        });
+      }
+    } catch {
+      /* the badge still shows it */
+    }
+  };
+
   useEffect(() => {
     if (!mounted || !prefs.notifyInApp) return;
     let alive = true;
@@ -74,6 +105,7 @@ export default function NotificationBell() {
         const next = d.unread ?? 0;
         if (prevUnread.current !== null && next > prevUnread.current) {
           announce(next, next - prevUnread.current);
+          toastArrivals(next - prevUnread.current);
         }
         prevUnread.current = next;
         setUnread(next);

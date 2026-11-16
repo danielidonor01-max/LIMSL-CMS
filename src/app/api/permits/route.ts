@@ -22,7 +22,7 @@ import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
-import { approvalBlockMessage } from "@/lib/work-order-approval";
+import { approvalBlockMessage, batchAuthorisation } from "@/lib/work-order-approval";
 import {
   DEFAULT_PERMIT_VALIDITY_DAYS,
   normaliseValidityDays,
@@ -115,7 +115,9 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    if (!body.equipmentId || !body.workDescription) {
+    // A batch permit takes its machines from the batch, so only a permit for
+    // one job has to name its machine.
+    if ((!body.equipmentId && !body.batchId) || !body.workDescription) {
       return NextResponse.json(
         { error: "Equipment and work description are required." },
         { status: 400 },
@@ -242,6 +244,7 @@ export async function POST(request: Request) {
     const standing = !!jhaDoc.category;
     let permitBatchId: string | null = standing ? null : (jhaDoc.batchId ?? null);
     let batchLeadWorkOrderId: string | null = null;
+    let batchEquipmentIds: string[] = [];
     if (body.batchId) {
       const [b] = await db.select().from(pmBatches).where(eq(pmBatches.id, String(body.batchId))).limit(1);
       if (!b) return NextResponse.json({ error: "PM batch not found." }, { status: 400 });
@@ -271,16 +274,38 @@ export async function POST(request: Request) {
       }
       permitBatchId = b.id;
       const batchWos = await db
-        .select({ id: workOrders.id, status: workOrders.status })
+        .select({
+          id: workOrders.id,
+          status: workOrders.status,
+          workOrderNumber: workOrders.workOrderNumber,
+          equipmentId: workOrders.equipmentId,
+        })
         .from(workOrders)
         .where(eq(workOrders.batchId, b.id));
-      batchLeadWorkOrderId = batchWos.find((w) => w.status !== "CANCELLED")?.id ?? null;
       if (body.workOrderId && !batchWos.some((w) => w.id === body.workOrderId)) {
         return NextResponse.json(
           { error: `That work order is not part of ${b.batchNumber}.` },
           { status: 409 },
         );
       }
+      // The batch is the work order. Its approval, given once for every
+      // machine (or, on an older batch, machine by machine), is what
+      // authorises this permit.
+      const authorised = batchAuthorisation(batchWos);
+      if (!authorised.ok) {
+        return NextResponse.json({ error: `${b.workOrderNumber ?? b.batchNumber}: ${authorised.reason}` }, { status: 409 });
+      }
+      const live = batchWos.filter((w) => w.status !== "CANCELLED");
+      batchLeadWorkOrderId = live[0]?.id ?? null;
+      batchEquipmentIds = [...new Set(live.map((w) => w.equipmentId))];
+    } else if (standing) {
+      // A standing analysis covers a category, not a job. Which machines and
+      // which approval the permit rests on are the batch's, so it has to be
+      // named; there is no single work order to pick.
+      return NextResponse.json(
+        { error: `${jhaDoc.jhaNumber} is the standing analysis for a PM category. Choose the PM batch this permit covers.` },
+        { status: 400 },
+      );
     }
     const workOrderId =
       body.workOrderId ?? batchLeadWorkOrderId ?? (standing ? null : jhaDoc.workOrderId) ?? null;
@@ -302,7 +327,7 @@ export async function POST(request: Request) {
     // an emergency work order is already OPEN with its signatures still being
     // collected, and blocking that would leave a breakdown crew unable to raise
     // the permit their own isolation depends on.
-    if (permitWo.status === "PENDING_APPROVAL") {
+    if (!permitBatchId && permitWo.status === "PENDING_APPROVAL") {
       return NextResponse.json({ error: approvalBlockMessage(permitWo.workOrderNumber) }, { status: 409 });
     }
     // REJECTED arrived with the work-order lifecycle actions and was not added
@@ -311,7 +336,7 @@ export async function POST(request: Request) {
     // decided no. A rejected work order sits in that state until it is
     // resubmitted, so without this a foreman whose job was refused by the
     // Maintenance Manager could still raise the permit that lets work start.
-    if (permitWo.status === "REJECTED") {
+    if (!permitBatchId && permitWo.status === "REJECTED") {
       return NextResponse.json(
         {
           error:
@@ -394,7 +419,7 @@ export async function POST(request: Request) {
       taskNo: body.taskNo ? String(body.taskNo).slice(0, 20) : null,
       // Inherited from the hazard analysis so the chain cannot fork.
       workOrderId,
-      equipmentId: body.equipmentId,
+      equipmentId: batchEquipmentIds[0] ?? body.equipmentId,
       workDescription: body.workDescription,
       hazardsIdentified: body.hazardsIdentified || "",
       controlMeasures: body.controlMeasures || "",
@@ -403,9 +428,9 @@ export async function POST(request: Request) {
       // Carried down the chain, so a PM permit is attached to the batch of
       // machines its method statement and hazard analysis were written for.
       // equipmentId above names the lead machine because the column requires
-      // one; the batch is what says the permit covers all of them, and the
-      // permit face lists them.
+      // one; equipmentIds names every machine the permit covers.
       batchId: permitBatchId,
+      equipmentIds: JSON.stringify(batchEquipmentIds.length ? batchEquipmentIds : [body.equipmentId]),
       lotoApplied: body.lotoApplied || false,
       ppeRequired: jhaDoc.ppeRequired ?? "[]",
       areaBarricaded: body.areaBarricaded || false,
