@@ -14,6 +14,8 @@ import {
   chainFor,
   chainSummary,
   isStepUnlocked,
+  canSignChainStep,
+  isOverrideSignature,
   type ChainStep,
 } from "@/lib/signoff/chains";
 import { ROLES } from "@/lib/roles";
@@ -302,4 +304,24 @@ test("an unsigned earlier step never blocks a later signer", () => {
     { id: "s2", status: "PENDING", signedById: null },
   ];
   assert.equal(alreadySignedByMe(chain, "s2", "u-a"), undefined);
+});
+
+// LIMSL, 16 Nov 2026: the asset holder is the Maintenance Manager or the
+// Factory Manager. Both sign the permit's asset-holder blocks as named
+// signatories, so neither signature is recorded as a senior covering.
+test("the permit's asset-holder blocks are the Maintenance Manager's or the Factory Manager's", () => {
+  const ahs = { stepOrder: 2, role: "MAINTENANCE_MANAGER" };
+  const ahss = { stepOrder: 3, role: "FOREMAN" };
+  for (const role of ["MAINTENANCE_MANAGER", "FACTORY_MANAGER"]) {
+    for (const s of [ahs, ahss]) {
+      assert.ok(canSignChainStep(role, "PERMIT", s), `${role} signs step ${s.stepOrder}`);
+      assert.equal(isOverrideSignature(role, "PERMIT", s), false, `${role} on step ${s.stepOrder} is not an override`);
+    }
+  }
+  assert.ok(canSignChainStep("FOREMAN", "PERMIT", ahss), "the site supervisor block stays open to the foreman");
+  assert.ok(!canSignChainStep("FOREMAN", "PERMIT", ahs), "a foreman is not the asset holder");
+  for (const role of ["HSE", "TECHNICIAN", "QA_QC", "COO"]) {
+    assert.ok(!canSignChainStep(role, "PERMIT", ahs), `${role} does not sign the AHS block`);
+    assert.ok(!canSignChainStep(role, "PERMIT", ahss), `${role} does not sign the AHSS block`);
+  }
 });

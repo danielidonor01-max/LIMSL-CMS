@@ -56,7 +56,7 @@ export default function WorkReadiness({
           ? "Today is already revalidated."
           : d.alreadyAsked
             ? "Already asked today. The Maintenance Manager has the request."
-            : "Asked. The Maintenance Manager has been told to revalidate the permit for today.",
+            : "Asked. The asset holder (Maintenance or Factory Manager) has been told to revalidate the permit for today.",
       );
       load();
     } finally {

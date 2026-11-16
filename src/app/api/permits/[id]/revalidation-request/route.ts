@@ -12,7 +12,7 @@ import { permits, notifications, auditLog } from "@/lib/db/schema";
 import { and, eq, gte } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, PERMIT_RENEW_ROLES } from "@/lib/roles";
 import { notify } from "@/lib/notifications";
 import { parseRenewalMarks } from "@/lib/maintenance/work-readiness";
 import { isWithinWindow } from "@/lib/hse/permit-validity";
@@ -68,7 +68,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       linkPath: `/permits/${permit.id}`,
       relatedEntityType: "permit_revalidation",
       relatedEntityId: permit.id,
-      roles: ["MAINTENANCE_MANAGER"],
+      roles: PERMIT_RENEW_ROLES,
     });
 
     await db.insert(auditLog).values({

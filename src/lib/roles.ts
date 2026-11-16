@@ -183,14 +183,13 @@ export const PERMIT_ISSUE_ROLES = ["SUPER_ADMIN", "HSE"];
 // authority, the issuer owns the permit lifecycle.
 export const PERMIT_WRITE_ROLES = ["SUPER_ADMIN", "HSE"];
 
-// Who may RENEW a permit for a further day inside its window: the
-// Maintenance Manager, and nobody else (LIMSL, November 2026). The AHS block
-// on the paper form is theirs. The foreman, HSE, the Factory Manager and
-// Super Admin could all sign a day before; a renewal is the Maintenance
-// Manager's statement that the job is still safe to carry on, and a second
-// hand on it dilutes whose statement that is. A technician asks for it
-// (revalidation-request), which already goes to the Maintenance Manager.
-export const PERMIT_RENEW_ROLES = ["MAINTENANCE_MANAGER"];
+// Who may RENEW a permit for a further day inside its window: the asset
+// holder, which is the Maintenance Manager or the Factory Manager (LIMSL,
+// 16 Nov 2026), and nobody else. The AHS block on the paper form is theirs.
+// The foreman, HSE and Super Admin could all sign a day before; a renewal is
+// the asset holder's statement that the job is still safe to carry on. A
+// technician asks for it (revalidation-request).
+export const PERMIT_RENEW_ROLES = ["MAINTENANCE_MANAGER", "FACTORY_MANAGER"];
 
 // Roles permitted to ACCEPT a hand-back, taking the equipment back into custody
 // and closing the permit. Handing back is the working party's act and follows

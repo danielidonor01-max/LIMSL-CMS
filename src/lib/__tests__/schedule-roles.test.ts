@@ -14,6 +14,6 @@ test("QA/QC, HSE, the technician and the COO do not assign work or raise batches
   }
 });
 
-test("only the Maintenance Manager renews a permit for a further day", () => {
-  assert.deepEqual(PERMIT_RENEW_ROLES, ["MAINTENANCE_MANAGER"]);
+test("only the asset holder (Maintenance or Factory Manager) renews a permit for a further day", () => {
+  assert.deepEqual(PERMIT_RENEW_ROLES, ["MAINTENANCE_MANAGER", "FACTORY_MANAGER"]);
 });

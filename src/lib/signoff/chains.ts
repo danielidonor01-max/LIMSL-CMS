@@ -97,16 +97,27 @@ export const PROCEDURE_CHAIN: ChainStep[] = twoPasses(
 // LIMSL permit. HSE issues the permit, so HSE does not appear as a step: raising
 // it IS the HSE act. The four blocks below are the ones signed on paper.
 //
-// PA and AHSS are both Foreman-level and that is deliberate, not a duplication
-// error: on the paper permit they are two different people, the foreman who
-// applied for the permit and the foreman supervising the site. The sign-off
-// engine already refuses to let one person sign two steps of the same chain, so
-// this reads on screen exactly as it reads on paper. (With only one Foreman
-// account in the system the AHSS step will need a senior to cover it.)
+// The asset holder is the Maintenance Manager or the Factory Manager (LIMSL,
+// 16 Nov 2026), so both asset-holder blocks name them as signatories, not as a
+// senior covering. The site supervisor block is also open to the foreman, as
+// on paper. The engine refuses to let one person sign two steps of the same
+// chain, so with one Foreman (the applicant) the two asset-holder blocks are
+// the Maintenance Manager and the Factory Manager, one each.
+const ASSET_HOLDERS = ["MAINTENANCE_MANAGER", "FACTORY_MANAGER", "SUPER_ADMIN"];
 export const PTW_CHAIN: ChainStep[] = [
   { role: "FOREMAN", roleLabel: "Permit Applicant (PA)", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "Asset Holder Supervisor (AHS)", required: true },
-  { role: "FOREMAN", roleLabel: "Asset Holder Site Supervisor (AHSS)", required: true },
+  {
+    role: "MAINTENANCE_MANAGER",
+    roleLabel: "Asset Holder Supervisor (AHS)",
+    required: true,
+    signableBy: ASSET_HOLDERS,
+  },
+  {
+    role: "FOREMAN",
+    roleLabel: "Asset Holder Site Supervisor (AHSS)",
+    required: true,
+    signableBy: ["FOREMAN", ...ASSET_HOLDERS],
+  },
   {
     role: "TECHNICIAN",
     roleLabel: "Permit Holder (PH)",

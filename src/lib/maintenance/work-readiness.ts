@@ -176,7 +176,7 @@ export function readinessToWork(input: ReadinessInput): Readiness {
       detail = "Today is marked on the permit as a day not worked.";
     } else {
       detail =
-        "Today's revalidation has not been signed. The Maintenance Manager revalidates the permit " +
+        "Today's revalidation has not been signed. The asset holder (Maintenance or Factory Manager) revalidates the permit " +
         "for the day before work starts.";
     }
     checks.push({ key: "REVALIDATED", label: "Revalidated for today", ok, detail });
