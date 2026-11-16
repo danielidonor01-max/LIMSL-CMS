@@ -152,6 +152,8 @@ export default function TroubleshootPage() {
   // results, the AI panel and documentation into one long scroll with no
   // hierarchy; a segmented panel keeps a single focus of attention.
   const [panel, setPanel] = useState<"engine" | "ai" | "docs">("engine");
+  // Desktop: the AI assistant's checks render into the side column, beside the chat.
+  const [checksRail, setChecksRail] = useState<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<{
     docId: string;
     title: string;
@@ -536,6 +538,7 @@ export default function TroubleshootPage() {
                 assetId={assetId}
                 symptom={searchedSymptom || symptom}
                 resumeSessionId={resumeSession}
+                checksRail={checksRail}
               />
             </div>
           ) : (
@@ -596,6 +599,7 @@ export default function TroubleshootPage() {
 
         {/* Schematics + component sidebar */}
         <div className="space-y-6">
+          {panel === "ai" && meta.aiReady && <div ref={setChecksRail} className="hidden lg:block" />}
           <SidePanel icon={FileText} title="Schematics to consult">
             {ctx && ctx.schematics.length > 0 ? (
               <div className="space-y-1.5">

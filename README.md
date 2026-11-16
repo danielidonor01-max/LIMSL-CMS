@@ -34,3 +34,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Credits
+
+Some interface components are adapted from [Rare UI](https://rareui.com)
+(Copyright (c) 2026 Swami Malode, MIT + Commons Clause + Attribution): the AI
+assistant's status line, prompt box, streaming reply and task list in
+`src/components/ai/`. Each file keeps the copyright notice in its header.

@@ -17,8 +17,6 @@ import {
   History,
   Pencil,
   QrCode,
-  Info,
-  BookOpen,
   Stethoscope,
   ClipboardList,
   PackageSearch,
@@ -445,7 +443,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                       <div key={guide.id} className="space-y-4">
                         <div className="text-xs">
                           <p className="font-semibold text-ink-900">Symptom: "{guide.symptom}"</p>
-                          <p className="text-ink-500 mt-1">**Probable Cause:** {guide.probableCause}</p>
+                          <p className="text-ink-500 mt-1"><span className="font-semibold text-ink-700">Probable cause:</span> {guide.probableCause}</p>
                         </div>
                         <div className="space-y-2">
                           <span className="text-xs font-bold text-ink-500 block">Verification Checklist</span>
@@ -462,25 +460,56 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
                         <Button variant="danger" fullWidth
                           href={`/equipment/${assetIdKey}/troubleshoot`}
                         >
-                          <BookOpen className="w-4 h-4" /> Open Troubleshooting Wizard
+                          <Stethoscope className="w-4 h-4" /> Open the troubleshooting guide
                         </Button>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="p-5 bg-ink-100 border border-ink-200 rounded-xl text-center space-y-2">
-                  <Info className="w-6 h-6 text-ink-500 mx-auto" />
-                  <h4 className="text-xs font-bold text-ink-700">No Active Faults</h4>
-                  <p className="text-xs text-ink-500 leading-relaxed">
-                    Machinery is operational. You can view registered schematics and BOM list, or launch the manual wizard.
+                // The way into the troubleshooting guide. It was a grey card
+                // on a grey page with a grey button, which read as disabled:
+                // it is now a panel like the BOM beside it, says what the
+                // guide will use, and opens it with the primary button.
+                <div className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                      <Stethoscope className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold text-ink-900">Troubleshooting guide</h3>
+                      <p className="text-sm text-ink-500 leading-relaxed mt-0.5">
+                        {isBroken
+                          ? "This machine is down. Describe the symptom and work it through, step by step."
+                          : "No open fault. Describe a symptom and work it through before it becomes one."}
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="space-y-2 text-sm text-ink-700">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-600" />
+                      {guides.length > 0
+                        ? `${guides.length} diagnostic guide${guides.length > 1 ? "s" : ""} for this machine`
+                        : "Ranks causes from this machine's repair history"}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-600" />
+                      {components.length > 0
+                        ? `${components.length} component${components.length > 1 ? "s" : ""} from the BOM, on the schematics`
+                        : "Manuals and the maintenance procedure"}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-600" />
+                      AI assistant, grounded in these records
+                    </li>
+                  </ul>
+                  <Button href={`/equipment/${assetIdKey}/troubleshoot`} icon={Stethoscope} fullWidth>
+                    Open the troubleshooting guide
+                  </Button>
+                  <p className="text-xs text-ink-500 flex items-start gap-1.5 leading-relaxed">
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-ink-400" />
+                    Advisory. Follow PTW and LOTO before you touch the machine.
                   </p>
-                  <Link
-                    href={`/equipment/${assetIdKey}/troubleshoot`}
-                    className="mt-3 w-full flex items-center justify-center gap-1 py-1.5 bg-ink-100 hover:bg-ink-200 border border-ink-200 text-ink-700 rounded-lg text-xs font-semibold transition-all"
-                  >
-                    Launch Guide Wizard
-                  </Link>
                 </div>
               )}
             </div>

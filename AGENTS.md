@@ -285,6 +285,14 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   (`toast.loading`).
 - **Document Control** (`/document-control`) is a read-only view over every
   numbered record and what it traces to; it stores nothing.
+- **The AI assistant** (`components/DiagnosisChat.tsx`) is built from the
+  Rare UI AI kit, ported into our tokens under `components/ai/`: `AiStatus`
+  while a reply is on its way, `StreamingResponse` revealing it word by word
+  (the service answers in one piece; history shows at once), `PromptBox` as
+  the composer, and `TaskList` for the suggested checks. On desktop the checks
+  render into the troubleshoot page's side column (`checksRail`, a portal);
+  on a phone they stay inline. Rare UI's licence needs the credit kept in each
+  file header and the link in README.md: do not strip either.
 
 ### The WMS is a standing document, not a form (do not make it per-job again)
 
@@ -404,10 +412,13 @@ permit's window, and — after the first day — **today revalidated** on the
 permit (a WORKED renewal mark for today). Clocking OFF is never refused.
 
 A technician cannot revalidate; they ask (`/api/permits/[id]/revalidation-request`,
-once a day) and the Maintenance Manager signs today's renewal on the permit.
-**Only** the Maintenance Manager: `PERMIT_RENEW_ROLES` is that one role, by
-LIMSL's decision (November 2026) — not the foreman, HSE, the Factory Manager
-or Super Admin. `schedule-roles.test.ts` holds it there.
+once a day) and the asset holder signs today's renewal on the permit. The
+asset holder is the Maintenance Manager **or** the Factory Manager (LIMSL,
+16 Nov 2026): `PERMIT_RENEW_ROLES` is those two roles — not the foreman, HSE
+or Super Admin. `schedule-roles.test.ts` holds it there. The same two sign the
+permit's asset-holder blocks (AHS, and AHSS alongside the foreman) as named
+signatories, not as a senior covering: with one Foreman (the applicant) the
+Maintenance Manager takes one block and the Factory Manager the other.
 A renewal is signed by the signed-in renewer — it no longer needs a drawn
 image, which the grid stopped sending when drawn signatures were retired and
 which had made revalidation impossible from the screen.
