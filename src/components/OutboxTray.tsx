@@ -7,7 +7,8 @@
 // is empty.
 "use client";
 
-import { CloudUpload, AlertTriangle, RotateCw, Trash2, Loader2 } from "lucide-react";
+import { CloudUpload, AlertTriangle, RotateCw, Loader2 } from "lucide-react";
+import { DeleteButton } from "@/components/DeleteButton";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useOutbox } from "@/lib/offline/use-outbox";
@@ -102,16 +103,16 @@ export default function OutboxTray() {
               >
                 <RotateCw className="w-3.5 h-3.5" /> Try again
               </button>
-              <button
-                onClick={() => {
+              {/* Discarding throws away a report that never reached the
+                  server, so it asks first, like every other delete. */}
+              <DeleteButton
+                aria-label={`Discard ${e.label}`}
+                onConfirm={() => {
                   discard(e.id);
                   refresh();
                   toast.success("Discarded.");
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 min-h-9 rounded-lg text-danger-700 text-xs font-semibold hover:bg-danger-100"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Discard
-              </button>
+              />
             </div>
           </div>
         ))}

@@ -9,7 +9,8 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Clock, ShieldCheck, Plus, Trash2, UserCheck } from "lucide-react";
+import { Clock, ShieldCheck, Plus, UserCheck } from "lucide-react";
+import { DeleteButton } from "@/components/DeleteButton";
 import SignatureBlock from "@/components/SignatureBlock";
 import SignoffChain from "@/components/SignoffChain";
 import CorrectiveFlow from "@/components/CorrectiveFlow";
@@ -747,9 +748,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 <div key={i} className="p-3 bg-ink-100 rounded-lg border border-ink-200 text-xs space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-ink-900">{act.action}</span>
-                    <button type="button" onClick={() => removeAction(i)} className="text-danger-600 hover:text-danger-700">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <DeleteButton onConfirm={() => removeAction(i)} aria-label={`Remove "${act.action}"`} />
                   </div>
                   <div className="flex justify-between items-center text-xs text-ink-500">
                     <span>By: {act.responsible}</span>
