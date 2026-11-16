@@ -318,7 +318,7 @@ export default function Sidebar({
                           rides on the icon instead. */}
                       {waiting && narrow && (
                         <span
-                          className="hidden lg:block absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand-500 ring-2 ring-nav"
+                          className="hidden lg:block absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger-500 ring-2 ring-nav"
                           aria-hidden="true"
                         />
                       )}
@@ -326,7 +326,7 @@ export default function Sidebar({
                     <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
                     {waiting ? (
                       <span
-                        className={`ml-auto w-2 h-2 rounded-full bg-brand-500 ring-2 ring-brand-500/25 shrink-0 ${narrow ? "lg:hidden" : ""}`}
+                        className={`ml-auto w-2 h-2 rounded-full bg-danger-500 ring-2 ring-danger-500/25 shrink-0 ${narrow ? "lg:hidden" : ""}`}
                         aria-hidden="true"
                       />
                     ) : (

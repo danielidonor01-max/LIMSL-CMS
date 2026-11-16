@@ -1,12 +1,14 @@
 // src/app/api/permits/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, equipment, auditLog, wmsDocuments, jhaDocuments, workOrders, pmBatches } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { permits, equipment, auditLog, wmsDocuments, jhaDocuments, workOrders, pmBatches, signoffs } from "@/lib/db/schema";
+import { and, eq, inArray } from "drizzle-orm";
+import { notify } from "@/lib/notifications";
+import { CANCEL_REASONS, cancelNote } from "@/lib/hse/permit-cancel";
 import { permitMachines } from "@/lib/hse/permit-machines";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { PERMIT_WRITE_ROLES } from "@/lib/roles";
+import { PERMIT_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { reconcilePermits, startDateOf, parseRenewals } from "@/lib/hse/permit-reconcile";
@@ -180,10 +182,48 @@ export async function PATCH(
       );
     }
 
+    // Why it was cancelled is the record (LIMSL, 16 Nov 2026). A permit is
+    // usually withdrawn because something in the JHA or the WMS behind it is
+    // wrong, and the people who correct it and reissue need to know which.
+    const reason = String(body.reason ?? "");
+    const note = String(body.note ?? "").trim();
+    if (!CANCEL_REASONS.some((r) => r.value === reason)) {
+      return NextResponse.json({ error: "Say why the permit is being cancelled." }, { status: 400 });
+    }
+    if (note.length < 10) {
+      return NextResponse.json(
+        { error: "Say what has to be corrected, in a sentence. It goes to whoever fixes it and reissues." },
+        { status: 400 },
+      );
+    }
+    const closureNote = cancelNote(reason, note);
+
     await db
       .update(permits)
-      .set({ status: "CANCELLED", closedAt: new Date().toISOString() })
+      .set({ status: "CANCELLED", closedAt: new Date().toISOString(), closureReason: "CANCELLED", closureNote })
       .where(eq(permits.id, id));
+
+    // A cancelled permit asks nobody to sign it. The signatures already given
+    // stay as the record of how far it got; the steps still waiting go.
+    const chain = await getSignoffChain("PERMIT", id);
+    await db
+      .delete(signoffs)
+      .where(and(inArray(signoffs.entityType, ["PERMIT", "PERMIT_CLOSEOUT"]), eq(signoffs.entityId, id), eq(signoffs.status, "PENDING")));
+
+    // The batch is free for a corrected permit to be raised against it.
+    if (permit.batchId) {
+      const [b] = await db.select().from(pmBatches).where(eq(pmBatches.id, permit.batchId)).limit(1);
+      if (b && b.permitId === id) {
+        await db
+          .update(pmBatches)
+          .set({
+            permitId: null,
+            status: b.status === "IN_PROGRESS" ? (b.assignedToId ? "ASSIGNED" : "PLANNED") : b.status,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(pmBatches.id, b.id));
+      }
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),
@@ -192,8 +232,28 @@ export async function PATCH(
       action: "CANCEL",
       entityType: "permit",
       entityId: id,
-      entityDescription: `Permit ${permit.permitNumber} cancelled`,
+      entityDescription: `Permit ${permit.permitNumber} cancelled. ${closureNote}`,
     });
+
+    // Everyone who signed it or holds it hears why, and HSE, who reissue.
+    try {
+      const signers = chain.filter((s) => s.status === "SIGNED" && s.signedById).map((s) => s.signedById!);
+      const people = [...new Set([...signers, ...(permit.permitHolderId ? [permit.permitHolderId] : [])])].filter(
+        (u) => u !== gate.actor?.id,
+      );
+      await notify({
+        event: "GENERAL",
+        title: `Permit ${permit.permitNumber} cancelled`,
+        body: `${gate.actor?.name ?? "HSE"} cancelled it. ${closureNote} Correct the document, then a new permit is raised.`,
+        linkPath: `/permits/${id}`,
+        relatedEntityType: "permit",
+        relatedEntityId: id,
+        userIds: people,
+        roles: PERMIT_ISSUE_ROLES,
+      });
+    } catch (err) {
+      console.warn("permit cancel: notify failed", err);
+    }
 
     const [updated] = await db.select().from(permits).where(eq(permits.id, id)).limit(1);
     return NextResponse.json(updated);

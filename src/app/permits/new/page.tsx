@@ -27,6 +27,7 @@ import {
   PPE_REQUIREMENTS,
   mandatoryPrecautionsFor,
   missingMandatoryPrecautions,
+  ENERGY_SOURCES,
 } from "@/lib/hse/permit-form";
 import { DEFAULT_PERMIT_VALIDITY_DAYS, expiryDateOf } from "@/lib/hse/permit-validity";
 import { invalidateApi } from "@/lib/api-cache";
@@ -85,6 +86,14 @@ function NewPermitForm() {
   const [ppeMarks, setPpeMarks] = useState<Marks>({});
   const [additionalRequirements, setAdditionalRequirements] = useState("");
   const [lotoApplied, setLotoApplied] = useState(false);
+  // The isolation register for LOTO: every energy source made safe, how, and
+  // under which lock or tag. The server refuses LOTO without it, and the form
+  // had nowhere to enter it, so ticking LOTO could never be submitted.
+  type IsoRow = { energySource: string; isolationDevice: string; lockTagNumber: string };
+  const emptyIso = (): IsoRow => ({ energySource: "ELECTRICAL", isolationDevice: "", lockTagNumber: "" });
+  const [isoPoints, setIsoPoints] = useState<IsoRow[]>([emptyIso()]);
+  const setIso = (i: number, patch: Partial<IsoRow>) =>
+    setIsoPoints((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const [areaBarricaded, setAreaBarricaded] = useState(false);
 
   useEffect(() => {
@@ -285,6 +294,10 @@ function NewPermitForm() {
     if (!standing && !equipmentId) return toast.error("Select the machine or system being worked on.");
     if (!workDescription.trim()) return toast.error("Describe the work.");
     if (!permitHolderId) return toast.error("Name the permit holder.");
+    const usableIso = isoPoints.filter((p) => p.energySource && p.isolationDevice.trim());
+    if (lotoApplied && usableIso.length === 0) {
+      return toast.error("LOTO is applied: list at least one isolation point, with the device that isolates it.");
+    }
     if (missing.length > 0) {
       return toast.error(`The work type selected requires: ${missing.join(", ")}.`);
     }
@@ -317,6 +330,15 @@ function NewPermitForm() {
           ppeMarks,
           additionalRequirements: additionalRequirements.trim() || null,
           lotoApplied,
+          isolationPoints: lotoApplied
+            ? isoPoints
+                .filter((p) => p.energySource && p.isolationDevice.trim())
+                .map((p) => ({
+                  energySource: p.energySource,
+                  isolationDevice: p.isolationDevice.trim(),
+                  lockTagNumber: p.lockTagNumber.trim() || undefined,
+                }))
+            : [],
           areaBarricaded,
         }),
       });
@@ -716,6 +738,60 @@ function NewPermitForm() {
                 Area barricaded
               </label>
             </div>
+
+            {lotoApplied && (
+              <div className="rounded-lg border border-line p-3 space-y-2">
+                <div>
+                  <p className="text-xs font-semibold text-ink-900">Isolation points</p>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Each energy source made safe, the device that isolates it, and its lock or tag. Checked again
+                    at close-out before the machines are re-energised.
+                  </p>
+                </div>
+                {isoPoints.map((row, i) => (
+                  <div key={i} className="grid grid-cols-1 sm:grid-cols-[10rem_minmax(0,1fr)_9rem_auto] gap-2 items-center">
+                    <Select
+                      value={row.energySource}
+                      onChange={(v) => setIso(i, { energySource: v })}
+                      ariaLabel={`Energy source ${i + 1}`}
+                      className="w-full"
+                    >
+                      {ENERGY_SOURCES.map((e) => (
+                        <option key={e.value} value={e.value}>
+                          {e.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <input
+                      value={row.isolationDevice}
+                      onChange={(e) => setIso(i, { isolationDevice: e.target.value })}
+                      placeholder="Isolating device, e.g. main isolator DB-3"
+                      aria-label={`Isolating device ${i + 1}`}
+                      className={FIELD_CLASS}
+                    />
+                    <input
+                      value={row.lockTagNumber}
+                      onChange={(e) => setIso(i, { lockTagNumber: e.target.value })}
+                      placeholder="Lock / tag no."
+                      aria-label={`Lock or tag number ${i + 1}`}
+                      className={FIELD_CLASS}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isoPoints.length === 1}
+                      onClick={() => setIsoPoints((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="secondary" size="sm" onClick={() => setIsoPoints((prev) => [...prev, emptyIso()])}>
+                  Add isolation point
+                </Button>
+              </div>
+            )}
 
             <div>
               <label className={LABEL_CLASS}>Additional requirements</label>

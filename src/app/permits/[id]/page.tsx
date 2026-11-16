@@ -30,6 +30,11 @@ import PermitHandback from "@/components/PermitHandback";
 import PermitFace from "@/components/PermitFace";
 import PermitPrintSheet from "@/components/PermitPrintSheet";
 import { formatDate } from "@/lib/utils";
+import Modal from "@/components/Modal";
+import Button from "@/components/Button";
+import Select from "@/components/Select";
+import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
+import { CANCEL_REASONS, cancelReasonOf } from "@/lib/hse/permit-cancel";
 import {
   remainingLabel,
   expiryDateOf,
@@ -47,6 +52,9 @@ import {
 type Permit = {
   id: string;
   permitNumber: string;
+  wmsId?: string | null;
+  jhaId?: string | null;
+  batchId?: string | null;
   workOrderId: string | null;
   workDescription: string;
   hazardsIdentified: string | null;
@@ -147,6 +155,11 @@ export default function PermitDetail() {
   const canAccept = mounted && PERMIT_ACCEPT_ROLES.includes(role ?? "");
 
   const [permit, setPermit] = useState<Permit | null>(null);
+  // Cancelling asks why, so the correction and the reissue start from it.
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState<string>("JHA");
+  const [cancelText, setCancelText] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -161,13 +174,23 @@ export default function PermitDetail() {
   }, [load]);
 
   async function cancelPermit() {
+    if (cancelText.trim().length < 10) {
+      toast.error("Say what has to be corrected, in a sentence.");
+      return;
+    }
+    setCancelling(true);
     const res = await fetch(`/api/permits/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "CANCELLED" }),
+      body: JSON.stringify({ status: "CANCELLED", reason: cancelReason, note: cancelText.trim() }),
     });
+    setCancelling(false);
     if (res.ok) {
-      toast.success("Permit cancelled.");
+      toast.success("Permit cancelled", {
+        description: "Its signers and HSE have been told why. Correct the document, then raise the new permit.",
+      });
+      setCancelOpen(false);
+      setCancelText("");
       load();
     } else {
       const e = await res.json().catch(() => ({}));
@@ -227,7 +250,84 @@ export default function PermitDetail() {
           closeout={permit.closeoutSteps ?? []}
         />
 
+        <Modal
+          open={cancelOpen}
+          onClose={() => setCancelOpen(false)}
+          title={`Cancel ${permit.permitNumber}`}
+          subtitle="Withdraw the permit so the paperwork behind it can be corrected and the permit reissued."
+        >
+          <div className="space-y-4">
+            <div>
+              <label className={LABEL_CLASS}>What is wrong</label>
+              <Select value={cancelReason} onChange={setCancelReason} ariaLabel="Reason for cancelling" className="w-full">
+                {CANCEL_REASONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className={LABEL_CLASS} htmlFor="cancel-note">
+                What has to be corrected
+              </label>
+              <textarea
+                id="cancel-note"
+                value={cancelText}
+                onChange={(e) => setCancelText(e.target.value)}
+                placeholder="e.g. The JHA does not cover working at height on the crane gantry"
+                className={`${FIELD_CLASS} h-24 resize-none`}
+              />
+              <p className="text-xs text-ink-500 mt-1">
+                Signatures already given stay on record; nobody is asked for the rest. Its signers, the permit
+                holder and HSE are told why.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setCancelOpen(false)}>
+                Keep the permit
+              </Button>
+              <Button variant="danger" icon={XCircle} loading={cancelling} onClick={cancelPermit}>
+                Cancel permit
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
         <div className="screen-only space-y-8">
+        {permit.status === "CANCELLED" && (
+          <section className="no-print rounded-xl border border-danger-200 bg-danger-50 px-4 py-3" role="status">
+            <p className="text-sm font-semibold text-danger-700 flex items-center gap-2">
+              <XCircle className="w-4 h-4 shrink-0" /> This permit was cancelled
+            </p>
+            {permit.closureNote && <p className="text-xs text-danger-700 mt-1 leading-relaxed">{permit.closureNote}</p>}
+            {/* The way back: put the document right, then issue again. A JHA
+                revision needs its own signatures before a permit can rest on
+                it, and the new permit is raised against the corrected one. */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {cancelReasonOf(permit.closureNote) === "JHA" && permit.jhaId && permit.wmsId && (
+                <Button size="sm" variant="secondary" href={`/jha/new?wmsId=${permit.wmsId}&supersedes=${permit.jhaId}`}>
+                  Revise the JHA
+                </Button>
+              )}
+              {cancelReasonOf(permit.closureNote) === "WMS" && permit.wmsId && (
+                <Button size="sm" variant="secondary" href={`/wms/new?reviseId=${permit.wmsId}`}>
+                  Revise the WMS
+                </Button>
+              )}
+              {permit.batchId ? (
+                <Button size="sm" href={`/pm-batches/${permit.batchId}`}>
+                  Back to the batch to reissue
+                </Button>
+              ) : (
+                <Button size="sm" href={`/permits/new${permit.jhaId ? `?jhaId=${permit.jhaId}` : ""}`}>
+                  Raise a new permit
+                </Button>
+              )}
+            </div>
+          </section>
+        )}
+
         {remaining && (
           <div
             className={`no-print flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${REMAINING_TONE[remaining.tone]}`}
@@ -343,7 +443,7 @@ export default function PermitDetail() {
               </button>
               {canWrite && !isDead && (
                 <button
-                  onClick={cancelPermit}
+                  onClick={() => setCancelOpen(true)}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-danger-200 text-danger-700 hover:bg-danger-50 rounded-lg text-xs font-semibold"
                 >
                   <XCircle className="w-4 h-4" /> Cancel Permit

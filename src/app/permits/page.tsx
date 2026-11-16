@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useApi } from "@/lib/api-cache";
-import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers, MapPin, BadgeCheck, FileKey2 } from "lucide-react";
+import { ShieldCheck, ShieldAlert, PlusCircle, AlertTriangle, Clock, Layers, BadgeCheck, FileKey2 } from "lucide-react";
 import Button from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -84,7 +84,9 @@ type Scope = "NEEDS_PERMIT" | "OPEN" | "OVERDUE" | "EXPIRING_SOON" | "CLOSED" | 
 export default function PermitsList() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
-  const [scope, setScope] = useState<Scope>("OPEN");
+  // Everything first (LIMSL, 16 Nov 2026): the register opens on the whole
+  // list and the narrower views are a choice, not where it lands.
+  const [scope, setScope] = useState<Scope>("ALL");
   const role = (session?.user as { role?: string })?.role;
   const canIssue = mounted && PERMIT_ISSUE_ROLES.includes(role ?? "");
 
@@ -99,12 +101,6 @@ export default function PermitsList() {
     return jhaData.filter((j) => j.status === "APPROVED" && !permittedJhaIds.has(j.id));
   }, [jhaData, records]);
 
-  // If there are pending JHAs needing a permit and user is HSE, default scope to NEEDS_PERMIT
-  useEffect(() => {
-    if (canIssue && pendingJhas.length > 0 && scope === "OPEN") {
-      setScope("NEEDS_PERMIT");
-    }
-  }, [canIssue, pendingJhas.length]);
 
   const open = useMemo(() => records.filter((r) => !CLOSED_STATES.has(r.status)), [records]);
   const closed = useMemo(() => records.filter((r) => CLOSED_STATES.has(r.status)), [records]);
@@ -220,6 +216,7 @@ export default function PermitsList() {
             value={scope}
             onChange={setScope}
             options={[
+              { value: "ALL" as const, label: "All", count: records.length },
               ...(pendingJhas.length > 0
                 ? [{ value: "NEEDS_PERMIT" as const, label: "Needs Permit", count: pendingJhas.length }]
                 : []),
@@ -227,7 +224,6 @@ export default function PermitsList() {
               { value: "OVERDUE" as const, label: "Overdue", count: overdue.length },
               { value: "EXPIRING_SOON" as const, label: "Expiring Soon", count: expiringSoon.length },
               { value: "CLOSED" as const, label: "Closed", count: closed.length },
-              { value: "ALL" as const, label: "All", count: records.length },
             ]}
           />
         </div>
@@ -346,24 +342,12 @@ export default function PermitsList() {
                           )}
                         </td>
                         <td className="py-3 px-4 min-w-0">
+                          {/* One line: what the permit covers. The machine,
+                              place and description are on the permit itself. */}
                           <div className="flex items-center gap-1.5">
                             {rec.batchNumber && <Layers className="w-3.5 h-3.5 text-ink-400 shrink-0" />}
                             <span className="font-medium text-ink-900 truncate">{covers}</span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-ink-500">
-                            {rec.assetId && <span>{rec.assetId}</span>}
-                            {(rec.location || rec.workArea) && (
-                              <span className="inline-flex items-center gap-1 text-ink-600 font-medium">
-                                <MapPin className="w-3 h-3 text-brand-600 shrink-0" />
-                                {rec.location || rec.workArea} {rec.facility ? `· ${rec.facility}` : ""}
-                              </span>
-                            )}
-                          </div>
-                          {rec.workDescription && (
-                            <p className="text-xs text-ink-500 line-clamp-1 mt-0.5">
-                              {rec.workDescription}
-                            </p>
-                          )}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap text-ink-700">
                           {rec.permitHolderName || "—"}

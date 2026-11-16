@@ -261,12 +261,13 @@ export async function POST(request: Request) {
       }
       // One permit per cycle. A second live one for the same batch is two
       // documents claiming to authorise the same work.
-      const [existing] = await db
-        .select({ permitNumber: permits.permitNumber, status: permits.status })
-        .from(permits)
-        .where(eq(permits.batchId, b.id))
-        .limit(1);
-      if (existing && existing.status !== "REJECTED" && existing.status !== "CANCELLED") {
+      const existing = (
+        await db
+          .select({ permitNumber: permits.permitNumber, status: permits.status })
+          .from(permits)
+          .where(eq(permits.batchId, b.id))
+      ).find((p) => p.status !== "REJECTED" && p.status !== "CANCELLED");
+      if (existing) {
         return NextResponse.json(
           { error: `${b.batchNumber} already has ${existing.permitNumber}. One permit covers the batch.` },
           { status: 409 },
@@ -411,6 +412,29 @@ export async function POST(request: Request) {
     const startDate = String(body.startDate ?? new Date().toISOString().slice(0, 10)).slice(0, 10);
     const validityDays = normaliseValidityDays(body.validityDays ?? DEFAULT_PERMIT_VALIDITY_DAYS);
 
+    // The isolation register: each energy source made safe, its device and
+    // lock/tag, and who applied it. "lotoApplied: true" alone is not an
+    // isolation certificate for a machine with electrical, hydraulic,
+    // pneumatic, stored and gravitational energy on it.
+    //
+    // Checked BEFORE anything is written. It used to run after the permit was
+    // inserted and its batch marked, so a refusal here left a permit with no
+    // signature chain holding the batch (PTW-2026-0004, 16 Nov 2026).
+    const points = Array.isArray(body.isolationPoints) ? body.isolationPoints : [];
+    const validPoints = points.filter(
+      (p: { energySource?: string; isolationDevice?: string }) => p?.energySource?.trim() && p?.isolationDevice?.trim(),
+    );
+    if (body.lotoApplied && validPoints.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "LOTO is marked as applied, list the isolation points (energy source, isolating device and lock/tag) " +
+            "so the de-isolation can be verified at close-out (ISO 45001 8.1.2).",
+        },
+        { status: 400 },
+      );
+    }
+
     const permitNumber = await nextDocNumber("PTW");
 
     const newPermit = {
@@ -467,24 +491,6 @@ export async function POST(request: Request) {
       await db.update(pmBatches).set({ permitId: newPermit.id, status: "IN_PROGRESS" }).where(eq(pmBatches.id, permitBatchId));
     }
 
-    // The isolation register: each energy source made safe, its device and
-    // lock/tag, and who applied it. "lotoApplied: true" alone is not an
-    // isolation certificate for a machine with electrical, hydraulic,
-    // pneumatic, stored and gravitational energy on it.
-    const points = Array.isArray(body.isolationPoints) ? body.isolationPoints : [];
-    const validPoints = points.filter(
-      (p: { energySource?: string; isolationDevice?: string }) => p?.energySource?.trim() && p?.isolationDevice?.trim(),
-    );
-    if (newPermit.lotoApplied && validPoints.length === 0) {
-      return NextResponse.json(
-        {
-          error:
-            "LOTO is marked as applied, list the isolation points (energy source, isolating device and lock/tag) " +
-            "so the de-isolation can be verified at close-out (ISO 45001 8.1.2).",
-        },
-        { status: 400 },
-      );
-    }
     if (validPoints.length) {
       await db.insert(isolationPoints).values(
         validPoints.map((p: Record<string, string>) => ({

@@ -130,7 +130,10 @@ async function loadBatch(id: string) {
 
   // The permit is the one document that IS per batch: it authorises this
   // cycle's work in this cycle's window.
-  const [permit] = await db.select().from(permits).where(eq(permits.batchId, id)).limit(1);
+  // A cancelled or rejected permit is history, not the batch's permit: the
+  // flow must offer a new one so the corrected paperwork can be reissued.
+  const batchPermits = await db.select().from(permits).where(eq(permits.batchId, id)).orderBy(desc(permits.createdAt));
+  const permit = batchPermits.find((p) => p.status !== "CANCELLED" && p.status !== "REJECTED");
 
   const flow = pmFlowState({
     batchId: batch.id,

@@ -270,7 +270,13 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   `/api/signoffs/ping`). The limit is read from `SIGN_PING` notifications, not
   a separate ledger. Notifications to a step use `stepAudience()`, so a bound
   step reaches that one person.
-- **Sidebar dots** (`/api/attention`, `lib/attention.ts`) come from the state
+- **Cancelling a permit** needs a reason (JHA, WMS or other) and a note
+  (`lib/hse/permit-cancel.ts`): its unsigned steps are removed (signed ones
+  stay), its batch is freed for a corrected permit, and its signers, holder
+  and HSE are told. The permit page then links to the JHA/WMS revision and the
+  reissue. Validate everything before inserting a permit: a refusal after the
+  insert leaves a permit with no chain holding its batch.
+- **Sidebar dots** are red (`/api/attention`, `lib/attention.ts`) and come from the state
   of the work: signatures waiting on you, documents your role must raise for an
   open batch, your own open work. Never from unread notifications.
 - **Toasts** stay on `sonner` (call `toast.success/error/warning`), dressed in

@@ -139,3 +139,16 @@ export function validateWorkTypes(workTypes: unknown): { ok: true; workTypes: Pe
   }
   return { ok: true, workTypes: [...new Set(valid)] };
 }
+
+// The energy sources an isolation point makes safe, as the isolation register
+// stores them (isolation_points.energy_source).
+export const ENERGY_SOURCES = [
+  { value: "ELECTRICAL", label: "Electrical" },
+  { value: "HYDRAULIC", label: "Hydraulic" },
+  { value: "PNEUMATIC", label: "Pneumatic" },
+  { value: "MECHANICAL", label: "Mechanical" },
+  { value: "THERMAL", label: "Thermal" },
+  { value: "CHEMICAL", label: "Chemical" },
+  { value: "GRAVITY", label: "Gravity" },
+  { value: "STORED", label: "Stored energy" },
+] as const;

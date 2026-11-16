@@ -70,7 +70,8 @@ export async function GET() {
       const jha = pair?.jha
         ? { id: pair.jha.id, status: stale ? "STALE" : pair.jha.status, jhaNumber: pair.jha.jhaNumber }
         : null;
-      const permit = permitRows.find((p) => p.batchId === b.id) ?? null;
+      const permit =
+        permitRows.find((p) => p.batchId === b.id && p.status !== "CANCELLED" && p.status !== "REJECTED") ?? null;
       return {
         ...b,
         categoryLabel: labels[b.category] ?? b.category,
