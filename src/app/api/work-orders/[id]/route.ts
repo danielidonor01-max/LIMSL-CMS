@@ -18,6 +18,7 @@ import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { reconcilePermits } from "@/app/api/permits/route";
 import { notify } from "@/lib/notifications";
 import { logEquipmentEvent } from "@/lib/equipment-log";
+import { applyDerivedStatus } from "@/lib/equipment-status";
 import { reconcileWorkOrderApprovals, approvalBlockMessage } from "@/lib/work-order-approval";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
@@ -206,6 +207,18 @@ export async function PATCH(
     }
 
     await db.update(workOrders).set(updates).where(eq(workOrders.id, id));
+
+    // A job starting, finishing or being cancelled changes what the machine
+    // is doing, so its status is re-derived by the one writer. Without this a
+    // repair whose fault was closed before its work order was completed left
+    // the machine "under maintenance" for good. Best-effort, like every caller.
+    if (body.status && body.status !== current.status && current.equipmentId) {
+      try {
+        await applyDerivedStatus(current.equipmentId);
+      } catch (err) {
+        console.warn("work-order: status derivation failed (non-fatal)", err);
+      }
+    }
 
     // Cancelling frees the linked schedule occurrence so a replacement WO can be
     // raised, otherwise the occurrence points at a dead WO forever and its PM

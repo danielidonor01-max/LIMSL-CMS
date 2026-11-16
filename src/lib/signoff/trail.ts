@@ -5,7 +5,7 @@
 // a permit before a batch can start is the person this exists for: the work
 // cannot begin until all three land, and nothing else tells them when.
 import { db } from "@/lib/db";
-import { pmBatches, wmsDocuments, jhaDocuments, permits, signoffs } from "@/lib/db/schema";
+import { pmBatches, wmsDocuments, jhaDocuments, permits, signoffs, workOrders, correctiveMaintenance } from "@/lib/db/schema";
 import { and, eq, or } from "drizzle-orm";
 import { notify } from "@/lib/notifications";
 import { entityHref, entityLabel } from "@/lib/signoff/inbox";
@@ -57,6 +57,31 @@ async function permitHolder(entityType: string, entityId: string) {
   return p?.h ? [p.h] : [];
 }
 
+// The crew of a one-off (CM) job: whoever the work order is assigned to,
+// and whoever the fault was assigned to. A PM batch's crew comes from the
+// batch; a repair has no batch, so without this the technician carrying it
+// never heard that its WMS, JHA or permit had landed.
+async function jobCrew(entityType: string, entityId: string) {
+  const table = entityType === "WMS" ? wmsDocuments : entityType === "JHA" ? jhaDocuments : entityType === "PERMIT" ? permits : null;
+  if (!table) return [];
+  const [row] = await db.select({ wo: table.workOrderId }).from(table).where(eq(table.id, entityId));
+  if (!row?.wo) return [];
+  const [wo] = await db
+    .select({ tech: workOrders.technicianId, cms: workOrders.cmsId, batch: workOrders.batchId })
+    .from(workOrders)
+    .where(eq(workOrders.id, row.wo));
+  if (!wo || wo.batch) return [];
+  const out = wo.tech ? [wo.tech] : [];
+  if (wo.cms) {
+    const [cm] = await db
+      .select({ to: correctiveMaintenance.assignedToId })
+      .from(correctiveMaintenance)
+      .where(eq(correctiveMaintenance.id, wo.cms));
+    if (cm?.to) out.push(cm.to);
+  }
+  return out;
+}
+
 // What a finished document means for the people waiting on it.
 const CLEARED: Record<string, string> = {
   WMS: "The method statement is approved for implementation. HSE can now raise the JHA.",
@@ -79,6 +104,7 @@ export async function notifyTrail(
     ...chain.filter((s) => s.status === "SIGNED" && s.signedById).map((s) => s.signedById!),
     ...batches.flatMap((b) => [b.assignedToId, ...ids(b.assistantIds)].filter((x): x is string => !!x)),
     ...(await permitHolder(entityType, entityId)),
+    ...(await jobCrew(entityType, entityId)),
   ]);
   // The signer saw it happen; their own toast already said so.
   if (actorId) people.delete(actorId);
