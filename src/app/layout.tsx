@@ -1,35 +1,44 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import AppShell from "@/components/AppShell";
 import ServiceWorker from "@/components/ServiceWorker";
 
-// Self-hosted, not fetched from Google at runtime. next/font downloads the
-// files at build time and serves them from our own origin, which is what makes
-// them work on the workshop connection and inside the offline shell. A CDN
-// request here would be a blank page on a bad signal.
+// Self-hosted, and now from files in the repo (src/app/fonts), not fetched
+// from Google at all. next/font/google downloaded them at BUILD time, which
+// broke production builds when Vercel's build CLI 65.14 stopped resolving
+// them ("next/font/google queries have exactly one entry", Nov 2026). Files
+// in the repo cannot fail that way. They are the Fontsource 5.3.0 variable
+// cuts of the same fonts, latin subset (what the Google loader asked for),
+// SIL Open Font License 1.1, licences beside them.
+//
+// Served from our own origin either way, which is what makes them work on the
+// workshop connection and inside the offline shell. A CDN request here would
+// be a blank page on a bad signal.
 //
 // Manrope carries the interface, Outfit carries display type. The pairing is
 // Giov's and it is the single biggest reason their screens do not read as
 // generated: system-ui is the default every generated interface reaches for,
 // and it is most of why ours did.
-const manrope = Manrope({
-  subsets: ["latin"],
+//
+// Variable fonts, so every weight the app uses (Manrope 400-800, Outfit
+// 600-700) comes from one file each. Manrope at 500 is still the workhorse:
+// it runs lighter than Inter, and body text at 400 on a white card in
+// daylight goes thin.
+const manrope = localFont({
+  src: "./fonts/manrope-latin-variable.woff2",
   variable: "--font-sans",
   display: "swap",
-  // 500 is the workhorse here rather than 400. Manrope runs slightly lighter
-  // than Inter at the same nominal weight, and body text at 400 on a white
-  // card in daylight goes thin.
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "200 800",
   fallback: ["ui-sans-serif", "system-ui", "Segoe UI", "Arial", "sans-serif"],
 });
 
-const outfit = Outfit({
-  subsets: ["latin"],
+const outfit = localFont({
+  src: "./fonts/outfit-latin-variable.woff2",
   variable: "--font-display",
   display: "swap",
-  weight: ["600", "700"],
+  weight: "100 900",
   fallback: ["ui-sans-serif", "system-ui", "Segoe UI", "Arial", "sans-serif"],
 });
 
