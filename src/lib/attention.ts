@@ -1,5 +1,5 @@
 // src/lib/attention.ts
-// Which modules have something waiting on this person, for the red dot in
+// Which modules have something waiting on this person, for the green dot in
 // the sidebar (LIMSL, 16 Nov 2026).
 //
 // The dot is not "you have a notification". A notification is read and gone;

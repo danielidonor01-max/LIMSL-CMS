@@ -276,7 +276,7 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   and HSE are told. The permit page then links to the JHA/WMS revision and the
   reissue. Validate everything before inserting a permit: a refusal after the
   insert leaves a permit with no chain holding its batch.
-- **Sidebar dots** are red (`/api/attention`, `lib/attention.ts`) and come from the state
+- **Sidebar dots** are green, and the active page has none (`/api/attention`, `lib/attention.ts`) and come from the state
   of the work: signatures waiting on you, documents your role must raise for an
   open batch, your own open work. Never from unread notifications.
 - **Toasts** stay on `sonner` (call `toast.success/error/warning`), dressed in

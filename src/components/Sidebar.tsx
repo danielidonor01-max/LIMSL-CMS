@@ -318,22 +318,21 @@ export default function Sidebar({
                           rides on the icon instead. */}
                       {waiting && narrow && (
                         <span
-                          className="hidden lg:block absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger-500 ring-2 ring-nav"
+                          className="hidden lg:block absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand-500 ring-2 ring-nav"
                           aria-hidden="true"
                         />
                       )}
                     </span>
                     <span className={narrow ? "lg:hidden" : ""}>{item.label}</span>
-                    {waiting ? (
+                    {/* The dot means one thing only: something here is waiting
+                        on you. The page you are on is shown by the highlight,
+                        so it no longer carries a dot of its own that could be
+                        mistaken for one. */}
+                    {waiting && (
                       <span
-                        className={`ml-auto w-2 h-2 rounded-full bg-danger-500 ring-2 ring-danger-500/25 shrink-0 ${narrow ? "lg:hidden" : ""}`}
+                        className={`ml-auto w-2 h-2 rounded-full bg-brand-500 ring-2 ring-brand-500/25 shrink-0 ${narrow ? "lg:hidden" : ""}`}
                         aria-hidden="true"
                       />
-                    ) : (
-                      active &&
-                      !narrow && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 shrink-0" aria-hidden="true" />
-                      )
                     )}
                   </Link>
                 </div>
