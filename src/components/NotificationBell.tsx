@@ -84,7 +84,6 @@ export default function NotificationBell() {
         show(n.title, {
           description: n.body,
           duration: 8000,
-          style: { "--toast-duration": "8000ms" } as React.CSSProperties,
           action: n.linkPath ? { label: "Open", onClick: () => router.push(n.linkPath!) } : undefined,
         });
       }

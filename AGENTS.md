@@ -281,8 +281,8 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   open batch, your own open work. Never from unread notifications.
 - **Toasts** stay on `sonner` (call `toast.success/error/warning`), dressed in
   `components/AppToaster.tsx` and the `.app-toast` rules in globals.css, in
-  the RareUI manner. A toast with a custom `duration` sets `--toast-duration`
-  to match so its running line empties on time.
+  the RareUI manner, bottom-right. No countdown line; progress is a spinner
+  (`toast.loading`).
 - **Document Control** (`/document-control`) is a read-only view over every
   numbered record and what it traces to; it stores nothing.
 

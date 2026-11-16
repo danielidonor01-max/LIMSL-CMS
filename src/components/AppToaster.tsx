@@ -2,17 +2,20 @@
 // The toast, in the RareUI manner (LIMSL, 16 Nov 2026) and in our own tokens.
 //
 // RareUI's toasts arrive on a spring and come into focus out of a slight blur,
-// sit in a soft card, and carry a fine line that runs down while they wait.
-// That is the look. The engine stays sonner: every toast in the app already
-// calls toast.success / toast.error with a title, a description and sometimes
-// an action, and rebuilding forty call sites to change how a message looks
-// would be churn with no reader benefit. So sonner is run unstyled and dressed
-// here, and the motion and the running line live in globals.css under
-// [data-sonner-toast], where sonner exposes its state.
+// and sit in a soft card. That is the look. They stack bottom-right, out of
+// the way of the page header and its actions. No countdown line: something
+// in progress shows a spinner (toast.loading), nothing else.
 //
-// Colour carries meaning only: the icon disc and the running line take the
-// tone (brand for done, rose for failed, amber for warning, sky for info);
-// the card itself stays white on a hairline, like every other panel.
+// The engine stays sonner: every toast in the app already calls
+// toast.success / toast.error with a title, a description and sometimes an
+// action, and rebuilding forty call sites to change how a message looks
+// would be churn with no reader benefit. So sonner is run unstyled and
+// dressed here, and the motion lives in globals.css under [data-sonner-toast],
+// where sonner exposes its state.
+//
+// Colour carries meaning only: the icon disc takes the tone (brand for done,
+// rose for failed, amber for warning, sky for info); the card itself stays
+// white on a hairline, like every other panel.
 "use client";
 
 import { Toaster } from "sonner";
@@ -23,7 +26,7 @@ const disc = "grid place-items-center w-8 h-8 rounded-full shrink-0";
 export default function AppToaster() {
   return (
     <Toaster
-      position="top-right"
+      position="bottom-right"
       gap={10}
       visibleToasts={4}
       duration={5000}
@@ -58,9 +61,6 @@ export default function AppToaster() {
       }}
       toastOptions={{
         unstyled: true,
-        // Read by the running line in globals.css, so it empties exactly as
-        // the toast leaves. A call that sets its own duration sets this too.
-        style: { "--toast-duration": "5000ms" } as React.CSSProperties,
         classNames: {
           toast:
             "app-toast group relative flex w-[var(--width)] items-start gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3.5 pr-10 shadow-raised font-sans",
