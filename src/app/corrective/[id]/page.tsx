@@ -277,7 +277,11 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
       if (saved && saved.id) setRecord(saved);
       setSavedKey(formKey);
       clearDraft();
-      toast.success("Breakdown record saved.");
+      toast.success(
+        saved?.status === "CLOSED" && record?.status !== "CLOSED"
+          ? "Saved. Every signature was already in, so the record is now closed."
+          : "Breakdown record saved.",
+      );
     } catch {
       toast.error("Couldn't save, your entries are still here. Try again.");
     } finally {

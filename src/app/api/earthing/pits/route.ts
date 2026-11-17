@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { earthPits, auditLog } from "@/lib/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -12,7 +12,7 @@ import { isMissingTable } from "@/lib/db/missing-table";
 import {
   EARTHING_SETUP_MESSAGE,
   ELECTRODE_TYPES,
-  normalisePitCode,
+  nextPitCode,
   validatePit,
 } from "@/lib/earthing/earthing";
 
@@ -45,9 +45,9 @@ export async function POST(request: Request) {
     const problem = validatePit(body);
     if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
-    const code = normalisePitCode(body.code);
-    const [clash] = await db.select({ id: earthPits.id }).from(earthPits).where(eq(earthPits.code, code)).limit(1);
-    if (clash) return NextResponse.json({ error: `There is already a pit coded ${code}.` }, { status: 409 });
+    // The number is generated (EP-01, EP-02, …); anything typed is ignored.
+    const used = await db.select({ code: earthPits.code }).from(earthPits);
+    const code = nextPitCode(used.map((p) => p.code));
 
     const now = new Date().toISOString();
     const row = {
@@ -66,7 +66,15 @@ export async function POST(request: Request) {
       createdAt: now,
       updatedAt: now,
     };
-    await db.insert(earthPits).values(row);
+    // Two pits added at the same moment draw the same number; the unique
+    // index refuses the second, which then takes the next one.
+    try {
+      await db.insert(earthPits).values(row);
+    } catch {
+      const again = await db.select({ code: earthPits.code }).from(earthPits);
+      row.code = nextPitCode(again.map((p) => p.code));
+      await db.insert(earthPits).values(row);
+    }
 
     await db.insert(auditLog).values({
       id: nanoid(),

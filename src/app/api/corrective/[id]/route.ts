@@ -13,6 +13,7 @@ import { logEquipmentEvent } from "@/lib/equipment-log";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { applyDerivedStatus } from "@/lib/equipment-status";
+import { closeCorrective } from "@/lib/maintenance/cm-closeout";
 
 export async function GET(
   request: Request,
@@ -302,6 +303,28 @@ export async function PATCH(
         await applyDerivedStatus(record.equipmentId);
       } catch (err) {
         console.warn("corrective PATCH: status derivation failed (non-fatal)", err);
+      }
+    }
+
+    // A record whose sign-off finished before it was complete (signed under
+    // the old flow, then the missing dates saved) closes on this Save. It is
+    // a no-op unless the chain is complete and nothing is missing.
+    if (updated[0] && updated[0].status !== "CLOSED") {
+      try {
+        const res = await closeCorrective(resolvedParams.id, {
+          id: gate.actor?.id ?? null,
+          name: gate.actor?.name ?? null,
+        });
+        if (res.closed) {
+          const [closed] = await db
+            .select()
+            .from(correctiveMaintenance)
+            .where(eq(correctiveMaintenance.id, resolvedParams.id))
+            .limit(1);
+          return NextResponse.json(closed);
+        }
+      } catch (err) {
+        console.warn("corrective PATCH: close-out check failed (non-fatal)", err);
       }
     }
 

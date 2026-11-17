@@ -13,6 +13,7 @@ import {
   probePositions,
   slopePerYear,
   validatePit,
+  nextPitCode,
   calibrationWarning,
   EARTHING_INTERVAL_DAYS,
 } from "@/lib/earthing/earthing";
@@ -153,7 +154,14 @@ test("an out-of-calibration instrument warns, a current one does not", () => {
   assert.equal(calibrationWarning("DUE_SOON"), null);
 });
 
-test("pits need a code, a name and a positive limit", () => {
+test("pit numbers are generated: EP-01 first, then after the highest used", () => {
+  assert.equal(nextPitCode([]), "EP-01");
+  assert.equal(nextPitCode(["EP-01", "EP-03", "OLD-9"]), "EP-04");
+  assert.equal(nextPitCode(["EP-99"]), "EP-100");
+});
+
+test("pits need a name and a positive limit; the code is not typed", () => {
+  assert.equal(validatePit({ name: "Main DB earth", limitOhms: 5 }), null);
   assert.equal(validatePit({ code: "EP-01", name: "Main DB earth", limitOhms: 5 }), null);
   assert.ok(validatePit({ code: "", name: "x", limitOhms: 5 }));
   assert.ok(validatePit({ code: "EP-01", name: "", limitOhms: 5 }));

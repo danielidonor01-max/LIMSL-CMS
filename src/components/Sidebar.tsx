@@ -76,6 +76,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
       { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
       { href: "/spares", label: "Critical Spares", icon: Package },
+      { href: "/earthing", label: "Earthing", icon: Zap },
     ],
   },
   {
@@ -86,7 +87,6 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
       { href: "/incidents", label: "Incidents & Near Misses", icon: Siren },
       { href: "/emergency", label: "Emergency Prep", icon: LifeBuoy },
-      { href: "/earthing", label: "Earthing", icon: Zap },
       { href: "/contractors", label: "Contractors", icon: HardHat },
       { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
       { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },

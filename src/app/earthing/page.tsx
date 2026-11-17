@@ -936,7 +936,6 @@ function PitModal({
         method: pit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: form.code,
           name: form.name,
           location: form.location,
           electrodeType: form.electrodeType || null,
@@ -961,10 +960,10 @@ function PitModal({
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={LABEL_CLASS} htmlFor="pit-code">
-              Code
-            </label>
-            <input id="pit-code" required value={form.code} onChange={(e) => set("code", e.target.value)} className={FIELD_CLASS} placeholder="EP-01" />
+            <span className={LABEL_CLASS}>Pit number</span>
+            <p className="px-3 py-2 text-sm rounded-lg bg-ink-100 text-ink-700">
+              {pit ? pit.code : "Given when you add it"}
+            </p>
           </div>
           <div>
             <label className={LABEL_CLASS} htmlFor="pit-limit">

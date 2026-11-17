@@ -310,6 +310,20 @@ export function normalisePitCode(raw: unknown): string {
   return String(raw ?? "").trim().toUpperCase().replace(/\s+/g, "-");
 }
 
+/**
+ * The next pit number, EP-01, EP-02, … (LIMSL, 17 Nov 2026: the number is
+ * generated, nobody types it). It follows the highest EP-n already used, so a
+ * retired pit's number is never handed out again. Two digits, more if needed.
+ */
+export function nextPitCode(existing: string[]): string {
+  let max = 0;
+  for (const c of existing) {
+    const m = /^EP-(\d+)$/.exec(c);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return `EP-${String(max + 1).padStart(2, "0")}`;
+}
+
 export function validatePit(body: {
   code?: unknown;
   name?: unknown;
@@ -317,7 +331,9 @@ export function validatePit(body: {
   electrodeType?: unknown;
 }, opts: { partial?: boolean } = {}): string | null {
   const has = (k: keyof typeof body) => body[k] !== undefined;
-  if (!opts.partial || has("code")) {
+  // The code is generated on create (`nextPitCode`), so it is only checked
+  // when one is actually given.
+  if (has("code")) {
     const code = normalisePitCode(body.code);
     if (!code) return "Give the pit a code, such as EP-01. It is what is painted on the pit cover.";
     if (code.length > 20) return "Keep the pit code to 20 characters.";
