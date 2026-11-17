@@ -26,6 +26,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { PERMIT_STATUS_LABELS, PERMIT_STATUS_BADGE } from "@/lib/constants";
 import PermitRenewalGrid from "@/components/PermitRenewalGrid";
+import { RevalidationAsk } from "@/components/PermitValidityPanel";
 import PermitHandback from "@/components/PermitHandback";
 import PermitFace from "@/components/PermitFace";
 import PermitPrintSheet from "@/components/PermitPrintSheet";
@@ -62,6 +63,7 @@ type Permit = {
   ppeRequired: string | null;
   lotoApplied: boolean | null;
   areaBarricaded: boolean | null;
+  permitHolderId: string | null;
   permitHolderName: string | null;
   issuedDate: string | null;
   expiryDate: string | null;
@@ -107,6 +109,7 @@ type Permit = {
     days: string[];
     marks: Record<string, RenewalDay>;
     summary: RenewalSummary;
+    endedOn?: string | null;
   } | null;
   closeout: { total: number; signed: number; complete: boolean } | null;
   approvalSteps: SignoffStep[];
@@ -413,7 +416,7 @@ export default function PermitDetail() {
                           href={`/equipment/${m.assetId.replace(/\//g, "-")}`}
                           className="text-xs px-2 py-1 rounded-lg bg-ink-100 text-ink-700 border border-line hover:border-brand-400 inline-block"
                         >
-                          {m.assetId} · {m.name}
+                          {m.name || m.assetId}
                         </Link>
                       </li>
                     ))}
@@ -426,11 +429,11 @@ export default function PermitDetail() {
                     href={`/equipment/${permit.equipment.assetId.replace(/\//g, "-")}`}
                     className="hover:text-brand-600 hover:underline"
                   >
-                    {permit.equipment.assetId}
+                    {permit.equipment.name || permit.equipment.assetId}
                   </Link>
-                ) : null}
-                {"-"}
-                {permit.equipment?.name}
+                ) : (
+                  permit.equipment?.name
+                )}
               </h2>
               )}
             </div>
@@ -553,13 +556,16 @@ export default function PermitDetail() {
         {/* The permit face: work types and the three checklists as marked. */}
         <PermitFace permit={permit} />
 
-        {/* Validity and renewal, one column per day of the period. */}
+        {/* Validity and renewal, one column per day of the period. The permit
+            holder asks for each day's revalidation from here. */}
+        {permit.validity && <RevalidationAsk permit={permit} onAsked={load} />}
         {permit.validity && (
           <PermitRenewalGrid
             permitId={permit.id}
             days={permit.validity.days}
             marks={permit.validity.marks}
             summary={permit.validity.summary}
+            endedOn={permit.validity.endedOn ?? null}
             canRenew={canRenew && isActive}
             onSaved={load}
           />

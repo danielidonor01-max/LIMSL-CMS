@@ -78,7 +78,7 @@ export default function NewCorrectiveRequest() {
       const machine = equipmentList.find((e: any) => e.id === equipmentId);
       const outcome = await submitOrQueue({
         url: "/api/corrective",
-        label: `Fault report, ${machine?.assetId ?? "equipment"}${machine?.name ? ` (${machine.name})` : ""}`,
+        label: `Fault report, ${machine?.name ?? machine?.assetId ?? "equipment"}`,
         body: {
           equipmentId,
           faultType,
@@ -139,7 +139,7 @@ export default function NewCorrectiveRequest() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.form}>
-        <PageHeader
+        <PageHeader
           title="Report a Machinery Fault"
           subtitle="Raise a corrective maintenance request against a machine"
           code="LIMSL-MAIN-015"

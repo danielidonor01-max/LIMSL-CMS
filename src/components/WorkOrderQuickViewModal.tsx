@@ -138,15 +138,10 @@ export default function WorkOrderQuickViewModal({
 
         {/* Machine & Location */}
         <div className="p-3 bg-white border border-ink-200 rounded-lg space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-ink-900 flex items-center gap-1.5">
-              <Wrench className="w-3.5 h-3.5 text-brand-600" /> Equipment
-            </span>
-            {workOrder.assetId && (
-              <span className="text-brand-600 font-medium">{workOrder.assetId}</span>
-            )}
-          </div>
-          <p className="text-ink-800 font-medium">{workOrder.equipmentName ?? "Unassigned"}</p>
+          <span className="font-semibold text-ink-900 flex items-center gap-1.5">
+            <Wrench className="w-3.5 h-3.5 text-brand-600" /> Equipment
+          </span>
+          <p className="text-ink-800 font-medium">{workOrder.equipmentName ?? workOrder.assetId ?? "Unassigned"}</p>
           {workOrder.location && (
             <p className="text-ink-400">Location: {workOrder.location}</p>
           )}

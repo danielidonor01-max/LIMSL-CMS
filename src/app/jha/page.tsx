@@ -70,7 +70,7 @@ export default function JhaListPage() {
   const wmsList = Array.isArray(wmsRaw) ? wmsRaw : [];
   const rows = Array.isArray(data) ? data : [];
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState<"needs_jha" | "open" | "approved" | "all">("open");
+  const [tab, setTab] = useState<"needs_jha" | "open" | "approved" | "all">("all");
 
   useEffect(() => setMounted(true), []);
 
@@ -80,12 +80,8 @@ export default function JhaListPage() {
     );
   }, [wmsList]);
 
-  // If there are pending WMS needing JHA and user is HSE, default tab to needs_jha
-  useEffect(() => {
-    if (canCreateJha && pendingWms.length > 0 && tab === "open") {
-      setTab("needs_jha");
-    }
-  }, [canCreateJha, pendingWms.length]);
+  // "All" is always the opening view. Method statements still waiting on an
+  // analysis are announced by the banner above the tabs, not by switching it.
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -187,12 +183,12 @@ export default function JhaListPage() {
             value={tab}
             onChange={setTab}
             items={[
+              { value: "all" as const, label: "All", count: rows.length },
+              { value: "open" as const, label: "Open", count: awaiting },
+              { value: "approved" as const, label: "Approved", count: approved },
               ...(pendingWms.length > 0
                 ? [{ value: "needs_jha" as const, label: "Needs Analysis", count: pendingWms.length }]
                 : []),
-              { value: "open" as const, label: "Open", count: awaiting },
-              { value: "approved" as const, label: "Approved", count: approved },
-              { value: "all" as const, label: "All", count: rows.length },
             ]}
           />
           <div className="relative flex-1">

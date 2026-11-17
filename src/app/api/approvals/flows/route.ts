@@ -18,6 +18,7 @@ import { signoffs } from "@/lib/db/schema";
 import { describeEntities } from "@/lib/signoff/describe";
 import { entityLabel, pendingFor, type SignoffRow } from "@/lib/signoff/inbox";
 import { canAccessPath, ROLE_LABELS } from "@/lib/roles";
+import { dropFinishedChains } from "@/lib/signoff/finished";
 
 type FlowStatus = "IN_PROGRESS" | "RETURNED" | "COMPLETE";
 
@@ -38,7 +39,9 @@ export async function GET() {
       byEntity.set(key, [...(byEntity.get(key) ?? []), r]);
     }
 
-    const mine = new Set(pendingFor(rows, { id: actor.id, role: actor.role }).map((m) => `${m.entityType}:${m.entityId}`));
+    const mine = new Set(
+      pendingFor(await dropFinishedChains(rows), { id: actor.id, role: actor.role }).map((m) => `${m.entityType}:${m.entityId}`),
+    );
     const cutoff = new Date(Date.now() - FINISHED_WINDOW_DAYS * 864e5).toISOString();
 
     const flows: Array<{

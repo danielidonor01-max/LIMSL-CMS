@@ -13,6 +13,7 @@ import { batchAuthorisation } from "@/lib/work-order-approval";
 import { attentionModules } from "@/lib/attention";
 import { JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { canSignChainStep, WMS_CHAIN } from "@/lib/signoff/chains";
+import { dropFinishedChains } from "@/lib/signoff/finished";
 
 const OPEN_BATCH = ["PLANNED", "ASSIGNED", "IN_PROGRESS"];
 const OPEN_WORK = ["OPEN", "IN_PROGRESS"];
@@ -29,7 +30,7 @@ export async function GET() {
     const pending = await db.select({ entityId: signoffs.entityId }).from(signoffs).where(eq(signoffs.status, "PENDING"));
     const entityIds = [...new Set(pending.map((p) => p.entityId))];
     const rows = entityIds.length
-      ? ((await db.select().from(signoffs).where(inArray(signoffs.entityId, entityIds))) as SignoffRow[])
+      ? await dropFinishedChains((await db.select().from(signoffs).where(inArray(signoffs.entityId, entityIds))) as SignoffRow[])
       : [];
     const mine = pendingFor(rows, { id: actor.id, role });
 

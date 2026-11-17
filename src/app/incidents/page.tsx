@@ -138,7 +138,7 @@ export default function IncidentsPage() {
                       <p className="text-xs text-ink-600 tabular-nums">
                         {formatDate(r.occurredAt.slice(0, 10))}
                         {r.location ? ` · ${r.location}` : ""}
-                        {r.assetId ? ` · ${r.assetId}` : ""}
+                        {r.equipmentName || r.assetId ? ` · ${r.equipmentName ?? r.assetId}` : ""}
                         {r.reportedByName ? ` · reported by ${r.reportedByName}` : ""}
                       </p>
                     </div>

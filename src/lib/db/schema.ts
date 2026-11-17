@@ -1673,3 +1673,65 @@ export type PmBatch = typeof pmBatches.$inferSelect;
 export type NewPmBatch = typeof pmBatches.$inferInsert;
 export type AssetCategory = typeof assetCategories.$inferSelect;
 export type AssetCategoryChange = typeof assetCategoryChanges.$inferSelect;
+
+// ─── Earthing ────────────────────────────────────────────────────────────────
+// Earthing is its own module (LIMSL, 17 Nov 2026), not an equipment row: what
+// is monitored is the resistance of each earth pit over the years, which the
+// equipment register has no place to hold. The tables come from
+// src/lib/db/apply-earthing.ts (additive, idempotent).
+export const earthPits = pgTable("earth_pits", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().unique(), // EP-01, painted on the pit cover
+  name: text("name").notNull(),
+  location: text("location"),
+  description: text("description"),
+  electrodeType: text("electrode_type"), // ROD | PLATE | STRIP | MESH | OTHER
+  // Per pit, because a general installation earth is commonly held to 5 Ω and
+  // a lightning-protection or clean electronics earth to 1 Ω or less. 5 Ω is
+  // the starting value (DEFAULT_LIMIT_OHMS in lib/earthing/earthing.ts).
+  limitOhms: real("limit_ohms").notNull().default(5),
+  active: boolean("active").notNull().default(true),
+  createdById: text("created_by_id"),
+  createdByName: text("created_by_name"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
+
+// One fall-of-potential test of one pit. Append-only: the instrument, its
+// calibration state and the pit's limit are snapshotted, because a reading
+// taken with an instrument that later lapsed (or against a limit later
+// tightened) has to read as it stood on the day.
+export const earthTests = pgTable(
+  "earth_tests",
+  {
+    id: text("id").primaryKey(),
+    testNumber: text("test_number").notNull().unique(), // ET-2026-0001
+    pitId: text("pit_id").notNull().references(() => earthPits.id),
+    testDate: text("test_date").notNull(), // YYYY-MM-DD
+    testTime: text("test_time"), // HH:MM
+    method: text("method").notNull().default("FALL_OF_POTENTIAL"),
+    instrumentId: text("instrument_id").references(() => calibrationRecords.id),
+    instrumentLabel: text("instrument_label"), // "HABOTEST HT20302 · S/N H12D-J051012"
+    instrumentCalStatus: text("instrument_cal_status"), // CURRENT | DUE_SOON | OVERDUE | NOT_CALIBRATED | OUT_OF_SERVICE
+    currentProbeDistanceM: real("current_probe_distance_m"), // D, to the current spike
+    readings: text("readings"), // JSON [{positionPct: 52|62|72, distanceM, ohms}]
+    resistanceOhms: real("resistance_ohms").notNull(), // the 62% reading
+    spreadPct: real("spread_pct"), // max deviation of 52%/72% from 62%
+    consistent: boolean("consistent"), // null for a single-reading test
+    limitOhms: real("limit_ohms"),
+    verdict: text("verdict").notNull(), // PASS | FAIL
+    soilCondition: text("soil_condition"), // DRY | MOIST | WET
+    weather: text("weather"),
+    remarks: text("remarks"),
+    testedById: text("tested_by_id"),
+    testedByName: text("tested_by_name"),
+    createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+  },
+  (t) => [
+    index("earth_tests_pit_idx").on(t.pitId),
+    index("earth_tests_date_idx").on(t.testDate),
+  ],
+);
+
+export type EarthPit = typeof earthPits.$inferSelect;
+export type EarthTest = typeof earthTests.$inferSelect;

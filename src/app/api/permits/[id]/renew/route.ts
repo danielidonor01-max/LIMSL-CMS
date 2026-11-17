@@ -52,7 +52,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       signedById: gate.actor?.id ?? null,
       signedByName: gate.actor?.name ?? null,
       signatureData: body.signatureData ?? null,
-      existing: existing[date] ?? null,
+      // A request is not a renewal: signing a requested day is not an amendment.
+      existing: existing[date] && existing[date].status !== "REQUESTED" ? existing[date] : null,
       amendReason: body.amendReason,
     });
 
@@ -60,7 +61,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const next: RenewalMarks = {
       ...existing,
-      [check.day.date]: { ...check.day, markedAt: new Date().toISOString() },
+      [check.day.date]: {
+        ...check.day,
+        // Keep who asked for the day, beside who signed it.
+        requestedById: existing[check.day.date]?.requestedById ?? null,
+        requestedByName: existing[check.day.date]?.requestedByName ?? null,
+        requestedAt: existing[check.day.date]?.requestedAt ?? null,
+        markedAt: new Date().toISOString(),
+      },
     };
 
     await db.update(permits).set({ renewalDays: JSON.stringify(next) }).where(eq(permits.id, id));

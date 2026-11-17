@@ -13,6 +13,7 @@ import { describeEntities } from "@/lib/signoff/describe";
 import { pendingFor, sortInbox, entityHref, entityLabel, type SignoffRow } from "@/lib/signoff/inbox";
 import { reconcileWorkOrderApprovals } from "@/lib/work-order-approval";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
+import { dropFinishedChains } from "@/lib/signoff/finished";
 
 
 export async function GET() {
@@ -32,10 +33,9 @@ export async function GET() {
     if (pendingRows.length === 0) return NextResponse.json([]);
 
     const entityIds = [...new Set(pendingRows.map((r) => r.entityId))];
-    const rows = (await db
-      .select()
-      .from(signoffs)
-      .where(inArray(signoffs.entityId, entityIds))) as SignoffRow[];
+    const rows = await dropFinishedChains(
+      (await db.select().from(signoffs).where(inArray(signoffs.entityId, entityIds))) as SignoffRow[],
+    );
 
     const mine = sortInbox(pendingFor(rows, { id: actor.id, role: actor.role }));
     if (mine.length === 0) return NextResponse.json([]);

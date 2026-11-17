@@ -12,13 +12,18 @@
 import { db } from "@/lib/db";
 import { workOrders, permits, wmsDocuments, jhaDocuments, pmBatches } from "@/lib/db/schema";
 import { and, desc, eq, notInArray, or } from "drizzle-orm";
-import { readinessToWork, type Readiness } from "./work-readiness";
+import { readinessToWork, parseRenewalMarks, type Readiness } from "./work-readiness";
 import { standingPairFor } from "@/lib/hse/standing-documents";
 
 export type JobReadiness = Readiness & {
   workOrderId: string;
   permitId: string | null;
   permitNumber: string | null;
+  // Only the permit holder asks for a day's revalidation (LIMSL, 17 Nov 2026).
+  permitHolderId: string | null;
+  permitHolderName: string | null;
+  // Today's request, once made: who asked and when.
+  revalidationRequested: { byName: string | null; at: string | null } | null;
   today: string;
 };
 
@@ -85,6 +90,12 @@ export async function loadReadiness(workOrderId: string): Promise<JobReadiness |
     workOrderId: wo.id,
     permitId: permit?.id ?? null,
     permitNumber: permit?.permitNumber ?? null,
+    permitHolderId: permit?.permitHolderId ?? null,
+    permitHolderName: permit?.permitHolderName ?? null,
+    revalidationRequested: (() => {
+      const m = parseRenewalMarks(permit?.renewalDays)[today];
+      return m?.status === "REQUESTED" ? { byName: m.requestedByName ?? null, at: m.requestedAt ?? null } : null;
+    })(),
     today,
   };
 }

@@ -29,7 +29,6 @@ const REPORTS: Record<string, ReportDef> = {
     endpoint: "/api/permits",
     columns: [
       { key: "permit", label: "Permit" },
-      { key: "asset", label: "Asset" },
       { key: "equipment", label: "Equipment" },
       { key: "holder", label: "Permit Holder" },
       { key: "status", label: "Status" },
@@ -39,8 +38,7 @@ const REPORTS: Record<string, ReportDef> = {
     ],
     map: (p) => ({
       permit: p.permitNumber,
-      asset: p.assetId ?? "-",
-      equipment: p.equipmentName ?? "-",
+      equipment: p.equipmentName ?? p.assetId ?? "-",
       holder: p.permitHolderName ?? "-",
       status: p.status,
       issued: p.issuedDate ? formatDate(p.issuedDate) : "\u2014",
@@ -55,7 +53,6 @@ const REPORTS: Record<string, ReportDef> = {
     extract: (d) => (Array.isArray(d) ? d.filter((s) => s.activityType === "PM") : []),
     columns: [
       { key: "planned", label: "Planned" },
-      { key: "asset", label: "Asset" },
       { key: "equipment", label: "Equipment" },
       { key: "responsible", label: "Responsible" },
       { key: "status", label: "Status" },
@@ -63,8 +60,7 @@ const REPORTS: Record<string, ReportDef> = {
     ],
     map: (s) => ({
       planned: s.plannedDate ? formatDate(s.plannedDate) : "\u2014",
-      asset: s.assetId ?? "-",
-      equipment: s.equipmentName ?? "-",
+      equipment: s.equipmentName ?? s.assetId ?? "-",
       responsible: s.responsiblePersonName ?? "-",
       status: s.status,
       completed: s.completedDate ? formatDate(s.completedDate) : "\u2014",

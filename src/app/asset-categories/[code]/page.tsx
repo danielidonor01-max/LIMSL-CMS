@@ -419,7 +419,6 @@ export default function CategoryDetailPage({
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-line bg-canvas text-ink-500 text-xs">
-                      <th className="py-2.5 px-4 font-medium">Asset ID</th>
                       <th className="py-2.5 px-4 font-medium">Machine Name</th>
                       <th className="py-2.5 px-4 font-medium">Status</th>
                       <th className="py-2.5 px-4 font-medium">Location</th>
@@ -430,7 +429,7 @@ export default function CategoryDetailPage({
                   <tbody className="divide-y divide-ink-100">
                     {data.machines.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-xs text-ink-500">
+                        <td colSpan={5} className="py-8 text-center text-xs text-ink-500">
                           No equipment registered under this category yet.
                         </td>
                       </tr>
@@ -438,15 +437,14 @@ export default function CategoryDetailPage({
                       data.machines.map((m) => {
                         return (
                           <tr key={m.id} className="hover:bg-ink-50 transition-colors">
-                            <td className="py-3 px-4 font-semibold text-ink-900">
+                            <td className="py-3 px-4 font-medium">
                               <Link
                                 href={`/equipment/${m.assetId.replace(/\//g, "-")}`}
-                                className="text-brand-600 hover:underline whitespace-nowrap"
+                                className="text-ink-900 hover:text-brand-600 hover:underline"
                               >
-                                {m.assetId}
+                                {m.name || m.assetId}
                               </Link>
                             </td>
-                            <td className="py-3 px-4 text-ink-900 font-medium">{m.name}</td>
                             <td className="py-3 px-4 whitespace-nowrap">
                               <Badge className={EQUIPMENT_STATUS_BADGE[m.status] ?? EQUIPMENT_STATUS_BADGE.DECOMMISSIONED}>
                                 {EQUIPMENT_STATUS_LABELS[m.status] ?? m.status.replace(/_/g, " ")}
@@ -580,9 +578,7 @@ export default function CategoryDetailPage({
                           </div>
                           <p className="text-xs text-ink-600 truncate mt-1">{p.workDescription}</p>
                           {p.equipmentName && (
-                            <p className="text-xs text-ink-400 mt-0.5">
-                              {p.equipmentName} ({p.assetId})
-                            </p>
+                            <p className="text-xs text-ink-400 mt-0.5">{p.equipmentName}</p>
                           )}
                         </div>
                         <Link
@@ -685,8 +681,7 @@ export default function CategoryDetailPage({
                       <div key={item.id} className="p-3.5 flex items-center justify-between gap-3 text-xs">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-ink-900">{item.equipmentName}</span>
-                            <span className="text-ink-400">({item.assetId})</span>
+                            <span className="font-semibold text-ink-900">{item.equipmentName || item.assetId}</span>
                           </div>
                           <p className="text-ink-500 mt-0.5">
                             Planned Date: {formatDate(item.plannedDate)} · Status: {item.status}

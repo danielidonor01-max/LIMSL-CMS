@@ -108,6 +108,11 @@ export function pendingFor(rows: SignoffRow[], actor: Actor): InboxItem[] {
 
     for (const step of ordered) {
       if (step.status !== "PENDING") continue;
+      // An optional step (the permit's Affected Custodian, the COO on a
+      // non-critical repair) is never "waiting on you": nothing is held up
+      // by it, so it raises no dot and no inbox line. It is still signable
+      // on the document itself.
+      if (step.required === false) continue;
 
       // A step reserved for a named person is theirs alone. The permit holder
       // signs the permit issued to him and no other technician signs it for

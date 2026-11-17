@@ -423,10 +423,10 @@ export default function WorkOrderDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="font-medium text-ink-900 hover:text-brand-600">
-                  {eq.name}
+                  {eq.name || eq.assetId}
                 </Link>
                 <p className="text-xs text-ink-500 mt-0.5">
-                  {eq.assetId} · {eq.location} · {eq.oem ?? "-"}
+                  {[eq.location, eq.oem].filter(Boolean).join(" · ") || "-"}
                 </p>
               </div>
               <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>

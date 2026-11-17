@@ -24,6 +24,7 @@ import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
 import FlowRail, { type FlowLink } from "@/components/FlowRail";
 import SignoffChain from "@/components/SignoffChain";
+import PermitValidityPanel from "@/components/PermitValidityPanel";
 import TableSkeleton from "@/components/TableSkeleton";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { WO_STATUS_BADGE } from "@/lib/constants";
@@ -271,7 +272,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
             : "No defects found."
       }`
     : nextUp
-      ? `Next: ${nextUp.machineName ?? nextUp.title} (${nextUp.assetId ?? nextUp.workOrderNumber}). The method statement, hazard analysis and permit cover every machine in the batch.`
+      ? `Next: ${nextUp.machineName ?? nextUp.title}. The method statement, hazard analysis and permit cover every machine in the batch.`
       : "The method statement, hazard analysis and permit cover every machine in the batch.";
 
   // Every document the batch runs under, as it stands right now.
@@ -295,7 +296,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
       : []),
     ...live.map((w) => ({
       key: `chk-${w.id}`,
-      kind: `PM checklist, ${w.assetId ?? w.machineName ?? ""}`.trim(),
+      kind: `PM checklist, ${w.machineName ?? w.assetId ?? ""}`.trim(),
       number: w.workOrderNumber,
       status: w.checklist ? "FILED" : "NOT_FILED",
       href: w.checklist ? `/work-orders/${w.id}` : undefined,
@@ -375,8 +376,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                             <div className="min-w-0">
                               <p className="font-medium text-ink-900">{w.machineName ?? w.title}</p>
                               <p className="text-xs text-ink-500 mt-0.5">
-                                {[w.assetId, w.location].filter(Boolean).join(" · ")}
-                                {" · "}
+                                {w.location ? `${w.location} · ` : ""}
                                 <Link href={`/work-orders/${w.id}`} className="hover:text-brand-700 hover:underline whitespace-nowrap">
                                   {w.workOrderNumber}
                                 </Link>
@@ -501,6 +501,9 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
             </div>
           </section>
         )}
+        {/* The permit's validity record, live with the documents: the holder
+            asks for each day's revalidation, the Factory Manager signs it. */}
+        {tab === "documents" && batch.permit && <PermitValidityPanel permitId={batch.permit.id} />}
       </div>
   );
 

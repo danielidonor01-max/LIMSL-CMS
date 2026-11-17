@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { db } from "@/lib/db";
-import { signoffs, users } from "@/lib/db/schema";
+import { signoffs, users, permits } from "@/lib/db/schema";
+import { isFinishedChain } from "@/lib/signoff/finished";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 // GET /api/signoffs?entityType=PM_CHECKLIST&entityId=... → the sign-off chain
@@ -36,7 +37,14 @@ export async function GET(request: Request) {
     if (!entityType || !entityId) {
       return NextResponse.json({ error: "entityType and entityId are required" }, { status: 400 });
     }
-    await ensureSignoffChain(entityType, entityId);
+    // A cancelled or closed permit's chain is history: reading it must not
+    // rebuild the steps the cancellation removed (lib/signoff/finished.ts).
+    let finished = false;
+    if (entityType === "PERMIT" || entityType === "PERMIT_CLOSEOUT") {
+      const [p] = await db.select({ status: permits.status }).from(permits).where(eq(permits.id, entityId)).limit(1);
+      finished = isFinishedChain(entityType, p?.status) && p?.status !== "ACTIVE";
+    }
+    if (!finished) await ensureSignoffChain(entityType, entityId);
     const chain = await getSignoffChain(entityType, entityId);
     return NextResponse.json(chain);
   } catch (error) {

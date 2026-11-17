@@ -185,7 +185,7 @@ function AssetHistoryDossier() {
           {/* Title + generated stamp */}
           <div>
             <h2 className="text-xl font-bold tracking-tight text-ink-900">
-              Maintenance Dossier, {String(eq.assetId ?? "")} {eq.name ? `· ${eq.name}` : ""}
+              Maintenance Dossier, {String(eq.name || eq.assetId || "")}
             </h2>
             <p className="text-xs text-ink-500 tabular-nums mt-1">
               {formatDate(data.range.from)}, {formatDate(data.range.to)} · generated{" "}

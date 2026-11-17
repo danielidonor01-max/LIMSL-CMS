@@ -321,7 +321,7 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-danger-700">
-                  {brokenDown[0].name} is down ({brokenDown[0].assetId})
+                  {brokenDown[0].name || brokenDown[0].assetId} is down
                 </p>
                 <BreakdownDetail record={openFor(brokenDown[0].id)} />
               </div>
@@ -367,8 +367,7 @@ export default function Home() {
                   >
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-ink-900 truncate">{eq.name}</span>
-                        <span className="text-xs text-ink-500">{eq.assetId}</span>
+                        <span className="text-sm font-semibold text-ink-900 truncate">{eq.name || eq.assetId}</span>
                         {eq.location && <span className="text-xs text-ink-400">&middot; {eq.location}</span>}
                       </div>
                       <BreakdownDetail record={rec} />
@@ -437,7 +436,6 @@ export default function Home() {
                 <thead>
                   <tr className="border-b border-ink-200 text-ink-500 font-medium">
                     <th className="py-2">Equipment</th>
-                    <th className="py-2">Tag ID</th>
                     <th className="py-2">Location</th>
                     <th className="py-2">Status</th>
                     <th className="py-2">Next PM</th>
@@ -450,7 +448,6 @@ export default function Home() {
                         {/* Asset IDs carry slashes (LEE/PE/1904), routes take the dash form. */}
                         <Link href={`/equipment/${(eq.assetId || "").replace(/\//g, "-")}`} className="hover:text-brand-600">{eq.name}</Link>
                       </td>
-                      <td className="py-3 text-ink-500">{eq.assetId}</td>
                       <td className="py-3">{eq.location ?? eq.bay ?? "-"}</td>
                       <td className="py-3">
                         <Badge className={EQUIPMENT_STATUS_BADGE[eq.status]}>

@@ -130,11 +130,12 @@ test("chainSummary: an all-optional chain is never complete", () => {
   assert.deepEqual(s, { total: 0, signed: 0, complete: false });
 });
 
-test("chainSummary: CM close-out completes without the optional COO signature", () => {
-  const statuses = CM_CHAIN.map((s) => (s.required ? "SIGNED" : "PENDING"));
+test("chainSummary: the CM close-out is three signatures, and the Maintenance Manager's closes it", () => {
+  const statuses = CM_CHAIN.map(() => "SIGNED");
   const s = chainSummary(materialise(CM_CHAIN, statuses));
-  assert.equal(s.total, 5);
+  assert.equal(s.total, 3);
   assert.equal(s.complete, true);
+  assert.deepEqual(CM_CHAIN.map((st) => st.role), ["TECHNICIAN", "FOREMAN", "MAINTENANCE_MANAGER"]);
 });
 
 // ── Declared chain integrity ─────────────────────────────────────────────────

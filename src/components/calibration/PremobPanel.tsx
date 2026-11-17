@@ -185,9 +185,9 @@ export default function PremobPanel({ canWrite, openNew }: { canWrite: boolean; 
                   <tr key={m.id} className="hover:bg-ink-50">
                     <td className="py-3 px-5">
                       <Link href={equipmentHref(m.assetId)} className="font-medium text-ink-900 hover:text-brand-700 hover:underline underline-offset-2">
-                        {m.name}
+                        {m.name || m.assetId}
                       </Link>
-                      <div className="text-xs text-ink-500 tabular-nums">{m.assetId}</div>
+                      {m.location && <div className="text-xs text-ink-500">{m.location}</div>}
                     </td>
                     <td className="py-3 px-5 tabular-nums text-ink-700">{m.latest ? formatDate(m.latest.premobDate) : "-"}</td>
                     <td className="py-3 px-5 text-ink-700">{m.latest?.vendor ?? "-"}</td>
@@ -238,10 +238,13 @@ export default function PremobPanel({ canWrite, openNew }: { canWrite: boolean; 
               onChange={(v) => setForm((f) => (f ? { ...f, equipmentId: v } : f))}
               className="w-full"
               ariaLabel="Crane"
+              searchable
             >
               <option value="" disabled>Select crane…</option>
               {machines.map((m) => (
-                <option key={m.id} value={m.id}>{m.assetId}, {m.name}</option>
+                <option key={m.id} value={m.id} data-keywords={[m.assetId, m.location].filter(Boolean).join(" ")}>
+                  {m.name || m.assetId}
+                </option>
               ))}
             </Select>
           </div>
@@ -283,7 +286,7 @@ export default function PremobPanel({ canWrite, openNew }: { canWrite: boolean; 
         open={history !== null}
         onClose={() => setHistory(null)}
         title="Premob History"
-        subtitle={history ? `${history.name} · ${history.assetId}` : ""}
+        subtitle={history ? history.name || history.assetId : ""}
       >
         {craneHistory.length === 0 ? (
           <EmptyState icon={FileCheck2} title="No premob recorded" message="The first premob you record for this crane starts its history." />

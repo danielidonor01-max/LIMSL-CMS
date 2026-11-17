@@ -93,6 +93,7 @@ const MODULE_LABELS: Record<string, string> = {
   "/training": "Training",
   "/wms": "WMS",
   "/calibration": "Calibration",
+  "/earthing": "Earthing",
   "/permits": "Permits",
 };
 

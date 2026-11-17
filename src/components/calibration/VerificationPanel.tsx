@@ -237,9 +237,8 @@ export default function VerificationPanel({ canWrite, openNew }: { canWrite: boo
                   <tr key={m.id} className="hover:bg-ink-50">
                     <td className="py-3 px-5">
                       <Link href={equipmentHref(m.assetId)} className="font-medium text-ink-900 hover:text-brand-700 hover:underline underline-offset-2">
-                        {m.name}
+                        {m.name || m.assetId}
                       </Link>
-                      <div className="text-xs text-ink-500 tabular-nums">{m.assetId}</div>
                     </td>
                     <td className="py-3 px-5 text-ink-500">{TYPE_LABEL[m.category ?? ""] ?? m.category}</td>
                     <td className="py-3 px-5 tabular-nums text-ink-700">{m.latest ? formatDate(m.latest.verificationDate) : "-"}</td>
@@ -305,10 +304,13 @@ export default function VerificationPanel({ canWrite, openNew }: { canWrite: boo
                 }}
                 className="w-full"
                 ariaLabel="Machine"
+                searchable
               >
                 <option value="" disabled>Select machine…</option>
                 {machines.map((m) => (
-                  <option key={m.id} value={m.id}>{m.assetId}, {m.name}</option>
+                  <option key={m.id} value={m.id} data-keywords={m.assetId}>
+                    {m.name || m.assetId}
+                  </option>
                 ))}
               </Select>
             </div>
@@ -420,7 +422,7 @@ export default function VerificationPanel({ canWrite, openNew }: { canWrite: boo
         open={history !== null}
         onClose={() => setHistory(null)}
         title="Verification History"
-        subtitle={history ? `${history.name} · ${history.assetId}` : ""}
+        subtitle={history ? history.name || history.assetId : ""}
         maxWidthClass="max-w-xl"
       >
         {machineHistory.length === 0 ? (

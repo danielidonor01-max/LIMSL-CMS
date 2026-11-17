@@ -18,10 +18,19 @@ export const DEFAULT_PERMIT_VALIDITY_DAYS = 7;
 
 export type DayStatus = "WORKED" | "NOT_WORKED";
 
+// REQUESTED is a day the permit holder has asked to be revalidated and nobody
+// has signed yet (LIMSL, 17 Nov 2026). It counts as unmarked everywhere: it is
+// a request on the record, not a renewal.
 export type RenewalDay = {
   date: string;
-  status: DayStatus;
+  status: DayStatus | "REQUESTED";
   time?: string | null;
+  requestedById?: string | null;
+  requestedByName?: string | null;
+  requestedAt?: string | null;
+  // "PERMIT_ISSUE": the first day, covered by the permit's own approval and
+  // shown on the grid so the first column is never an unexplained blank.
+  basis?: "PERMIT_ISSUE" | null;
   signedById?: string | null;
   signedByName?: string | null;
   signatureData?: string | null;
@@ -209,6 +218,39 @@ export type RenewalSummary = {
   // unmarked day in the past is a gap in the evidence, not a day off.
   unaccounted: string[];
 };
+
+/**
+ * The first day of a permit is authorised by the permit being approved; no
+ * separate renewal is signed for it. Show it on the record as such, rather
+ * than as a blank column that reads like a gap in the evidence. Not stored.
+ */
+export function withIssueDay(
+  marks: RenewalMarks,
+  startDate: string,
+  approvedAt: string | null | undefined,
+  approvedByName?: string | null,
+): RenewalMarks {
+  if (!approvedAt) return marks;
+  const existing = marks[startDate];
+  if (existing && existing.status !== "REQUESTED") return marks;
+  const t = new Date(approvedAt);
+  const time = Number.isNaN(t.getTime())
+    ? null
+    : t.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos" });
+  return {
+    ...marks,
+    [startDate]: {
+      date: startDate,
+      status: "WORKED",
+      time,
+      signedById: null,
+      signedByName: approvedByName ?? "Permit approval",
+      signatureData: null,
+      markedAt: approvedAt,
+      basis: "PERMIT_ISSUE",
+    },
+  };
+}
 
 export function renewalSummary(
   startDate: string,

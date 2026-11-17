@@ -31,6 +31,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/jha": "Job Hazard Analysis",
   "/permits": "Permits (PTW)",
   "/emergency": "Emergency Prep",
+  "/earthing": "Earthing",
   "/contractors": "Contractors",
   "/audit/non-conformity": "Audit & NC",
   "/audit/risks": "Risk Register",

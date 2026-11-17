@@ -78,6 +78,11 @@ test("no page-level module has appeared without being considered for search", ()
     // machine in it. It was exempt while it lived under settings, and moving
     // it out did not give it anything a search would find faster.
     "asset-categories",
+    // A handful of earth pits on one page, each test reached from its pit
+    // (17 Nov 2026). Not searched yet: the tables ship by a one-off script and
+    // search must not fail on a database that has not run it. Add it to the
+    // search route, guarded by isMissingTable, if the pit count grows.
+    "earthing",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",

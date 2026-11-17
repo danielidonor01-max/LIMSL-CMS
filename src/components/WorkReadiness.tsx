@@ -14,6 +14,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { CheckCircle2, CircleDashed, ShieldCheck, ShieldAlert } from "lucide-react";
 import Button from "@/components/Button";
+import { useSession } from "next-auth/react";
 import type { JobReadiness } from "@/lib/maintenance/work-readiness-db";
 
 export default function WorkReadiness({
@@ -28,6 +29,8 @@ export default function WorkReadiness({
 }) {
   const [data, setData] = useState<JobReadiness | null>(null);
   const [asking, setAsking] = useState(false);
+  const { data: session } = useSession();
+  const myId = (session?.user as { id?: string } | undefined)?.id ?? null;
 
   const load = useCallback(() => {
     fetch(`/api/work-orders/${workOrderId}/readiness`)
@@ -55,8 +58,8 @@ export default function WorkReadiness({
         d.alreadyRevalidated
           ? "Today is already revalidated."
           : d.alreadyAsked
-            ? "Already asked today. The Maintenance Manager has the request."
-            : "Asked. The asset holder (Maintenance or Factory Manager) has been told to revalidate the permit for today.",
+            ? "Already asked today. The Factory Manager has the request."
+            : "Asked. The Factory Manager has been told to revalidate the permit for today.",
       );
       load();
     } finally {
@@ -107,9 +110,19 @@ export default function WorkReadiness({
           <p className="text-xs text-ink-700 leading-relaxed min-w-0 flex-1">
             Everything else is in place. The permit needs today&apos;s revalidation before work starts.
           </p>
-          <Button size="sm" loading={asking} onClick={ask}>
-            Ask for today&apos;s revalidation
-          </Button>
+          {data.revalidationRequested ? (
+            <span className="text-xs text-ink-600">
+              Asked by {data.revalidationRequested.byName ?? "the permit holder"}, waiting on the Factory Manager.
+            </span>
+          ) : !data.permitHolderId || data.permitHolderId === myId ? (
+            <Button size="sm" loading={asking} onClick={ask}>
+              Ask the Factory Manager
+            </Button>
+          ) : (
+            <span className="text-xs text-ink-600">
+              {data.permitHolderName ?? "The permit holder"} asks the Factory Manager.
+            </span>
+          )}
         </div>
       )}
     </section>

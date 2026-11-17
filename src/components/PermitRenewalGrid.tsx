@@ -31,7 +31,10 @@ export default function PermitRenewalGrid({
   summary,
   canRenew,
   onSaved,
+  endedOn = null,
 }: {
+  /** The day a closed or cancelled permit ended; its record stops there. */
+  endedOn?: string | null;
   permitId: string;
   days: string[];
   marks: Record<string, RenewalDay>;
@@ -53,7 +56,7 @@ export default function PermitRenewalGrid({
 
   const openDay = (date: string) => {
     const existing = marks[date];
-    setStatus(existing?.status ?? "WORKED");
+    setStatus(existing?.status === "NOT_WORKED" ? "NOT_WORKED" : "WORKED");
     setTime(existing?.time ?? "08:00");
     setAmendReason("");
     setOpen(date);
@@ -89,7 +92,10 @@ export default function PermitRenewalGrid({
     }
   };
 
-  const existing = open ? marks[open] : null;
+  // A request or the issue day is not a renewal, so signing it is not an amendment.
+  const isRenewal = (m?: RenewalDay | null) => !!m && m.status !== "REQUESTED" && m.basis !== "PERMIT_ISSUE";
+  const existing = open && isRenewal(marks[open]) ? marks[open] : null;
+  const requests = days.filter((d) => marks[d]?.status === "REQUESTED");
 
   return (
     <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
@@ -99,7 +105,9 @@ export default function PermitRenewalGrid({
             <CalendarDays className="w-4 h-4 text-brand-600" /> Validity and renewal
           </h3>
           <p className="text-xs text-ink-500 mt-0.5">
-            {summary.expired
+            {endedOn
+              ? `Closed on ${endedOn}.`
+              : summary.expired
               ? `Expired after ${summary.expiresOn}.`
               : `${summary.daysRemaining} day${summary.daysRemaining === 1 ? "" : "s"} left, expires after ${summary.expiresOn}.`}
             {" "}
@@ -157,6 +165,26 @@ export default function PermitRenewalGrid({
                         title={`${mark.signedByName ?? ""} ${mark.time ?? ""}`}
                         className="h-7 mx-auto"
                       />
+                    ) : mark?.status === "WORKED" ? (
+                      // A typed renewal is signed by name. It used to show
+                      // only a drawn image, so a renewed day looked blank.
+                      <span className="block text-[11px] leading-tight text-ink-900 font-medium" title={mark.basis === "PERMIT_ISSUE" ? "Covered by the permit's approval" : `Revalidated by ${mark.signedByName ?? ""}`}>
+                        {mark.basis === "PERMIT_ISSUE" ? "Issued" : (mark.signedByName ?? "Signed").split(" ")[0]}
+                      </span>
+                    ) : mark?.status === "REQUESTED" && canRenew && past ? (
+                      <button
+                        type="button"
+                        onClick={() => openDay(d)}
+                        className="inline-flex flex-col items-center text-warn-700 hover:text-warn-900"
+                        aria-label={`Revalidate ${d}, asked by ${mark.requestedByName ?? "the permit holder"}`}
+                      >
+                        <PenLine className="w-4 h-4" />
+                        <span className="text-[10px] font-semibold">Asked</span>
+                      </button>
+                    ) : mark?.status === "REQUESTED" ? (
+                      <span className="block text-[10px] font-semibold text-warn-700" title={`Asked by ${mark.requestedByName ?? ""}`}>
+                        Asked
+                      </span>
                     ) : mark?.status === "NOT_WORKED" ? (
                       <span className="block text-ink-300 text-lg leading-none" title="Not worked">
                         ／
@@ -181,6 +209,20 @@ export default function PermitRenewalGrid({
         </table>
       </div>
 
+      {requests.length > 0 && (
+        <div className="px-6 py-3 bg-warn-50 border-t border-warn-200 space-y-0.5">
+          {requests.map((d) => (
+            <p key={d} className="text-xs text-warn-900">
+              {marks[d].requestedByName ?? "The permit holder"} asked for {d} to be revalidated
+              {marks[d].requestedAt
+                ? ` at ${new Date(marks[d].requestedAt!).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                : ""}
+              {canRenew ? ". Press the pen under that day to revalidate it." : ". Waiting on the Factory Manager."}
+            </p>
+          ))}
+        </div>
+      )}
+
       {summary.unaccounted.length > 0 && (
         <div className="px-6 py-3 bg-warn-50 border-t border-warn-200">
           <p className="text-xs text-warn-800">
@@ -195,7 +237,7 @@ export default function PermitRenewalGrid({
       {canRenew && marks && (
         <div className="px-6 py-3 border-t border-ink-200 flex flex-wrap gap-1.5">
           {days
-            .filter((d) => d <= today && marks[d])
+            .filter((d) => d <= today && isRenewal(marks[d]))
             .map((d) => (
               <button
                 key={d}

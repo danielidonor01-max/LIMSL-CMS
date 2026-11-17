@@ -174,10 +174,14 @@ export function readinessToWork(input: ReadinessInput): Readiness {
       detail = `Revalidated today${mark.time ? ` at ${mark.time}` : ""}${mark.signedByName ? ` by ${mark.signedByName}` : ""}.`;
     } else if (mark?.status === "NOT_WORKED") {
       detail = "Today is marked on the permit as a day not worked.";
+    } else if (mark?.status === "REQUESTED") {
+      detail =
+        `${mark.requestedByName ?? "The permit holder"} asked for today's revalidation. ` +
+        "Waiting on the Factory Manager to sign it on the permit.";
     } else {
       detail =
-        "Today's revalidation has not been signed. The asset holder (Maintenance or Factory Manager) revalidates the permit " +
-        "for the day before work starts.";
+        "Today's revalidation has not been signed. The permit holder asks the Factory Manager, who revalidates " +
+        "the permit for the day before work starts.";
     }
     checks.push({ key: "REVALIDATED", label: "Revalidated for today", ok, detail });
   }

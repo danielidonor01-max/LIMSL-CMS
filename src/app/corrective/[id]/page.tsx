@@ -5,13 +5,11 @@ import Button from "@/components/Button";
 import { pageMain } from "@/lib/page-shell";
 import DateTimeField from "@/components/DateTimeField";
 import DateField from "@/components/DateField";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Clock, ShieldCheck, Plus, UserCheck } from "lucide-react";
+import { Clock, ShieldCheck, Plus, UserCheck, CheckCircle2, CircleDashed, Save } from "lucide-react";
 import { DeleteButton } from "@/components/DeleteButton";
-import SignatureBlock from "@/components/SignatureBlock";
 import SignoffChain from "@/components/SignoffChain";
 import CorrectiveFlow from "@/components/CorrectiveFlow";
 import WorkReadiness from "@/components/WorkReadiness";
@@ -24,11 +22,10 @@ import { useDraft } from "@/lib/use-draft";
 import { failureModesFor, DETECTION_METHODS } from "@/lib/maintenance/failure-codes";
 import { productionDowntimeHours, type WorkSettings, DEFAULT_WORK_SETTINGS } from "@/lib/worktime";
 import PageSkeleton from "@/components/Skeleton";
+import { closeOutGaps } from "@/lib/maintenance/cm-closeout-rules";
 
 export default function CorrectiveDetail({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
   const { data: session } = useSession();
-  const currentUserName = (session?.user as { name?: string })?.name ?? "";
   const currentUserRole = (session?.user as { role?: string })?.role ?? null;
   const resolvedParams = use(params);
   const recordId = resolvedParams.id;
@@ -65,10 +62,6 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [newResp, setNewResp] = useState("");
   const [newDate, setNewDate] = useState("");
 
-  // The close-out no longer collects drawn marks. Kept as empty strings so the
-  // payload shape and older records are unchanged.
-  const techSign = "";
-  const superSign = "";
   const [supervisorComments, setSupervisorComments] = useState("");
 
   // Downtime window, production hours are derived from these against the
@@ -77,10 +70,21 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [rcaTargetDate, setRcaTargetDate] = useState("");
   const [expectedRestorationAt, setExpectedRestorationAt] = useState("");
   const [userList, setUserList] = useState<any[]>([]);
-  const [assigning, setAssigning] = useState(false);
   const [downStartAt, setDownStartAt] = useState("");
   const [downEndAt, setDownEndAt] = useState("");
   const [workSettings, setWorkSettings] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
+  // What was last saved, so the page can say whether anything is unsaved.
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [loadedAt, setLoadedAt] = useState(0);
+  // The sign-off chain, read here too so the close-out checklist can count it.
+  const [chain, setChain] = useState<{ required: boolean | null; status: string }[]>([]);
+  const loadChain = useCallback(() => {
+    fetch(`/api/signoffs?entityType=CORRECTIVE&entityId=${recordId}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setChain(Array.isArray(d) ? d : []))
+      .catch(() => setChain([]));
+  }, [recordId]);
+  useEffect(() => loadChain(), [loadChain, reloadKey]);
 
   // The roster for the investigator picker. A free-text name here would be the
   // same mistake the close-out just stopped making.
@@ -106,6 +110,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           setExpectedRestorationAt(data.expectedRestorationAt || "");
           setDownStartAt(data.downStartAt || (data.reportedDate ? `${data.reportedDate}T08:00` : ""));
           setDownEndAt(data.downEndAt || "");
+          setSupervisorComments(data.supervisorComments || "");
 
           // Load RCA fields if pre-existing
           if (data.rcaTool) setRcaTool(data.rcaTool);
@@ -126,6 +131,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           if (data.correctiveActions) {
             setActions(JSON.parse(data.correctiveActions));
           }
+          setLoadedAt(Date.now());
 
           // Fetch Equipment details
           if (data.equipmentId) {
@@ -229,103 +235,73 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     correctiveActions: actions,
   });
 
-  const saveAssignment = async () => {
-    setAssigning(true);
-    try {
-      const res = await fetch(`/api/corrective/${recordId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rcaTargetDate: rcaTargetDate || null,
-          expectedRestorationAt: expectedRestorationAt || null,
-        }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't save the dates.");
-        return;
-      }
-      toast.success("RCA due date and restoration estimate saved.");
-    } catch {
-      toast.error("Couldn't save the dates.");
-    } finally {
-      setAssigning(false);
-    }
-  };
+  // ONE save for the whole record (LIMSL, 17 Nov 2026). The analysis, the
+  // dates, the downtime window, the notes and the action log used to have a
+  // button each, and the close button asked for signatures the page no longer
+  // collected. Now the record is filled in and saved, the chain below is
+  // signed, and the last signature closes it (lib/maintenance/cm-closeout.ts).
+  const formPayload = () => ({
+    ...rcaPayload(),
+    rcaTargetDate,
+    expectedRestorationAt,
+    downStartAt,
+    downEndAt,
+    supervisorComments,
+  });
+  const formKey = JSON.stringify(formPayload());
+  const dirty = savedKey !== null && formKey !== savedKey;
+  // Snapshot the form right after a load, once the fields hold the record.
+  useEffect(() => {
+    if (loadedAt) setSavedKey(formKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadedAt]);
 
-  const handleSaveRca = async () => {
+  const handleSave = async () => {
+    if (downStartAt && downEndAt && new Date(downEndAt).getTime() <= new Date(downStartAt).getTime()) {
+      toast.error("The restored time must be after the machine went down.");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/corrective/${recordId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(rcaPayload()),
+        body: JSON.stringify(formPayload()),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't save the RCA, check your connection and try again.");
+        toast.error(d.error || "Couldn't save, your entries are still here. Try again.");
         return;
       }
+      const saved = await res.json().catch(() => null);
+      if (saved && saved.id) setRecord(saved);
+      setSavedKey(formKey);
       clearDraft();
-      toast.success("RCA and corrective actions saved.");
+      toast.success("Breakdown record saved.");
     } catch {
-      toast.error("Couldn't save the RCA, check your connection and try again.");
+      toast.error("Couldn't save, your entries are still here. Try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCloseOut = async () => {
-    if (!techSign || !superSign) {
-      toast.error("Both technician and supervisor signatures are required to close out the request.");
-      return;
-    }
-    if (!downStartAt || !downEndAt) {
-      toast.error("Record when the machine went down and when it was restored, this drives MTTR.");
-      return;
-    }
-    if (new Date(downEndAt).getTime() <= new Date(downStartAt).getTime()) {
-      toast.error("Restored time must be after the machine went down.");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/corrective/${recordId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // The RCA rides along so closing out can never discard it.
-          ...rcaPayload(),
-          status: "CLOSED",
-          technicianSignature: techSign,
-          // technicianName is stamped from the session server-side, the client
-          // is not trusted to name the signer.
-          supervisorSignature: superSign,
-          supervisorComments,
-          // The window is the source of truth; the server recomputes production
-          // downtime hours from it against the working-hours settings.
-          downStartAt,
-          downEndAt,
-          restoredToServiceTime: downEndAt,
-          closeOutDate: new Date().toISOString().split("T")[0],
-        }),
-      });
-
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Couldn't close out the record, your entries are still here, try again.");
-        return;
-      }
-      clearDraft();
-      toast.success("Breakdown closed out.");
-      router.push("/corrective");
-    } catch {
-      toast.error("Couldn't close out the record, your entries are still here, try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const savedGaps = record ? closeOutGaps(record) : [];
+  const requiredSteps = chain.filter((s) => s.required !== false);
+  const signedSteps = requiredSteps.filter((s) => s.status === "SIGNED").length;
+  const isClosed = record?.status === "CLOSED";
+  const readiness = [
+    { label: "Work order raised", done: !!record?.workOrderId },
+    { label: "Failure mode chosen and saved", done: !savedGaps.includes("the failure mode") },
+    { label: "Verified root cause written and saved", done: !savedGaps.includes("the verified root cause") },
+    {
+      label: "Downtime window saved (down and restored)",
+      done: !savedGaps.some((g) => g.startsWith("when the machine") || g.startsWith("a restored time")),
+    },
+    {
+      label: requiredSteps.length ? `Signatures: ${signedSteps} of ${requiredSteps.length}` : "Signatures",
+      done: requiredSteps.length > 0 && signedSteps === requiredSteps.length,
+    },
+  ];
 
   if (loading) {
     return (
@@ -396,8 +372,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 )}
               </div>
               <div>
-                <span className="text-xs text-ink-500 block mb-1">Tag ID</span>
-                <span className="font-semibold text-ink-900">{equipment?.assetId}</span>
+                <span className="text-xs text-ink-500 block mb-1">Location</span>
+                <span className="font-semibold text-ink-900">{equipment?.location || "-"}</span>
               </div>
               <div>
                 <span className="text-xs text-ink-500 block mb-1">Status at failure</span>
@@ -564,25 +540,23 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 />
               </div>
             </div>
-
-            <Button
-              onClick={handleSaveRca}
-              disabled={saving}
-            >
-              Save RCA Analysis
-            </Button>
           </div>
 
-          {/* Closeout & Approvals */}
+          {/* Dates, downtime and notes. Saved with everything else by the one
+              Save below; no button of their own. */}
           <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
-            <h2 className="text-base font-semibold text-ink-900">Completion Sign-off</h2>
+            <h2 className="text-base font-semibold text-ink-900">
+              {isClosed ? "Close-out" : "Dates and downtime"}
+            </h2>
 
-            {record.status === "CLOSED" ? (
+            {isClosed ? (
               <div className="p-3 bg-brand-500/10 border border-brand-500/20 text-brand-600 text-xs rounded-lg flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 flex-shrink-0" />
                 <div>
-                  <p className="font-bold">Record Closed Out Successfully</p>
-                  <p className="text-xs text-ink-500">Approved by Supervisor {record.supervisorName} on {record.closeOutDate}</p>
+                  <p className="font-bold">Closed on {record.closeOutDate}</p>
+                  <p className="text-xs text-ink-500">
+                    Repaired by {record.technicianName ?? "-"}, verified by {record.supervisorName ?? "-"}
+                  </p>
                   {record.totalDowntimeHours != null && (
                     <p className="text-xs text-ink-500">
                       Production downtime: <span className="font-semibold text-ink-700">{Number(record.totalDowntimeHours).toFixed(2)} h</span>
@@ -592,55 +566,17 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
               </div>
             ) : (
               <div className="space-y-4">
-                {currentUserName && (
-                  <p className="text-xs text-ink-500">
-                    Closing out as <span className="font-semibold text-ink-700">{currentUserName}</span> (recorded as the technician).
-                  </p>
-                )}
-                {/* No name field. It used to be free text, and the server
-                    has always discarded it in favour of the signed chain, so
-                    the box asked for something that looked like it mattered and
-                    did not. The approving supervisor is whoever signs the
-                    foreman step, and now their user id is stored beside their
-                    name, which is what an auditor asking "who signed this and
-                    were they competent to" actually needs. */}
-                <p className="text-xs text-ink-500 leading-relaxed">
-                  The approving supervisor is taken from the signed foreman step on the sign-off
-                  chain above, and recorded against their account. It cannot be typed in.
-                </p>
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-ink-500">Supervisor Comments</span>
-                  <textarea
-                    placeholder="Provide supervisor closeout recommendations or audit check notes..."
-                    value={supervisorComments}
-                    onChange={(e) => setSupervisorComments(e.target.value)}
-                    className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
-                  />
-                </div>
-
-                {/* Who is investigating, and when the machine is expected
-                    back. Without a named next actor a fault report becomes a
-                    fault report nobody came back to, which is how a record ends
-                    up sitting in "RCA investigation" for a month. */}
+                {/* Who is investigating, and when the machine is expected back. */}
                 <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
                   <div className="flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-brand-600" />
-                    <span className="text-xs font-semibold text-ink-700">
-                      Investigation &amp; restoration
-                    </span>
+                    <span className="text-xs font-semibold text-ink-700">Investigation &amp; restoration</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Shown, not chosen. Who carries a repair is decided in the
-                        repair flow above, by the Foreman, once the repair has been
-                        authorised. A second picker here set the same field and skipped
-                        that rule, so a repair could be assigned before anyone agreed
-                        it should happen. */}
+                    {/* Shown, not chosen: the Foreman assigns in the repair flow above. */}
                     <div className="space-y-1.5">
                       <p className="text-sm font-medium text-ink-700">Assigned to</p>
-                      <p className="text-sm text-ink-900 py-2">
-                        {record.assignedToName || "Nobody yet"}
-                      </p>
-                      <p className="text-xs text-ink-500">Assigned through the repair flow above.</p>
+                      <p className="text-sm text-ink-900 py-2">{record.assignedToName || "Nobody yet"}</p>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-ink-700">RCA due by</label>
@@ -653,16 +589,8 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                         onChange={setExpectedRestorationAt}
                         ariaLabel="Expected back in service"
                       />
+                      <p className="text-xs text-ink-500">What production is told while the machine is down.</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Button variant="secondary" loading={assigning} onClick={saveAssignment}>
-                      Save dates
-                    </Button>
-                    <p className="text-xs text-ink-500">
-                      The estimate is what production is told. A breakdown with none reads as
-                      &ldquo;no estimate given&rdquo; on the dashboard.
-                    </p>
                   </div>
                 </div>
 
@@ -670,16 +598,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 <div className="p-3 rounded-lg border border-ink-200 bg-ink-50 space-y-3">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-danger-600" />
-                    <span className="text-xs font-semibold text-ink-700">Downtime Window</span>
+                    <span className="text-xs font-semibold text-ink-700">Downtime window</span>
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-ink-700">Machine went down</label>
-                      <DateTimeField
-                        value={downStartAt}
-                        onChange={setDownStartAt}
-                        ariaLabel="Machine went down"
-                      />
+                      <DateTimeField value={downStartAt} onChange={setDownStartAt} ariaLabel="Machine went down" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-ink-700">Restored to service</label>
@@ -700,27 +624,60 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   )}
                 </div>
 
-                {/* The close-out attestation.
-                    Two drawn marks used to sit here, one above the other, and
-                    neither could be verified against anything. Closing a
-                    breakdown is attested by the person doing it, under their
-                    own name, with the moment recorded — which is what the
-                    sign-off chain below this already does properly. */}
-                <div className="rounded-lg border border-line bg-surface px-4 py-3.5">
-                  <p className="text-sm font-medium text-ink-700 mb-1.5">Closing this out as</p>
-                  <SignatureBlock name={currentUserName} role={currentUserRole} signedAt={new Date().toISOString()} />
+                <div className="space-y-2">
+                  <label htmlFor="cm-notes" className="text-xs font-semibold text-ink-500">Notes for the sign-off</label>
+                  <textarea
+                    id="cm-notes"
+                    placeholder="Anything the people signing should know: checks done, follow-ups, recommendations…"
+                    value={supervisorComments}
+                    onChange={(e) => setSupervisorComments(e.target.value)}
+                    className="w-full h-16 bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2 text-xs focus:outline-none resize-none"
+                  />
                 </div>
-
-                <Button fullWidth variant="danger"
-                  type="button"
-                  onClick={handleCloseOut}
-                  disabled={saving}
-                >
-                  Verify and Close Breakdown Work Order
-                </Button>
               </div>
             )}
           </div>
+
+          {/* The one save. It sticks to the bottom of the column, so it is
+              never a scroll away while something is unsaved. */}
+          {!isClosed && (
+            <div
+              className={`${dirty ? "sticky bottom-4 z-30 shadow-raised" : "shadow-card"} flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3`}
+            >
+              <p className={`text-sm ${dirty ? "text-warn-700 font-medium" : "text-ink-500"}`}>
+                {dirty ? "You have unsaved changes." : "Everything on this record is saved."}
+              </p>
+              <Button icon={Save} onClick={handleSave} loading={saving} disabled={!dirty || saving}>
+                Save
+              </Button>
+            </div>
+          )}
+
+          {/* What closing needs. Nothing to press here: the record closes
+              itself when the last signature on the chain below lands. */}
+          {!isClosed && (
+            <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-3">
+              <h2 className="text-base font-semibold text-ink-900">How this record closes</h2>
+              <p className="text-sm text-ink-600">
+                Save the record, then three people sign once below: the technician, the
+                foreman, then the Maintenance Manager, whose signature closes it. There is
+                no separate close button.
+              </p>
+              <ul className="space-y-2">
+                {readiness.map((r) => (
+                  <li key={r.label} className="flex items-start gap-2.5 text-sm">
+                    {r.done ? (
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-brand-600" aria-hidden />
+                    ) : (
+                      <CircleDashed className="w-4 h-4 mt-0.5 shrink-0 text-ink-400" aria-hidden />
+                    )}
+                    <span className={r.done ? "text-ink-700" : "text-ink-900 font-medium"}>{r.label}</span>
+                    <span className="sr-only">{r.done ? "done" : "to do"}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         </div>
 
@@ -741,6 +698,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
           {/* Corrective Actions Tracking Log (CATL) */}
           <div className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4">
             <h2 className="text-base font-semibold text-ink-900">Corrective Action Log</h2>
+            <p className="text-xs text-ink-500">Items you add here are kept when you press Save.</p>
 
             {/* Existing actions list */}
             <div className="space-y-2.5 max-h-56 overflow-y-auto">
@@ -795,7 +753,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                 onClick={addAction}
                 className="w-full flex items-center justify-center gap-1 py-2 bg-ink-100 hover:bg-ink-200 border border-ink-200 rounded-lg text-xs font-semibold text-ink-900 transition-all"
               >
-                <Plus className="w-4 h-4" /> Add Action Item
+                <Plus className="w-4 h-4" /> Add to the list
               </button>
             </div>
           </div>
@@ -808,6 +766,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
             entityType="CORRECTIVE"
             entityId={recordId}
             title="Corrective maintenance sign-off"
+            onChange={() => setReloadKey((k) => k + 1)}
           />
         </div>
       </main>

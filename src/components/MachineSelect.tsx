@@ -8,7 +8,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Layers, Wrench, Check, ChevronDown, Search, CheckSquare, Square, Info } from "lucide-react";
+import { Layers, Wrench, Info } from "lucide-react";
 import { EQUIPMENT_CATEGORY_LABELS } from "@/lib/constants";
 import Select from "@/components/Select";
 
@@ -20,6 +20,7 @@ export type EquipmentItem = {
   location?: string | null;
   status?: string | null;
   criticality?: string | null;
+  removedAt?: string | null;
 };
 
 export type CategoryOption = {
@@ -85,7 +86,6 @@ export default function MachineSelect({
   const [internalEquipment, setInternalEquipment] = useState<EquipmentItem[]>([]);
   const [categoriesList, setCategoriesList] = useState<CategoryOption[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>(selectedCategory);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Sync category if prop changes
   useEffect(() => {
@@ -127,8 +127,13 @@ export default function MachineSelect({
       .catch(() => {});
   }, []);
 
+  // An asset off the register (sold, scrapped, or the earthing system that
+  // moved to its own module) is history, not something to raise work against.
   const equipment = useMemo(
-    () => (propEquipment && propEquipment.length > 0 ? propEquipment : internalEquipment),
+    () =>
+      (propEquipment && propEquipment.length > 0 ? propEquipment : internalEquipment).filter(
+        (e) => !e.removedAt
+      ),
     [propEquipment, internalEquipment]
   );
 
@@ -262,19 +267,6 @@ export default function MachineSelect({
     onSelectedIdsChange(filtered);
   };
 
-  // Filtered equipment list for "Specific Machine" search
-  const filteredSpecificEquipment = useMemo(() => {
-    if (!searchQuery.trim()) return equipment;
-    const q = searchQuery.toLowerCase();
-    return equipment.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.assetId.toLowerCase().includes(q) ||
-        (e.location && e.location.toLowerCase().includes(q)) ||
-        (e.category && e.category.toLowerCase().includes(q))
-    );
-  }, [equipment, searchQuery]);
-
   return (
     <div className={`space-y-3 ${className}`}>
       {/* ── Top Decision Header: Mode Switcher ── */}
@@ -396,9 +388,7 @@ export default function MachineSelect({
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-ink-900 truncate">{m.name}</p>
-                            <p className="text-xs text-ink-500">
-                              {m.assetId} {m.location ? `· ${m.location}` : ""}
-                            </p>
+                            {m.location && <p className="text-xs text-ink-500">{m.location}</p>}
                           </div>
                         </label>
                       );
@@ -416,6 +406,7 @@ export default function MachineSelect({
                     onChange={handleMachineSelect}
                     placeholder="Select machine from this category…"
                     className="w-full"
+                    searchable
                   >
                     {allowCategoryWide && (
                       <option value="">
@@ -423,8 +414,8 @@ export default function MachineSelect({
                       </option>
                     )}
                     {machinesInCategory.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.assetId} · {m.name} {m.location ? `(${m.location})` : ""}
+                      <option key={m.id} value={m.id} data-keywords={m.assetId}>
+                        {m.location ? `${m.name} (${m.location})` : m.name}
                       </option>
                     ))}
                   </Select>
@@ -445,7 +436,7 @@ export default function MachineSelect({
                                 : "bg-white border-ink-200 text-ink-700 hover:bg-ink-50"
                             }`}
                           >
-                            {m.assetId} · {m.name}
+                            {m.name}
                           </button>
                         ))}
                       </div>
@@ -463,35 +454,23 @@ export default function MachineSelect({
         <div className="space-y-3 bg-surface border border-line rounded-xl p-4 shadow-card">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-ink-700">Search & Select Machine</span>
+              <span className="text-xs font-semibold text-ink-700">Select Machine</span>
               <span className="text-[11px] text-ink-500">Individual machine assignment (CM / Breakdown)</span>
-            </div>
-
-            {/* Search box to filter large registers */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-ink-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter by machine name, asset ID (e.g. LEE/PE/0161), location..."
-                className="w-full bg-ink-50 border border-ink-200 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-brand-500"
-              />
             </div>
 
             <Select
               value={value}
               onChange={handleMachineSelect}
-              placeholder="Select a specific machine…"
+              placeholder="Open and type a machine name…"
               className="w-full"
+              searchable
             >
-              <option value="">Choose machine from register…</option>
-              {filteredSpecificEquipment.map((m) => {
+              {equipment.map((m) => {
                 const catLabel =
                   categoryGroups[m.category || "OTHER"]?.label || m.category || "General";
                 return (
-                  <option key={m.id} value={m.id}>
-                    {m.assetId} · {m.name} — [{catLabel}] {m.location ? `(${m.location})` : ""}
+                  <option key={m.id} value={m.id} data-keywords={`${m.assetId} ${catLabel} ${m.location ?? ""}`}>
+                    {m.location ? `${m.name} (${m.location})` : m.name}
                   </option>
                 );
               })}
@@ -503,12 +482,9 @@ export default function MachineSelect({
             <div className="p-3 bg-ink-50/60 border border-ink-200 rounded-lg flex items-start justify-between gap-3 text-xs">
               <div>
                 <p className="font-semibold text-ink-900">{selectedMachine.name}</p>
-                <p className="text-ink-600 mt-0.5">
-                  Asset ID: <span className="font-medium text-ink-800">{selectedMachine.assetId}</span>
-                  {selectedMachine.location && (
-                    <span className="ml-2">· Location: {selectedMachine.location}</span>
-                  )}
-                </p>
+                {selectedMachine.location && (
+                  <p className="text-ink-600 mt-0.5">Location: {selectedMachine.location}</p>
+                )}
                 <p className="text-ink-500 mt-1">
                   Category:{" "}
                   <span className="font-medium text-brand-700">

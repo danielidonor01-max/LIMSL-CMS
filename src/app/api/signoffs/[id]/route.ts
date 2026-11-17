@@ -1,8 +1,8 @@
 // src/app/api/signoffs/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signoffs, auditLog, users, workOrders, wmsDocuments } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { signoffs, auditLog, users, workOrders, wmsDocuments, jhaDocuments, pmBatches, permits } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { verifyPassword } from "@/lib/password";
@@ -15,6 +15,9 @@ import { notify, notifyNextSigner } from "@/lib/notifications";
 import { milestoneAfterSign, type Milestone } from "@/lib/signoff/milestones";
 import { notifyTrail } from "@/lib/signoff/trail";
 import { approveBatchLines, BATCH_APPROVAL_ENTITY } from "@/lib/work-order-approval";
+import { closeCorrective, correctiveSignBlocker } from "@/lib/maintenance/cm-closeout";
+import { reconcileJha } from "@/app/api/jha/route";
+import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
 // Enforces: authenticated, role matches the step (or senior/super-admin), and
@@ -72,6 +75,13 @@ export async function POST(
           { error: "Earlier required sign-offs must be completed first." },
           { status: 409 },
         );
+      }
+      // A breakdown record is signed when it is finished, not while it is
+      // still being written: the first signature ("Repaired by") waits for a
+      // saved, complete record, so everyone after signs the same content.
+      if (step.entityType === "CORRECTIVE" && step.stepOrder === 1) {
+        const blocker = await correctiveSignBlocker(step.entityId);
+        if (blocker) return NextResponse.json({ error: blocker }, { status: 409 });
       }
       // Segregation of duties: a multi-level chain means multiple PEOPLE.
       // Seniority lets a manager cover a junior step, which previously let one
@@ -296,6 +306,66 @@ export async function POST(
                 });
               } catch (err) {
                 console.warn("signoff: notify HSE of WMS approval failed", err);
+              }
+            }
+          }
+
+          // The last close-out signature IS the close. There is no separate
+          // "verify and close" button any more (lib/maintenance/cm-closeout.ts).
+          if (step.entityType === "CORRECTIVE") {
+            await closeCorrective(step.entityId, { id: user.id ?? null, name: user.name ?? null });
+          }
+
+          // A fully signed hazard analysis is HSE's cue to raise the permit.
+          // Nobody watches a screen all day, so HSE is told (bell, and email or
+          // WhatsApp where configured) with a link straight into the permit form.
+          if (step.entityType === "JHA") {
+            await reconcileJha();
+            const [jha] = await db.select().from(jhaDocuments).where(eq(jhaDocuments.id, step.entityId)).limit(1);
+            if (jha) {
+              let batchId: string | null = null;
+              let batchNumber: string | null = null;
+              if (jha.category) {
+                const open = await db
+                  .select({ id: pmBatches.id, batchNumber: pmBatches.batchNumber })
+                  .from(pmBatches)
+                  .where(
+                    and(
+                      eq(pmBatches.category, jha.category),
+                      inArray(pmBatches.status, ["PLANNED", "ASSIGNED", "IN_PROGRESS"]),
+                    ),
+                  );
+                if (open.length) {
+                  const covered = await db
+                    .select({ batchId: permits.batchId, status: permits.status })
+                    .from(permits)
+                    .where(inArray(permits.batchId, open.map((b) => b.id)));
+                  const live = new Set(
+                    covered
+                      .filter((p) => !["REJECTED", "CANCELLED", "CLOSED", "EXPIRED"].includes(p.status))
+                      .map((p) => p.batchId),
+                  );
+                  const next = open.find((b) => !live.has(b.id));
+                  batchId = next?.id ?? null;
+                  batchNumber = next?.batchNumber ?? null;
+                }
+              }
+              const link = `/permits/new?jhaId=${jha.id}${batchId ? `&batchId=${batchId}` : ""}`;
+              try {
+                await notify({
+                  event: "PTW_SIGN_REQUEST",
+                  title: `Raise the permit: ${jha.jhaNumber} is approved`,
+                  body:
+                    `The hazard analysis "${jha.title}" is fully signed` +
+                    `${batchNumber ? ` and ${batchNumber} is waiting on its permit` : ""}. ` +
+                    `Raise the permit to work so the job can start.`,
+                  linkPath: link,
+                  relatedEntityType: "jha",
+                  relatedEntityId: jha.id,
+                  roles: PERMIT_ISSUE_ROLES.filter((r) => r !== "SUPER_ADMIN"),
+                });
+              } catch (err) {
+                console.warn("signoff: notify HSE to raise the permit failed", err);
               }
             }
           }

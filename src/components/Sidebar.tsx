@@ -39,6 +39,7 @@ import {
   ClipboardCheck,
   LifeBuoy,
   FileSearch,
+  Zap,
 } from "lucide-react";
 import { isSuperAdmin, canAccessPath } from "@/lib/roles";
 import AccountMenu from "@/components/AccountMenu";
@@ -85,6 +86,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/permits", label: "Permits (PTW)", icon: ShieldCheck },
       { href: "/incidents", label: "Incidents & Near Misses", icon: Siren },
       { href: "/emergency", label: "Emergency Prep", icon: LifeBuoy },
+      { href: "/earthing", label: "Earthing", icon: Zap },
       { href: "/contractors", label: "Contractors", icon: HardHat },
       { href: "/audit/non-conformity", label: "Audit & NC", icon: ShieldAlert },
       { href: "/audit/risks", label: "Risk Register", icon: AlertOctagon },

@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     // Best-effort, never let a notification failure fail the record.
     try {
       const [eqRow] = await db.select().from(equipment).where(eq(equipment.id, body.equipmentId)).limit(1);
-      const machine = eqRow ? `${eqRow.assetId}, ${eqRow.name}` : "a machine";
+      const machine = eqRow ? eqRow.name || eqRow.assetId : "a machine";
       await notify({
         event: "BREAKDOWN",
         title: `Breakdown logged: ${machine}`,

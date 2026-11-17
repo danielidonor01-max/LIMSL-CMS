@@ -43,16 +43,18 @@ export const PM_CHAIN: ChainStep[] = [
   { role: "MAINTENANCE_MANAGER", roleLabel: "Approved by (Maintenance Manager)", required: true },
 ];
 
-// Corrective Maintenance close-out sign-off (higher authority, RCA + safety):
-//   Technician repairs → Foreman verifies → HSE safety sign-off → Maintenance
-//   Manager approves RCA/CA → Factory Manager close-out. COO for critical cases.
+// Corrective Maintenance close-out sign-off, three signatures (LIMSL, 17 Nov
+// 2026; it was five plus an optional COO step, too heavy for a breakdown):
+//   Technician repairs → Foreman verifies the machine runs → Maintenance
+//   Manager approves the RCA and closes the record.
+// Safety is already covered by the permit the job needed before work started
+// (`correctiveSignBlocker` refuses the first signature without one), so HSE
+// no longer signs the close-out. A chain nobody has signed yet is rebuilt to
+// this one on next access; a chain with signatures keeps its old steps.
 export const CM_CHAIN: ChainStep[] = [
   { role: "TECHNICIAN", roleLabel: "Repaired by (Technician)", required: true },
   { role: "FOREMAN", roleLabel: "Verified by (Foreman)", required: true },
-  { role: "HSE", roleLabel: "Safety sign-off (HSE)", required: true },
-  { role: "MAINTENANCE_MANAGER", roleLabel: "RCA & action approved (Maintenance Manager)", required: true },
-  { role: "FACTORY_MANAGER", roleLabel: "Close-out (Factory Manager)", required: true },
-  { role: "COO", roleLabel: "Executive approval (COO), critical only", required: false },
+  { role: "MAINTENANCE_MANAGER", roleLabel: "RCA approved and closed (Maintenance Manager)", required: true },
 ];
 
 // Work Method Statement authorisation — three action parties, matching the
@@ -94,18 +96,23 @@ export const PROCEDURE_CHAIN: ChainStep[] = twoPasses(
 );
 
 // Permit-to-Work authorisation, matching the signature blocks on the printed
-// LIMSL permit. HSE issues the permit, so HSE does not appear as a step: raising
-// it IS the HSE act. The four blocks below are the ones signed on paper.
+// LIMSL permit. The four blocks below are the ones signed on paper.
+//
+// The Permit Applicant is HSE (LIMSL, 17 Nov 2026; it was the Foreman). HSE
+// raises the permit, and raising it signs the applicant block in the same act
+// (api/permits POST), so nobody is asked to sign their own application twice.
+// Permits raised before this keep the Foreman on that block; a stored step is
+// read by its own role when it no longer matches this chain.
 //
 // The asset holder is the Maintenance Manager or the Factory Manager (LIMSL,
 // 16 Nov 2026), so both asset-holder blocks name them as signatories, not as a
 // senior covering. The site supervisor block is also open to the foreman, as
 // on paper. The engine refuses to let one person sign two steps of the same
-// chain, so with one Foreman (the applicant) the two asset-holder blocks are
-// the Maintenance Manager and the Factory Manager, one each.
+// chain; with HSE applying, the Foreman is free for the site supervisor block
+// and the Maintenance or Factory Manager takes the asset holder block.
 const ASSET_HOLDERS = ["MAINTENANCE_MANAGER", "FACTORY_MANAGER", "SUPER_ADMIN"];
 export const PTW_CHAIN: ChainStep[] = [
-  { role: "FOREMAN", roleLabel: "Permit Applicant (PA)", required: true },
+  { role: "HSE", roleLabel: "Permit Applicant (PA)", required: true, signableBy: ["HSE", "SUPER_ADMIN"] },
   {
     role: "MAINTENANCE_MANAGER",
     roleLabel: "Asset Holder Supervisor (AHS)",

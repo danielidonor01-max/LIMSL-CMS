@@ -428,7 +428,7 @@ export default function SpareDetailPage({ params }: { params: Promise<{ id: stri
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-ink-200 bg-ink-50 text-ink-500">
-                    <th className="py-3 px-5 font-semibold">Machine / Asset</th>
+                    <th className="py-3 px-5 font-semibold">Machine</th>
                     <th className="py-3 px-5 font-semibold">Category</th>
                     <th className="py-3 px-5 font-semibold text-center">Criticality</th>
                     <th className="py-3 px-5 font-semibold">Location</th>
@@ -444,10 +444,9 @@ export default function SpareDetailPage({ params }: { params: Promise<{ id: stri
                           href={`/equipment/${encodeURIComponent(eq.assetId)}`}
                           className="font-semibold text-ink-900 hover:text-brand-600 flex items-center gap-1.5"
                         >
-                          {eq.name}
+                          {eq.name || eq.assetId}
                           <ExternalLink className="w-3 h-3 text-ink-400" />
                         </Link>
-                        <p className="text-xs text-ink-500 mt-0.5">{eq.assetId}</p>
                       </td>
                       <td className="py-3.5 px-5 text-ink-600">{eq.category ?? "—"}</td>
                       <td className="py-3.5 px-5 text-center">
@@ -657,11 +656,12 @@ export default function SpareDetailPage({ params }: { params: Promise<{ id: stri
                 onChange={(v) => setSelectedEqId(v)}
                 className="w-full"
                 ariaLabel="Select machine"
+                searchable
               >
                 <option value="">Select equipment…</option>
                 {availableEquipment.map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.assetId} · {eq.name} ({CRITICALITY_SHORT[eq.criticality ?? ""] ?? "General"})
+                  <option key={eq.id} value={eq.id} data-keywords={eq.assetId}>
+                    {`${eq.name || eq.assetId} (${CRITICALITY_SHORT[eq.criticality ?? ""] ?? "General"})`}
                   </option>
                 ))}
               </Select>

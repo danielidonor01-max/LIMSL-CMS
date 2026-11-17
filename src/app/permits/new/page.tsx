@@ -561,7 +561,7 @@ function NewPermitForm() {
                         key={w.id}
                         className="text-xs px-2 py-1 rounded-lg bg-ink-100 text-ink-700 border border-line"
                       >
-                        {w.assetId} · {w.machineName}
+                        {w.machineName ?? w.assetId}
                       </li>
                     ))}
                   </ul>

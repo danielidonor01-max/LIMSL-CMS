@@ -197,7 +197,7 @@ export async function computeKpis(now = new Date()) {
       const remark = STATUS_REMARK[e.status] ?? (evts.length ? `${evts.length} breakdown${evts.length > 1 ? "s" : ""} (6 mo)` : "Stable");
       return {
         id: e.id,
-        equipmentName: `${e.assetId} · ${e.name}`,
+        equipmentName: e.name || e.assetId,
         status: e.status,
         breakdowns: evts.length,
         availability,

@@ -1,18 +1,21 @@
 // src/app/api/permits/[id]/revalidation-request/route.ts
-// A technician asking for today's revalidation.
+// The permit holder asking for today's revalidation.
 //
 // After the first day, work under a permit waits each morning for the day's
-// renewal to be signed on the permit. The technician cannot sign it — that is
-// the point — but they are the one standing at the machine knowing it is
-// needed. This tells the Maintenance Manager, with a link straight to the
-// permit, and records that it was asked for and when. It signs nothing.
+// renewal to be signed on the permit. The permit holder cannot sign it, that
+// is the point, but they are the one at the machine who knows it is needed.
+//
+// LIMSL, 17 Nov 2026: the request is the PERMIT HOLDER's to make (the person
+// the permit names, not any technician) and it goes to the Factory Manager.
+// It is written onto the permit's validity record as a REQUESTED day, so the
+// grid shows who asked and when even before anybody signs. It signs nothing.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { permits, notifications, auditLog } from "@/lib/db/schema";
-import { and, eq, gte } from "drizzle-orm";
+import { permits, auditLog } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES, PERMIT_RENEW_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { notify } from "@/lib/notifications";
 import { parseRenewalMarks } from "@/lib/maintenance/work-readiness";
 import { isWithinWindow } from "@/lib/hse/permit-validity";
@@ -27,6 +30,16 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const [permit] = await db.select().from(permits).where(eq(permits.id, id)).limit(1);
     if (!permit) return NextResponse.json({ error: "Permit not found." }, { status: 404 });
 
+    const actor = gate.actor;
+    if (permit.permitHolderId && actor?.id !== permit.permitHolderId && actor?.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          error: `Only the permit holder, ${permit.permitHolderName ?? "named on the permit"}, asks for ${permit.permitNumber} to be revalidated.`,
+        },
+        { status: 403 },
+      );
+    }
+
     const today = permitToday();
     if (permit.status !== "ACTIVE") {
       return NextResponse.json(
@@ -40,35 +53,48 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
         { status: 409 },
       );
     }
-    if (parseRenewalMarks(permit.renewalDays)[today]?.status === "WORKED") {
+    const marks = parseRenewalMarks(permit.renewalDays);
+    const mark = marks[today];
+    if (mark?.status === "WORKED") {
       return NextResponse.json({ ok: true, alreadyRevalidated: true });
     }
-
+    if (mark?.status === "NOT_WORKED") {
+      return NextResponse.json(
+        { error: `${today} is already struck as not worked on ${permit.permitNumber}.` },
+        { status: 409 },
+      );
+    }
     // Once a day is enough. A second press should not send a second message.
-    const [already] = await db
-      .select({ id: notifications.id })
-      .from(notifications)
-      .where(
-        and(
-          eq(notifications.relatedEntityType, "permit_revalidation"),
-          eq(notifications.relatedEntityId, permit.id),
-          gte(notifications.createdAt, `${today}T00:00:00Z`),
-        ),
-      )
-      .limit(1);
-    if (already) return NextResponse.json({ ok: true, alreadyAsked: true });
+    if (mark?.status === "REQUESTED") return NextResponse.json({ ok: true, alreadyAsked: true });
+
+    const now = new Date().toISOString();
+    await db
+      .update(permits)
+      .set({
+        renewalDays: JSON.stringify({
+          ...marks,
+          [today]: {
+            date: today,
+            status: "REQUESTED",
+            requestedById: actor?.id ?? null,
+            requestedByName: actor?.name ?? null,
+            requestedAt: now,
+          },
+        }),
+      })
+      .where(eq(permits.id, permit.id));
 
     await notify({
       event: "PTW_SIGN_REQUEST",
       title: `Revalidate ${permit.permitNumber} for today`,
       body:
-        `${gate.actor?.name ?? "A technician"} is ready to start work under ${permit.permitNumber} ` +
+        `${actor?.name ?? "The permit holder"} is ready to start work under ${permit.permitNumber} ` +
         `(${permit.workDescription}) and needs today's revalidation signed on the permit before ` +
         `work can begin.`,
       linkPath: `/permits/${permit.id}`,
       relatedEntityType: "permit_revalidation",
       relatedEntityId: permit.id,
-      roles: PERMIT_RENEW_ROLES,
+      roles: ["FACTORY_MANAGER"],
     });
 
     await db.insert(auditLog).values({

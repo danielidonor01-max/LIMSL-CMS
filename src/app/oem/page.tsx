@@ -423,7 +423,6 @@ export default function OemPage() {
                             ) : (
                               <span className="text-ink-500">-</span>
                             )}
-                            {v.assetId && <div className="text-xs text-ink-500 tabular-nums">{v.assetId}</div>}
                           </td>
                           <td className="py-3 px-5 whitespace-nowrap">
                             <CoverBadge v={v} />
@@ -482,8 +481,7 @@ export default function OemPage() {
                           <td className="py-3 px-5">
                             <div className="text-ink-900">{it.vendorName ?? "No linked vendor"}</div>
                             <div className="text-xs text-ink-500">
-                              {it.equipmentName ?? "-"}
-                              {it.assetId ? ` · ${it.assetId}` : ""}
+                              {it.equipmentName ?? it.assetId ?? "-"}
                             </div>
                           </td>
                           <td className="py-3 px-5 text-ink-700 max-w-xs">{it.problemDescription}</td>
@@ -535,7 +533,7 @@ export default function OemPage() {
         open={!!viewing}
         onClose={() => setViewing(null)}
         title={viewing?.vendorName ?? "Vendor"}
-        subtitle={viewing ? `${viewing.equipmentName ?? ""}${viewing.assetId ? ` · ${viewing.assetId}` : ""}` : ""}
+        subtitle={viewing ? viewing.equipmentName ?? viewing.assetId ?? "" : ""}
       >
         {viewing &&
           (() => {
@@ -587,7 +585,7 @@ export default function OemPage() {
         open={!!editing}
         onClose={() => setEditing(null)}
         title="Edit vendor"
-        subtitle={editing ? `${editing.equipmentName ?? ""}${editing.assetId ? ` · ${editing.assetId}` : ""}` : ""}
+        subtitle={editing ? editing.equipmentName ?? editing.assetId ?? "" : ""}
       >
         {editing && (
           <form key={editing.id} onSubmit={submitEdit} className="space-y-4">
@@ -644,10 +642,12 @@ export default function OemPage() {
         <form onSubmit={submitVendor} className="space-y-4">
           <div>
             <label className={LABEL_CLASS}>Equipment</label>
-            <Select value={vendorEquipmentId} onChange={setVendorEquipmentId} required className="w-full">
+            <Select value={vendorEquipmentId} onChange={setVendorEquipmentId} required searchable className="w-full">
               <option value="" disabled>Select equipment…</option>
               {equipmentList.map((e) => (
-                <option key={e.id} value={e.id}>{e.assetId}, {e.name}</option>
+                <option key={e.id} value={e.id} data-keywords={[e.assetId, e.location].filter(Boolean).join(" ")}>
+                  {e.name || e.assetId}
+                </option>
               ))}
             </Select>
           </div>
@@ -661,19 +661,23 @@ export default function OemPage() {
         <form onSubmit={submitIntervention} className="space-y-4">
           <div>
             <label className={LABEL_CLASS}>Vendor (optional)</label>
-            <Select value={intOemId} onChange={setIntOemId} className="w-full">
+            <Select value={intOemId} onChange={setIntOemId} searchable className="w-full">
               <option value="">No linked vendor</option>
               {vendors.map((v) => (
-                <option key={v.id} value={v.id}>{v.vendorName} ({v.assetId})</option>
+                <option key={v.id} value={v.id} data-keywords={v.assetId ?? ""}>
+                  {v.equipmentName ? `${v.vendorName}, ${v.equipmentName}` : v.vendorName}
+                </option>
               ))}
             </Select>
           </div>
           <div>
             <label className={LABEL_CLASS}>Equipment (if no vendor)</label>
-            <Select value={intEquipmentId} onChange={setIntEquipmentId} className="w-full">
+            <Select value={intEquipmentId} onChange={setIntEquipmentId} searchable className="w-full">
               <option value="">Select equipment</option>
               {equipmentList.map((e) => (
-                <option key={e.id} value={e.id}>{e.assetId}, {e.name}</option>
+                <option key={e.id} value={e.id} data-keywords={[e.assetId, e.location].filter(Boolean).join(" ")}>
+                  {e.name || e.assetId}
+                </option>
               ))}
             </Select>
           </div>

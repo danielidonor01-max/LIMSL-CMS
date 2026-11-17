@@ -120,8 +120,12 @@ export default function ReportsPage() {
   const assetOptions = useMemo(
     () =>
       [...equipment]
-        .sort((a, b) => String(a.assetId).localeCompare(String(b.assetId)))
-        .map((e) => ({ value: e.assetId as string, label: `${e.assetId} · ${e.name}` })),
+        .sort((a, b) => String(a.name ?? a.assetId).localeCompare(String(b.name ?? b.assetId)))
+        .map((e) => ({
+          value: e.assetId as string,
+          label: String(e.name || e.assetId),
+          keywords: [e.assetId, e.location].filter(Boolean).join(" "),
+        })),
     [equipment],
   );
 
@@ -297,6 +301,7 @@ export default function ReportsPage() {
                     value={dossierAsset}
                     onChange={setDossierAsset}
                     options={assetOptions}
+                    searchable
                     ariaLabel="Choose an asset"
                     placeholder="Choose an asset…"
                   />

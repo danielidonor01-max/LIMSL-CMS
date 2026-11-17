@@ -156,7 +156,7 @@ function SchedulePageView() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [quarterFilter, setQuarterFilter] = useState("ALL");
 
-  const { data: equipmentData } = useApi<{ id: string; assetId: string; name: string }[]>(
+  const { data: equipmentData } = useApi<{ id: string; assetId: string; name: string; location?: string | null }[]>(
     "/api/equipment",
     [],
   );
@@ -868,7 +868,7 @@ function SchedulePageView() {
                             {" · "}
                             {g.rows
                               .slice(0, 3)
-                              .map((r) => r.assetId ?? r.equipmentName)
+                              .map((r) => r.equipmentName ?? r.assetId)
                               .filter(Boolean)
                               .join(", ")}
                             {g.rows.length > 3 ? ` +${g.rows.length - 3}` : ""}
@@ -956,20 +956,20 @@ function SchedulePageView() {
                           that takes the slack. */}
                       <td className="py-3.5 px-5 max-w-0 w-full">
                         <div className="font-medium text-ink-900 truncate">
-                          {r.equipmentName}
-                        </div>
-                        <div className="text-xs text-ink-500">
                           {r.assetId ? (
                             <Link
                               href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
                               className="hover:text-brand-600 hover:underline"
                             >
-                              {r.assetId}
+                              {r.equipmentName ?? r.assetId}
                             </Link>
-                          ) : null}
-                          {" · "}
-                          {r.category ? EQUIPMENT_CATEGORY_LABELS[r.category] : ""}
+                          ) : (
+                            r.equipmentName
+                          )}
                         </div>
+                        {r.category ? (
+                          <div className="text-xs text-ink-500">{EQUIPMENT_CATEGORY_LABELS[r.category] ?? r.category}</div>
+                        ) : null}
                       </td>
                       <td className="py-3.5 px-5">
                         <Badge className={ACTIVITY_TYPE_BADGE[r.activityType]}>
@@ -1050,11 +1050,12 @@ function SchedulePageView() {
                 onChange={(v) => setCreateForm((f) => ({ ...f, equipmentId: v }))}
                 className="w-full"
                 required
+                searchable
               >
                 <option value="">Select equipment…</option>
                 {equipmentList.map((eq) => (
-                  <option key={eq.id} value={eq.id}>
-                    {eq.assetId}, {eq.name}
+                  <option key={eq.id} value={eq.id} data-keywords={[eq.assetId, eq.location].filter(Boolean).join(" ")}>
+                    {eq.name || eq.assetId}
                   </option>
                 ))}
               </Select>
@@ -1135,7 +1136,7 @@ function SchedulePageView() {
         </Modal>
 
         {/* Reschedule an activity */}
-        <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.group && reschedule.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[reschedule.row.category] ?? reschedule.row.category} machine on this day` : reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
+        <Modal open={!!reschedule} onClose={() => setReschedule(null)} title="Reschedule Activity" subtitle={reschedule ? `${reschedule.group && reschedule.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[reschedule.row.category] ?? reschedule.row.category} machine on this day` : reschedule.row.equipmentName ?? reschedule.row.assetId ?? ""} · ${reschedule.row.activityType}` : ""}>
           {reschedule && (
             <div className="space-y-4">
               <p className="text-xs text-ink-500">
@@ -1159,7 +1160,7 @@ function SchedulePageView() {
           leadId={assign?.responsiblePersonId ?? null}
           assistantIds={safeIds(assign?.assistantIds)}
           title="Who is doing this job"
-          subtitle={assign ? `${assign.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[assign.activityType] ?? assign.activityType}` : ""}
+          subtitle={assign ? `${assign.equipmentName ?? assign.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[assign.activityType] ?? assign.activityType}` : ""}
           saving={saving}
           onSave={submitAssign}
         />
@@ -1171,7 +1172,7 @@ function SchedulePageView() {
           open={!!snooze}
           onClose={() => setSnooze(null)}
           title="Quieten reminders"
-          subtitle={snooze ? `${snooze.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[snooze.row.activityType] ?? snooze.row.activityType}` : ""}
+          subtitle={snooze ? `${snooze.row.equipmentName ?? snooze.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[snooze.row.activityType] ?? snooze.row.activityType}` : ""}
         >
           {snooze && (
             <div className="space-y-4">
@@ -1205,7 +1206,7 @@ function SchedulePageView() {
           open={!!defer}
           onClose={() => setDefer(null)}
           title="Defer this activity"
-          subtitle={defer ? `${defer.group && defer.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[defer.row.category] ?? defer.row.category} machine on this day` : defer.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[defer.row.activityType] ?? defer.row.activityType}` : ""}
+          subtitle={defer ? `${defer.group && defer.row.category ? `Every ${EQUIPMENT_CATEGORY_LABELS[defer.row.category] ?? defer.row.category} machine on this day` : defer.row.equipmentName ?? defer.row.assetId ?? ""} · ${ACTIVITY_TYPE_LABELS[defer.row.activityType] ?? defer.row.activityType}` : ""}
         >
           {defer && (
             <div className="space-y-4">
@@ -1354,9 +1355,9 @@ function SchedulePageView() {
                             className="min-w-0 group/m"
                           >
                             <span className="block text-sm font-medium text-ink-900 truncate group-hover/m:text-brand-700 group-hover/m:underline underline-offset-2">
-                              {row.equipmentName ?? "Unnamed equipment"}
+                              {row.equipmentName ?? row.assetId ?? "Unnamed equipment"}
                             </span>
-                            <span className="block text-xs text-ink-500 tabular-nums">{row.assetId ?? "-"}</span>
+                            {row.location && <span className="block text-xs text-ink-500">{row.location}</span>}
                           </Link>
                           {row.workOrderId ? (
                             <Link

@@ -11,6 +11,7 @@ import {
   isolationPoints,
   contractors,
   pmBatches,
+  signoffs,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -19,7 +20,8 @@ import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { nextDocNumber } from "@/lib/doc-number";
 import { permitReadiness } from "@/lib/hse/standing-documents";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
-import { chainSummary } from "@/lib/signoff/chains";
+import { chainSummary, canSignChainStep, isOverrideSignature } from "@/lib/signoff/chains";
+import { notifyNextSigner } from "@/lib/notifications";
 import { assessContractor, blockReason } from "@/lib/hse/contractors";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
 import { approvalBlockMessage, batchAuthorisation } from "@/lib/work-order-approval";
@@ -510,6 +512,38 @@ export async function POST(request: Request) {
     await ensureSignoffChain("PERMIT", newPermit.id, newPermit.permitNumber, {
       PERMIT_HOLDER: { id: holder.id, name: holder.name },
     });
+
+    // HSE is the Permit Applicant, and raising the permit is the application:
+    // the PA block is signed by that act, not by a second press on the same
+    // page. Only the applicant's own role signs it this way, never a stand-in.
+    try {
+      const chain = await getSignoffChain("PERMIT", newPermit.id);
+      const pa = chain.find((s) => s.stepOrder === 1);
+      const role = gate.actor?.role ?? null;
+      if (
+        pa &&
+        pa.status === "PENDING" &&
+        canSignChainStep(role, "PERMIT", pa) &&
+        !isOverrideSignature(role, "PERMIT", pa)
+      ) {
+        await db
+          .update(signoffs)
+          .set({
+            status: "SIGNED",
+            signedById: gate.actor?.id ?? null,
+            signedByName: gate.actor?.name ?? null,
+            signedByRole: role,
+            authMethod: "SESSION",
+            comments: "Signed by raising the permit.",
+            signedAt: new Date().toISOString(),
+          })
+          .where(eq(signoffs.id, pa.id));
+        const fresh = await getSignoffChain("PERMIT", newPermit.id);
+        await notifyNextSigner("PERMIT", newPermit.id, fresh, newPermit.permitNumber);
+      }
+    } catch (err) {
+      console.warn("permits: applicant signature failed (non-fatal)", err);
+    }
 
     return NextResponse.json(newPermit, { status: 201 });
   } catch (error: any) {

@@ -111,7 +111,7 @@ export async function raisePmBatch(input: {
     const wo = await raiseWorkOrder({
       type: activityType === "INS" ? "INSPECTION" : "PREVENTIVE",
       equipmentId: m.equipmentId,
-      title: `${activityType === "INS" ? "Inspection" : "PM"}, ${m.assetId} ${m.name}`,
+      title: `${activityType === "INS" ? "Inspection" : "PM"}, ${m.name || m.assetId}`,
       description: m.taskDescription || `Planned ${activityType} under batch ${batchNumber}.`,
       plannedDate,
       scheduleId: m.scheduleId,

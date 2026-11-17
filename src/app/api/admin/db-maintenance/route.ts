@@ -461,6 +461,54 @@ const INDEXES: [string, string][] = [
   ["diagnostic_guides_equipment_idx", "CREATE INDEX IF NOT EXISTS diagnostic_guides_equipment_idx ON diagnostic_guides (equipment_id)"],
   ["non_conformities_equipment_idx", "CREATE INDEX IF NOT EXISTS non_conformities_equipment_idx ON non_conformities (equipment_id)"],
   ["permits_work_order_idx", "CREATE INDEX IF NOT EXISTS permits_work_order_idx ON permits (work_order_id)"],
+  // The Earthing module (17 Nov 2026). Same DDL as src/lib/db/apply-earthing.ts,
+  // which also does the data steps (the Habotest, retiring LEE/SYS/0001).
+  [
+    "earth_pits",
+    `CREATE TABLE IF NOT EXISTS earth_pits (
+      id text PRIMARY KEY,
+      code text NOT NULL UNIQUE,
+      name text NOT NULL,
+      location text,
+      description text,
+      electrode_type text,
+      limit_ohms real NOT NULL DEFAULT 5,
+      active boolean NOT NULL DEFAULT true,
+      created_by_id text,
+      created_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      updated_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  [
+    "earth_tests",
+    `CREATE TABLE IF NOT EXISTS earth_tests (
+      id text PRIMARY KEY,
+      test_number text NOT NULL UNIQUE,
+      pit_id text NOT NULL REFERENCES earth_pits(id),
+      test_date text NOT NULL,
+      test_time text,
+      method text NOT NULL DEFAULT 'FALL_OF_POTENTIAL',
+      instrument_id text REFERENCES calibration_records(id),
+      instrument_label text,
+      instrument_cal_status text,
+      current_probe_distance_m real,
+      readings text,
+      resistance_ohms real NOT NULL,
+      spread_pct real,
+      consistent boolean,
+      limit_ohms real,
+      verdict text NOT NULL,
+      soil_condition text,
+      weather text,
+      remarks text,
+      tested_by_id text,
+      tested_by_name text,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
+  ["earth_tests_pit_idx", "CREATE INDEX IF NOT EXISTS earth_tests_pit_idx ON earth_tests (pit_id)"],
+  ["earth_tests_date_idx", "CREATE INDEX IF NOT EXISTS earth_tests_date_idx ON earth_tests (test_date)"],
 ];
 
 export async function POST() {

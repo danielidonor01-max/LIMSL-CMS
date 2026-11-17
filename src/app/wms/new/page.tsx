@@ -306,7 +306,7 @@ function NewWmsForm() {
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {(batch.workOrders ?? []).map((w: any) => (
                       <li key={w.id} className="text-xs bg-surface border border-line rounded px-2 py-0.5 text-ink-700">
-                        {[w.assetId, w.machineName].filter(Boolean).join(" ")}
+                        {w.machineName ?? w.assetId}
                       </li>
                     ))}
                   </ul>

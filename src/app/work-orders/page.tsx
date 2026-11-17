@@ -375,17 +375,9 @@ export default function WorkOrdersPage() {
                         <td className="py-2.5 px-4 max-w-0 w-full">
                           <Link href={`/work-orders/${r.id}`} className="block min-w-0">
                             <div className="font-medium text-ink-900 truncate">
-                              {r.equipmentName}
+                              {r.equipmentName ?? r.assetId}
                             </div>
                           </Link>
-                          {r.assetId && (
-                            <Link
-                              href={`/equipment/${r.assetId.replace(/\//g, "-")}`}
-                              className="text-xs text-ink-500 hover:text-brand-600 hover:underline"
-                            >
-                              {r.assetId}
-                            </Link>
-                          )}
                         </td>
                         <td className="py-2.5 px-4 text-ink-600 whitespace-nowrap text-xs">
                           {WO_TYPE_LABELS[r.type] ?? r.type}

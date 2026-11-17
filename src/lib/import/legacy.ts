@@ -23,6 +23,7 @@ import {
   type LegacyCategoryInfo,
 } from "./legacy-parse";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
+import { isEarthingSystemRow } from "@/lib/earthing/earthing";
 
 export type LegacyKind = "register" | "history" | "schedule";
 
@@ -118,6 +119,9 @@ async function processRegister(wb: Awaited<ReturnType<typeof loadWorkbook>>, act
   const seenTags = new Set<string>();
 
   for (const r of parsed.rows) {
+    // Earthing lives in the Earthing module since 17 Nov 2026 and is no longer
+    // an equipment row; without this a re-import brings LEE/SYS/0001 back.
+    if (isEarthingSystemRow(r)) continue;
     const errors: string[] = [];
     for (const d of [r.calDate, r.calExpire, r.pmServiceDate, r.pmDueDate]) {
       if (d.error) errors.push(d.error);

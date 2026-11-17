@@ -176,9 +176,9 @@ export default function PermitPrintSheet({
                 <strong style={{ fontWeight: 600 }}>Description of work</strong>{" "}
                 {permit.workDescription}
                 {(permit.machines?.length ?? 0) > 1
-                  ? ` (${permit.machines!.map((m) => `${m.assetId} ${m.name}`).join("; ")})`
+                  ? ` (${permit.machines!.map((m) => m.name || m.assetId).join("; ")})`
                   : permit.equipment
-                    ? ` (${permit.equipment.assetId}, ${permit.equipment.name})`
+                    ? ` (${permit.equipment.name || permit.equipment.assetId})`
                     : ""}
               </div>
               <div style={{ marginBottom: "3pt" }}>
@@ -370,6 +370,8 @@ export default function PermitPrintSheet({
                 {marks[d]?.status === "WORKED" && marks[d]?.signatureData ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={marks[d]!.signatureData!} alt="" style={{ height: "20pt" }} />
+                ) : marks[d]?.status === "WORKED" ? (
+                  <span>{marks[d]?.basis === "PERMIT_ISSUE" ? "Issued" : marks[d]?.signedByName ?? ""}</span>
                 ) : marks[d]?.status === "NOT_WORKED" ? (
                   "／"
                 ) : (

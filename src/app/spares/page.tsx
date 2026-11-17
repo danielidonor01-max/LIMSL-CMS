@@ -543,11 +543,11 @@ function SparesRegister() {
 
             <div>
               <label className={LABEL_CLASS}>Held for which machine?</label>
-              <Select value={form.equipmentId} onChange={(v) => set("equipmentId", v)} className="w-full">
+              <Select value={form.equipmentId} onChange={(v) => set("equipmentId", v)} searchable className="w-full">
                 <option value="">General workshop stock</option>
                 {equipmentList.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.assetId} · {e.name}
+                  <option key={e.id} value={e.id} data-keywords={e.assetId}>
+                    {e.name || e.assetId}
                   </option>
                 ))}
               </Select>

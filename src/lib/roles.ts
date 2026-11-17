@@ -118,9 +118,12 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
   // /wms: QA/QC no longer sign method statements (WMS_CHAIN is Originator →
   // Factory Supervisor/Maintenance Manager → Factory Coordinator), but they
   // keep read access to the library for quality reference.
-  QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/contractors"],
-  HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/contractors"],
-  VIEWER: ["/", "/equipment", "/procedure", "/reports", "/emergency"],
+  QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/earthing", "/contractors"],
+  HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/training", "/emergency", "/earthing", "/contractors"],
+  // /earthing: reading the earth-resistance record is open to every scoped role
+  // for the same reason as /emergency. Writing a test stays with
+  // MAINTENANCE_WRITE_ROLES in the API.
+  VIEWER: ["/", "/equipment", "/procedure", "/reports", "/emergency", "/earthing"],
 };
 
 // Paths every authenticated role may reach, regardless of scope.

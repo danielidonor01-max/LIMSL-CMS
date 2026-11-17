@@ -208,7 +208,7 @@ export default function PMChecklistPage() {
       // when the connection returns.
       const outcome = await submitOrQueue({
         url: "/api/pm-checklists",
-        label: `PM checklist, ${wo?.equipment?.assetId ?? "work order"} ${wo?.workOrderNumber ?? ""}`.trim(),
+        label: `PM checklist, ${wo?.equipment?.name ?? wo?.equipment?.assetId ?? "work order"} ${wo?.workOrderNumber ?? ""}`.trim(),
         dedupeKey: `pm-checklist:${id}`,
         body: {
           workOrderId: id,

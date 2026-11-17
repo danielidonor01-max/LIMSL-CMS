@@ -264,6 +264,14 @@ test("HSE and QA/QC can reach the contractor register", () => {
   assert.equal(canAccessPath("VIEWER", "/contractors"), false);
 });
 
+// Earthing is its own module (LIMSL, 17 Nov 2026). Every role reads the site's
+// earth record; writing a test is gated in the API on MAINTENANCE_WRITE_ROLES.
+test("every role can reach the earthing module", () => {
+  for (const role of ROLES) {
+    assert.equal(canAccessPath(role, "/earthing"), true, `${role} cannot reach /earthing`);
+  }
+});
+
 test("user administration is the Super Admin's alone", () => {
   for (const role of ROLES) {
     assert.equal(canManageUsers(role), role === "SUPER_ADMIN", `${role} user management`);

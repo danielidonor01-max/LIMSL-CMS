@@ -309,7 +309,7 @@ export default function ScheduleCalendar({
                         <div className="min-w-0">
                           <p className="font-semibold text-ink-900 truncate">{r.equipmentName ?? r.assetId}</p>
                           <p className="text-xs text-ink-400">
-                            {r.assetId} · {r.status}
+                            {r.status}
                             {r.responsiblePersonName ? ` · Responsible: ${r.responsiblePersonName}` : ""}
                           </p>
                         </div>
@@ -394,7 +394,7 @@ function DayCell({
       if (!map.has(catKey)) {
         const label = a.category
           ? (categoryLabels?.[a.category] ?? a.category)
-          : (a.assetId ?? a.equipmentName ?? "Eq.");
+          : (a.equipmentName ?? a.assetId ?? "Eq.");
         map.set(catKey, { label, activityType: a.activityType, count: 0, status: a.status });
       }
       const item = map.get(catKey)!;

@@ -102,8 +102,8 @@ export default function JobNextStep({
         d.alreadyRevalidated
           ? "Today is already revalidated."
           : d.alreadyAsked
-            ? "Already asked today. The asset holder has the request."
-            : "Asked. The Maintenance or Factory Manager has been told to revalidate the permit for today.",
+            ? "Already asked today. The Factory Manager has the request."
+            : "Asked. The Factory Manager has been told to revalidate the permit for today.",
       );
       load();
     } finally {
@@ -232,9 +232,24 @@ export default function JobNextStep({
                 </>
               )}
               {!cleared && data.needsRevalidation && (
-                <Button loading={asking} onClick={ask}>
-                  Ask for today&apos;s revalidation
-                </Button>
+                data.revalidationRequested ? (
+                  <p className="text-sm text-ink-600">
+                    {data.revalidationRequested.byName ?? "The permit holder"} asked the Factory Manager
+                    {data.revalidationRequested.at
+                      ? ` at ${new Date(data.revalidationRequested.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                      : ""}
+                    . Work starts once the permit is revalidated.
+                  </p>
+                ) : !data.permitHolderId || data.permitHolderId === userId ? (
+                  <Button loading={asking} onClick={ask}>
+                    Ask the Factory Manager to revalidate
+                  </Button>
+                ) : (
+                  <p className="text-sm text-ink-600">
+                    {data.permitHolderName ?? "The permit holder"} asks the Factory Manager for today&apos;s
+                    revalidation.
+                  </p>
+                )
               )}
             </div>
           )}

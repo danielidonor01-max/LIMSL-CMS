@@ -12,7 +12,7 @@ import { PERMIT_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { reconcilePermits, startDateOf, parseRenewals } from "@/lib/hse/permit-reconcile";
-import { normaliseValidityDays, permitDays, renewalSummary } from "@/lib/hse/permit-validity";
+import { normaliseValidityDays, permitDays, renewalSummary, withIssueDay } from "@/lib/hse/permit-validity";
 
 export async function GET(
   _request: Request,
@@ -106,6 +106,23 @@ export async function GET(
     const start = startDateOf(permit);
     const validityDays = normaliseValidityDays(permit.validityDays);
     const today = new Date().toISOString().slice(0, 10);
+    // The last approval signature is who put the permit in force on day one.
+    const lastApprover = [...approvalChain]
+      .filter((s) => s.status === "SIGNED" && s.signedAt)
+      .sort((a, b) => String(a.signedAt).localeCompare(String(b.signedAt)))
+      .pop();
+    const marks = withIssueDay(
+      parseRenewals(permit.renewalDays),
+      start,
+      permit.approvedAt ?? lastApprover?.signedAt ?? null,
+      lastApprover?.signedByName ?? null,
+    );
+
+    // A closed or cancelled permit's record stops on the day it ended: the
+    // days after it are not gaps, and it has no days "left".
+    const ended = ["CLOSED", "CLOSED_LATE", "CLOSED_WORK_ONGOING", "CANCELLED"].includes(permit.status);
+    const endedOn = ended ? String(permit.closedAt ?? permit.acceptedAt ?? today).slice(0, 10) : null;
+    const asOf = endedOn && endedOn < today ? endedOn : today;
 
     return NextResponse.json({
       ...permit,
@@ -121,8 +138,9 @@ export async function GET(
         startDate: start,
         validityDays,
         days: permitDays(start, validityDays),
-        marks: parseRenewals(permit.renewalDays),
-        summary: renewalSummary(start, validityDays, parseRenewals(permit.renewalDays), today),
+        marks,
+        endedOn,
+        summary: renewalSummary(start, validityDays, marks, asOf),
       },
       approval: chainSummary(approvalChain),
       closeout: closeoutChain.length ? chainSummary(closeoutChain) : null,

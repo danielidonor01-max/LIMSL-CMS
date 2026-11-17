@@ -313,6 +313,69 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   render into the troubleshoot page's side column (`checksRail`, a portal);
   on a phone they stay inline. Rare UI's licence needs the credit kept in each
   file header and the link in README.md: do not strip either.
+- **The Permit Applicant is HSE** (17 Nov 2026; it was the Foreman). PTW
+  step 1 is `role: "HSE"`, `signableBy: ["HSE","SUPER_ADMIN"]`, and raising
+  the permit signs it in the same act (`api/permits` POST). Permits raised
+  before keep the Foreman on that block.
+- **A fully signed JHA tells HSE to raise the permit** (signature route,
+  `PTW_SIGN_REQUEST`, linked to `/permits/new?jhaId=…&batchId=…` for the
+  next open batch of its category). It also settles the JHA's APPROVED status
+  then and there (`reconcileJha`).
+- **Revalidation is the permit holder's ask, to the Factory Manager.** Only
+  `permits.permitHolderId` (or Super Admin) may call
+  `/api/permits/[id]/revalidation-request`; it writes a `REQUESTED` day onto
+  `renewalDays` (who asked, when) and notifies the Factory Manager. A
+  REQUESTED day counts as unmarked everywhere and signing it is not an
+  amendment. Day one shows on the record as "Issued" (`withIssueDay`, read
+  side only). The grid shows a typed renewal by the signer's name: it used to
+  show only drawn images, so every renewed day looked blank. The PM batch
+  page shows the same record under Documents (`PermitValidityPanel`).
+- **Finished permits wait on nobody** (`lib/signoff/finished.ts`): approval
+  steps of a permit past PENDING_APPROVAL and close-out steps of a closed or
+  cancelled one are dropped from the dot, My Approvals and the flows; reading
+  such a chain never rebuilds it (opening a cancelled permit used to recreate
+  the steps the cancellation removed). Optional steps never count as waiting.
+- **A breakdown record has one Save and no close button**
+  (`lib/maintenance/cm-closeout.ts`). Fill in and save → sign the CM chain →
+  the last required signature closes the record (`closeCorrective`, called
+  from the signature route). The first signature ("Repaired by") is refused
+  until the saved record has a failure mode, a verified root cause, a valid
+  downtime window, a work order and an issued permit (`correctiveSignBlocker`).
+  The old PATCH `status: "CLOSED"` path still works for older callers.
+  The CM chain is three signatures: Technician → Foreman → Maintenance
+  Manager (was five plus COO). HSE's safety check is the permit itself.
+- **Equipment names stand alone** (17 Nov 2026): outside the equipment module
+  a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
+  searchable as hidden keywords.
+- **Long dropdowns are type-to-find** (`components/Select.tsx`): more than
+  eight options (or `searchable`) and the open field is a text box that
+  narrows the list as you type; `<option data-keywords>` / `keywords` are
+  matched but not shown. Never put a second search box above a dropdown.
+
+### Earthing is its own module (LIMSL, 17 Nov 2026)
+
+`/earthing` (Safety & Compliance) monitors the site's earthing pit by pit:
+`earth_pits` (code, location, electrode, **its own resistance limit**, 5 Ω by
+default) and append-only `earth_tests` (`ET-2026-0001`). LIMSL test by the
+**fall-of-potential** method: current spike at D, potential probe at 52/62/72%
+of D, the 62% reading is the result, and the test is consistent when 52% and
+72% agree with it within ±5%. An inconsistent test is still saved, flagged,
+with the advice to move the spike out. The arithmetic, the annual due date and
+the trend helpers are pure in `src/lib/earthing/earthing.ts`.
+
+- **The instrument lives in the calibration register**, not here. The Habotest
+  HT20302 (S/N H12D-J051012) is a MEASURING equipment row with a
+  `calibration_records` row. Each test snapshots the instrument and its
+  calibration state **on the test date**; an out-of-calibration reading is
+  saved and marked, never hidden. A FAIL raises an `EARTHING_FAILURE`
+  non-conformity the way a failed calibration does.
+- **Earthing is no longer an equipment row.** The legacy import's "Earthing
+  system" (LEE/SYS/0001) is retired (removed from the register, history kept),
+  the legacy register import skips it (`isEarthingSystemRow`), and
+  `MachineSelect` hides every removed asset.
+- Writing (pits, tests) is `MAINTENANCE_WRITE_ROLES`; every role can read.
+- Tables and data steps: `src/lib/db/apply-earthing.ts` (see §8). Until it
+  runs, the page shows a setup notice and saving returns 503.
 
 ### The WMS is a standing document, not a form (do not make it per-job again)
 
@@ -437,7 +500,7 @@ asset holder is the Maintenance Manager **or** the Factory Manager (LIMSL,
 16 Nov 2026): `PERMIT_RENEW_ROLES` is those two roles — not the foreman, HSE
 or Super Admin. `schedule-roles.test.ts` holds it there. The same two sign the
 permit's asset-holder blocks (AHS, and AHSS alongside the foreman) as named
-signatories, not as a senior covering: with one Foreman (the applicant) the
+signatories, not as a senior covering: with HSE as the applicant (17 Nov 2026) the
 Maintenance Manager takes one block and the Factory Manager the other.
 A renewal is signed by the signed-in renewer — it no longer needs a drawn
 image, which the grid stopped sending when drawn signatures were retired and
@@ -621,6 +684,21 @@ DATABASE_URL=...  npx tsx src/lib/db/apply-pm-flow.ts         # pm_batches + bat
 DATABASE_URL=...  npx tsx src/lib/db/sync-doc-counters.ts     # counters -> highest number in use
 DATABASE_URL=...  npx tsx src/lib/db/reset-safety-documents.ts --dry-run
 ```
+
+`apply-earthing.ts` switches on the Earthing module. Dry run by default; it
+prints what it would do and changes nothing until `--apply`:
+
+```bash
+npx tsx --env-file=.env.local src/lib/db/apply-earthing.ts            # dry run
+npx tsx --env-file=.env.local src/lib/db/apply-earthing.ts --apply
+```
+
+It creates `earth_pits`/`earth_tests` (also in Settings → Database
+maintenance), makes sure the Habotest HT20302 is a calibratable instrument
+(equipment row + calibration record, never overwriting existing dates or
+certificates), and retires the earthing-system equipment row: removed from the
+register with a log and audit line, future untouched plan rows deleted, open
+work orders and batches reported, not changed.
 
 `apply-asset-categories.ts` creates the category tables, seeds a row per
 category in use at its machines' MAJORITY interval, and moves the minority
