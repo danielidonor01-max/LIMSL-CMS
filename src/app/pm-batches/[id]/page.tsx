@@ -12,9 +12,13 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { PAGE_MAIN } from "@/lib/page-shell";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { useApi } from "@/lib/api-cache";
 import PageHeader from "@/components/PageHeader";
+import PageLead from "@/components/PageLead";
+import Tabs from "@/components/Tabs";
+import KebabMenu, { type KebabItem } from "@/components/KebabMenu";
+import { defectOutcome } from "@/lib/maintenance/pm-defect";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
@@ -22,13 +26,13 @@ import FlowRail, { type FlowLink } from "@/components/FlowRail";
 import SignoffChain from "@/components/SignoffChain";
 import TableSkeleton from "@/components/TableSkeleton";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
-import { WO_STATUS_LABELS, WO_STATUS_BADGE } from "@/lib/constants";
+import { WO_STATUS_BADGE } from "@/lib/constants";
 import type { FlowState } from "@/lib/maintenance/flow";
 import {
   UserCheck,
   CheckCircle2,
-  Clock,
-  ClipboardCheck,
+  CircleDashed,
+  ExternalLink,
   FileText,
   AlertTriangle,
 } from "lucide-react";
@@ -88,6 +92,21 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
   const [assignOpen, setAssignOpen] = useState(false);
   const [person, setPerson] = useState("");
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"machines" | "documents">("machines");
+
+  // Live: the documents and machines are re-read every 20 seconds and when
+  // the tab comes back into view, so a signature elsewhere shows up here
+  // without a reload. The refresh is silent once the page has data.
+  useEffect(() => {
+    const tick = () => document.visibilityState === "visible" && refresh();
+    const timer = window.setInterval(tick, 20000);
+    window.addEventListener("focus", tick);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", tick);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => setMounted(true), []);
 
@@ -218,267 +237,506 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
     },
   };
 
+  const isDone = (w: BatchWo) => w.status === "COMPLETED" || Boolean(w.checklist?.completed);
+  const live = batch.workOrders.filter((w) => w.status !== "CANCELLED");
+  const total = live.length;
+  const doneCount = live.filter(isDone).length;
+  const allDone = total > 0 && doneCount >= total;
+  const outcomes = live.map((w) => (w.checklist ? defectOutcome(w.checklist) : "NONE"));
+  const fixedCount = outcomes.filter((o) => o === "FIXED").length;
+  const openCount = outcomes.filter((o) => o === "OPEN").length;
+  const lastFinished =
+    live
+      .map((w) => w.checklist?.signedAt ?? w.completedAt ?? null)
+      .filter((d): d is string => !!d)
+      .sort()
+      .at(-1) ?? null;
+  // Still to do first, in the batch's own order; the first of them is next.
+  const ordered = [...live.filter((w) => !isDone(w)), ...live.filter(isDone)];
+  const nextUp = ordered.find((w) => !isDone(w)) ?? null;
+
+  const headline = allDone
+    ? `All ${total} machines serviced`
+    : doneCount > 0
+      ? `${doneCount} of ${total} machines done`
+      : batch.assignedToName
+        ? `${total} machine${total === 1 ? "" : "s"} to service`
+        : "Nobody is on this batch yet";
+  const supporting = allDone
+    ? `Finished ${lastFinished ? formatDateTime(lastFinished) : ""}. ${
+        openCount > 0
+          ? `${openCount} defect${openCount === 1 ? "" : "s"} still need${openCount === 1 ? "s" : ""} a repair.`
+          : fixedCount > 0
+            ? `${fixedCount} defect${fixedCount === 1 ? " was" : "s were"} found and fixed during the PM.`
+            : "No defects found."
+      }`
+    : nextUp
+      ? `Next: ${nextUp.machineName ?? nextUp.title} (${nextUp.assetId ?? nextUp.workOrderNumber}). The method statement, hazard analysis and permit cover every machine in the batch.`
+      : "The method statement, hazard analysis and permit cover every machine in the batch.";
+
+  // Every document the batch runs under, as it stands right now.
+  const docs: { key: string; kind: string; number: string; status: string; href?: string }[] = [
+    ...(batch.workOrderNumber
+      ? [{
+          key: "wo",
+          kind: "Batch work order",
+          number: batch.workOrderNumber,
+          status: batch.flow.done.includes("WORK_ORDER") ? "APPROVED" : "PENDING_APPROVAL",
+        }]
+      : []),
+    ...(batch.wms
+      ? [{ key: "wms", kind: "Method statement", number: `${batch.wms.wmsNumber} rev ${batch.wms.revision ?? 0}`, status: batch.wms.status, href: `/wms/${batch.wms.id}` }]
+      : []),
+    ...(batch.jha
+      ? [{ key: "jha", kind: "Hazard analysis", number: `${batch.jha.jhaNumber} rev ${batch.jha.revision ?? 0}`, status: batch.jha.status, href: `/jha/${batch.jha.id}` }]
+      : []),
+    ...(batch.permit
+      ? [{ key: "ptw", kind: "Permit to work", number: batch.permit.permitNumber, status: batch.permit.status, href: `/permits/${batch.permit.id}` }]
+      : []),
+    ...live.map((w) => ({
+      key: `chk-${w.id}`,
+      kind: `PM checklist, ${w.assetId ?? w.machineName ?? ""}`.trim(),
+      number: w.workOrderNumber,
+      status: w.checklist ? "FILED" : "NOT_FILED",
+      href: w.checklist ? `/work-orders/${w.id}` : undefined,
+    })),
+  ];
+  const missing = [
+    !batch.wms && "Method statement",
+    !batch.jha && "Hazard analysis",
+    !batch.permit && "Permit to work",
+  ].filter(Boolean) as string[];
+
+  // The machines and documents, shown at full width once the batch is
+  // finished and beside the road while it is under way.
+  const workArea = (
+      <div className="space-y-5 min-w-0">
+        {/* One work order for the batch, approved once. */}
+        {batch.workOrderNumber && !allDone && (
+          <SignoffChain
+            entityType="PM_BATCH"
+            entityId={batch.id}
+            title={`Batch work order ${batch.workOrderNumber}, approval to commence`}
+            onChange={refresh}
+          />
+        )}
+
+        <Tabs
+          ariaLabel="Batch views"
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "machines", label: "Machines", count: total },
+            { value: "documents", label: "Documents", count: docs.length },
+          ]}
+        />
+
+        {tab === "machines" ? (
+          <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line text-ink-500 text-xs">
+                    <th className="py-2.5 pl-5 pr-3 font-medium">Machine</th>
+                    <th className="py-2.5 px-3 font-medium whitespace-nowrap">Done</th>
+                    <th className="py-2.5 px-3 font-medium">Findings</th>
+                    <th className="py-2.5 pl-3 pr-5 font-medium text-right">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {ordered.map((w) => {
+                    const done = isDone(w);
+                    const finished = w.checklist?.signedAt ?? w.completedAt ?? null;
+                    const outcome = w.checklist ? defectOutcome(w.checklist) : "NONE";
+                    const findings = w.checklist?.observations?.trim();
+                    const isNext = !done && w.id === nextUp?.id;
+                    const menu: KebabItem[] = [
+                      ...(w.checklist
+                        ? [{ label: "View checklist", icon: FileText, href: `/work-orders/${w.id}/pm-checklist` }]
+                        : []),
+                      { label: "Open work order", icon: ExternalLink, href: `/work-orders/${w.id}` },
+                      // Only a defect still waiting for a repair is offered
+                      // as a fault. One fixed during the PM is closed.
+                      ...(outcome === "OPEN" && w.equipmentId
+                        ? [{ label: "Report as a fault", icon: AlertTriangle, href: `/corrective/new?equipmentId=${w.equipmentId}`, danger: true }]
+                        : []),
+                    ];
+                    return (
+                      <tr key={w.id} className={isNext ? "bg-brand-50/40" : "hover:bg-ink-50"}>
+                        <td className="py-3 pl-5 pr-3 align-top">
+                          <div className="flex items-start gap-2.5">
+                            {done ? (
+                              <CheckCircle2 className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" aria-label="Done" />
+                            ) : (
+                              <CircleDashed className="w-4 h-4 text-ink-300 shrink-0 mt-0.5" aria-label="Not done" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-ink-900">{w.machineName ?? w.title}</p>
+                              <p className="text-xs text-ink-500 mt-0.5">
+                                {[w.assetId, w.location].filter(Boolean).join(" · ")}
+                                {" · "}
+                                <Link href={`/work-orders/${w.id}`} className="hover:text-brand-700 hover:underline whitespace-nowrap">
+                                  {w.workOrderNumber}
+                                </Link>
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 align-top whitespace-nowrap">
+                          {done ? (
+                            <>
+                              <p className="text-ink-900">{finished ? formatDateTime(finished) : "Done"}</p>
+                              {(w.checklist?.technicianName || w.technicianName) && (
+                                <p className="text-xs text-ink-500 mt-0.5">
+                                  by {w.checklist?.technicianName || w.technicianName}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <Badge className={w.status === "IN_PROGRESS" ? WO_STATUS_BADGE.IN_PROGRESS : "bg-ink-100 text-ink-600"}>
+                              {w.status === "IN_PROGRESS" ? "In progress" : "Not started"}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 align-top min-w-48">
+                          {!done ? (
+                            <span className="text-ink-400">-</span>
+                          ) : outcome === "NONE" ? (
+                            <span className="text-ink-600">{findings || "No defects"}</span>
+                          ) : (
+                            <div className="space-y-1">
+                              <Badge
+                                className={
+                                  outcome === "OPEN"
+                                    ? "bg-danger-500/10 text-danger-700 border-danger-500/20"
+                                    : "bg-brand-500/10 text-brand-700 border-brand-500/20"
+                                }
+                              >
+                                {outcome === "OPEN" ? "Needs a repair" : "Fixed during the PM"}
+                              </Badge>
+                              {findings && <p className="text-ink-900 line-clamp-2">{findings}</p>}
+                              {w.checklist?.actionDescription && (
+                                <p className="text-xs text-ink-500 line-clamp-2">
+                                  {outcome === "OPEN" ? "Needs: " : "Done: "}
+                                  {w.checklist.actionDescription}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 pl-3 pr-5 align-top text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {!done && (
+                              // The work order page carries the one road:
+                              // start, then fill the checklist.
+                              <Button size="sm" variant={isNext ? "primary" : "secondary"} href={`/work-orders/${w.id}`}>
+                                {w.status === "IN_PROGRESS" ? "Continue" : "Start"}
+                              </Button>
+                            )}
+                            <KebabMenu items={menu} ariaLabel={`Actions for ${w.assetId ?? w.workOrderNumber}`} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : (
+          <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+            <div className="px-5 py-3 border-b border-line flex items-center justify-between gap-3">
+              <p className="text-sm text-ink-600">
+                Everything this batch runs under, as it stands now.
+              </p>
+              <span className="text-xs text-ink-400 inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span className="size-1.5 rounded-full bg-brand-500 motion-safe:animate-pulse" /> Live
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line text-ink-500 text-xs">
+                    <th className="py-2.5 pl-5 pr-3 font-medium">Document</th>
+                    <th className="py-2.5 px-3 font-medium whitespace-nowrap">Number</th>
+                    <th className="py-2.5 px-3 font-medium">Status</th>
+                    <th className="py-2.5 pl-3 pr-5 font-medium text-right">
+                      <span className="sr-only">Open</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {docs.map((d) => (
+                    <tr key={d.key} className="hover:bg-ink-50">
+                      <td className="py-3 pl-5 pr-3 text-ink-900">{d.kind}</td>
+                      <td className="py-3 px-3 whitespace-nowrap text-ink-700">{d.number}</td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <Badge className={DOC_TONE[d.status] ?? "bg-ink-100 text-ink-600"}>
+                          {DOC_LABEL[d.status] ?? d.status.replace(/_/g, " ").toLowerCase()}
+                        </Badge>
+                      </td>
+                      <td className="py-3 pl-3 pr-5 text-right whitespace-nowrap">
+                        {d.href && (
+                          <Link href={d.href} className="text-sm font-medium text-brand-700 hover:underline">
+                            Open
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {missing.map((m) => (
+                    <tr key={m}>
+                      <td className="py-3 pl-5 pr-3 text-ink-500">{m}</td>
+                      <td className="py-3 px-3 text-ink-400">-</td>
+                      <td className="py-3 px-3">
+                        <Badge className="bg-ink-100 text-ink-600">Not raised yet</Badge>
+                      </td>
+                      <td />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
+  );
+
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
       <main className={PAGE_MAIN.detail}>
         <PageHeader
           title={batch.workOrderNumber ? `${batch.batchNumber} · ${batch.workOrderNumber}` : batch.batchNumber}
-          subtitle={`${batch.categoryLabel} · planned ${formatDate(batch.plannedDate)} · ${batch.workOrders.length} machine${batch.workOrders.length === 1 ? "" : "s"}`}
+          subtitle={`${batch.categoryLabel} · planned ${formatDate(batch.plannedDate)} · ${total} machine${total === 1 ? "" : "s"}`}
           backHref="/pm-batches"
           backLabel="PM Batches"
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
-          <div className="space-y-5 min-w-0">
-            {/* Who is carrying it */}
-            <section className="bg-surface border border-line rounded-xl shadow-card p-4">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex items-start gap-3 min-w-0">
-                  <UserCheck className="w-4 h-4 text-ink-400 mt-0.5 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-ink-900">
-                      {batch.assignedToName ?? "Nobody is assigned yet"}
-                    </p>
-                    <p className="text-xs text-ink-500 mt-0.5 leading-relaxed">
-                      {batch.assignedToName
-                        ? `Assigned by ${batch.assignedByName ?? "—"}${batch.assignedAt ? ` on ${formatDate(batch.assignedAt)}` : ""}. Every machine in this batch is on their list.`
-                        : "Assigning one person here assigns the maintenance activity for every machine in the batch."}
-                    </p>
-                  </div>
-                </div>
-                {canAssign && !assignOpen && (
-                  <Button size="sm" variant="secondary" onClick={() => setAssignOpen(true)}>
-                    {batch.assignedToName ? "Reassign" : "Assign"}
-                  </Button>
-                )}
-              </div>
+        {/* Finished: the lead and the status report side by side, and the
+            machines below at full width. Under way: the lead, then the
+            machines beside the road (each step an action someone takes). */}
+        {allDone ? (
+          <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_320px] gap-5 items-stretch">
+            <div className="min-w-0">
+            {/* The same lead card as the dashboard and My Work: the answer, one
+                sentence, and the one figure in the dark panel. */}
+            <PageLead
+              headingId="batch-lead"
+              headline={headline}
+              supporting={supporting}
+              figure={{
+                label: "Machines done",
+                value: String(doneCount),
+                unit: `/ ${total}`,
+                progress: total ? (doneCount / total) * 100 : 0,
+                tone: allDone ? "good" : "warn",
+              }}
+              stats={[
+                { label: "need a repair", value: openCount, tone: "bad" },
+                { label: "fixed in the PM", value: fixedCount },
+                { label: "to do", value: total - doneCount, tone: "warn" },
+              ]}
+              meta={
+                <>
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-ink-400" />
+                    {batch.assignedToName ? (
+                      <>
+                        <span className="font-medium text-ink-900">{batch.assignedToName}</span>
+                        {batch.assignedByName &&
+                          ` · assigned by ${batch.assignedByName}${batch.assignedAt ? ` on ${formatDate(batch.assignedAt)}` : ""}`}
+                      </>
+                    ) : (
+                      "Nobody assigned"
+                    )}
+                  </span>
+                  {canAssign && !allDone && !assignOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setAssignOpen(true)}
+                      className="font-semibold text-brand-700 hover:underline"
+                    >
+                      {batch.assignedToName ? "Reassign" : "Assign"}
+                    </button>
+                  )}
+                </>
+              }
+            />
 
-              {assignOpen && canAssign && (
-                <div className="mt-3 pt-3 border-t border-ink-200 flex flex-wrap items-end gap-2">
-                  <div className="min-w-[220px] flex-1">
-                    <label className="text-xs font-medium text-ink-700 block mb-1" htmlFor="batch-assignee">
-                      Assign to
-                    </label>
-                    <Select value={person} onChange={setPerson} ariaLabel="Assignee" className="w-full">
-                      <option value="">Choose a person</option>
-                      {assignees.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  <Button size="sm" loading={saving} disabled={!person} onClick={assign}>
-                    Assign batch
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setAssignOpen(false);
-                      setPerson("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
+            {assignOpen && canAssign && (
+              <section className="bg-surface border border-line rounded-xl shadow-card p-4 flex flex-wrap items-end gap-2">
+                <div className="min-w-[220px] flex-1">
+                  <label className="text-xs font-medium text-ink-700 block mb-1" htmlFor="batch-assignee">
+                    Assign the whole batch to
+                  </label>
+                  <Select value={person} onChange={setPerson} ariaLabel="Assignee" className="w-full">
+                    <option value="">Choose a person</option>
+                    {assignees.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
-              )}
-            </section>
-
-            {/* One work order for the batch, approved once. Each machine below is
-                a line of it, numbered under it, with no approval of its own. */}
-            {batch.workOrderNumber && (
-              <SignoffChain
-                entityType="PM_BATCH"
-                entityId={batch.id}
-                title={`Batch work order ${batch.workOrderNumber}, approval to commence`}
-                onChange={refresh}
-              />
-            )}
-
-            {/* The machines, which is what the batch actually is */}
-            <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
-              <header className="px-4 py-3 border-b border-line flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <h2 className="text-sm font-semibold text-ink-900">
-                    Machines in this batch to work on
-                  </h2>
-                  <p className="text-xs text-ink-500 mt-0.5">
-                    Select an equipment from the list below to conduct its PM checklist. The WMS, JHA, and PTW cover all equipment in this schedule.
-                  </p>
-                </div>
-                <Badge className="bg-ink-100 text-ink-700">
-                  {batch.workOrders.filter((w) => w.status === "COMPLETED").length} of {batch.workOrders.length} Completed
-                </Badge>
-              </header>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-line text-ink-500 text-xs">
-                      <th className="py-2.5 px-4 font-medium whitespace-nowrap">WO #</th>
-                      <th className="py-2.5 px-4 font-medium">Machine & Asset</th>
-                      <th className="py-2.5 px-4 font-medium whitespace-nowrap">Status</th>
-                      <th className="py-2.5 px-4 font-medium text-right">Checklist Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ink-200">
-                    {batch.workOrders.map((w) => {
-                      const isComplete = w.status === "COMPLETED" || Boolean(w.checklist?.completed);
-                      return (
-                        <tr key={w.id} className="hover:bg-ink-50 transition-colors">
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <Link
-                              href={`/work-orders/${w.id}`}
-                              className="font-semibold text-ink-900 hover:text-brand-700"
-                            >
-                              {w.workOrderNumber}
-                            </Link>
-                          </td>
-                          <td className="py-3 px-4 text-ink-700">
-                            <div className="font-medium text-ink-900">
-                              {[w.assetId, w.machineName].filter(Boolean).join(" ") || w.title}
-                            </div>
-                            {w.location && (
-                              <div className="text-xs text-ink-400 mt-0.5">{w.location}</div>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <Badge className={WO_STATUS_BADGE[w.status] ?? WO_STATUS_BADGE.OPEN}>
-                              {WO_STATUS_LABELS[w.status] ?? w.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
-                            {isComplete ? (
-                              <div className="flex items-center justify-end gap-2">
-                                <span className="inline-flex items-center gap-1 text-xs text-brand-700 font-medium">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-600" /> Done
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  href={`/work-orders/${w.id}/pm-checklist`}
-                                  icon={FileText}
-                                >
-                                  View Checklist
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                size="sm"
-                                href={`/work-orders/${w.id}/pm-checklist`}
-                                icon={ClipboardCheck}
-                              >
-                                Fill Checklist
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* Completed PM Work & Execution Records table */}
-            {batch.workOrders.some((w) => w.status === "COMPLETED" || w.checklist?.completed) && (
-              <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
-                <header className="px-4 py-3 border-b border-line bg-brand-50/30">
-                  <h2 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600" /> Completed PM Work & Execution Records
-                  </h2>
-                  <p className="text-xs text-ink-500 mt-0.5">
-                    Logged work records, execution window timestamps (start to finish), inspection findings, and details.
-                  </p>
-                </header>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-line text-ink-500">
-                        <th className="py-3 px-4 font-medium">Equipment</th>
-                        <th className="py-3 px-4 font-medium whitespace-nowrap">Technician</th>
-                        <th className="py-3 px-4 font-medium whitespace-nowrap">Execution Window</th>
-                        <th className="py-3 px-4 font-medium">Findings & Work Done</th>
-                        <th className="py-3 px-4 font-medium text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-ink-200">
-                      {batch.workOrders
-                        .filter((w) => w.status === "COMPLETED" || w.checklist?.completed)
-                        .map((w) => (
-                          <tr key={w.id} className="hover:bg-ink-50">
-                            <td className="py-3 px-4">
-                              <div className="font-semibold text-ink-900">
-                                {w.machineName ?? w.assetId ?? w.title}
-                              </div>
-                              <div className="text-xs text-ink-400">{w.assetId} · {w.workOrderNumber}</div>
-                            </td>
-                            <td className="py-3 px-4 whitespace-nowrap text-ink-700">
-                              {w.checklist?.technicianName || w.technicianName || "—"}
-                            </td>
-                            <td className="py-3 px-4 whitespace-nowrap text-ink-700">
-                              <div className="flex items-center gap-1.5 text-ink-900">
-                                <Clock className="w-3.5 h-3.5 text-ink-400" />
-                                <span>{w.startedAt ? formatDate(w.startedAt) : "—"}</span>
-                              </div>
-                              {w.completedAt && (
-                                <div className="text-xs text-ink-500 mt-0.5">
-                                  Finished: {formatDate(w.completedAt)}
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 max-w-xs">
-                              <div className="line-clamp-2 text-ink-800">
-                                {w.checklist?.observations || "All PM checkpoints verified and satisfactory."}
-                              </div>
-                              {w.checklist?.correctiveActionRequired && (
-                                <div className="mt-1 flex items-center gap-1 text-danger-700 font-medium text-xs">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  <span>Defect Flagged: {w.checklist.actionDescription || "Corrective action needed"}</span>
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  href={`/work-orders/${w.id}/pm-checklist`}
-                                  icon={FileText}
-                                >
-                                  Checklist
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  href={`/work-orders/${w.id}`}
-                                >
-                                  Details
-                                </Button>
-                                {w.checklist?.correctiveActionRequired && w.equipmentId && (
-                                  <Button
-                                    size="sm"
-                                    variant="danger"
-                                    href={`/corrective/new?equipmentId=${w.equipmentId}`}
-                                    icon={AlertTriangle}
-                                  >
-                                    Log CM
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Button size="sm" loading={saving} disabled={!person} onClick={assign}>
+                  Assign batch
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAssignOpen(false);
+                    setPerson("");
+                  }}
+                >
+                  Cancel
+                </Button>
               </section>
             )}
-          </div>
 
-          <FlowRail flow={batch.flow} role={role} links={links} className="lg:sticky lg:top-4" />
-        </div>
+            </div>
+              <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden h-full flex flex-col md:flex-row 2xl:flex-col">
+                <div className="p-5 flex items-center gap-3 border-b md:border-b-0 md:border-r 2xl:border-r-0 2xl:border-b border-line shrink-0">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-brand-500 text-white shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs text-ink-500">Status</p>
+                    <p className="text-base font-semibold text-ink-900">Completed</p>
+                  </div>
+                </div>
+                <dl className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-1 divide-y sm:divide-y-0 2xl:divide-y divide-line text-sm">
+                  {[
+                    ["Finished", lastFinished ? formatDateTime(lastFinished) : "-"],
+                    ["Machines", `${doneCount} of ${total}`],
+                    ["Carried out by", batch.assignedToName ?? "-"],
+                    ["Permit", batch.permit ? `${batch.permit.permitNumber} (${(DOC_LABEL[batch.permit.status] ?? batch.permit.status).toLowerCase()})` : "-"],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex items-baseline justify-between gap-4 px-5 py-3 lg:flex-col lg:justify-center lg:gap-1 2xl:flex-row 2xl:justify-between 2xl:gap-4">
+                      <dt className="text-ink-500">{k}</dt>
+                      <dd className="text-ink-900 text-right lg:text-left 2xl:text-right">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+          </div>
+        ) : (
+          <>
+          {/* The same lead card as the dashboard and My Work: the answer, one
+              sentence, and the one figure in the dark panel. */}
+          <PageLead
+            headingId="batch-lead"
+            headline={headline}
+            supporting={supporting}
+            figure={{
+              label: "Machines done",
+              value: String(doneCount),
+              unit: `/ ${total}`,
+              progress: total ? (doneCount / total) * 100 : 0,
+              tone: allDone ? "good" : "warn",
+            }}
+            stats={[
+              { label: "need a repair", value: openCount, tone: "bad" },
+              { label: "fixed in the PM", value: fixedCount },
+              { label: "to do", value: total - doneCount, tone: "warn" },
+            ]}
+            meta={
+              <>
+                <span className="inline-flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-ink-400" />
+                  {batch.assignedToName ? (
+                    <>
+                      <span className="font-medium text-ink-900">{batch.assignedToName}</span>
+                      {batch.assignedByName &&
+                        ` · assigned by ${batch.assignedByName}${batch.assignedAt ? ` on ${formatDate(batch.assignedAt)}` : ""}`}
+                    </>
+                  ) : (
+                    "Nobody assigned"
+                  )}
+                </span>
+                {canAssign && !allDone && !assignOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setAssignOpen(true)}
+                    className="font-semibold text-brand-700 hover:underline"
+                  >
+                    {batch.assignedToName ? "Reassign" : "Assign"}
+                  </button>
+                )}
+              </>
+            }
+          />
+
+          {assignOpen && canAssign && (
+            <section className="bg-surface border border-line rounded-xl shadow-card p-4 flex flex-wrap items-end gap-2">
+              <div className="min-w-[220px] flex-1">
+                <label className="text-xs font-medium text-ink-700 block mb-1" htmlFor="batch-assignee">
+                  Assign the whole batch to
+                </label>
+                <Select value={person} onChange={setPerson} ariaLabel="Assignee" className="w-full">
+                  <option value="">Choose a person</option>
+                  {assignees.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button size="sm" loading={saving} disabled={!person} onClick={assign}>
+                Assign batch
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAssignOpen(false);
+                  setPerson("");
+                }}
+              >
+                Cancel
+              </Button>
+            </section>
+          )}
+
+          </>
+        )}
+
+        {allDone ? (
+          workArea
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
+            {workArea}
+            <FlowRail flow={batch.flow} role={role} links={links} className="xl:sticky xl:top-4" />
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
+const DOC_LABEL: Record<string, string> = {
+  APPROVED: "Approved",
+  PENDING_APPROVAL: "Awaiting approval",
+  DRAFT: "Draft",
+  SUPERSEDED: "Superseded",
+  ACTIVE: "Active",
+  PENDING: "Awaiting signatures",
+  CLOSED: "Closed",
+  CANCELLED: "Cancelled",
+  REJECTED: "Returned",
+  FILED: "Filed",
+  NOT_FILED: "Not filed yet",
+};
+
+const DOC_TONE: Record<string, string> = {
+  APPROVED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  ACTIVE: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  FILED: "bg-brand-500/10 text-brand-700 border-brand-500/20",
+  CLOSED: "bg-ink-100 text-ink-700",
+  PENDING_APPROVAL: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  PENDING: "bg-warn-500/10 text-warn-700 border-warn-500/20",
+  REJECTED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+  CANCELLED: "bg-danger-500/10 text-danger-700 border-danger-500/20",
+};

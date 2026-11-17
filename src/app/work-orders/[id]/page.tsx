@@ -7,24 +7,22 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import KebabMenu, { type KebabItem } from "@/components/KebabMenu";
+import JobNextStep from "@/components/JobNextStep";
 import { PERMIT_ISSUE_ROLES, MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import {
   ArrowLeft,
   Loader2,
-  Play,
   XCircle,
-  ClipboardCheck,
   Wrench,
   Calendar,
   User,
   Users,
-  Lock,
   Siren,
   ShieldCheck,
   CheckCircle2,
   BookText,
   Timer,
-  Square,
   RotateCcw,
   AlertCircle,
 } from "lucide-react";
@@ -35,7 +33,6 @@ import { invalidateApi } from "@/lib/api-cache";
 import Modal from "@/components/Modal";
 import SignoffChain from "@/components/SignoffChain";
 import WorkOrderParts from "@/components/WorkOrderParts";
-import WorkReadiness from "@/components/WorkReadiness";
 import AssignPeople, { type Person } from "@/components/AssignPeople";
 import {
   isAwaitingRetrospectiveApproval,
@@ -43,7 +40,7 @@ import {
 } from "@/lib/maintenance/work-order-commencement";
 import { procedureLabel } from "@/lib/maintenance/governing-procedure";
 import { formatHours } from "@/lib/maintenance/time-log";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import {
   WO_STATUS_BADGE,
   WO_STATUS_LABELS,
@@ -82,7 +79,6 @@ export default function WorkOrderDetailPage() {
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
   const [timeLog, setTimeLog] = useState<TimeLog | null>(null);
   const [clocking, setClocking] = useState(false);
-  const clockedOn = !!(userId && timeLog?.running.some((r) => r.userId === userId));
   const [wo, setWo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -120,9 +116,6 @@ export default function WorkOrderDetailPage() {
 
   useEffect(load, [id]);
 
-  // Whether the job is cleared to start today — the same check the server
-  // enforces on clock-on and on Start Work. Null until it has loaded.
-  const [ready, setReady] = useState<boolean | null>(null);
 
   const clock = async (action: "on" | "off") => {
     setClocking(true);
@@ -139,8 +132,8 @@ export default function WorkOrderDetailPage() {
       }
       toast.success(
         action === "on"
-          ? "Clocked on. The job is now in progress."
-          : `Clocked off. ${formatHours(d.totalHours)} booked to this job.`,
+          ? "Started. The job is in progress and your time is running."
+          : `Paused. ${formatHours(d.totalHours)} booked to this job so far.`,
       );
       load();
     } catch {
@@ -233,7 +226,6 @@ export default function WorkOrderDetailPage() {
   const eq = wo.equipment;
   const checklist = wo.checklist;
   const isPreventive = wo.type === "PREVENTIVE" || wo.type === "INSPECTION";
-  const canFillChecklist = isPreventive && !checklist && wo.status !== "CANCELLED";
 
   const parse = (json: string | null): ChecklistItem[] => {
     if (!json) return [];
@@ -267,9 +259,18 @@ export default function WorkOrderDetailPage() {
     }
   };
 
+  const moreActions: KebabItem[] = [
+    ...(canIssuePermit && eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS")
+      ? [{ label: "Raise a permit to work", icon: ShieldCheck, href: `/permits/new?equipmentId=${eq.id}&workOrderId=${id}` }]
+      : []),
+    ...(canWrite && !jobClosed
+      ? [{ label: "Cancel this work order", icon: XCircle, onClick: () => setCancelOpen(true), danger: true }]
+      : []),
+  ];
+  const myHours = timeLog?.byPerson.find((p) => p.userId === userId)?.hours ?? 0;
+
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      
       <main className={PAGE_MAIN.detail}>
         <Link href="/work-orders" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to work orders
@@ -321,8 +322,8 @@ export default function WorkOrderDetailPage() {
 
         {/* Header card */}
         <div className="bg-surface border border-line rounded-xl shadow-card p-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xl font-bold text-brand-600">
                   {wo.workOrderNumber}
@@ -339,88 +340,14 @@ export default function WorkOrderDetailPage() {
               {wo.description && <p className="text-sm text-ink-500 mt-1">{wo.description}</p>}
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2 shrink-0">
-              {wo.status === "REJECTED" && canWrite && (
-                <Button
-                  variant="secondary"
-                  icon={RotateCcw}
-                  onClick={handleResubmit}
-                  loading={acting}
-                >
-                  Resubmit for Approval
-                </Button>
-              )}
-              {wo.status === "PENDING_APPROVAL" && (
-                <span className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink-100 border border-ink-200 text-ink-500 rounded-lg text-xs font-semibold">
-                  <Lock className="w-4 h-4" /> Awaiting approval
-                </span>
-              )}
-              {wo.status === "OPEN" && (
-                <button
-                  onClick={() => patch({ status: "IN_PROGRESS" })}
-                  disabled={acting || ready === false}
-                  title={ready === false ? "Not cleared to start. See the checklist below." : undefined}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-warn-600 hover:bg-warn-500 text-white rounded-lg text-xs font-semibold disabled:opacity-60"
-                >
-                  <Play className="w-4 h-4" /> Start Work
-                </button>
-              )}
-              {/* Clocking on is the honest version of "Start Work": it says who
-                  is on the job and when, rather than only that somebody is. */}
-              {canWrite && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
-                <Button
-                  variant={clockedOn ? "secondary" : "primary"}
-                  onClick={() => clock(clockedOn ? "off" : "on")}
-                  // Clocking OFF is never blocked: stopping work is always allowed.
-                  disabled={clocking || (!clockedOn && ready === false)}
-                  loading={clocking}
-                  icon={clockedOn ? Square : Timer}
-                >
-                  {clockedOn ? "Clock off" : "Clock on"}
-                </Button>
-              )}
-              {canFillChecklist && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
-                <Button
-                  href={`/work-orders/${id}/pm-checklist`}
-                >
-                  <ClipboardCheck className="w-4 h-4" /> Fill PM Checklist
-                </Button>
-              )}
-              {!isPreventive && wo.status === "IN_PROGRESS" && (
-                <Button
-                  onClick={() => {
-                    // Offer the clocked total rather than an empty box. An
-                    // empty box is what made this number guesswork.
-                    if (timeLog && timeLog.totalHours > 0 && !actualHours) {
-                      setActualHours(String(timeLog.totalHours));
-                    }
-                    setCompleteOpen(true);
-                  }}
-                  disabled={acting}
-                  icon={CheckCircle2}
-                >
-                  Complete Work
-                </Button>
-              )}
-              {canIssuePermit && eq && (wo.status === "OPEN" || wo.status === "IN_PROGRESS") && (
-                <Link
-                  href={`/permits/new?equipmentId=${eq.id}&workOrderId=${id}`}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-brand-200 text-brand-700 hover:bg-brand-50 rounded-lg text-xs font-semibold"
-                >
-                  <ShieldCheck className="w-4 h-4" /> Raise PTW
-                </Link>
-              )}
-              {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
-                <button
-                  onClick={() => setCancelOpen(true)}
-                  disabled={acting}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-lg text-xs font-semibold disabled:opacity-60"
-                >
-                  <XCircle className="w-4 h-4" /> Cancel WO
-                </button>
-              )}
-            </div>
+            {/* The doing lives in the panel below, one button at a time.
+                What is left here is rare and administrative, so it sits
+                behind the menu rather than beside the work. */}
+            {moreActions.length > 0 && (
+              <div className="shrink-0">
+                <KebabMenu items={moreActions} ariaLabel="More actions for this work order" />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-ink-200">
@@ -430,16 +357,40 @@ export default function WorkOrderDetailPage() {
             <Meta
               icon={<Wrench className="w-3.5 h-3.5" />}
               label="Duration"
-              value={wo.actualDuration ? `${wo.actualDuration} hrs` : "-"}
+              value={
+                wo.actualDuration
+                  ? `${wo.actualDuration} hrs`
+                  : timeLog && timeLog.totalHours > 0
+                    ? formatHours(timeLog.totalHours)
+                    : "-"
+              }
             />
           </div>
         </div>
 
-        {/* Everything that has to be signed before anybody starts, and today's
-            revalidation — shown whole, so the person at the machine can see
-            what is outstanding rather than meeting a greyed-out button. */}
-        {wo.status !== "COMPLETED" && wo.status !== "CANCELLED" && (
-          <WorkReadiness workOrderId={String(id)} onChange={setReady} />
+        {/* What to do now: one panel, one button for the next step. The
+            full list of signed documents is folded inside it. */}
+        {!jobClosed && (
+          <JobNextStep
+            workOrderId={String(id)}
+            status={wo.status}
+            isPreventive={isPreventive && !checklist}
+            canWork={canWrite}
+            userId={userId}
+            running={timeLog?.running ?? []}
+            myHours={myHours}
+            totalHours={timeLog?.totalHours ?? 0}
+            busy={clocking}
+            onStart={() => clock("on")}
+            onPause={() => clock("off")}
+            onComplete={() => {
+              // Offer the clocked total rather than an empty box.
+              if (timeLog && timeLog.totalHours > 0 && !actualHours) {
+                setActualHours(String(timeLog.totalHours));
+              }
+              setCompleteOpen(true);
+            }}
+          />
         )}
 
         {/* People on the job */}
@@ -488,49 +439,25 @@ export default function WorkOrderDetailPage() {
         {/* Hours booked to the job, and by whom. The number that feeds mean time
             to repair used to be typed in at close-out from memory, days after
             the work. This is the same number with evidence behind it. */}
-        {timeLog && (timeLog.sessions.length > 0 || (canWrite && !jobClosed)) && (
+        {jobClosed && timeLog && timeLog.totalHours > 0 && (
           <div className="bg-surface border border-line rounded-xl shadow-card p-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
                 <Timer className="w-4 h-4 text-brand-600" /> Time on the job
               </h3>
               <span className="text-sm text-ink-900 font-semibold tabular-nums">
-                {formatHours(timeLog.totalHours)} booked
+                {formatHours(timeLog.totalHours)}
               </span>
             </div>
-
-            {timeLog.running.length > 0 && (
-              <div className="mt-4 rounded-lg border border-warn-200 bg-warn-50 px-4 py-3">
-                <p className="text-sm text-warn-800">
-                  {timeLog.running.length === 1
-                    ? `${timeLog.running[0].userName ?? "Someone"} is clocked on now.`
-                    : `${timeLog.running.length} people are clocked on now.`}{" "}
-                  Time is not counted until they clock off.
-                </p>
-              </div>
-            )}
-
-            {timeLog.byPerson.length > 0 && (
+            {timeLog.byPerson.length > 1 && (
               <dl className="mt-4 divide-y divide-line border-t border-line">
                 {timeLog.byPerson.map((p) => (
-                  <div
-                    key={p.userId ?? p.userName}
-                    className="flex items-baseline justify-between gap-4 py-2.5"
-                  >
+                  <div key={p.userId ?? p.userName} className="flex items-baseline justify-between gap-4 py-2.5">
                     <dt className="text-sm text-ink-600">{p.userName}</dt>
-                    <dd className="text-sm font-medium text-ink-900 tabular-nums">
-                      {formatHours(p.hours)}
-                    </dd>
+                    <dd className="text-sm font-medium text-ink-900 tabular-nums">{formatHours(p.hours)}</dd>
                   </div>
                 ))}
               </dl>
-            )}
-
-            {timeLog.sessions.length === 0 && (
-              <p className="text-sm text-ink-500 mt-3 leading-relaxed">
-                Nobody has booked time to this job yet. Clock on when you start and off when you
-                stop, as many times as the job takes.
-              </p>
             )}
           </div>
         )}
@@ -571,7 +498,7 @@ export default function WorkOrderDetailPage() {
         {checklist && (
           <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-5">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-600" /> PM Checklist. Signed Off
+              <ShieldCheck className="w-4 h-4 text-brand-600" /> PM checklist
             </h3>
 
             <div className="flex flex-wrap gap-2">
@@ -597,13 +524,25 @@ export default function WorkOrderDetailPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-ink-200">
-              <SignatureView label="Technician" name={checklist.technicianName} sig={checklist.technicianSignature} />
-              <SignatureView label="Supervisor" name={checklist.supervisorName} sig={checklist.supervisorSignature} />
+            {/* Drawn signatures were retired; the sign-off chain below is
+                the signature. Old records that carry an image still show it. */}
+            <div className="pt-4 border-t border-ink-200 flex flex-wrap items-center justify-between gap-3 text-sm">
+              <p className="text-ink-700">
+                Filled in by <span className="font-medium text-ink-900">{checklist.technicianName ?? "-"}</span>
+                {checklist.signedAt && <span className="text-ink-500">, {formatDateTime(checklist.signedAt)}</span>}
+              </p>
+              <p className="text-ink-500">Next PM {formatDate(checklist.nextPMDate)}</p>
             </div>
-            <p className="text-xs text-ink-500">
-              Signed {formatDate(checklist.signedAt)} · Next PM {formatDate(checklist.nextPMDate)}
-            </p>
+            {(checklist.technicianSignature || checklist.supervisorSignature) && (
+              <div className="grid grid-cols-2 gap-6">
+                {checklist.technicianSignature && (
+                  <SignatureView label="Technician" name={checklist.technicianName} sig={checklist.technicianSignature} />
+                )}
+                {checklist.supervisorSignature && (
+                  <SignatureView label="Supervisor" name={checklist.supervisorName} sig={checklist.supervisorSignature} />
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -762,6 +701,8 @@ function SafetyChip({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
+const STATUS_TEXT: Record<string, string> = { OK: "OK", PASS: "Pass", NA: "N/A", NOT_OK: "Not OK", FAIL: "Fail" };
+
 function ChecklistSection({ title, items }: { title: string; items: ChecklistItem[] }) {
   if (!items.length) return null;
   return (
@@ -780,7 +721,7 @@ function ChecklistSection({ title, items }: { title: string; items: ChecklistIte
                     : "text-danger-600"
               }
             >
-              {it.status}
+              {STATUS_TEXT[it.status] ?? it.status}
             </span>
           </li>
         ))}

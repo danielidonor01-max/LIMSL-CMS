@@ -285,6 +285,26 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   (`toast.loading`).
 - **Document Control** (`/document-control`) is a read-only view over every
   numbered record and what it traces to; it stores nothing.
+- **A job's page has one "what to do now" panel** (`components/JobNextStep.tsx`,
+  16 Nov 2026): cleared to start, then **Start work**, then **Fill in the PM
+  checklist** (or **Complete the work** for a repair), one button at a time.
+  "Start work" is the clock-on and puts the job in progress; there is no
+  separate Start Work button. Pause is the small secondary action. Finishing a
+  job (checklist, complete, cancel) clocks everybody off it
+  (`lib/maintenance/time-log-db.ts`), and filing the checklist signs the
+  technician's "performed by" step. Rare actions (raise a permit, cancel) sit
+  in the header's menu. A batch's machine list sends unfinished machines to
+  the work order page ("Start"/"Continue"), not straight to the checklist,
+  and a filed checklist returns to its batch.
+- **A PM's defect has three answers** (`lib/maintenance/pm-defect.ts`): no
+  defect, fixed during this PM, or still needs a repair. Only the last is
+  offered as a fault to report. No new column: OPEN is
+  `correctiveActionRequired`, FIXED is a described action without it.
+- **The PM batch page** (`/pm-batches/[id]`) leads with the same `PageLead`
+  card as the dashboard and My Work, then Machines and Documents tabs (the
+  documents re-read every 20 seconds). Row actions sit in the kebab menu.
+  While the batch is under way the right rail is the step-by-step road;
+  once it is finished it is a status report.
 - **The AI assistant** (`components/DiagnosisChat.tsx`) is built from the
   Rare UI AI kit, ported into our tokens under `components/ai/`: `AiStatus`
   while a reply is on its way, `StreamingResponse` revealing it word by word

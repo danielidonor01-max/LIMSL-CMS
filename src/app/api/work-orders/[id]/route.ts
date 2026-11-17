@@ -19,6 +19,7 @@ import { reconcilePermits } from "@/app/api/permits/route";
 import { notify } from "@/lib/notifications";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { applyDerivedStatus } from "@/lib/equipment-status";
+import { clockEveryoneOff } from "@/lib/maintenance/time-log-db";
 import { reconcileWorkOrderApprovals, approvalBlockMessage } from "@/lib/work-order-approval";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
@@ -208,6 +209,13 @@ export async function PATCH(
 
     await db.update(workOrders).set(updates).where(eq(workOrders.id, id));
 
+    // Completing or cancelling the job ends everybody's time on it. Time cannot
+    // be booked to a closed job, so a clock left running would run for ever.
+    let clockedOff = 0;
+    if ((body.status === "COMPLETED" || body.status === "CANCELLED") && body.status !== current.status) {
+      clockedOff = await clockEveryoneOff(db, id);
+    }
+
     // A job starting, finishing or being cancelled changes what the machine
     // is doing, so its status is re-derived by the one writer. Without this a
     // repair whose fault was closed before its work order was completed left
@@ -299,7 +307,7 @@ export async function PATCH(
     }
 
     const [updated] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
-    return NextResponse.json(updated);
+    return NextResponse.json({ ...updated, clockedOff });
   } catch (error) {
     console.error("Failed to update work order:", error);
     return NextResponse.json(

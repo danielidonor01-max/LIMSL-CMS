@@ -25,6 +25,8 @@ import { applyDerivedStatus } from "@/lib/equipment-status";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
 import { notifyNextSigner } from "@/lib/notifications";
 import { notifyBatchComplete } from "@/lib/signoff/trail";
+import { canSignChainStep, isOverrideSignature } from "@/lib/signoff/chains";
+import { clockEveryoneOff } from "@/lib/maintenance/time-log-db";
 
 // Submitting a completed PM checklist closes the loop:
 //  1. persist the checklist (with drawn signatures)
@@ -119,6 +121,7 @@ export async function POST(request: Request) {
       .limit(1);
 
     let recurredDate: string | null = null;
+    let clockedOff = 0;
     await db.transaction(async (tx) => {
       await tx.insert(pmChecklists).values(checklist);
 
@@ -130,6 +133,9 @@ export async function POST(request: Request) {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(workOrders.id, body.workOrderId));
+
+      // Submitting the checklist finishes the job, so it clocks everyone off.
+      clockedOff = await clockEveryoneOff(tx, body.workOrderId);
 
       // Complete the linked schedule activity and spawn its next occurrence so
       // the PM programme perpetuates itself instead of emptying out.
@@ -197,7 +203,14 @@ export async function POST(request: Request) {
     try {
       const chain = await ensureSignoffChain("PM_CHECKLIST", checklistId, wo?.workOrderNumber);
       const step1 = chain.find((s) => s.stepOrder === 1 && s.role === "TECHNICIAN");
-      if (step1 && checklist.technicianSignature && step1.status === "PENDING") {
+      // Filing the checklist IS the technician's "performed by" signature:
+      // they are signed in, and drawn signatures were retired, so waiting for
+      // an image left step 1 for a second, separate press nobody expected.
+      // Only the technician's own filing signs it, never a senior's override.
+      const filer = gate.actor?.role ?? null;
+      const filerSigns =
+        !!step1 && canSignChainStep(filer, "PM_CHECKLIST", step1) && !isOverrideSignature(filer, "PM_CHECKLIST", step1);
+      if (step1 && filerSigns && step1.status === "PENDING") {
         await db
           .update(signoffs)
           .set({
@@ -205,7 +218,7 @@ export async function POST(request: Request) {
             signedById: gate.actor?.id ?? null,
             signedByName: gate.actor?.name ?? null,
             signedByRole: gate.actor?.role ?? null,
-            signatureData: checklist.technicianSignature,
+            signatureData: checklist.technicianSignature ?? null,
             signedAt: new Date().toISOString(),
           })
           .where(eq(signoffs.id, step1.id));
@@ -224,7 +237,9 @@ export async function POST(request: Request) {
         title: `Preventive maintenance completed${wo?.workOrderNumber ? `, ${wo.workOrderNumber}` : ""}`,
         detail: body.correctiveActionRequired
           ? `Follow-up corrective action flagged: ${body.actionDescription || "see checklist"}`
-          : "PM checklist signed off; equipment returned to service.",
+          : body.actionDescription?.trim()
+            ? `Defect fixed during the PM: ${body.actionDescription.trim()}`
+            : "PM checklist signed off; equipment returned to service.",
         refType: "work_order",
         refId: wo?.id ?? null,
         // The signed record is viewed on the WO page, the /pm-checklist path is
@@ -266,7 +281,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ ...checklist, id: checklistId, batchCompleted }, { status: 201 });
+    return NextResponse.json({ ...checklist, id: checklistId, batchCompleted, clockedOff }, { status: 201 });
   } catch (error) {
     console.error("Failed to submit PM checklist:", error);
     return NextResponse.json(

@@ -1,6 +1,8 @@
 // src/app/work-orders/[id]/pm-checklist/page.tsx
 "use client";
 
+import { defectOutcome, type DefectOutcome } from "@/lib/maintenance/pm-defect";
+
 import Button from "@/components/Button";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import DateField from "@/components/DateField";
@@ -40,6 +42,22 @@ const STATUS_OPTIONS = ["OK", "NOT_OK", "NA"];
 const mkItems = (tasks: JobTask[]): Item[] =>
   tasks.map((t) => ({ item: t.item, status: "", remarks: "", criteria: t.criteria, unit: t.unit, value: "" }));
 
+const DEFECT_CHOICES: { value: DefectOutcome; label: string; hint: string; on: string }[] = [
+  { value: "NONE", label: "No defect", hint: "Everything was in order.", on: "border-brand-300 bg-brand-50" },
+  {
+    value: "FIXED",
+    label: "Yes, and I fixed it during this PM",
+    hint: "Recorded in the machine's history. Nothing more to report.",
+    on: "border-brand-300 bg-brand-50",
+  },
+  {
+    value: "OPEN",
+    label: "Yes, and it still needs a repair",
+    hint: "Shown on the batch as waiting for a repair, with the option to report it as a fault.",
+    on: "border-warn-300 bg-warn-50",
+  },
+];
+
 export default function PMChecklistPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -59,7 +77,13 @@ export default function PMChecklistPage() {
   const [planIsGeneric, setPlanIsGeneric] = useState(false);
 
   const [observations, setObservations] = useState("");
-  const [correctiveActionRequired, setCorrectiveActionRequired] = useState(false);
+  // Did the PM find a defect, and is it still there? (LIMSL, 16 Nov 2026.) A
+  // lone "corrective action required" box could not tell a defect fixed on
+  // the spot from one still waiting for a repair, so a fixed one kept asking
+  // to be reported as a fault. Stored without a new column: a fixed defect is
+  // a described action with correctiveActionRequired false (lib/maintenance/pm-defect.ts).
+  const [defect, setDefect] = useState<DefectOutcome>("NONE");
+  const correctiveActionRequired = defect === "OPEN";
   const [actionDescription, setActionDescription] = useState("");
   const [sparePartsNeeded, setSparePartsNeeded] = useState("");
   const [nextPMDate, setNextPMDate] = useState("");
@@ -79,7 +103,7 @@ export default function PMChecklistPage() {
   // visit, so the form keeps a local draft and offers it back on return.
   const draftValue = {
     visual, functional, lubrication, electrical,
-    observations, correctiveActionRequired, actionDescription, sparePartsNeeded, nextPMDate,
+    observations, correctiveActionRequired, defect, actionDescription, sparePartsNeeded, nextPMDate,
   };
   const { draft, clearDraft, dismissDraft } = useDraft(id ? `pm:${id}` : null, draftValue);
   const restoreDraft = () => {
@@ -89,7 +113,7 @@ export default function PMChecklistPage() {
     setLubrication(draft.lubrication);
     setElectrical(draft.electrical);
     setObservations(draft.observations);
-    setCorrectiveActionRequired(draft.correctiveActionRequired);
+    setDefect(defectOutcome(draft));
     setActionDescription(draft.actionDescription);
     setSparePartsNeeded(draft.sparePartsNeeded);
     setNextPMDate(draft.nextPMDate);
@@ -162,6 +186,14 @@ export default function PMChecklistPage() {
       );
       return;
     }
+    if (defect !== "NONE" && !actionDescription.trim()) {
+      setError(
+        defect === "FIXED"
+          ? "Say what you did to fix the defect, so the machine's history shows it."
+          : "Say what repair the defect still needs, so whoever picks it up knows.",
+      );
+      return;
+    }
     setAttested(false);
     setShowConfirm(true);
   };
@@ -189,7 +221,7 @@ export default function PMChecklistPage() {
           electricalChecks: electrical,
           observations,
           correctiveActionRequired,
-          actionDescription,
+          actionDescription: defect === "NONE" ? "" : actionDescription,
           sparePartsNeeded,
           pmCompleted: true,
           nextPMDate,
@@ -223,9 +255,13 @@ export default function PMChecklistPage() {
           description: "Every machine in the batch has its checklist filed. They now go for verification.",
         });
       } else {
-        toast.success("PM checklist filed.");
+        toast.success("PM checklist filed. This machine is done.", {
+          description: filed?.clockedOff ? "Your time on the job has stopped." : undefined,
+        });
       }
-      router.push(`/work-orders/${id}`);
+      // A machine in a batch goes back to the batch, where the next machine
+      // is waiting. A job on its own goes back to its work order.
+      router.push(wo?.batchId ? `/pm-batches/${wo.batchId}` : `/work-orders/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");
       setSaving(false);
@@ -380,21 +416,37 @@ export default function PMChecklistPage() {
             placeholder="Observations, abnormalities, measurements…"
             className={field}
           />
-          <label className="flex items-center gap-2 text-xs text-ink-700">
-            <input
-              type="checkbox"
-              checked={correctiveActionRequired}
-              onChange={(e) => setCorrectiveActionRequired(e.target.checked)}
-              className="accent-warn-500 w-4 h-4"
-            />
-            Corrective action required (equipment will be flagged Under Maintenance)
-          </label>
-          {correctiveActionRequired && (
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-ink-900 mb-2">Did you find a defect?</legend>
+            {DEFECT_CHOICES.map((c) => (
+              <label
+                key={c.value}
+                className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                  defect === c.value ? c.on : "border-line hover:bg-ink-50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="defect"
+                  value={c.value}
+                  checked={defect === c.value}
+                  onChange={() => setDefect(c.value)}
+                  className="accent-brand-600 w-4 h-4 mt-0.5 shrink-0"
+                />
+                <span>
+                  <span className="font-medium text-ink-900">{c.label}</span>
+                  <span className="block text-xs text-ink-500 mt-0.5">{c.hint}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          {defect !== "NONE" && (
             <textarea
               value={actionDescription}
               onChange={(e) => setActionDescription(e.target.value)}
               rows={2}
-              placeholder="Describe the corrective action needed…"
+              placeholder={defect === "FIXED" ? "What you did to fix it…" : "What repair it still needs…"}
+              aria-label={defect === "FIXED" ? "What you did to fix it" : "What repair it still needs"}
               className={field}
             />
           )}

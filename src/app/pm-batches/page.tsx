@@ -60,7 +60,8 @@ type Scope = "LIVE" | "DONE" | "ALL";
 
 export default function PmBatchesPage() {
   const [mounted, setMounted] = useState(false);
-  const [scope, setScope] = useState<Scope>("LIVE");
+  // "All" leads and is where the page opens (LIMSL, 16 Nov 2026), as on Permits.
+  const [scope, setScope] = useState<Scope>("ALL");
   const { data, loading } = useApi<{ batches: Batch[] }>("/api/pm-batches", { batches: [] });
   const batches = data.batches ?? [];
 
@@ -141,9 +142,9 @@ export default function PmBatchesPage() {
           value={scope}
           onChange={setScope}
           options={[
+            { value: "ALL", label: "All", count: batches.length },
             { value: "LIVE", label: "In flight", count: live.length },
             { value: "DONE", label: "Finished", count: done.length },
-            { value: "ALL", label: "All", count: batches.length },
           ]}
         />
 
