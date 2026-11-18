@@ -14,6 +14,7 @@ import { pendingFor, sortInbox, entityHref, entityLabel, type SignoffRow } from 
 import { reconcileWorkOrderApprovals } from "@/lib/work-order-approval";
 import { reconcilePermits } from "@/lib/hse/permit-reconcile";
 import { dropFinishedChains } from "@/lib/signoff/finished";
+import { isBackfillStep } from "@/lib/maintenance/backfill";
 
 
 export async function GET() {
@@ -43,11 +44,13 @@ export async function GET() {
     // What each document is called and where it is read, from the one
     // describer the flow tracker uses too.
     const described = await describeEntities(mine);
+    const backfilled = new Set(pendingRows.filter((r) => isBackfillStep(r.comments)).map((r) => r.id));
     return NextResponse.json(
       mine.map((m) => {
         const d = described.get(`${m.entityType}:${m.entityId}`);
         return {
           ...m,
+          backfilled: backfilled.has(m.signoffId),
           kind: entityLabel(m.entityType),
           href: d?.href ?? entityHref(m.entityType, m.entityId),
           // A record the lookup could not find is still shown. Hiding it would

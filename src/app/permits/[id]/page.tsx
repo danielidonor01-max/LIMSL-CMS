@@ -574,7 +574,7 @@ export default function PermitDetail() {
         {/* Handback, handover and work acceptance. */}
         <PermitHandback
           permit={permit}
-          canHandback={canHandback && !isPending}
+          canHandback={canHandback && !isPending && permit.status !== "BACKFILLED"}
           canAccept={canAccept}
           onSaved={load}
         />

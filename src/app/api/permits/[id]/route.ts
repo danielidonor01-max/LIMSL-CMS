@@ -120,7 +120,7 @@ export async function GET(
 
     // A closed or cancelled permit's record stops on the day it ended: the
     // days after it are not gaps, and it has no days "left".
-    const ended = ["CLOSED", "CLOSED_LATE", "CLOSED_WORK_ONGOING", "CANCELLED"].includes(permit.status);
+    const ended = ["CLOSED", "CLOSED_LATE", "CLOSED_WORK_ONGOING", "CANCELLED", "BACKFILLED"].includes(permit.status);
     const endedOn = ended ? String(permit.closedAt ?? permit.acceptedAt ?? today).slice(0, 10) : null;
     const asOf = endedOn && endedOn < today ? endedOn : today;
 

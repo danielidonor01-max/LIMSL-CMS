@@ -346,6 +346,14 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   before its dates were filled in): `closeCorrective` runs after every PATCH.
   The CM chain is three signatures: Technician → Foreman → Maintenance
   Manager (was five plus COO). HSE's safety check is the permit itself.
+- **PMs done on paper are backfilled, never signed for** (18 Nov 2026,
+  `lib/maintenance/backfill.ts`, `lib/db/backfill-2026.ts`). The script enters
+  batches, lines, checklists and permits marked `BACKFILL-2026`, invents no
+  checklist result, and signs nothing: every step is named to one person, who
+  signs in their own login from the panel in My Approvals
+  (`BackfillSignPanel`, through the normal signature route). A permit in status
+  `BACKFILLED` is outside the validity clock in `reconcilePermits` and closes
+  when both of its chains are signed. CNC Heavy Duty is excluded.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.

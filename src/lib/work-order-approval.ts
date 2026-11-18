@@ -15,7 +15,7 @@
 // authorising, and the permit is what allows that.
 import { db } from "@/lib/db";
 import { workOrders } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 
@@ -91,6 +91,17 @@ export async function approveBatchLines(batchId: string) {
     })
     .where(and(eq(workOrders.batchId, batchId), eq(workOrders.status, "PENDING_APPROVAL")))
     .returning({ id: workOrders.id });
+  // Lines entered from the paper file are already complete. The approval is
+  // recorded on them without reopening the work.
+  await db
+    .update(workOrders)
+    .set({
+      approvedById: approver?.signedById ?? null,
+      approvedByName: approver?.signedByName ?? null,
+      approvedAt: now,
+      updatedAt: now,
+    })
+    .where(and(eq(workOrders.batchId, batchId), eq(workOrders.status, "COMPLETED"), isNull(workOrders.approvedAt)));
   return opened.length;
 }
 

@@ -36,6 +36,7 @@ import { ROLE_LABELS } from "@/lib/roles";
 import ApprovalFlows from "@/components/ApprovalFlows";
 import MetricPanel from "@/components/MetricPanel";
 import QuickSignModal, { type QuickSignTarget } from "@/components/QuickSignModal";
+import BackfillSignPanel from "@/components/BackfillSignPanel";
 import type { PriorityTier } from "@/lib/signoff/inbox";
 
 type Item = {
@@ -54,6 +55,7 @@ type Item = {
   subtitle?: string | null;
   createdAt?: string | null;
   priorityTier: PriorityTier;
+  backfilled?: boolean;
 };
 
 type ViewTab = "action" | "tracking";
@@ -64,12 +66,17 @@ export default function ApprovalsPage() {
   const role = (session?.user as { role?: string })?.role;
   const userName = session?.user?.name ?? "you";
 
-  const { data: items, loading, error, refresh } = useApi<Item[]>("/api/approvals", []);
+  const { data: allItems, loading, error, refresh } = useApi<Item[]>("/api/approvals", []);
+  // Records entered from the paper file are signed together from their own
+  // panel, so they do not bury the live work in the queue below.
+  const items = useMemo(() => allItems?.filter((i) => !i.backfilled) ?? null, [allItems]);
+  const backfillItems = useMemo(() => allItems?.filter((i) => i.backfilled) ?? [], [allItems]);
   const [activeTab, setActiveTab] = useState<ViewTab>("action");
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("ALL");
   const [quickSignTarget, setQuickSignTarget] = useState<QuickSignTarget | null>(null);
 
   const count = items?.length ?? 0;
+  const totalCount = allItems?.length ?? 0;
 
   // Breakdown by priority tiers
   const urgentItems = useMemo(
@@ -123,7 +130,7 @@ export default function ApprovalsPage() {
               {
                 value: "action",
                 label: "Action required",
-                count: count > 0 ? count : undefined,
+                count: totalCount > 0 ? totalCount : undefined,
               },
               {
                 value: "tracking",
@@ -154,6 +161,8 @@ export default function ApprovalsPage() {
         ) : (
           /* Action Required Queue */
           <div className="space-y-6">
+            {backfillItems.length > 0 && <BackfillSignPanel items={backfillItems} onDone={refresh} />}
+
             {/* Dynamic Priority Phase Banner */}
             {activePhase === "urgent" && (
               <div className="p-5 rounded-xl bg-danger-500/5 border border-danger-500/20 text-ink-900 space-y-2">
@@ -254,7 +263,7 @@ export default function ApprovalsPage() {
               ]}
             />
 
-            {count === 0 ? (
+            {count === 0 && backfillItems.length > 0 ? null : count === 0 ? (
               <div className="bg-surface border border-line rounded-xl shadow-card">
                 <EmptyState
                   icon={CheckCheck}

@@ -55,7 +55,7 @@ type Permit = {
 // A permit is closed when it has been handed back, or when it will never be
 // used. Everything else is still out there, which includes an expired permit
 // nobody closed — that is the one an auditor asks about first.
-const CLOSED_STATES = new Set(["CLOSED", "CLOSED_LATE", "CLOSED_WORK_ONGOING", "CANCELLED"]);
+const CLOSED_STATES = new Set(["CLOSED", "CLOSED_LATE", "CLOSED_WORK_ONGOING", "CANCELLED", "BACKFILLED"]);
 
 const REMAINING_TONE: Record<string, string> = {
   OK: "bg-ink-500/10 text-ink-600 border-ink-500/20",

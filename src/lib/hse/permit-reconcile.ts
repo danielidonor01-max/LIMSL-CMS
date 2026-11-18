@@ -11,8 +11,9 @@
 // over another, so the permit is closed as work ongoing and a fresh one
 // referencing it starts its own seven days.
 import { db } from "@/lib/db";
-import { permits, auditLog, nonConformities } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { permits, auditLog, nonConformities, signoffs } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { BACKFILLED_PERMIT, backfilledPermitComplete } from "@/lib/maintenance/backfill";
 import { nanoid } from "nanoid";
 import { nextDocNumber } from "@/lib/doc-number";
 import { ensureSignoffChain, getSignoffChain } from "@/lib/signoff/service";
@@ -119,12 +120,46 @@ async function raiseSuccessor(previous: PermitRow, today: string) {
   return { id, permitNumber };
 }
 
+// A permit entered from the paper file closes when both of its chains are
+// signed. One query for all of them: this runs on every read of the inbox.
+async function closeBackfilledPermits(all: PermitRow[]) {
+  const waiting = all.filter((p) => p.status === BACKFILLED_PERMIT);
+  if (waiting.length === 0) return;
+  const steps = await db
+    .select({
+      entityType: signoffs.entityType,
+      entityId: signoffs.entityId,
+      required: signoffs.required,
+      status: signoffs.status,
+    })
+    .from(signoffs)
+    .where(
+      and(
+        inArray(signoffs.entityType, ["PERMIT", "PERMIT_CLOSEOUT"]),
+        inArray(signoffs.entityId, waiting.map((p) => p.id)),
+      ),
+    );
+  for (const p of waiting) {
+    const mine = steps.filter((s) => s.entityId === p.id);
+    const approval = mine.filter((s) => s.entityType === "PERMIT");
+    const closeout = mine.filter((s) => s.entityType === "PERMIT_CLOSEOUT");
+    if (backfilledPermitComplete(approval, closeout)) {
+      await db
+        .update(permits)
+        .set({ status: "CLOSED", closureReason: "COMPLETED", approvedAt: new Date().toISOString() })
+        .where(eq(permits.id, p.id));
+    }
+  }
+}
+
 export async function reconcilePermits() {
   const all = await db.select().from(permits);
   const today = new Date().toISOString().slice(0, 10);
+  await closeBackfilledPermits(all);
 
   for (const p of all) {
     if (
+      p.status === BACKFILLED_PERMIT ||
       p.status === "CLOSED" ||
       p.status === "CLOSED_LATE" ||
       p.status === "CLOSED_WORK_ONGOING" ||

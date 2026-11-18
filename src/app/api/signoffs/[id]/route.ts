@@ -18,6 +18,7 @@ import { approveBatchLines, BATCH_APPROVAL_ENTITY } from "@/lib/work-order-appro
 import { closeCorrective, correctiveSignBlocker } from "@/lib/maintenance/cm-closeout";
 import { reconcileJha } from "@/app/api/jha/route";
 import { PERMIT_ISSUE_ROLES } from "@/lib/roles";
+import { isBackfillStep } from "@/lib/maintenance/backfill";
 
 // POST /api/signoffs/[id] → sign (or reject) one step in a chain.
 // Enforces: authenticated, role matches the step (or senior/super-admin), and
@@ -400,8 +401,12 @@ export async function POST(
       try {
         const fresh = await getSignoffChain(step.entityType, step.entityId);
         milestone = milestoneAfterSign(step.entityType, fresh, step.stepOrder);
-        await notifyNextSigner(step.entityType, step.entityId, fresh);
-        await notifyTrail(step.entityType, step.entityId, fresh, milestone, user.id);
+        // Paper records being entered in bulk: each signer was told once, and
+        // a message per signature would bury everything else they receive.
+        if (!isBackfillStep(step.comments)) {
+          await notifyNextSigner(step.entityType, step.entityId, fresh);
+          await notifyTrail(step.entityType, step.entityId, fresh, milestone, user.id);
+        }
       } catch (err) {
         console.warn("signoff: notify next signer failed", err);
       }
