@@ -311,6 +311,16 @@ export function normalisePitCode(raw: unknown): string {
 }
 
 /**
+ * Where a pit stands now: its latest reading against its CURRENT limit. A test
+ * keeps the verdict it was given on the day (its own snapshotted limit), but a
+ * pit's status follows the limit as it is now, so correcting a limit that was
+ * typed wrong is reflected straight away, without a retest.
+ */
+export function currentVerdict(resistanceOhms: number, limitOhms: number): Verdict {
+  return resistanceOhms <= limitOhms ? "PASS" : "FAIL";
+}
+
+/**
  * The next pit number, EP-01, EP-02, … (LIMSL, 17 Nov 2026: the number is
  * generated, nobody types it). It follows the highest EP-n already used, so a
  * retired pit's number is never handed out again. Two digits, more if needed.

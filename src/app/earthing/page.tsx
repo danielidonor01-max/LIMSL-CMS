@@ -63,6 +63,7 @@ import {
   SOIL_LABELS,
   calibrationWarning,
   changeVsPrevious,
+  currentVerdict,
   dueStatus,
   evaluateFallOfPotential,
   latestPerPit,
@@ -414,6 +415,8 @@ function InstrumentCard({ instruments, loading }: { instruments: Instrument[]; l
 type PitRow = {
   pit: Pit;
   latest: EarthTest | null;
+  /** The latest reading against the pit's limit as it is now. */
+  current: "PASS" | "FAIL" | null;
   due: ReturnType<typeof dueStatus>;
   values: number[];
   change: number | null;
@@ -451,26 +454,54 @@ function PitsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-ink-200">
-          {rows.map(({ pit, latest, due, values, change, colour }) => {
+          {rows.map(({ pit, latest, current, due, values, change, colour }) => {
             const items: KebabItem[] = [
               ...(canWrite && pit.active ? [{ label: "New test for this pit", icon: ClipboardPlus, onClick: () => onNewTest(pit.id) }] : []),
-              ...(canWrite ? [{ label: "Edit pit", icon: Pencil, onClick: () => onEdit(pit) }] : []),
+              ...(canWrite ? [{ label: "Edit limit and details", icon: Pencil, onClick: () => onEdit(pit) }] : []),
               { label: "View history", icon: History, onClick: () => onHistory(pit.id) },
             ];
             return (
               <tr key={pit.id} className={`hover:bg-ink-50 ${pit.active ? "" : "text-ink-500"}`}>
                 <td className="py-3 px-5">
-                  <div className="font-semibold text-ink-900">{pit.code}</div>
-                  <div className="text-ink-600">{pit.name}</div>
+                  {canWrite ? (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(pit)}
+                      className="text-left hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 rounded-lg"
+                      aria-label={`Edit ${pit.code}`}
+                    >
+                      <div className="font-semibold text-ink-900">{pit.code}</div>
+                      <div className="text-ink-600">{pit.name}</div>
+                    </button>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-ink-900">{pit.code}</div>
+                      <div className="text-ink-600">{pit.name}</div>
+                    </>
+                  )}
                   {!pit.active && <Badge className="mt-1 bg-ink-500/10 text-ink-600 border-ink-500/20">Out of use</Badge>}
                 </td>
                 <td className="py-3 px-5 text-ink-700">{pit.location || "-"}</td>
-                <td className="py-3 px-5 text-right tabular-nums text-ink-700 whitespace-nowrap">{pit.limitOhms} Ω</td>
+                <td className="py-3 px-5 text-right tabular-nums text-ink-700 whitespace-nowrap">
+                  {canWrite ? (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(pit)}
+                      aria-label={`Change the limit of ${pit.code}, now ${pit.limitOhms} ohms`}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 -mr-2 text-ink-800 hover:bg-ink-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30"
+                    >
+                      {pit.limitOhms} Ω
+                      <Pencil className="w-3.5 h-3.5 text-ink-400" aria-hidden />
+                    </button>
+                  ) : (
+                    `${pit.limitOhms} Ω`
+                  )}
+                </td>
                 <td className="py-3 px-5 whitespace-nowrap">
                   {latest ? (
                     <div className="flex items-center gap-2">
                       <span className="tabular-nums font-semibold text-ink-900">{ohms(latest.resistanceOhms)}</span>
-                      <VerdictBadge verdict={latest.verdict} />
+                      <VerdictBadge verdict={current ?? latest.verdict} />
                     </div>
                   ) : (
                     <span className="text-ink-500">No test yet</span>
@@ -956,7 +987,7 @@ function PitModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={pit ? "Edit earth pit" : "Add earth pit"} subtitle={pit ? pit.code : "One electrode or pit that is tested on its own"}>
+    <Modal open={open} onClose={onClose} title={pit ? `Edit ${pit.code}` : "Add earth pit"} subtitle={pit ? "Its limit, name, location and electrode" : "One electrode or pit that is tested on its own"}>
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -982,6 +1013,13 @@ function PitModal({
             />
           </div>
         </div>
+        {pit && form.limitOhms !== "" && Number(form.limitOhms) !== pit.limitOhms && (
+          <p className="text-xs text-ink-600 -mt-1">
+            The pit&apos;s status will be judged against {form.limitOhms} Ω from now on. Tests already
+            recorded keep the verdict they were given against {pit.limitOhms} Ω, and the change is
+            written to the audit log.
+          </p>
+        )}
         <div>
           <label className={LABEL_CLASS} htmlFor="pit-name">
             Name
@@ -1084,6 +1122,7 @@ export default function EarthingPage() {
         return {
           pit,
           latest: l,
+          current: l ? currentVerdict(l.resistanceOhms, pit.limitOhms) : null,
           due: dueStatus(l?.testDate, TODAY),
           values: series.map((t) => t.resistanceOhms),
           change: changeVsPrevious(series),
@@ -1094,8 +1133,8 @@ export default function EarthingPage() {
 
   const summary = useMemo(() => {
     const active = rows.filter((r) => r.pit.active);
-    const passing = active.filter((r) => r.latest?.verdict === "PASS").length;
-    const failing = active.filter((r) => r.latest?.verdict === "FAIL").length;
+    const passing = active.filter((r) => r.current === "PASS").length;
+    const failing = active.filter((r) => r.current === "FAIL").length;
     const dueOrOver = active.filter((r) => r.due.state === "OVERDUE" || r.due.state === "DUE_SOON" || r.due.state === "NEVER").length;
     const overdue = active.filter((r) => r.due.state === "OVERDUE" || r.due.state === "NEVER").length;
     const lastTest = tests[0]?.testDate ?? null;

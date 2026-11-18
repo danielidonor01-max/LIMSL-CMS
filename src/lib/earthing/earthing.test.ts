@@ -14,6 +14,7 @@ import {
   slopePerYear,
   validatePit,
   nextPitCode,
+  currentVerdict,
   calibrationWarning,
   EARTHING_INTERVAL_DAYS,
 } from "@/lib/earthing/earthing";
@@ -152,6 +153,12 @@ test("an out-of-calibration instrument warns, a current one does not", () => {
   assert.ok(calibrationWarning("OUT_OF_SERVICE"));
   assert.equal(calibrationWarning("CURRENT"), null);
   assert.equal(calibrationWarning("DUE_SOON"), null);
+});
+
+test("a pit's status follows its current limit; on the limit is a pass", () => {
+  assert.equal(currentVerdict(0.52, 0.43), "FAIL");
+  assert.equal(currentVerdict(0.52, 5), "PASS");
+  assert.equal(currentVerdict(5, 5), "PASS");
 });
 
 test("pit numbers are generated: EP-01 first, then after the highest used", () => {
