@@ -19,6 +19,7 @@ import PageLead from "@/components/PageLead";
 import Tabs from "@/components/Tabs";
 import KebabMenu, { type KebabItem } from "@/components/KebabMenu";
 import { defectOutcome } from "@/lib/maintenance/pm-defect";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { Badge } from "@/components/Badge";
@@ -243,6 +244,10 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
   const total = live.length;
   const doneCount = live.filter(isDone).length;
   const allDone = total > 0 && doneCount >= total;
+  // Entered from the paper file: the results are on the paper, so a blank here
+  // is not "no defects", and the date carries no time of day.
+  const onPaper = live.some((w) => isPaperRecord(w.checklist?.observations));
+  const whenDone = (d: string) => (onPaper ? formatDate(d) : formatDateTime(d));
   const outcomes = live.map((w) => (w.checklist ? defectOutcome(w.checklist) : "NONE"));
   const fixedCount = outcomes.filter((o) => o === "FIXED").length;
   const openCount = outcomes.filter((o) => o === "OPEN").length;
@@ -257,13 +262,17 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
   const nextUp = ordered.find((w) => !isDone(w)) ?? null;
 
   const headline = allDone
-    ? `All ${total} machines serviced`
+    ? total === 1
+      ? "1 machine serviced"
+      : `All ${total} machines serviced`
     : doneCount > 0
       ? `${doneCount} of ${total} machines done`
       : batch.assignedToName
         ? `${total} machine${total === 1 ? "" : "s"} to service`
         : "Nobody is on this batch yet";
-  const supporting = allDone
+  const supporting = onPaper
+    ? `Entered from the paper record. Work date ${formatDate(batch.plannedDate)}, from the annual schedule. Results and any defects are on the paper record.`
+    : allDone
     ? `Finished ${lastFinished ? formatDateTime(lastFinished) : ""}. ${
         openCount > 0
           ? `${openCount} defect${openCount === 1 ? "" : "s"} still need${openCount === 1 ? "s" : ""} a repair.`
@@ -354,7 +363,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                     const findings = w.checklist?.observations?.trim();
                     const isNext = !done && w.id === nextUp?.id;
                     const menu: KebabItem[] = [
-                      ...(w.checklist
+                      ...(w.checklist && !onPaper
                         ? [{ label: "View checklist", icon: FileText, href: `/work-orders/${w.id}/pm-checklist` }]
                         : []),
                       { label: "Open work order", icon: ExternalLink, href: `/work-orders/${w.id}` },
@@ -387,7 +396,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                         <td className="py-3 px-3 align-top whitespace-nowrap">
                           {done ? (
                             <>
-                              <p className="text-ink-900">{finished ? formatDateTime(finished) : "Done"}</p>
+                              <p className="text-ink-900">{finished ? whenDone(finished) : "Done"}</p>
                               {(w.checklist?.technicianName || w.technicianName) && (
                                 <p className="text-xs text-ink-500 mt-0.5">
                                   by {w.checklist?.technicianName || w.technicianName}
@@ -403,6 +412,8 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                         <td className="py-3 px-3 align-top min-w-48">
                           {!done ? (
                             <span className="text-ink-400">-</span>
+                          ) : isPaperRecord(findings) ? (
+                            <span className="text-ink-600">On the paper record</span>
                           ) : outcome === "NONE" ? (
                             <span className="text-ink-600">{findings || "No defects"}</span>
                           ) : (
@@ -536,11 +547,15 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                 progress: total ? (doneCount / total) * 100 : 0,
                 tone: allDone ? "good" : "warn",
               }}
-              stats={[
-                { label: "need a repair", value: openCount, tone: "bad" },
-                { label: "fixed in the PM", value: fixedCount },
-                { label: "to do", value: total - doneCount, tone: "warn" },
-              ]}
+              stats={
+                onPaper
+                  ? [{ label: "to do", value: total - doneCount, tone: "warn" }]
+                  : [
+                      { label: "need a repair", value: openCount, tone: "bad" },
+                      { label: "fixed in the PM", value: fixedCount },
+                      { label: "to do", value: total - doneCount, tone: "warn" },
+                    ]
+              }
               meta={
                 <>
                   <span className="inline-flex items-center gap-1.5">
@@ -612,7 +627,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                 </div>
                 <dl className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-1 divide-y sm:divide-y-0 2xl:divide-y divide-line text-sm">
                   {[
-                    ["Finished", lastFinished ? formatDateTime(lastFinished) : "-"],
+                    [onPaper ? "Work date" : "Finished", lastFinished ? whenDone(lastFinished) : "-"],
                     ["Machines", `${doneCount} of ${total}`],
                     ["Carried out by", batch.assignedToName ?? "-"],
                     ["Permit", batch.permit ? `${batch.permit.permitNumber} (${(DOC_LABEL[batch.permit.status] ?? batch.permit.status).toLowerCase()})` : "-"],

@@ -355,7 +355,6 @@ async function main() {
           controlMeasures: "As recorded in the hazard analysis linked to this permit.",
           wmsId: wmsFor.get(b.category)!,
           jhaId: jhaFor.get(b.category)!,
-          workTypes: JSON.stringify(["COLD_WORK"]),
           facility: "Factory",
           workArea: areas || label,
           startDate: date,

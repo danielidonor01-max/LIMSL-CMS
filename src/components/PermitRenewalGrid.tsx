@@ -32,7 +32,10 @@ export default function PermitRenewalGrid({
   canRenew,
   onSaved,
   endedOn = null,
+  onPaper = false,
 }: {
+  /** Entered from the paper file: the daily record is on the paper permit. */
+  onPaper?: boolean;
   /** The day a closed or cancelled permit ended; its record stops there. */
   endedOn?: string | null;
   permitId: string;
@@ -105,13 +108,19 @@ export default function PermitRenewalGrid({
             <CalendarDays className="w-4 h-4 text-brand-600" /> Validity and renewal
           </h3>
           <p className="text-xs text-ink-500 mt-0.5">
-            {endedOn
-              ? `Closed on ${endedOn}.`
-              : summary.expired
-              ? `Expired after ${summary.expiresOn}.`
-              : `${summary.daysRemaining} day${summary.daysRemaining === 1 ? "" : "s"} left, expires after ${summary.expiresOn}.`}
-            {" "}
-            {summary.worked} worked, {summary.notWorked} not worked.
+            {onPaper ? (
+              `Work date ${days[0]}. The daily validity record is on the paper permit.`
+            ) : (
+              <>
+                {endedOn
+                  ? `Closed on ${endedOn}.`
+                  : summary.expired
+                  ? `Expired after ${summary.expiresOn}.`
+                  : `${summary.daysRemaining} day${summary.daysRemaining === 1 ? "" : "s"} left, expires after ${summary.expiresOn}.`}
+                {" "}
+                {summary.worked} worked, {summary.notWorked} not worked.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -223,7 +232,7 @@ export default function PermitRenewalGrid({
         </div>
       )}
 
-      {summary.unaccounted.length > 0 && (
+      {!onPaper && summary.unaccounted.length > 0 && (
         <div className="px-6 py-3 bg-warn-50 border-t border-warn-200">
           <p className="text-xs text-warn-800">
             {summary.unaccounted.length} day

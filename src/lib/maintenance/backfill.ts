@@ -109,6 +109,15 @@ export function backfilledPermitComplete(
   return chainSummary(approval).complete && chainSummary(closeout).complete;
 }
 
+/**
+ * True for a record entered from the paper file. Its blank fields mean "on the
+ * paper", never "no" or "none", so screens must not read them as answers.
+ */
+export const isPaperRecord = (note: string | null | undefined) => !!note?.startsWith(BACKFILL_TAG);
+
+/** The note as a reader should see it, without the search tag. */
+export const paperRecordText = (note: string) => note.replace(`${BACKFILL_TAG}: entered`, "Entered");
+
 export const backfillNote = (date: string) =>
   `${BACKFILL_TAG}: entered on ${new Date().toISOString().slice(0, 10)} from the paper record held by Maintenance. ` +
   `The work date ${date} is the date on the annual schedule; the paper record governs if it differs. ` +

@@ -16,6 +16,7 @@ import PermitRenewalGrid from "@/components/PermitRenewalGrid";
 import Button from "@/components/Button";
 import { PERMIT_RENEW_ROLES } from "@/lib/roles";
 import type { RenewalDay, RenewalSummary } from "@/lib/hse/permit-validity";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 
 type PermitView = {
   id: string;
@@ -23,6 +24,7 @@ type PermitView = {
   status: string;
   permitHolderId: string | null;
   permitHolderName: string | null;
+  closureNote?: string | null;
   validity: {
     startDate: string;
     days: string[];
@@ -120,6 +122,7 @@ export default function PermitValidityPanel({ permitId }: { permitId: string }) 
         marks={permit.validity.marks}
         summary={permit.validity.summary}
         endedOn={permit.validity.endedOn ?? null}
+        onPaper={isPaperRecord(permit.closureNote)}
         canRenew={PERMIT_RENEW_ROLES.includes(role) && permit.status === "ACTIVE"}
         onSaved={load}
       />

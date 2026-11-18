@@ -8,6 +8,9 @@ import {
   eligibleForBackfill,
   groupIntoBatches,
   isBackfillStep,
+  isPaperRecord,
+  paperRecordText,
+  backfillNote,
   rotateTechnicians,
   type BackfillPlanRow,
 } from "@/lib/maintenance/backfill";
@@ -95,6 +98,26 @@ test("bulk signing goes through the one signature route and only marks tagged st
   assert.equal(isBackfillStep(BACKFILL_TAG), true);
   assert.equal(isBackfillStep("Looks fine"), false);
   assert.equal(isBackfillStep(null), false);
+});
+
+test("a paper record is recognised from its note, and reads without the tag", () => {
+  const note = backfillNote("2026-03-10");
+  assert.equal(isPaperRecord(note), true);
+  assert.equal(isPaperRecord("Replaced the filter."), false);
+  assert.equal(isPaperRecord(null), false);
+  assert.match(paperRecordText(note), /^Entered on /);
+  assert.doesNotMatch(paperRecordText(note), /BACKFILL/);
+});
+
+test("screens do not read a paper record's blank fields as answers", () => {
+  const wo = readFileSync("src/app/work-orders/[id]/page.tsx", "utf8");
+  assert.match(wo, /checklist && !isPaperRecord\(checklist\.observations\) && \(/);
+  const batch = readFileSync("src/app/pm-batches/[id]/page.tsx", "utf8");
+  assert.match(batch, /On the paper record/);
+  const grid = readFileSync("src/components/PermitRenewalGrid.tsx", "utf8");
+  assert.match(grid, /!onPaper && summary\.unaccounted\.length > 0/);
+  // The script does not state a work type the paper permit holds.
+  assert.doesNotMatch(readFileSync("src/lib/db/backfill-2026.ts", "utf8"), /COLD_WORK/);
 });
 
 test("every drafted hazard analysis names known PPE and has real steps", () => {

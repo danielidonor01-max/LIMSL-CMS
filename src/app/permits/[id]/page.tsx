@@ -31,6 +31,7 @@ import PermitHandback from "@/components/PermitHandback";
 import PermitFace from "@/components/PermitFace";
 import PermitPrintSheet from "@/components/PermitPrintSheet";
 import { formatDate } from "@/lib/utils";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
@@ -239,6 +240,9 @@ export default function PermitDetail() {
 
   const isActive = permit.status === "ACTIVE";
   const isPending = permit.status === "PENDING_APPROVAL";
+  const onPaper = isPaperRecord(permit.closureNote);
+  // The work type of a permit entered from the file is on the paper copy.
+  const shownPermit = onPaper ? { ...permit, workTypes: null } : permit;
   const isDead = permit.status === "CLOSED" || permit.status === "CANCELLED" || permit.status === "EXPIRED";
 
   return (
@@ -248,7 +252,7 @@ export default function PermitDetail() {
             the same paper the pad produces, and the two have to be readable
             side by side. */}
         <PermitPrintSheet
-          permit={permit}
+          permit={shownPermit}
           chain={permit.approvalSteps ?? []}
           closeout={permit.closeoutSteps ?? []}
         />
@@ -460,7 +464,13 @@ export default function PermitDetail() {
             <Meta
               icon={<Clock className="w-3.5 h-3.5" />}
               label="Expires"
-              value={permit.expiryDate ? new Date(permit.expiryDate).toLocaleString() : "-"}
+              value={
+                permit.expiryDate
+                  ? onPaper
+                    ? formatDate(permit.expiryDate)
+                    : new Date(permit.expiryDate).toLocaleString()
+                  : "-"
+              }
             />
             <Meta
               icon={<CheckCircle2 className="w-3.5 h-3.5" />}
@@ -553,8 +563,15 @@ export default function PermitDetail() {
           )}
         </div>
 
+        {onPaper && (
+          <p className="rounded-xl border border-info-200 bg-info-50 px-4 py-3 text-sm text-info-900">
+            Entered from the paper permit. Its work type, precautions, PPE, daily validity record and handback are on
+            the paper copy held by Maintenance.
+          </p>
+        )}
+
         {/* The permit face: work types and the three checklists as marked. */}
-        <PermitFace permit={permit} />
+        <PermitFace permit={shownPermit} />
 
         {/* Validity and renewal, one column per day of the period. The permit
             holder asks for each day's revalidation from here. */}
@@ -566,18 +583,21 @@ export default function PermitDetail() {
             marks={permit.validity.marks}
             summary={permit.validity.summary}
             endedOn={permit.validity.endedOn ?? null}
+            onPaper={onPaper}
             canRenew={canRenew && isActive}
             onSaved={load}
           />
         )}
 
         {/* Handback, handover and work acceptance. */}
-        <PermitHandback
-          permit={permit}
-          canHandback={canHandback && !isPending && permit.status !== "BACKFILLED"}
-          canAccept={canAccept}
-          onSaved={load}
-        />
+        {!onPaper && (
+          <PermitHandback
+            permit={permit}
+            canHandback={canHandback && !isPending}
+            canAccept={canAccept}
+            onSaved={load}
+          />
+        )}
 
         {/* Authorisation chain, must be complete before work begins */}
         <SignoffChain
