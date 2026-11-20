@@ -117,11 +117,16 @@ test("the schedule opens on all activities, and Log is the last tab", () => {
 test("both logs print alone, under the company letterhead", () => {
   const css = readFileSync("src/app/globals.css", "utf8");
   assert.match(css, /\[data-print-solo\] > :not\(\[data-print-keep\]\)/);
-  for (const f of ["src/components/ScheduleComplianceLog.tsx", "src/components/EarthingLog.tsx"]) {
-    const src = readFileSync(f, "utf8");
-    assert.match(src, /<PrintLetterhead/, f);
-    assert.match(src, /window\.print\(\)/, f);
-  }
+  const earthingLog = readFileSync("src/components/EarthingLog.tsx", "utf8");
+  assert.match(earthingLog, /<PrintLetterhead/);
+  assert.match(earthingLog, /window\.print\(\)/);
+  // The schedule record is a document of its own: cover, running header, numbered footer.
+  const scheduleLog = readFileSync("src/components/ScheduleComplianceLog.tsx", "utf8");
+  assert.match(scheduleLog, /window\.print\(\)/);
+  assert.match(scheduleLog, /className="report-cover"/);
+  assert.match(scheduleLog, /\/brand\/logo-80\.png/);
+  assert.match(css, /@page report \{[\s\S]*counter\(page\) " of " counter\(pages\)/);
+  assert.match(css, /@page report:first/);
   assert.match(readFileSync("src/components/PrintLetterhead.tsx", "utf8"), /\/brand\/logo-80\.png/);
   const earthing = readFileSync("src/app/earthing/page.tsx", "utf8");
   assert.match(earthing, /\{ value: "trends", label: "Trends" \},\s+\{ value: "log", label: "Log" \}/);

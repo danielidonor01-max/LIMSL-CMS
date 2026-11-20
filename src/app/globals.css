@@ -447,6 +447,330 @@ select[size]:not([size="1"]) {
     size: A4 portrait;
     margin: 10mm;
   }
+
+  /* ── The management report (schedule Log) ────────────────────────────────
+     A document with its own page: wider margins, a running header naming the
+     company and the record, and a footer with the document number and the
+     page count. The cover carries none of them. */
+  /* The whole document goes on the report's page, so no blank sheet is left
+     where the record ends and the page's own wrappers close; and the wrappers
+     print as paper, whatever "background graphics" is set to. */
+  html:has([data-print-solo] .report) {
+    page: report;
+  }
+  html:has([data-print-solo] .report) body,
+  html:has([data-print-solo] .report) body * {
+    min-height: 0 !important;
+  }
+  html:has([data-print-solo] .report) .bg-canvas {
+    background: #ffffff !important;
+  }
+  .report {
+    page: report;
+    background: #ffffff;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #111410;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report p {
+    margin: 0;
+  }
+  .report-cover {
+    break-after: page;
+    display: flex;
+    flex-direction: column;
+    height: 247mm;
+  }
+  .report-cover-head {
+    display: flex;
+    align-items: center;
+    gap: 12pt;
+    padding-bottom: 12pt;
+    border-bottom: 2pt solid #111410;
+  }
+  .report-cover-head img {
+    width: 48pt;
+    height: 48pt;
+    object-fit: contain;
+  }
+  .report-org {
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 0.2pt;
+  }
+  .report-dept {
+    font-size: 9.5pt;
+    color: #4b4e4a;
+    margin-top: 2pt !important;
+  }
+  .report-cover-title {
+    margin-top: 58mm;
+  }
+  .report-kicker {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 1.2pt;
+  }
+  .report-cover-title h1 {
+    font-size: 27pt;
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 8pt 0 0;
+  }
+  .report-year {
+    font-size: 27pt;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #059669;
+  }
+  .report-asat {
+    font-size: 11pt;
+    color: #3b3f3a;
+    margin-top: 10pt !important;
+  }
+  .report-cover-figures {
+    display: grid;
+    grid-template-columns: 1.4fr repeat(4, 1fr);
+    margin-top: 22mm;
+    border-top: 0.75pt solid #111410;
+    border-bottom: 0.75pt solid #111410;
+  }
+  .report-cover-figures > div {
+    padding: 10pt 10pt 10pt 0;
+  }
+  .report-cover-figures > div + div {
+    padding-left: 10pt;
+    border-left: 0.5pt solid #c9cbc6;
+  }
+  .report-figure {
+    font-size: 20pt;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-figure-label {
+    font-size: 9.5pt;
+    font-weight: 600;
+    margin-top: 3pt !important;
+  }
+  .report-figure-note {
+    font-size: 8pt;
+    color: #4b4e4a;
+  }
+  .report-control {
+    margin-top: auto;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+  .report-control th,
+  .report-control td {
+    text-align: left;
+    padding: 5pt 6pt;
+    border: 0.5pt solid #9ca39b;
+    vertical-align: top;
+  }
+  .report-control th {
+    width: 17%;
+    font-weight: 600;
+    background: #f1f2ef;
+  }
+  .report-part {
+    font-size: 13pt;
+    font-weight: 700;
+    margin: 0 0 8pt;
+    padding-bottom: 4pt;
+    border-bottom: 1.5pt solid #111410;
+  }
+  .report-section {
+    break-inside: avoid;
+    margin: 0 0 14pt;
+  }
+  .report-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12pt;
+    margin-bottom: 6pt;
+  }
+  .report-section-head h3 {
+    font-size: 11pt;
+    font-weight: 700;
+    margin: 0;
+  }
+  .report-section-head p {
+    font-size: 8.5pt;
+    color: #4b4e4a;
+  }
+  .report-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #f1f2ef;
+    border-left: 3pt solid #059669;
+    margin-bottom: 6pt;
+  }
+  .report-strip > div {
+    padding: 6pt 8pt;
+  }
+  .report-strip-value {
+    font-size: 13pt;
+    font-weight: 700;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-strip-label {
+    font-size: 8pt;
+    color: #3b3f3a;
+  }
+  .report-lead {
+    font-size: 10pt;
+    margin-bottom: 10pt !important;
+  }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+  .report-table th {
+    text-align: left;
+    font-weight: 600;
+    padding: 4pt 6pt;
+    background: #e6e8e3;
+    border-bottom: 0.75pt solid #111410;
+    vertical-align: bottom;
+  }
+  .report-table td {
+    padding: 3pt 6pt;
+    border-bottom: 0.5pt solid #c9cbc6;
+  }
+  /* The name column takes the room, so a category stays on one line and two
+     quarters fit a page. */
+  .report-table th:first-child,
+  .report-table td:first-child {
+    width: 34%;
+    white-space: nowrap;
+  }
+  /* The comparison of quarters: a short first column, and the standing kept
+     on one line. */
+  .report-table.compare th:first-child,
+  .report-table.compare td:first-child {
+    width: 12%;
+  }
+  .report-table.compare td:nth-child(2) {
+    white-space: nowrap;
+  }
+  .report-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-table .strong {
+    font-weight: 700;
+  }
+  .report-table tr.total td {
+    font-weight: 700;
+    border-top: 0.75pt solid #111410;
+    border-bottom: 0.75pt solid #111410;
+  }
+  .report-chart {
+    max-width: 150mm;
+    margin: 4pt 0 12pt;
+  }
+  .report-caption {
+    font-size: 8pt;
+    color: #4b4e4a;
+  }
+  .report-note {
+    margin-top: 12pt;
+    padding: 8pt 10pt;
+    background: #f1f2ef;
+    font-size: 8.5pt;
+    break-inside: avoid;
+  }
+  .report-note-title {
+    font-weight: 700;
+    margin-bottom: 2pt !important;
+  }
+  .report-signoff-title {
+    margin-top: 18pt;
+    break-after: avoid;
+  }
+  .report-signoff {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18pt;
+    break-inside: avoid;
+  }
+  .report-sign-line {
+    height: 34pt;
+    border-bottom: 0.75pt solid #111410;
+  }
+  .report-sign-who {
+    font-weight: 700;
+    margin-top: 4pt !important;
+  }
+  .report-sign-what {
+    font-size: 8pt;
+    color: #4b4e4a;
+  }
+
+  @page report {
+    size: A4 portrait;
+    margin: 22mm 16mm 20mm 16mm;
+    @top-left {
+      content: "LEE International Machinery and Services Limited";
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-bottom: 0.5pt solid #9ca39b;
+      vertical-align: bottom;
+      padding-bottom: 3pt;
+    }
+    @top-right {
+      content: "Maintenance Compliance Record";
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-bottom: 0.5pt solid #9ca39b;
+      vertical-align: bottom;
+      padding-bottom: 3pt;
+    }
+    @bottom-left {
+      content: "LIMSL-MAIN-PLN-013  ·  Controlled record, printed from LIMSL CMS";
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-top: 0.5pt solid #9ca39b;
+      vertical-align: top;
+      padding-top: 3pt;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-top: 0.5pt solid #9ca39b;
+      vertical-align: top;
+      padding-top: 3pt;
+    }
+  }
+  @page report:first {
+    @top-left {
+      content: none;
+      border: none;
+    }
+    @top-right {
+      content: none;
+      border: none;
+    }
+    @bottom-left {
+      content: none;
+      border: none;
+    }
+    @bottom-right {
+      content: none;
+      border: none;
+    }
+  }
 }
 
 /* ─── Toasts (AppToaster.tsx) ───────────────────────────────────────────────

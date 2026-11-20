@@ -36,7 +36,7 @@ test("a repair whose only work order was cancelled is back on raising one", () =
 
 test("the printed record is the year: quarters in turn, then the comparison, and no machine list", () => {
   const src = readFileSync("src/components/ScheduleComplianceLog.tsx", "utf8");
-  assert.match(src, /<YearPrint logs=\{year4\}/);
+  assert.match(src, /<YearPrint\s+logs=\{year4\}/);
   assert.match(src, /<div className="screen-only space-y-6">/);
   assert.match(src, /breakBefore: "page"/);
   const print = src.slice(src.indexOf("function YearPrint"));

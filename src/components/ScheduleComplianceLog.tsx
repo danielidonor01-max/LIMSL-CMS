@@ -16,7 +16,6 @@ import EmptyState from "@/components/EmptyState";
 import MetricPanel from "@/components/MetricPanel";
 import SegmentedControl from "@/components/SegmentedControl";
 import Select from "@/components/Select";
-import { PrintLetterhead, PrintSignoff } from "@/components/PrintLetterhead";
 import { formatDate } from "@/lib/utils";
 import {
   COMPLIANCE_TARGET_PCT,
@@ -121,7 +120,7 @@ export default function ScheduleComplianceLog({
   const quarterOpen = t.notDue > 0;
 
   return (
-    <div className="space-y-6 print-sheet">
+    <div className="space-y-6">
       <div className="no-print flex flex-wrap items-center gap-3">
         <Select value={String(shownYear)} onChange={(v) => setYear(Number(v))} ariaLabel="Year" className="w-28">
           {years.map((y) => (
@@ -162,14 +161,16 @@ export default function ScheduleComplianceLog({
         </div>
       </div>
 
-      <PrintLetterhead
-        title={`${activityType === "PM" ? "PM" : "Inspection"} Compliance Record ${shownYear}`}
-        period={`All four quarters, as at ${formatDate(today)}`}
-        reference="LIMSL-MAIN-PLN-013"
-        generatedBy={printedBy}
+      <YearPrint
+        logs={year4}
+        year={shownYear}
+        today={today}
+        noun={noun}
+        kind={activityType === "PM" ? "Preventive Maintenance" : "Inspection"}
+        label={label}
+        rule={rule}
+        printedBy={printedBy}
       />
-
-      <YearPrint logs={year4} year={shownYear} today={today} noun={noun} label={label} rule={rule} />
 
       <div className="screen-only space-y-6">
       {t.planned === 0 ? (
@@ -433,32 +434,43 @@ export default function ScheduleComplianceLog({
 }
 
 // ── The printed record ──────────────────────────────────────────────────────
-// What management reads: each quarter in turn with its categories, then one
-// page comparing the quarters. No machine list; that stays on screen.
+// A document, not a screenshot: a cover page, then each quarter with its
+// categories, then one page comparing the quarters, under a running header and
+// a numbered footer (the `report` page rules in globals.css). No machine list;
+// that stays on screen.
+
+/* eslint-disable @next/next/no-img-element */
 
 const STANDING_TEXT = { CLOSED: "Closed", CURRENT: "Current quarter, in progress", AHEAD: "Not started" } as const;
+const DOC_NUMBER = "LIMSL-MAIN-PLN-013";
 
 function YearPrint({
   logs,
   year,
   today,
   noun,
+  kind,
   label,
   rule,
+  printedBy,
 }: {
   logs: QuarterLog[];
   year: number;
   today: string;
   noun: string;
+  kind: string;
   label: (code: string) => string;
   rule: ComplianceRule;
+  printedBy?: string | null;
 }) {
   const ytd = sumTallies(logs.map((l) => l.total));
   const current = logs.find((l) => quarterStanding(year, l.quarter, today) === "CURRENT") ?? null;
   const missedOf = (x: LogTally) => x.outstanding + x.outsideWindow + x.deferred;
+  const asAt = new Date(`${today}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const verdict = (v: number | null) => (v === null ? "Nothing counted yet" : v >= COMPLIANCE_TARGET_PCT ? "Target met" : "Below target");
 
   // The trend, drawn by hand so it prints exactly as drawn.
-  const W = 520;
+  const W = 560;
   const H = 210;
   const base = 170;
   const top = 20;
@@ -470,146 +482,234 @@ function YearPrint({
     .join(" ");
 
   return (
-    <div className="print-only">
+    <div className="print-only report">
+      {/* ── Cover ── */}
+      <section className="report-cover">
+        <div className="report-cover-head">
+          <img src="/brand/logo-80.png" alt="" width={64} height={64} />
+          <div>
+            <p className="report-org">LEE INTERNATIONAL MACHINERY AND SERVICES LIMITED</p>
+            <p className="report-dept">Maintenance Department</p>
+          </div>
+        </div>
+
+        <div className="report-cover-title">
+          <p className="report-kicker">Management review record</p>
+          <h1>{kind} Compliance Record</h1>
+          <p className="report-year">{year}</p>
+          <p className="report-asat">All four quarters, as at {asAt}</p>
+        </div>
+
+        <div className="report-cover-figures">
+          <div>
+            <p className="report-figure">{pct(ytd.compliancePct)}</p>
+            <p className="report-figure-label">Year to date</p>
+            <p className="report-figure-note">
+              {ytd.compliant} of {ytd.due} counted, target {COMPLIANCE_TARGET_PCT}%
+            </p>
+          </div>
+          {logs.map((l) => (
+            <div key={l.quarter}>
+              <p className="report-figure">{pct(l.total.compliancePct)}</p>
+              <p className="report-figure-label">Q{l.quarter}</p>
+              <p className="report-figure-note">{STANDING_TEXT[quarterStanding(year, l.quarter, today)]}</p>
+            </div>
+          ))}
+        </div>
+
+        <table className="report-control">
+          <tbody>
+            <tr>
+              <th>Document number</th>
+              <td>{DOC_NUMBER}</td>
+              <th>Period covered</th>
+              <td>1 January to 31 December {year}</td>
+            </tr>
+            <tr>
+              <th>Position as at</th>
+              <td>{asAt}</td>
+              <th>Prepared by</th>
+              <td>{printedBy || "Maintenance Department"}</td>
+            </tr>
+            <tr>
+              <th>Source</th>
+              <td>LIMSL CMS, annual maintenance schedule</td>
+              <th>Contents</th>
+              <td>Quarters 1 to 4, year at a glance, sign-off</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      {/* ── The quarters ── */}
+      <h2 className="report-part">1. Quarter by quarter</h2>
       {logs.map((log) => {
         const t = log.total;
         const standing = quarterStanding(year, log.quarter, today);
         const cats = [...log.byCategory].sort((a, b) => label(a.category).localeCompare(label(b.category)));
         return (
-          <section key={log.quarter} className="print-avoid-break mb-6">
-            <div className="flex items-baseline justify-between gap-4 border-b border-ink-900 pb-1">
-              <h2 className="text-base font-bold text-ink-900">{quarterLabel(year, log.quarter)}</h2>
-              <p className="text-xs text-ink-700">{STANDING_TEXT[standing]}</p>
+          <section key={log.quarter} className="report-section">
+            <div className="report-section-head">
+              <h3>{quarterLabel(year, log.quarter)}</h3>
+              <p>{STANDING_TEXT[standing]}</p>
             </div>
-            <p className="text-sm text-ink-900 mt-2">
-              {logHeadline(log, noun)}
-              {t.due > 0 && t.compliancePct !== null
-                ? t.compliancePct >= COMPLIANCE_TARGET_PCT
-                  ? ` Target of ${COMPLIANCE_TARGET_PCT}% met.`
-                  : ` Below the ${COMPLIANCE_TARGET_PCT}% target.`
-                : ""}
-              {t.open > 0 ? ` ${t.open} due with the window still open.` : ""}
-              {t.notDue > 0 ? ` ${t.notDue} still to come.` : ""}
-            </p>
-            {t.planned > 0 && (
-              <table className="w-full text-left text-xs mt-2">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th className="text-right">Planned</th>
-                    <th className="text-right">Due</th>
-                    <th className="text-right">Done in time</th>
-                    <th className="text-right">Not done in time</th>
-                    <th className="text-right">Due, window open</th>
-                    <th className="text-right">Still to come</th>
-                    <th className="text-right">Compliance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cats.map(({ category, tally }) => (
-                    <tr key={category}>
-                      <td>{label(category)}</td>
-                      <td className="text-right">{tally.planned}</td>
-                      <td className="text-right">{tally.due}</td>
-                      <td className="text-right">{tally.compliant}</td>
-                      <td className="text-right">{missedOf(tally)}</td>
-                      <td className="text-right">{tally.open}</td>
-                      <td className="text-right">{tally.notDue}</td>
-                      <td className="text-right font-bold">{pct(tally.compliancePct)}</td>
+            {t.planned === 0 ? (
+              <p className="report-lead">No {noun} were planned in this quarter.</p>
+            ) : (
+              <>
+                <div className="report-strip">
+                  <div>
+                    <p className="report-strip-value">{pct(t.compliancePct)}</p>
+                    <p className="report-strip-label">Compliance, {verdict(t.compliancePct).toLowerCase()}</p>
+                  </div>
+                  <div>
+                    <p className="report-strip-value">{t.compliant}</p>
+                    <p className="report-strip-label">Done in time, of {t.due} counted</p>
+                  </div>
+                  <div>
+                    <p className="report-strip-value">{missedOf(t)}</p>
+                    <p className="report-strip-label">Not done in time</p>
+                  </div>
+                  <div>
+                    <p className="report-strip-value">{t.open + t.notDue}</p>
+                    <p className="report-strip-label">
+                      {t.open > 0 ? `Open: ${t.open} due, ${t.notDue} still to come` : "Still to come"}
+                    </p>
+                  </div>
+                </div>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th className="num">Planned</th>
+                      <th className="num">Counted</th>
+                      <th className="num">Done in time</th>
+                      <th className="num">Not done in time</th>
+                      <th className="num">Due, window open</th>
+                      <th className="num">Still to come</th>
+                      <th className="num">Compliance</th>
                     </tr>
-                  ))}
-                  <tr className="font-bold">
-                    <td>Quarter total</td>
-                    <td className="text-right">{t.planned}</td>
-                    <td className="text-right">{t.due}</td>
-                    <td className="text-right">{t.compliant}</td>
-                    <td className="text-right">{missedOf(t)}</td>
-                    <td className="text-right">{t.open}</td>
-                    <td className="text-right">{t.notDue}</td>
-                    <td className="text-right">{pct(t.compliancePct)}</td>
-                  </tr>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {cats.map(({ category, tally }) => (
+                      <tr key={category}>
+                        <td>{label(category)}</td>
+                        <td className="num">{tally.planned}</td>
+                        <td className="num">{tally.due}</td>
+                        <td className="num">{tally.compliant}</td>
+                        <td className="num">{missedOf(tally)}</td>
+                        <td className="num">{tally.open}</td>
+                        <td className="num">{tally.notDue}</td>
+                        <td className="num strong">{pct(tally.compliancePct)}</td>
+                      </tr>
+                    ))}
+                    <tr className="total">
+                      <td>Quarter total</td>
+                      <td className="num">{t.planned}</td>
+                      <td className="num">{t.due}</td>
+                      <td className="num">{t.compliant}</td>
+                      <td className="num">{missedOf(t)}</td>
+                      <td className="num">{t.open}</td>
+                      <td className="num">{t.notDue}</td>
+                      <td className="num">{pct(t.compliancePct)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </>
             )}
           </section>
         );
       })}
 
+      {/* ── The year ── */}
       <section style={{ breakBefore: "page" }}>
-        <div className="border-b border-ink-900 pb-1">
-          <h2 className="text-base font-bold text-ink-900">{year} at a glance</h2>
-        </div>
-        <p className="text-sm text-ink-900 mt-2">
+        <h2 className="report-part">2. {year} at a glance</h2>
+        <p className="report-lead">
           {ytd.due > 0
-            ? `Year to date: ${ytd.compliant} of ${ytd.due} ${noun} due were done in time, ${ytd.compliancePct}% against a target of ${COMPLIANCE_TARGET_PCT}%.`
-            : `No ${noun} have fallen due yet this year.`}
+            ? `Year to date, ${ytd.compliant} of ${ytd.due} ${noun} counted were done in time: ${ytd.compliancePct}% against a target of ${COMPLIANCE_TARGET_PCT}%.`
+            : `No ${noun} have been counted yet this year.`}
           {current
-            ? ` The current quarter, Q${current.quarter}, stands at ${pct(current.total.compliancePct)} (${current.total.compliant} of ${current.total.due} counted)${current.total.open > 0 ? `, ${current.total.open} due with the window still open` : ""}, with ${current.total.notDue} scheduled ${noun} still to come before it closes.`
+            ? ` The current quarter, Q${current.quarter}, stands at ${pct(current.total.compliancePct)} (${current.total.compliant} of ${current.total.due} counted)${current.total.open > 0 ? `, with ${current.total.open} due and the window still open` : ""}, and ${current.total.notDue} scheduled ${noun} still to come before it closes.`
             : ""}
         </p>
 
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ ...EXACT, maxWidth: "150mm", marginTop: "10pt" }} role="img" aria-label="Compliance by quarter">
-          {[0, 50, 100].map((v) => (
-            <g key={v}>
-              <line x1="34" x2={W - 10} y1={y(v)} y2={y(v)} stroke="#c9cbc6" strokeWidth="0.75" />
-              <text x="28" y={y(v) + 3.5} fontSize="10" textAnchor="end" fill="#3b3f3a">
-                {v}%
-              </text>
-            </g>
-          ))}
-          <line x1="34" x2={W - 10} y1={y(COMPLIANCE_TARGET_PCT)} y2={y(COMPLIANCE_TARGET_PCT)} stroke="#111410" strokeWidth="1" strokeDasharray="5 4" />
-          <text x={W - 10} y={y(COMPLIANCE_TARGET_PCT) - 4} fontSize="10" textAnchor="end" fill="#111410">
-            Target {COMPLIANCE_TARGET_PCT}%
-          </text>
-          {logs.map((l, i) => {
-            const v = l.total.compliancePct;
-            const isCurrent = current?.quarter === l.quarter;
-            return (
-              <g key={l.quarter}>
-                {v !== null && (
-                  <rect
-                    x={x(i) - 26}
-                    y={y(v)}
-                    width="52"
-                    height={Math.max(base - y(v), 1)}
-                    fill={isCurrent ? "#ffffff" : v >= COMPLIANCE_TARGET_PCT ? "#10b981" : "#9ca39b"}
-                    stroke={isCurrent ? "#111410" : "none"}
-                    strokeWidth="1.25"
-                    strokeDasharray={isCurrent ? "4 3" : undefined}
-                  />
-                )}
-                <text x={x(i)} y={v === null ? base - 6 : y(v) - 6} fontSize="11" fontWeight="700" textAnchor="middle" fill="#111410">
-                  {v === null ? "-" : `${v}%`}
-                </text>
-                <text x={x(i)} y={base + 15} fontSize="11" fontWeight="700" textAnchor="middle" fill="#111410">
-                  Q{l.quarter}
-                </text>
-                <text x={x(i)} y={base + 29} fontSize="9.5" textAnchor="middle" fill="#3b3f3a">
-                  {isCurrent ? "in progress" : l.total.due ? `${l.total.compliant} of ${l.total.due}` : l.total.planned ? "not started" : "none planned"}
+        <div className="report-chart">
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Compliance by quarter">
+            {[0, 50, 100].map((v) => (
+              <g key={v}>
+                <line x1="34" x2={W - 10} y1={y(v)} y2={y(v)} stroke="#c9cbc6" strokeWidth="0.75" />
+                <text x="28" y={y(v) + 3.5} fontSize="10" textAnchor="end" fill="#3b3f3a">
+                  {v}%
                 </text>
               </g>
-            );
-          })}
-          {points.includes(" ") && <polyline points={points} fill="none" stroke="#111410" strokeWidth="1.5" />}
-          {logs.map((l, i) =>
-            l.total.compliancePct === null ? null : (
-              <circle key={l.quarter} cx={x(i)} cy={y(l.total.compliancePct)} r="3.5" fill="#111410" />
-            ),
-          )}
-        </svg>
+            ))}
+            <line x1="34" x2={W - 10} y1={y(COMPLIANCE_TARGET_PCT)} y2={y(COMPLIANCE_TARGET_PCT)} stroke="#111410" strokeWidth="1" strokeDasharray="5 4" />
+            <text x={W - 10} y={y(COMPLIANCE_TARGET_PCT) + 13} fontSize="10" textAnchor="end" fill="#111410">
+              Target {COMPLIANCE_TARGET_PCT}%
+            </text>
+            {points.includes(" ") && <polyline points={points} fill="none" stroke="#111410" strokeWidth="1.5" />}
+            {logs.map((l, i) => {
+              const v = l.total.compliancePct;
+              const isCurrent = current?.quarter === l.quarter;
+              return (
+                <g key={l.quarter}>
+                  {v !== null && (
+                    <rect
+                      x={x(i) - 26}
+                      y={y(v)}
+                      width="52"
+                      height={Math.max(base - y(v), 1)}
+                      fill={isCurrent ? "#ffffff" : v >= COMPLIANCE_TARGET_PCT ? "#10b981" : "#9ca39b"}
+                      stroke={isCurrent ? "#111410" : "none"}
+                      strokeWidth="1.25"
+                      strokeDasharray={isCurrent ? "4 3" : undefined}
+                    />
+                  )}
+                  <text
+                    x={x(i)}
+                    y={v === null ? base - 6 : y(v) - 9}
+                    fontSize="11"
+                    fontWeight="700"
+                    textAnchor="middle"
+                    fill="#111410"
+                    stroke="#ffffff"
+                    strokeWidth="4"
+                    paintOrder="stroke"
+                  >
+                    {v === null ? "-" : `${v}%`}
+                  </text>
+                  <text x={x(i)} y={base + 15} fontSize="11" fontWeight="700" textAnchor="middle" fill="#111410">
+                    Q{l.quarter}
+                  </text>
+                  <text x={x(i)} y={base + 29} fontSize="9.5" textAnchor="middle" fill="#3b3f3a">
+                    {isCurrent ? "in progress" : l.total.due ? `${l.total.compliant} of ${l.total.due}` : l.total.planned ? "not started" : "none planned"}
+                  </text>
+                </g>
+              );
+            })}
+            {logs.map((l, i) =>
+              l.total.compliancePct === null ? null : (
+                <circle key={l.quarter} cx={x(i)} cy={y(l.total.compliancePct)} r="3.5" fill="#111410" />
+              ),
+            )}
+          </svg>
+          <p className="report-caption">
+            Compliance by quarter. Green bars met the target, grey bars did not, and the dashed bar is the quarter in progress.
+          </p>
+        </div>
 
-        <table className="w-full text-left text-xs mt-3">
+        <table className="report-table compare">
           <thead>
             <tr>
               <th>Quarter</th>
               <th>Standing</th>
-              <th className="text-right">Planned</th>
-              <th className="text-right">Due</th>
-              <th className="text-right">Done in time</th>
-              <th className="text-right">Not done in time</th>
-              <th className="text-right">Due, window open</th>
-              <th className="text-right">Still to come</th>
-              <th className="text-right">Compliance</th>
+              <th className="num">Planned</th>
+              <th className="num">Counted</th>
+              <th className="num">Done in time</th>
+              <th className="num">Not done in time</th>
+              <th className="num">Due, window open</th>
+              <th className="num">Still to come</th>
+              <th className="num">Compliance</th>
             </tr>
           </thead>
           <tbody>
@@ -617,34 +717,47 @@ function YearPrint({
               <tr key={l.quarter}>
                 <td>Q{l.quarter}</td>
                 <td>{STANDING_TEXT[quarterStanding(year, l.quarter, today)]}</td>
-                <td className="text-right">{l.total.planned}</td>
-                <td className="text-right">{l.total.due}</td>
-                <td className="text-right">{l.total.compliant}</td>
-                <td className="text-right">{missedOf(l.total)}</td>
-                <td className="text-right">{l.total.open}</td>
-                <td className="text-right">{l.total.notDue}</td>
-                <td className="text-right font-bold">{pct(l.total.compliancePct)}</td>
+                <td className="num">{l.total.planned}</td>
+                <td className="num">{l.total.due}</td>
+                <td className="num">{l.total.compliant}</td>
+                <td className="num">{missedOf(l.total)}</td>
+                <td className="num">{l.total.open}</td>
+                <td className="num">{l.total.notDue}</td>
+                <td className="num strong">{pct(l.total.compliancePct)}</td>
               </tr>
             ))}
-            <tr className="font-bold">
+            <tr className="total">
               <td colSpan={2}>Year to date</td>
-              <td className="text-right">{ytd.planned}</td>
-              <td className="text-right">{ytd.due}</td>
-              <td className="text-right">{ytd.compliant}</td>
-              <td className="text-right">{missedOf(ytd)}</td>
-              <td className="text-right">{ytd.open}</td>
-              <td className="text-right">{ytd.notDue}</td>
-              <td className="text-right">{pct(ytd.compliancePct)}</td>
+              <td className="num">{ytd.planned}</td>
+              <td className="num">{ytd.due}</td>
+              <td className="num">{ytd.compliant}</td>
+              <td className="num">{missedOf(ytd)}</td>
+              <td className="num">{ytd.open}</td>
+              <td className="num">{ytd.notDue}</td>
+              <td className="num">{pct(ytd.compliancePct)}</td>
             </tr>
           </tbody>
         </table>
 
-        <p className="text-xs text-ink-700 mt-3">
-          {describeRule(rule)} Deferred work counts against its quarter. Work still to come is not counted until
-          its date arrives. The machine-by-machine list is in the system, under Schedule, Log.
-        </p>
+        <div className="report-note">
+          <p className="report-note-title">How this is counted</p>
+          <p>
+            {describeRule(rule)} Deferred work counts against its quarter. Work still to come is not counted until its
+            date arrives. The machine-by-machine list is held in the system under Schedule, Log.
+          </p>
+        </div>
 
-        <PrintSignoff labels={["Prepared by (Maintenance)", "Reviewed by", "Approved by (Management)"]} />
+        <h2 className="report-part report-signoff-title">3. Sign-off</h2>
+        <div className="report-signoff">
+          {["Prepared by (Maintenance)", "Reviewed by", "Approved by (Management)"].map((who) => (
+            <div key={who}>
+              <div className="report-sign-line" />
+              <p className="report-sign-who">{who}</p>
+              <p className="report-sign-what">Name</p>
+              <p className="report-sign-what">Signature and date</p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
