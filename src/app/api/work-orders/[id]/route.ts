@@ -9,8 +9,10 @@ import {
   permits,
   auditLog,
   pmBatches,
+  signoffs,
+  correctiveMaintenance,
 } from "@/lib/db/schema";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { loadReadiness } from "@/lib/maintenance/work-readiness-db";
@@ -236,6 +238,20 @@ export async function PATCH(
         .update(maintenanceSchedule)
         .set({ workOrderId: null })
         .where(eq(maintenanceSchedule.id, current.scheduleId));
+    }
+
+    // A cancelled work order cannot be revalidated: a new one is raised. So
+    // its unsigned approval steps go (signed ones stay as the record), and a
+    // breakdown it belonged to is freed, which puts that repair back on
+    // "raise the work order" instead of pointing at a dead one.
+    if (body.status === "CANCELLED" && body.status !== current.status) {
+      await db
+        .delete(signoffs)
+        .where(and(eq(signoffs.entityType, "WORK_ORDER"), eq(signoffs.entityId, id), eq(signoffs.status, "PENDING")));
+      await db
+        .update(correctiveMaintenance)
+        .set({ workOrderId: null, updatedAt: new Date().toISOString() })
+        .where(eq(correctiveMaintenance.workOrderId, id));
     }
 
     await db.insert(auditLog).values({

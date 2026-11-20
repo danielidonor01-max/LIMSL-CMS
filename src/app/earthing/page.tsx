@@ -1277,6 +1277,7 @@ export default function EarthingPage() {
               headingId="earthing-lead"
               headline={headline}
               supporting={supporting}
+              wideFigure
               figure={{ label: "Next measurement", value: nextFigure.value, unit: nextFigure.unit, tone: nextFigure.tone }}
               stats={[
                 { label: "measurements on record", value: summary.measurements },

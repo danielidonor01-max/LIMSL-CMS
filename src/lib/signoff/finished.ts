@@ -8,8 +8,14 @@
 // Approval steps of a permit that is no longer pending, and close-out steps of
 // one that is closed or cancelled, are dropped from every "waiting on you"
 // list, and such chains are never rebuilt on read.
+//
+// The same goes for a cancelled work order (LIMSL, 20 Nov 2026): it cannot be
+// revalidated, a new one has to be raised, so its approval steps are history.
+// And a breakdown record with no work order has nothing to sign off yet: its
+// first signature is refused until a work order and permit exist, so it does
+// not sit in anybody's inbox either.
 import { db } from "@/lib/db";
-import { permits } from "@/lib/db/schema";
+import { correctiveMaintenance, permits, workOrders } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 
 /** Statuses after which the permit's approval chain is history. */
@@ -33,11 +39,42 @@ export function isFinishedChain(entityType: string, permitStatus: string | null 
   return false;
 }
 
-/** Drop the rows of finished permit chains from a set of sign-off rows. */
+/** A work order chain is dead once the work order is cancelled. */
+export const isDeadWorkOrderChain = (entityType: string, workOrderStatus: string | null | undefined) =>
+  entityType === "WORK_ORDER" && workOrderStatus === "CANCELLED";
+
+/** A breakdown record's sign-off waits on nobody while it has no work order. */
+export const isWaitingForWorkOrder = (entityType: string, record: { workOrderId: string | null; status: string | null } | undefined) =>
+  entityType === "CORRECTIVE" && !!record && !record.workOrderId && record.status !== "CLOSED";
+
+const idsOf = (rows: { entityType: string; entityId: string }[], types: string[]) => [
+  ...new Set(rows.filter((r) => types.includes(r.entityType)).map((r) => r.entityId)),
+];
+
+/** Drop the rows of chains nobody can or should sign from a set of sign-off rows. */
 export async function dropFinishedChains<T extends { entityType: string; entityId: string }>(rows: T[]): Promise<T[]> {
-  const ids = [...new Set(rows.filter((r) => r.entityType === "PERMIT" || r.entityType === "PERMIT_CLOSEOUT").map((r) => r.entityId))];
-  if (ids.length === 0) return rows;
-  const found = await db.select({ id: permits.id, status: permits.status }).from(permits).where(inArray(permits.id, ids));
-  const status = new Map(found.map((p) => [p.id, p.status]));
-  return rows.filter((r) => !isFinishedChain(r.entityType, status.get(r.entityId)));
+  const permitIds = idsOf(rows, ["PERMIT", "PERMIT_CLOSEOUT"]);
+  const woIds = idsOf(rows, ["WORK_ORDER"]);
+  const cmIds = idsOf(rows, ["CORRECTIVE"]);
+  if (permitIds.length + woIds.length + cmIds.length === 0) return rows;
+
+  const [permitRows, woRows, cmRows] = await Promise.all([
+    permitIds.length ? db.select({ id: permits.id, status: permits.status }).from(permits).where(inArray(permits.id, permitIds)) : [],
+    woIds.length ? db.select({ id: workOrders.id, status: workOrders.status }).from(workOrders).where(inArray(workOrders.id, woIds)) : [],
+    cmIds.length
+      ? db
+          .select({ id: correctiveMaintenance.id, workOrderId: correctiveMaintenance.workOrderId, status: correctiveMaintenance.status })
+          .from(correctiveMaintenance)
+          .where(inArray(correctiveMaintenance.id, cmIds))
+      : [],
+  ]);
+  const permitStatus = new Map(permitRows.map((p: { id: string; status: string }) => [p.id, p.status]));
+  const woStatus = new Map(woRows.map((w: { id: string; status: string }) => [w.id, w.status]));
+  const cm = new Map(cmRows.map((c: { id: string; workOrderId: string | null; status: string | null }) => [c.id, c]));
+  return rows.filter(
+    (r) =>
+      !isFinishedChain(r.entityType, permitStatus.get(r.entityId)) &&
+      !isDeadWorkOrderChain(r.entityType, woStatus.get(r.entityId)) &&
+      !isWaitingForWorkOrder(r.entityType, cm.get(r.entityId)),
+  );
 }

@@ -168,6 +168,30 @@ export function buildQuarterLog(
   };
 }
 
+/** Several tallies as one, for the year to date. */
+export function sumTallies(tallies: LogTally[]): LogTally {
+  const t = emptyTally();
+  for (const x of tallies) {
+    t.planned += x.planned;
+    t.onTime += x.onTime;
+    t.late += x.late;
+    t.outsideWindow += x.outsideWindow;
+    t.outstanding += x.outstanding;
+    t.deferred += x.deferred;
+    t.notDue += x.notDue;
+  }
+  return settle(t);
+}
+
+export type QuarterStanding = "CLOSED" | "CURRENT" | "AHEAD";
+
+/** Whether a quarter is over, running, or still to come, as at `today`. */
+export function quarterStanding(year: number, quarter: number, today: string): QuarterStanding {
+  const now = yearOf(today) * 4 + quarterOf(today);
+  const q = year * 4 + quarter;
+  return q < now ? "CLOSED" : q === now ? "CURRENT" : "AHEAD";
+}
+
 /** Years the plan holds rows for, newest first. */
 export function logYears(rows: LogActivity[]): number[] {
   return [...new Set(rows.map((r) => yearOf(r.plannedDate)).filter((y) => Number.isFinite(y)))].sort((a, b) => b - a);

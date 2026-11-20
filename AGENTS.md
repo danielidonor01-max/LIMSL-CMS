@@ -383,6 +383,17 @@ marks the pass; segregation (one person, one step) applies **per pass**.
 - **Every email uses one layout** (`lib/notifications/email-template.ts`,
   20 Nov 2026): table-based, inline styles, logo header, one button with the
   address written out beneath it, plain-text twin. Change it there only.
+- **A cancelled work order asks nobody for anything** (20 Nov 2026). It
+  cannot be revalidated; a new one is raised. Cancelling removes its unsigned
+  approval steps (signed ones stay) and clears `workOrderId` on a breakdown it
+  belonged to, and the repair flow ignores cancelled work orders, so the
+  breakdown is back on "raise the work order". `dropFinishedChains` also keeps
+  a cancelled work order's chain, and the sign-off of a breakdown with no work
+  order, out of My Approvals and the sidebar dot.
+- **The schedule Log prints the year, not the screen** (20 Nov 2026): each
+  quarter in turn (headline and category table), then a last page comparing
+  the quarters with the trend, the current quarter's position and the PMs
+  still to come. No machine list on paper (`YearPrint`).
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.

@@ -32,12 +32,16 @@ import { cmFlowState, cmNeedsAuthorisation, repairAuthorisers, isCriticalRepair 
 
 
 async function documents(id: string, record: typeof correctiveMaintenance.$inferSelect) {
-  const wos = await db
-    .select({ id: workOrders.id, status: workOrders.status, workOrderNumber: workOrders.workOrderNumber })
-    .from(workOrders)
-    .where(eq(workOrders.cmsId, id));
+  // A cancelled work order is not this repair's work order any more: the
+  // repair goes back to "raise the work order".
+  const wos = (
+    await db
+      .select({ id: workOrders.id, status: workOrders.status, workOrderNumber: workOrders.workOrderNumber })
+      .from(workOrders)
+      .where(eq(workOrders.cmsId, id))
+  ).filter((w: { status: string }) => w.status !== "CANCELLED");
 
-  const woId = record.workOrderId ?? wos[0]?.id ?? null;
+  const woId = wos.find((w: { id: string }) => w.id === record.workOrderId)?.id ?? wos[0]?.id ?? null;
   const [wms] = woId
     ? await db.select().from(wmsDocuments).where(eq(wmsDocuments.workOrderId, woId)).limit(1)
     : [];

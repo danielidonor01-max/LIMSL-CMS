@@ -71,6 +71,7 @@ export default function PageLead({
   stats = [],
   meta,
   headingId = "page-lead-heading",
+  wideFigure = false,
 }: {
   headline: string;
   supporting: string;
@@ -79,6 +80,8 @@ export default function PageLead({
   stats?: LeadStat[];
   meta?: React.ReactNode;
   headingId?: string;
+  /** A wider dark panel, for sub-figures that are words or dates rather than counts. */
+  wideFigure?: boolean;
 }) {
   const reduced = useReducedMotion() ?? false;
   return (
@@ -126,7 +129,7 @@ export default function PageLead({
           )}
         </div>
 
-        <div className="lg:w-72 rounded-xl bg-nav text-white p-5 flex flex-col justify-between">
+        <div className={`${wideFigure ? "lg:w-[26rem]" : "lg:w-72"} rounded-xl bg-nav text-white p-5 flex flex-col justify-between`}>
           <p className="text-xs font-semibold tracking-[0.12em] text-nav-label">
             {figure.label}
           </p>
