@@ -47,7 +47,7 @@ export default function EquipmentHistoryPage() {
   }
 
   return (
-    <div className={PAGE_MAIN.form}>
+    <div className={PAGE_MAIN.register}>
       <Link href="/equipment" className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to registry
       </Link>

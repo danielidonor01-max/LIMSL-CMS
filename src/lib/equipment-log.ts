@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 
 export type LogCategory =
   | "PM" | "CM" | "INSPECTION" | "ACCIDENT" | "TRANSFER"
@@ -26,6 +27,8 @@ export type TimelineEvent = {
   detail: string | null;
   href: string | null;
   source: "AUTO" | "MANUAL" | "DERIVED";
+  /** Brought in from the legacy Equipment History Log workbook. */
+  legacy?: boolean;
   performedByName: string | null;
   occurredAt: string;
   refType?: string | null;
@@ -88,10 +91,13 @@ export async function buildTimeline(equipmentId: string): Promise<TimelineEvent[
     events.push({
       id: l.id,
       category: l.category as LogCategory,
-      title: l.title,
-      detail: l.detail,
+      // Records entered from the maintenance file carry a search tag in their
+      // stored text; the reader sees where the results are, not the tag.
+      title: l.title.replace(/ \(backfilled\)$/, ""),
+      detail: isPaperRecord(l.detail) ? "Readings and results are on the paper record." : l.detail,
       href: l.href,
       source: l.source as "AUTO" | "MANUAL",
+      legacy: l.performedByName === "Legacy import" || (l.metadata ?? "").includes('"legacyImport":true'),
       performedByName: l.performedByName,
       occurredAt: l.occurredAt,
       refType: l.refType,

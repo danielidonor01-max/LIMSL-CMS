@@ -97,6 +97,60 @@ export function parseLegacyDate(v: ExcelJS.CellValue): ParsedDate {
   return BAD(`Could not read "${s}" as a date`);
 }
 
+// The history log was typed day/month/year into a workbook that read
+// month/day/year. Where the day was 13 or more Excel could not make a date of
+// it and kept the text, which parses correctly. Where it was 12 or less Excel
+// stored a real date with the two swapped, some of the time: the same sheet
+// holds "4 November 2026" between January and July entries. A stored date
+// whose day and month can both be a month therefore has two readings.
+export function dateReadings(v: ExcelJS.CellValue): string[] {
+  const first = parseLegacyDate(v);
+  if (!first.iso) return [];
+  const stored = v instanceof Date || (typeof v === "object" && v !== null && (v as { result?: unknown }).result instanceof Date);
+  const [y, m, d] = first.iso.split("-");
+  if (!stored || Number(d) > 12 || d === m) return [first.iso];
+  return [first.iso, `${y}-${d}-${m}`];
+}
+
+/**
+ * Picks one reading per row. The log is filled in from the top, so the right
+ * readings are the ones that leave the sheet in date order; a date after today
+ * is never right while another reading exists. Among equals the date stays as
+ * the cell reads. Rows with no date are passed over.
+ */
+export function resolveChronology(readings: string[][], today: string): (string | null)[] {
+  const rows = readings.map((r, i) => ({ r, i })).filter((x) => x.r.length > 0);
+  const out: (string | null)[] = readings.map(() => null);
+  if (rows.length === 0) return out;
+  type Best = { cost: number; swaps: number; prev: number };
+  const table: Best[][] = [];
+  const own = (d: string) => (d > today ? 1000 : 0);
+  rows.forEach(({ r }, i) => {
+    table.push(
+      r.map((d, j) => {
+        if (i === 0) return { cost: own(d), swaps: j, prev: -1 };
+        let best: Best | null = null;
+        rows[i - 1].r.forEach((p, k) => {
+          const b = table[i - 1][k];
+          const cand = { cost: b.cost + own(d) + (d < p ? 100 : 0), swaps: b.swaps + j, prev: k };
+          if (!best || cand.cost < best.cost || (cand.cost === best.cost && cand.swaps < best.swaps)) best = cand;
+        });
+        return best!;
+      }),
+    );
+  });
+  let j = 0;
+  const last = table[table.length - 1];
+  last.forEach((b, k) => {
+    if (b.cost < last[j].cost || (b.cost === last[j].cost && b.swaps < last[j].swaps)) j = k;
+  });
+  for (let i = rows.length - 1; i >= 0; i--) {
+    out[rows[i].i] = rows[i].r[j];
+    j = table[i][j].prev;
+  }
+  return out;
+}
+
 export function addDays(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -239,6 +293,8 @@ export function classifyHistoryText(description: string): string {
 export type LegacyHistoryRow = {
   excelRow: number;
   date: ParsedDate;
+  /** The date as the cell reads, when the sheet's date order showed it was swapped. */
+  asRead?: string;
   ticks: string[]; // tick letters (A..H) that are checked
   description: string;
   remark: string;
@@ -263,7 +319,10 @@ function formValue(ws: ExcelJS.Worksheet, row: number): string {
   return "";
 }
 
-export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[] {
+export function parseHistoryWorkbook(
+  wb: ExcelJS.Workbook,
+  today: string = new Date().toISOString().slice(0, 10),
+): LegacyHistorySheet[] {
   const sheets: LegacyHistorySheet[] = [];
   for (const ws of wb.worksheets) {
     const sheet: LegacyHistorySheet = {
@@ -298,6 +357,7 @@ export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[]
     }
     if (!descCol) sheet.errors.push(`Sheet "${ws.name}": no DESCRIPTION column in the log table`);
 
+    const readings: string[][] = [];
     for (let r = headerRow + 1; r <= ws.rowCount; r++) {
       const row = ws.getRow(r);
       const rawDate = row.getCell(1).value;
@@ -318,7 +378,14 @@ export function parseHistoryWorkbook(wb: ExcelJS.Workbook): LegacyHistorySheet[]
         description,
         remark,
       });
+      readings.push(hasDate ? dateReadings(rawDate) : []);
     }
+    resolveChronology(readings, today).forEach((iso, i) => {
+      const row = sheet.rows[i];
+      if (!iso || !row.date.iso || iso === row.date.iso) return;
+      row.asRead = row.date.iso;
+      row.date = { iso, error: null };
+    });
     sheets.push(sheet);
   }
   return sheets;

@@ -63,6 +63,21 @@ export function eligibleForBackfill(row: BackfillPlanRow, today: string): boolea
 }
 
 /**
+ * The overdue PMs of one category, entered on its own later run (CNC Heavy
+ * Duty, 20 Nov 2026). Inspections are left out: only the PM plan was asked for.
+ */
+export function eligibleForCategoryPm(row: BackfillPlanRow, today: string, category: string): boolean {
+  return (
+    row.category === category &&
+    row.status === "OVERDUE" &&
+    row.activityType === "PM" &&
+    row.plannedDate <= today &&
+    !row.batchId &&
+    !row.removedAt
+  );
+}
+
+/**
  * One batch per category, date and activity, oldest first. PMs and inspections
  * due on the same day stay in separate batches: each is its own record.
  */

@@ -99,11 +99,11 @@ export default function BackfillSignPanel({ items, onDone }: { items: BackfillIt
     <section className="p-5 bg-surface border border-line rounded-xl shadow-card space-y-4" aria-labelledby="backfill-title">
       <div className="space-y-1">
         <h2 id="backfill-title" className="text-base font-semibold text-ink-900">
-          {items.length} record{items.length === 1 ? "" : "s"} from the paper file need your signature
+          {items.length} maintenance record{items.length === 1 ? "" : "s"} need your signature
         </h2>
         <p className="text-sm text-ink-600 max-w-3xl">
-          These PMs and inspections were done on paper and have now been entered. Your signature is dated today.
-          Check them against the paper file first, and do not sign anything that does not match it.
+          These PMs and inspections have been entered from the maintenance record. Your signature is dated today.
+          Check them against the record first, and do not sign anything that does not match it.
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export default function BackfillSignPanel({ items, onDone }: { items: BackfillIt
           disabled={running}
           onChange={(e) => setChecked(e.target.checked)}
         />
-        <span>I have checked these records against the paper file, and they match it.</span>
+        <span>I have checked these records against the maintenance record, and they match it.</span>
       </label>
 
       {hasPin && (

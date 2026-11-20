@@ -230,11 +230,13 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
   const byAsset = new Map(all.map((e) => [e.assetId.toUpperCase(), e.id]));
 
   const logs = await db
-    .select({ equipmentId: equipmentLog.equipmentId, occurredAt: equipmentLog.occurredAt, title: equipmentLog.title })
+    .select({ id: equipmentLog.id, equipmentId: equipmentLog.equipmentId, occurredAt: equipmentLog.occurredAt, title: equipmentLog.title })
     .from(equipmentLog);
   const dupKey = (equipmentId: string, dateIso: string, title: string) =>
     `${equipmentId}|${dateIso.slice(0, 10)}|${title}`;
   const existingKeys = new Set(logs.map((l) => dupKey(l.equipmentId, l.occurredAt, l.title)));
+  const existingIds = new Map(logs.map((l) => [dupKey(l.equipmentId, l.occurredAt, l.title), l.id]));
+  let updated = 0;
 
   for (const sheet of sheets) {
     // Resolve the machine: asset code first, then the form-block description,
@@ -282,14 +284,35 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
         errors.push("Already in the machine log, skipped");
       }
 
-      const action: ImportAction = errors.length ? "error" : "create";
+      // An entry imported before its date was put right: the sheet's date
+      // order shows the day and month were swapped, so the entry is moved to
+      // the corrected date rather than entered a second time.
+      const stale = !errors.length && row.asRead ? existingIds.get(dupKey(equipmentId, row.asRead, title)) : undefined;
+
+      const action: ImportAction = errors.length ? "error" : stale ? "update" : "create";
       preview.push({
         row: ++n,
-        label: `${sheet.sheetName} r${row.excelRow} · ${category} · ${dateIso || "?"}`,
+        label: stale
+          ? `${sheet.sheetName} r${row.excelRow} · ${category} · date corrected from ${row.asRead} to ${dateIso}`
+          : `${sheet.sheetName} r${row.excelRow} · ${category} · ${dateIso || "?"}`,
         action,
         errors,
       });
       if (!commit || errors.length) continue;
+
+      if (stale) {
+        try {
+          await db.update(equipmentLog).set({ occurredAt: dateIso }).where(eq(equipmentLog.id, stale));
+          existingIds.delete(dupKey(equipmentId, row.asRead!, title));
+          existingKeys.add(dupKey(equipmentId, dateIso, title));
+          updated++;
+        } catch (e) {
+          const p = preview[preview.length - 1];
+          p.action = "error";
+          p.errors.push(`Write failed: ${errMsg(e)}`);
+        }
+        continue;
+      }
 
       try {
         await db.insert(equipmentLog).values({
@@ -313,8 +336,8 @@ async function processHistory(wb: Awaited<ReturnType<typeof loadWorkbook>>, acto
     }
   }
 
-  if (commit) await audit(actor, "equipment_log (legacy history)", created, 0);
-  return { preview, summary: summarize(preview, created, 0) };
+  if (commit) await audit(actor, "equipment_log (legacy history)", created, updated);
+  return { preview, summary: summarize(preview, created, updated) };
 }
 
 // ── 3. Schedule ──────────────────────────────────────────────────────────────

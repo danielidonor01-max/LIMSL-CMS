@@ -1,23 +1,28 @@
 // src/components/EquipmentLog.tsx
-// The machine lifetime history log, a unified, filterable timeline of every
-// action on a machine (PMs, CMs, inspections, accidents, transfers, diagnoses,
-// status changes, documents, notes), auto-populated by the flows and manually
-// extendable. Responsive: a vertical timeline that reads cleanly on phones and
-// desktop alike. Reused by the digital-twin History tab and the /history page.
+// The machine's history log: every action on a machine (PMs, repairs,
+// inspections, accidents, transfers, diagnoses, status changes, documents,
+// notes) in one table, in date order (LIMSL, 20 Nov 2026).
+//
+// It was a timeline of cards. A timeline reads well for ten entries and badly
+// for three hundred, and a legacy workbook imports hundreds at once: what
+// people need then is to sort by date, narrow by type, year and where the
+// entry came from, and search. Reused by the equipment page's History tab and
+// the /history page.
 "use client";
 
 import DateTimeField from "@/components/DateTimeField";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  Wrench, AlertTriangle, ClipboardCheck, Truck, Stethoscope, Activity,
-  FileText, StickyNote, Gauge, CircleDot, Plus, Loader2, ExternalLink, Filter, FileCheck2, Scale,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, FilterX, History, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import LocationField from "@/components/LocationField";
+import EmptyState from "@/components/EmptyState";
+import TableSkeleton from "@/components/TableSkeleton";
+import { Badge } from "@/components/Badge";
+import { formatDate } from "@/lib/utils";
 
 type Event = {
   id: string;
@@ -26,28 +31,30 @@ type Event = {
   detail: string | null;
   href: string | null;
   source: "AUTO" | "MANUAL" | "DERIVED";
+  legacy?: boolean;
   performedByName: string | null;
   occurredAt: string;
 };
 
-const CATEGORY_META: Record<string, { label: string; icon: typeof Wrench; color: string; ring: string }> = {
-  PM: { label: "PM", icon: ClipboardCheck, color: "text-brand-600", ring: "bg-brand-50 border-brand-200" },
-  CM: { label: "Corrective", icon: Wrench, color: "text-danger-600", ring: "bg-danger-50 border-danger-200" },
-  INSPECTION: { label: "Inspection", icon: Gauge, color: "text-info-600", ring: "bg-info-50 border-info-200" },
-  ACCIDENT: { label: "Accident", icon: AlertTriangle, color: "text-orange-600", ring: "bg-orange-50 border-orange-200" },
-  TRANSFER: { label: "Transfer", icon: Truck, color: "text-violet-600", ring: "bg-violet-50 border-violet-200" },
-  DIAGNOSIS: { label: "Diagnosis", icon: Stethoscope, color: "text-indigo-600", ring: "bg-indigo-50 border-indigo-200" },
-  STATUS: { label: "Status", icon: Activity, color: "text-warn-600", ring: "bg-warn-50 border-warn-200" },
-  CALIBRATION: { label: "Calibration", icon: Gauge, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
-  PREMOB: { label: "Premob", icon: FileCheck2, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
-  VERIFICATION: { label: "Verification", icon: Scale, color: "text-teal-600", ring: "bg-teal-50 border-teal-200" },
-  DOCUMENT: { label: "Document", icon: FileText, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
-  METER: { label: "Meter", icon: Gauge, color: "text-cyan-600", ring: "bg-cyan-50 border-cyan-200" },
-  NOTE: { label: "Note", icon: StickyNote, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
-  OTHER: { label: "Other", icon: CircleDot, color: "text-ink-500", ring: "bg-ink-50 border-ink-200" },
+const NEUTRAL = "bg-ink-500/10 text-ink-600 border-ink-500/20";
+const CATEGORY_META: Record<string, { label: string; badge: string }> = {
+  PM: { label: "PM", badge: "bg-brand-500/10 text-brand-700 border-brand-500/20" },
+  CM: { label: "Repair", badge: "bg-danger-500/10 text-danger-700 border-danger-500/20" },
+  INSPECTION: { label: "Inspection", badge: "bg-info-500/10 text-info-700 border-info-500/20" },
+  ACCIDENT: { label: "Accident", badge: "bg-danger-500/10 text-danger-700 border-danger-500/20" },
+  TRANSFER: { label: "Transfer", badge: NEUTRAL },
+  DIAGNOSIS: { label: "Diagnosis", badge: "bg-info-500/10 text-info-700 border-info-500/20" },
+  STATUS: { label: "Status", badge: "bg-warn-500/10 text-warn-700 border-warn-500/20" },
+  CALIBRATION: { label: "Calibration", badge: "bg-info-500/10 text-info-700 border-info-500/20" },
+  PREMOB: { label: "Premob", badge: "bg-info-500/10 text-info-700 border-info-500/20" },
+  VERIFICATION: { label: "Verification", badge: "bg-info-500/10 text-info-700 border-info-500/20" },
+  DOCUMENT: { label: "Document", badge: NEUTRAL },
+  METER: { label: "Meter", badge: NEUTRAL },
+  NOTE: { label: "Note", badge: NEUTRAL },
+  OTHER: { label: "Other", badge: NEUTRAL },
 };
+const metaOf = (category: string) => CATEGORY_META[category] ?? CATEGORY_META.OTHER;
 
-const FILTERS = ["ALL", "PM", "CM", "INSPECTION", "CALIBRATION", "PREMOB", "VERIFICATION", "ACCIDENT", "TRANSFER", "DIAGNOSIS", "STATUS", "DOCUMENT", "NOTE"];
 const MANUAL_CATEGORIES = [
   { value: "NOTE", label: "Note / observation" },
   { value: "ACCIDENT", label: "Accident / incident" },
@@ -58,30 +65,86 @@ const MANUAL_CATEGORIES = [
   { value: "OTHER", label: "Other" },
 ];
 
-const fmtDate = (s: string) => {
-  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00` : s);
-  return Number.isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+// Where an entry came from, in the reader's words.
+type Origin = "SYSTEM" | "MANUAL" | "LEGACY";
+const ORIGIN_LABELS: Record<Origin, string> = {
+  SYSTEM: "Recorded by the system",
+  MANUAL: "Entered by hand",
+  LEGACY: "Legacy history log",
 };
+const originOf = (e: Event): Origin => (e.legacy ? "LEGACY" : e.source === "MANUAL" ? "MANUAL" : "SYSTEM");
+
+// Dates arrive as a bare day from the legacy log and as a full timestamp from
+// the system. The day decides the order; the time only separates the same day.
+const dayOf = (s: string) => s.slice(0, 10);
+const orderKey = (e: Event) => `${dayOf(e.occurredAt)}|${e.occurredAt.slice(10)}`;
+
+const PAGE = 50;
 
 export default function EquipmentLog({ assetId, canWrite }: { assetId: string; canWrite: boolean }) {
   const [events, setEvents] = useState<Event[] | null>(null);
-  const [filter, setFilter] = useState("ALL");
+  const [failed, setFailed] = useState(false);
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState("ALL");
+  const [origin, setOrigin] = useState("ALL");
+  const [year, setYear] = useState("ALL");
+  const [newestFirst, setNewestFirst] = useState(true);
+  const [shown, setShown] = useState(PAGE);
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ category: "NOTE", title: "", detail: "", occurredAt: "", newLocation: "" });
 
   const load = () => {
+    setFailed(false);
     fetch(`/api/equipment/${assetId}/log`)
-      .then((r) => (r.ok ? r.json() : { events: [] }))
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
       .then((d) => setEvents(d.events ?? []))
-      .catch(() => setEvents([]));
+      .catch(() => {
+        setEvents([]);
+        setFailed(true);
+      });
   };
   useEffect(load, [assetId]);
 
-  const filtered = useMemo(
-    () => (events ?? []).filter((e) => filter === "ALL" || e.category === filter),
-    [events, filter],
+  const all = useMemo(() => events ?? [], [events]);
+  const categories = useMemo(
+    () => [...new Set(all.map((e) => e.category))].sort((a, b) => metaOf(a).label.localeCompare(metaOf(b).label)),
+    [all],
   );
+  const years = useMemo(() => [...new Set(all.map((e) => e.occurredAt.slice(0, 4)))].filter((y) => /^\d{4}$/.test(y)).sort().reverse(), [all]);
+  const origins = useMemo(() => [...new Set(all.map(originOf))], [all]);
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    const out = all.filter(
+      (e) =>
+        (category === "ALL" || e.category === category) &&
+        (origin === "ALL" || originOf(e) === origin) &&
+        (year === "ALL" || e.occurredAt.startsWith(year)) &&
+        (!term ||
+          e.title.toLowerCase().includes(term) ||
+          (e.detail ?? "").toLowerCase().includes(term) ||
+          (e.performedByName ?? "").toLowerCase().includes(term)),
+    );
+    out.sort((a, b) => orderKey(a).localeCompare(orderKey(b)));
+    return newestFirst ? out.reverse() : out;
+  }, [all, q, category, origin, year, newestFirst]);
+
+  const filtersOn = q.trim() !== "" || category !== "ALL" || origin !== "ALL" || year !== "ALL";
+  const clearFilters = () => {
+    setQ("");
+    setCategory("ALL");
+    setOrigin("ALL");
+    setYear("ALL");
+  };
+  // A new filter starts again from the top of the list.
+  const narrow = (set: (v: string) => void) => (v: string) => {
+    set(v);
+    setShown(PAGE);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,82 +180,156 @@ export default function EquipmentLog({ assetId, canWrite }: { assetId: string; c
   };
 
   const field = "w-full bg-ink-50 border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500/40";
+  const SortIcon = newestFirst ? ArrowDown : ArrowUp;
 
   return (
-    <div className="space-y-4">
-      {/* Filters + add */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mb-1">
-          <Filter className="w-3.5 h-3.5 text-ink-400 shrink-0" />
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
- filter === f ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-ink-200 text-ink-500 hover:border-ink-300"
- }`}
-            >
-              {f === "ALL" ? "All" : CATEGORY_META[f]?.label ?? f}
-            </button>
-          ))}
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[12rem] max-w-sm">
+          <Search className="w-4 h-4 text-ink-400 absolute left-2.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => narrow(setQ)(e.target.value)}
+            aria-label="Search this machine's history"
+            placeholder="Search entries or people"
+            className="w-full h-9 pl-8 pr-3 bg-canvas border border-line rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/15"
+          />
         </div>
+        <Select value={category} onChange={narrow(setCategory)} ariaLabel="Type of entry" className="w-40">
+          <option value="ALL">All types</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {metaOf(c).label}
+            </option>
+          ))}
+        </Select>
+        <Select value={year} onChange={narrow(setYear)} ariaLabel="Year" className="w-32">
+          <option value="ALL">All years</option>
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </Select>
+        {origins.length > 1 && (
+          <Select value={origin} onChange={narrow(setOrigin)} ariaLabel="Where the entry came from" className="w-52">
+            <option value="ALL">All sources</option>
+            {origins.map((o) => (
+              <option key={o} value={o}>
+                {ORIGIN_LABELS[o]}
+              </option>
+            ))}
+          </Select>
+        )}
+        {events !== null && (
+          <span className="text-xs text-ink-500 tabular-nums whitespace-nowrap" aria-live="polite">
+            {filtered.length === all.length ? `${all.length} entr${all.length === 1 ? "y" : "ies"}` : `${filtered.length} of ${all.length}`}
+          </span>
+        )}
         {canWrite && (
-          <Button size="sm" icon={Plus} onClick={() => setShowAdd(true)} className="sm:ml-auto shrink-0">
+          <Button size="sm" icon={Plus} onClick={() => setShowAdd(true)} className="ml-auto shrink-0">
             Add entry
           </Button>
         )}
       </div>
 
-      {/* Timeline */}
-      {events === null ? (
-        <div className="py-12 flex justify-center text-ink-400">
-          <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
+      <div className="border border-line rounded-xl overflow-hidden bg-surface">
+        {events === null ? (
+          <TableSkeleton rows={6} cols={5} />
+        ) : failed ? (
+          <EmptyState
+            icon={History}
+            title="The history could not be loaded"
+            message="Check the connection and try again."
+            actionLabel="Try again"
+            onAction={load}
+          />
+        ) : filtered.length === 0 ? (
+          filtersOn ? (
+            <EmptyState
+              icon={FilterX}
+              title="No entries match these filters"
+              message="Nothing in this machine's history matches the search and filters."
+              actionLabel="Clear filters"
+              onAction={clearFilters}
+            />
+          ) : (
+            <EmptyState
+              icon={History}
+              title="No history recorded yet"
+              message="PMs, repairs, inspections and transfers appear here as they happen. Entries from the legacy history log are added through Settings, Import."
+              actionLabel={canWrite ? "Add entry" : undefined}
+              onAction={canWrite ? () => setShowAdd(true) : undefined}
+            />
+          )
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-ink-200 text-ink-500">
+                  <th className="py-3 px-4 font-medium whitespace-nowrap" aria-sort={newestFirst ? "descending" : "ascending"}>
+                    <button
+                      type="button"
+                      onClick={() => setNewestFirst((v) => !v)}
+                      className="inline-flex items-center gap-1 font-medium text-ink-700 hover:text-ink-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 rounded-lg"
+                      title={newestFirst ? "Newest first. Click for oldest first." : "Oldest first. Click for newest first."}
+                    >
+                      Date
+                      <SortIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                    </button>
+                  </th>
+                  <th className="py-3 px-4 font-medium">Type</th>
+                  <th className="py-3 px-4 font-medium">Entry</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">By</th>
+                  <th className="py-3 px-4 font-medium">Source</th>
+                  <th className="py-3 px-4 font-medium">
+                    <span className="sr-only">Record</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-200">
+                {filtered.slice(0, shown).map((ev) => {
+                  const meta = metaOf(ev.category);
+                  // The legacy log repeats the description as the first line of its detail.
+                  const rest = ev.detail?.trim().startsWith(ev.title.trim()) ? ev.detail.trim().slice(ev.title.trim().length).trim() : ev.detail?.trim();
+                  const detail = rest || null;
+                  return (
+                    <tr key={ev.id} className="hover:bg-ink-50 align-top">
+                      <td className="py-3 px-4 tabular-nums text-ink-900 whitespace-nowrap">{formatDate(dayOf(ev.occurredAt))}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <Badge className={meta.badge}>{meta.label}</Badge>
+                      </td>
+                      <td className="py-3 px-4 min-w-64">
+                        <p className="font-medium text-ink-900 break-words">{ev.title}</p>
+                        {detail && <p className="text-ink-600 mt-0.5 break-words whitespace-pre-line">{detail}</p>}
+                      </td>
+                      <td className="py-3 px-4 text-ink-700 whitespace-nowrap">{ev.legacy ? "-" : ev.performedByName || "-"}</td>
+                      <td className="py-3 px-4 text-ink-600 whitespace-nowrap">{ORIGIN_LABELS[originOf(ev)]}</td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {ev.href && (
+                          <Link href={ev.href} className="font-semibold text-brand-700 hover:underline">
+                            Open
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {filtered.length > shown && (
+        <div className="flex justify-center">
+          <Button variant="secondary" size="sm" onClick={() => setShown((n) => n + PAGE)}>
+            Show {Math.min(PAGE, filtered.length - shown)} more
+          </Button>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-ink-400">
-          {filter === "ALL" ? "No history recorded for this machine yet." : `No ${CATEGORY_META[filter]?.label ?? filter} entries.`}
-        </div>
-      ) : (
-        <ol className="relative border-l-2 border-ink-100 ml-3 space-y-4">
-          {filtered.map((ev) => {
-            const meta = CATEGORY_META[ev.category] ?? CATEGORY_META.OTHER;
-            const Icon = meta.icon;
-            return (
-              <li key={ev.id} className="ml-6">
-                <span className={`absolute -left-[13px] flex items-center justify-center w-6 h-6 rounded-full border ${meta.ring}`}>
-                  <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
-                </span>
-                <div className="bg-white border border-ink-200 rounded-lg p-3">
-                  <div className="flex items-start justify-between gap-2 flex-wrap">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-lg border ${meta.ring} ${meta.color}`}>
-                          {meta.label}
-                        </span>
-                        {ev.source === "MANUAL" && <span className="text-xs text-ink-400">manual</span>}
-                        {ev.source === "AUTO" && <span className="text-xs text-ink-400">auto</span>}
-                      </div>
-                      <p className="text-sm font-medium text-ink-900 mt-1 break-words">{ev.title}</p>
-                      {ev.detail && <p className="text-xs text-ink-500 mt-0.5 break-words">{ev.detail}</p>}
-                    </div>
-                    <span className="text-xs text-ink-400 shrink-0">{fmtDate(ev.occurredAt)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    {ev.performedByName && <span className="text-xs text-ink-400">by {ev.performedByName}</span>}
-                    {ev.href && (
-                      <Link href={ev.href} className="text-xs text-brand-600 hover:underline inline-flex items-center gap-0.5">
-                        Open <ExternalLink className="w-2.5 h-2.5" />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
       )}
 
-      {/* Manual add */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add log entry" subtitle="Records against this machine's history">
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">

@@ -367,6 +367,22 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   percentage is rounded down; EARTHING rows are excluded. It prints alone
   under the letterhead (`components/PrintLetterhead.tsx`): a page sets
   `data-print-solo` on `main` and `data-print-keep` on the record.
+- **A machine's history is a table** (20 Nov 2026, `components/EquipmentLog.tsx`):
+  date order (newest first, the Date header reverses it), with search and
+  filters for type, year and source (system, by hand, legacy log). The legacy
+  Equipment History Log workbook comes in through Settings, Import; it must be
+  saved as .xlsx first. Its dates were typed d/m/y into a workbook that read
+  m/d/y, so a stored date with two readings takes the one that keeps the sheet
+  in date order (`resolveChronology`, `lib/import/legacy-parse.ts`), and a
+  re-import moves an entry already imported on the swapped date instead of
+  adding it twice.
+- **CNC Heavy Duty's PMs were entered on 20 Nov 2026** with
+  `backfill-2026.ts --category=CNC_HEAVY`: overdue PMs only, under the
+  category's approved WMS and JHA, signed in bulk from My Approvals like the
+  first run. Nothing on screen labels them.
+- **Every email uses one layout** (`lib/notifications/email-template.ts`,
+  20 Nov 2026): table-based, inline styles, logo header, one button with the
+  address written out beneath it, plain-text twin. Change it there only.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.

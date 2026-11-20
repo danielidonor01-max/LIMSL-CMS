@@ -9,7 +9,14 @@
 // all of it lands, or none.
 //
 // It signs nothing. Every step of every chain waits for the named person, in
-// their own login. CNC Heavy Duty is left for manual handling.
+// their own login. CNC Heavy Duty was left out of the first run and entered on
+// its own (20 Nov 2026):
+//
+//   npx tsx --env-file=.env.local src/lib/db/backfill-2026.ts --category=CNC_HEAVY [--apply]
+//
+// A category run takes that category's overdue PMs only, under the method
+// statement and hazard analysis already approved for it, and writes no new
+// standing document.
 import { db } from "@/lib/db";
 import {
   auditLog,
@@ -40,6 +47,7 @@ import {
   BACKFILL_TAG,
   backfillNote,
   eligibleForBackfill,
+  eligibleForCategoryPm,
   groupIntoBatches,
   rotateTechnicians,
   type BackfillPlanRow,
@@ -47,6 +55,7 @@ import {
 import { STANDING_DOCS } from "./backfill-standing-docs";
 
 const APPLY = process.argv.includes("--apply");
+const CATEGORY = process.argv.find((a) => a.startsWith("--category="))?.split("=")[1] ?? null;
 const ROLLBACK = "REHEARSAL_ROLLBACK";
 const VALIDITY_DAYS = 7;
 
@@ -115,8 +124,11 @@ async function main() {
     if (!u || u.name !== p.name || u.isActive === false) throw new Error(`${p.name} is not an active account.`);
   }
 
-  const already = await db.select({ id: pmBatches.id }).from(pmBatches).where(like(pmBatches.notes, `${BACKFILL_TAG}%`));
-  if (already.length > 0) throw new Error(`The backfill has already been entered (${already.length} batches).`);
+  const already = await db
+    .select({ id: pmBatches.id })
+    .from(pmBatches)
+    .where(CATEGORY ? and(like(pmBatches.notes, `${BACKFILL_TAG}%`), eq(pmBatches.category, CATEGORY)) : like(pmBatches.notes, `${BACKFILL_TAG}%`));
+  if (already.length > 0) throw new Error(`${CATEGORY ?? "The backfill"} has already been entered (${already.length} batches).`);
 
   const plan = await db
     .select({
@@ -140,13 +152,16 @@ async function main() {
     .innerJoin(equipment, eq(maintenanceSchedule.equipmentId, equipment.id));
   type Row = (typeof plan)[number] & BackfillPlanRow;
 
-  const eligible = (plan as Row[]).filter((r) => eligibleForBackfill(r, today));
+  const eligible = (plan as Row[]).filter((r) =>
+    CATEGORY ? eligibleForCategoryPm(r, today, CATEGORY) : eligibleForBackfill(r, today),
+  );
   const batches = groupIntoBatches(eligible);
   const technicians = rotateTechnicians(batches.map((b) => b.plannedDate), PEOPLE.daniel as Person, PEOPLE.ajayi as Person);
 
   // The plan still to come takes up the rotation where the backfill leaves it.
   const future = (plan as Row[]).filter(
     (r) =>
+      !CATEGORY &&
       r.status === "SCHEDULED" &&
       r.plannedDate > today &&
       !r.responsiblePersonId &&
@@ -179,7 +194,7 @@ async function main() {
     .from(equipment);
 
   const categories = [...new Set(batches.map((b) => b.category))].sort();
-  const missing = categories.filter((c) => !STANDING_DOCS[c]);
+  const missing = CATEGORY ? [] : categories.filter((c) => !STANDING_DOCS[c]);
   if (missing.length) throw new Error(`No standing document drafted for: ${missing.join(", ")}`);
 
   const counts = { wms: 0, jha: 0, batches: 0, lines: 0, checklists: 0, permits: 0, signatures: 0, futureAssigned: 0 };
@@ -192,8 +207,25 @@ async function main() {
       const jhaFor = new Map<string, string>();
       const allChains: ReturnType<typeof chainRows> = [];
 
+      // A category run works under the documents already approved for it.
+      if (CATEGORY) {
+        const [wms] = await tx
+          .select({ id: wmsDocuments.id, wmsNumber: wmsDocuments.wmsNumber })
+          .from(wmsDocuments)
+          .where(and(eq(wmsDocuments.category, CATEGORY), eq(wmsDocuments.status, "APPROVED")));
+        if (!wms) throw new Error(`${CATEGORY} has no approved method statement.`);
+        const [jha] = await tx
+          .select({ id: jhaDocuments.id, jhaNumber: jhaDocuments.jhaNumber })
+          .from(jhaDocuments)
+          .where(and(eq(jhaDocuments.wmsId, wms.id), eq(jhaDocuments.status, "APPROVED")));
+        if (!jha) throw new Error(`${CATEGORY} has no approved hazard analysis.`);
+        wmsFor.set(CATEGORY, wms.id);
+        jhaFor.set(CATEGORY, jha.id);
+        console.log(`Standing documents: ${wms.wmsNumber}, ${jha.jhaNumber}`);
+      }
+
       // ── Standing documents, one set per category ─────────────────────────
-      for (const category of categories) {
+      for (const category of CATEGORY ? [] : categories) {
         const doc = STANDING_DOCS[category];
         const scope = machines.filter((m: { category: string; removedAt: string | null }) => m.category === category && !m.removedAt);
         const review = `Standing document drafted for the 2026 backfill. Check it against the paper document before signing.`;
@@ -402,7 +434,7 @@ async function main() {
             id: nanoid(),
             equipmentId: l.equipmentId,
             category: b.activityType === "INS" ? "INSPECTION" : "PM",
-            title: `${b.activityType === "INS" ? "Inspection" : "Preventive maintenance"} completed, ${l.workOrderNumber} (backfilled)`,
+            title: `${b.activityType === "INS" ? "Inspection" : "Preventive maintenance"} completed, ${l.workOrderNumber}`,
             detail: note,
             refType: "work_order",
             refId: l.id,
@@ -422,7 +454,7 @@ async function main() {
           action: "CREATE",
           entityType: "pm_batch",
           entityId: batchId,
-          entityDescription: `${batchNumber} backfilled from the paper record: ${noun}, ${label}, ${date}, ${lines.length} machine(s), work order ${workOrderNumber}, permit ${permitNumber}, carried out by ${tech.name}.`,
+          entityDescription: `${batchNumber} entered from the maintenance record: ${noun}, ${label}, ${date}, ${lines.length} machine(s), work order ${workOrderNumber}, permit ${permitNumber}, carried out by ${tech.name}.`,
         });
 
         counts.batches += 1;
@@ -485,6 +517,9 @@ async function main() {
   console.log("\nRecords");
   console.log(`  plan rows cleared   ${eligible.length} (${eligible.filter((r) => r.activityType === "PM").length} PM, ${eligible.filter((r) => r.activityType === "INS").length} inspections)`);
   for (const [k, v] of Object.entries(counts)) console.log(`  ${k.padEnd(19)} ${v}`);
+  for (const [i, b] of batches.entries()) {
+    if (CATEGORY) console.log(`  ${b.plannedDate} ${b.activityType} ${b.rows.length} machine(s), ${technicians[i].name}`);
+  }
   console.log("\nBatches by month and technician");
   for (const [k, v] of [...months].sort()) console.log(`  ${k}: ${v}`);
   console.log("\nSignatures waiting, by person");
@@ -510,8 +545,8 @@ async function main() {
       try {
         await notify({
           event: "GENERAL",
-          title: "PMs from the paper file are ready for your signature",
-          body: `The 2026 PMs and inspections done on paper have been entered. About ${n} signatures are yours. Check them against the paper file, then sign them together in My Approvals.`,
+          title: "PM records are ready for your signature",
+          body: `The 2026 PMs carried out have been entered. About ${n} signatures are yours. Check them against the record, then sign them together in My Approvals.`,
           linkPath: "/approvals",
           relatedEntityType: "pm_batch",
           relatedEntityId: BACKFILL_TAG,
