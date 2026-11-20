@@ -2,13 +2,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { maintenanceSchedule, equipment, workOrders, auditLog, pmBatches } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc, ne } from "drizzle-orm";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { SCHEDULE_WRITE_ROLES } from "@/lib/roles";
 import { reconcileSchedule } from "@/lib/schedule";
 import { suggestedPmFrequency } from "@/lib/maintenance/adherence";
+import { tooCloseTo } from "@/lib/maintenance/round-spacing";
 
 // Returns every scheduled activity for the year, joined with its equipment.
 export async function GET() {
@@ -32,6 +33,7 @@ export async function GET() {
         assistantIds: maintenanceSchedule.assistantIds,
         status: maintenanceSchedule.status,
         completedDate: maintenanceSchedule.completedDate,
+        recordedDate: maintenanceSchedule.recordedDate,
         workOrderId: maintenanceSchedule.workOrderId,
         // The plan row knew it had a work order but not which one, so the
         // schedule could only offer "View WO" — a link with no name on it. A
@@ -95,6 +97,28 @@ export async function POST(request: Request) {
     // The weekend rule the annual plan follows applies to work added by hand too.
     const plannedDate = toWorkingDay(asked);
     const d = new Date(`${plannedDate}T00:00:00`);
+
+    // One round at a time. A second visit of the same kind planned within half
+    // the machine's interval of one still open is the same round entered
+    // twice; the open one is rescheduled instead.
+    const frequency = body.maintenanceFrequency || eq0.maintenanceFrequency || suggestedPmFrequency(eq0.criticality);
+    const open = await db
+      .select({ plannedDate: maintenanceSchedule.plannedDate })
+      .from(maintenanceSchedule)
+      .where(
+        and(
+          eq(maintenanceSchedule.equipmentId, body.equipmentId),
+          eq(maintenanceSchedule.activityType, body.activityType),
+          ne(maintenanceSchedule.status, "COMPLETED"),
+        ),
+      );
+    const clash = tooCloseTo(plannedDate, open.map((r: { plannedDate: string }) => r.plannedDate), frequency);
+    if (clash) {
+      return NextResponse.json(
+        { error: `This machine already has this work planned for ${clash}, which is still open. Reschedule that one instead of adding another.` },
+        { status: 409 },
+      );
+    }
 
     const row = {
       id: nanoid(),

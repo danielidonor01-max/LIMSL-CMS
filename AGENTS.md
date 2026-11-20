@@ -394,6 +394,30 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   quarter in turn (headline and category table), then a last page comparing
   the quarters with the trend, the current quarter's position and the PMs
   still to come. No machine list on paper (`YearPrint`).
+- **PM compliance is counted by one rule, set in Settings** (20 Nov 2026,
+  `lib/maintenance/compliance-rule.ts`, stored in `app_settings.compliance_rule`,
+  API `/api/settings/compliance-rule`, Super Admin only, every change audited).
+  It holds the window per frequency and when unfinished work starts to count:
+  when its window closes (standard) or the day after its date. Until then the
+  work is `OPEN` ("due, window open") and outside the percentage. The Log,
+  its printout, the schedule header and the KPI engine all go through
+  `outcomeOf` / `complianceTally` (`compliance-log.ts`); never count compliance
+  another way, or the system gives two figures.
+- **One round at a time.** `generateNextOccurrence` adds nothing while the
+  series has an uncompleted visit dated today or later (completing a
+  long-overdue PM had entered the November crane round twice), and
+  `POST /api/schedule` refuses a visit within half the interval of an open one
+  (`lib/maintenance/round-spacing.ts`).
+- **A work date is corrected, never edited** (20 Nov 2026,
+  `lib/maintenance/work-date.ts`, `work-date-db.ts`, table
+  `work_date_corrections`, `WDC-…`). `maintenance_schedule.completedDate` is
+  the day the work was done and what compliance is measured on;
+  `recordedDate` is the day the system was told. On a finished PM batch the
+  Foreman or a manager requests a correction with its evidence and reason; the
+  Maintenance Manager alone signs it (`WORK_DATE` chain, no stand-in) and may
+  not raise it himself; the signature applies it (`applyWorkDateCorrection`),
+  keeps the recorded date, and writes the before and after to the audit log.
+  Do not add any other way to change a completed date.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.

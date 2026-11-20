@@ -11,6 +11,8 @@ import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
 import { chainSummary, canSignChainStep, isOverrideSignature, passOf } from "@/lib/signoff/chains";
 import { sealDocument } from "@/lib/signoff/seal";
 import { applyCategoryChange } from "@/lib/maintenance/asset-categories";
+import { applyWorkDateCorrection } from "@/lib/maintenance/work-date-db";
+import { WORK_DATE_ENTITY } from "@/lib/maintenance/work-date";
 import { notify, notifyNextSigner } from "@/lib/notifications";
 import { milestoneAfterSign, type Milestone } from "@/lib/signoff/milestones";
 import { notifyTrail } from "@/lib/signoff/trail";
@@ -243,6 +245,11 @@ export async function POST(
           // a page for the schedule to become true.
           if (step.entityType === "ASSET_CATEGORY") {
             await applyCategoryChange(step.entityId, { id: user.id ?? null, name: user.name ?? null });
+          }
+
+          // The Maintenance Manager's signature is what moves a work date.
+          if (step.entityType === WORK_DATE_ENTITY) {
+            await applyWorkDateCorrection(step.entityId, { id: user.id ?? null, name: user.name ?? null });
           }
 
           // One approval for the whole batch opens every machine's line.

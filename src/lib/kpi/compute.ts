@@ -20,7 +20,8 @@ import {
 } from "@/lib/db/schema";
 import { getWorkSettings } from "@/lib/settings";
 import { plannedHoursForMonth } from "@/lib/worktime";
-import { adherenceOf } from "@/lib/maintenance/adherence";
+import { complianceTally, type LogActivity } from "@/lib/maintenance/compliance-log";
+import { getComplianceRule } from "@/lib/maintenance/compliance-rule-store";
 import { reconcileSchedule } from "@/lib/schedule";
 import { availabilityOf, ptwComplianceOf, medianJobHoursOf, backlogHoursOf } from "@/lib/kpi/formulas";
 
@@ -55,6 +56,12 @@ export async function computeKpis(now = new Date()) {
 
   const totalAssets = equip.length || 1;
   const todayStr = now.toISOString().slice(0, 10);
+  // One counting rule for the KPI, the schedule and its Log (Settings).
+  const rule = await getComplianceRule();
+  const ratio = (rows: typeof sched) => {
+    const t = complianceTally(rows as unknown as LogActivity[], todayStr, rule);
+    return t.due ? t.compliant / t.due : null;
+  };
   const months = lastMonths(6, now);
 
   // ── Monthly series (real) ────────────────────────────────────────────────
@@ -68,19 +75,10 @@ export async function computeKpis(now = new Date()) {
     const missingWindow = breakdowns.filter((c) => (c.totalDowntimeHours ?? 0) <= 0).length;
     const mttr = breakdowns.length ? downtimeHours / breakdowns.length : null;
 
-    const pmSched = sched.filter((s) => s.activityType === "PM" && inMonth(s.plannedDate, key));
-    // Compliant = completed AND within the adherence window for its frequency.
-    // Counting any completion, however late, made this metric unfalsifiable.
-    const pmDone = pmSched.filter(
-      (s) =>
-        s.status === "COMPLETED" &&
-        (!s.completedDate || adherenceOf(s.plannedDate, s.completedDate, s.maintenanceFrequency).compliant),
-    ).length;
-    const pmCompliance = pmSched.length ? pmDone / pmSched.length : null;
-
-    const insSched = sched.filter((s) => s.activityType === "INS" && inMonth(s.plannedDate, key));
-    const insDone = insSched.filter((s) => s.status === "COMPLETED").length;
-    const inspectionCompliance = insSched.length ? insDone / insSched.length : null;
+    // Compliant = completed inside the window for its frequency. Counting any
+    // completion, however late, made this metric unfalsifiable.
+    const pmCompliance = ratio(sched.filter((s) => s.activityType === "PM" && inMonth(s.plannedDate, key)));
+    const inspectionCompliance = ratio(sched.filter((s) => s.activityType === "INS" && inMonth(s.plannedDate, key)));
 
     const plannedHours = totalAssets * plannedHoursForMonth(key, workSettings);
     // Planned downtime counts. A machine down eight hours for a PM was 100%
@@ -140,10 +138,8 @@ export async function computeKpis(now = new Date()) {
     ? (fleetSize - brokenDown - awaitingParts) / fleetSize
     : null;
 
-  const pmDueAll = sched.filter((s) => s.activityType === "PM" && s.plannedDate <= todayStr);
-  const pmCompliance = pmDueAll.length ? pmDueAll.filter((s) => s.status === "COMPLETED").length / pmDueAll.length : null;
-  const insDueAll = sched.filter((s) => s.activityType === "INS" && s.plannedDate <= todayStr);
-  const inspectionCompliance = insDueAll.length ? insDueAll.filter((s) => s.status === "COMPLETED").length / insDueAll.length : null;
+  const pmCompliance = ratio(sched.filter((s) => s.activityType === "PM"));
+  const inspectionCompliance = ratio(sched.filter((s) => s.activityType === "INS"));
   const overdueActivities = sched.filter((s) => s.status === "OVERDUE").length;
 
   const openWoList = wos.filter((w) => w.status === "OPEN" || w.status === "IN_PROGRESS");

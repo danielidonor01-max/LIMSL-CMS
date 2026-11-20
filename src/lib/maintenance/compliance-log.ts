@@ -9,6 +9,7 @@
 //
 // Pure, so the screen, the printout and the tests cannot disagree.
 import { adherenceOf } from "@/lib/maintenance/adherence";
+import { DEFAULT_COMPLIANCE_RULE, windowDaysFor, type ComplianceRule } from "@/lib/maintenance/compliance-rule";
 
 export type LogActivity = {
   id: string;
@@ -16,6 +17,8 @@ export type LogActivity = {
   activityType: string;
   status: string;
   completedDate: string | null;
+  /** When the system was told, where an approved correction has moved the work date. */
+  recordedDate?: string | null;
   maintenanceFrequency: string | null;
   category: string | null;
   equipmentName: string | null;
@@ -26,7 +29,7 @@ export type LogActivity = {
   deferredReviewDate?: string | null;
 };
 
-export type LogOutcome = "ON_TIME" | "LATE" | "OUTSIDE_WINDOW" | "OUTSTANDING" | "DEFERRED" | "NOT_DUE";
+export type LogOutcome = "ON_TIME" | "LATE" | "OUTSIDE_WINDOW" | "OUTSTANDING" | "DEFERRED" | "OPEN" | "NOT_DUE";
 
 export const LOG_OUTCOME_LABELS: Record<LogOutcome, string> = {
   ON_TIME: "Done on time",
@@ -34,6 +37,7 @@ export const LOG_OUTCOME_LABELS: Record<LogOutcome, string> = {
   OUTSIDE_WINDOW: "Done outside window",
   OUTSTANDING: "Not done",
   DEFERRED: "Deferred",
+  OPEN: "Due, window open",
   NOT_DUE: "Not yet due",
 };
 
@@ -50,11 +54,22 @@ export const yearOf = (isoDate: string): number => Number(isoDate.slice(0, 4));
 const QUARTER_MONTHS = ["January to March", "April to June", "July to September", "October to December"];
 export const quarterLabel = (year: number, quarter: number) => `Q${quarter} ${year}, ${QUARTER_MONTHS[quarter - 1]}`;
 
-export function outcomeOf(row: LogActivity, today: string): { outcome: LogOutcome; daysLate: number | null } {
+const plusDays = (iso: string, days: number) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+export function outcomeOf(
+  row: LogActivity,
+  today: string,
+  rule: ComplianceRule = DEFAULT_COMPLIANCE_RULE,
+): { outcome: LogOutcome; daysLate: number | null } {
+  const window = windowDaysFor(rule, row.maintenanceFrequency);
   if (row.status === "COMPLETED") {
     // A completion with no date on it is taken as done on the day, as the KPI does.
     if (!row.completedDate) return { outcome: "ON_TIME", daysLate: null };
-    const a = adherenceOf(row.plannedDate, row.completedDate.slice(0, 10), row.maintenanceFrequency);
+    const a = adherenceOf(row.plannedDate, row.completedDate.slice(0, 10), row.maintenanceFrequency, window);
     return {
       outcome: a.verdict === "ON_TIME" ? "ON_TIME" : a.verdict === "LATE_WITHIN_WINDOW" ? "LATE" : "OUTSIDE_WINDOW",
       daysLate: a.daysLate,
@@ -62,18 +77,24 @@ export function outcomeOf(row: LogActivity, today: string): { outcome: LogOutcom
   }
   if (row.plannedDate > today) return { outcome: "NOT_DUE", daysLate: null };
   if (row.status === "DEFERRED") return { outcome: "DEFERRED", daysLate: null };
-  return { outcome: "OUTSTANDING", daysLate: null };
+  // Unfinished work is judged when the rule says so, not before: on its due
+  // day it can still be done on time, and inside its window it can still be
+  // done in time. Until then it is open, and stays out of the percentage.
+  const judgedAfter = rule.countFrom === "WINDOW_CLOSED" ? plusDays(row.plannedDate, window) : row.plannedDate;
+  return { outcome: today <= judgedAfter ? "OPEN" : "OUTSTANDING", daysLate: null };
 }
 
 export type LogTally = {
   planned: number;
-  /** Planned up to today, plus anything already done. What compliance is measured against. */
+  /** What compliance is measured against: everything planned, less work not yet due and work still open. */
   due: number;
   onTime: number;
   late: number;
   outsideWindow: number;
   outstanding: number;
   deferred: number;
+  /** Overdue, but not yet counted against the quarter under the counting rule. */
+  open: number;
   notDue: number;
   /** Done on time or inside the window. */
   compliant: number;
@@ -89,6 +110,7 @@ const emptyTally = (): LogTally => ({
   outsideWindow: 0,
   outstanding: 0,
   deferred: 0,
+  open: 0,
   notDue: 0,
   compliant: 0,
   compliancePct: null,
@@ -101,11 +123,12 @@ function add(t: LogTally, outcome: LogOutcome) {
   else if (outcome === "OUTSIDE_WINDOW") t.outsideWindow++;
   else if (outcome === "OUTSTANDING") t.outstanding++;
   else if (outcome === "DEFERRED") t.deferred++;
+  else if (outcome === "OPEN") t.open++;
   else t.notDue++;
 }
 
 function settle(t: LogTally): LogTally {
-  t.due = t.planned - t.notDue;
+  t.due = t.planned - t.notDue - t.open;
   t.compliant = t.onTime + t.late;
   // Rounded down: 94.9% is not 95%, and the record must not round its way to target.
   t.compliancePct = t.due ? Math.floor((t.compliant / t.due) * 100) : null;
@@ -130,9 +153,10 @@ const inScope = (r: LogActivity, activityType: string) =>
 
 export function buildQuarterLog(
   rows: LogActivity[],
-  opts: { year: number; quarter: number; activityType: string; today: string },
+  opts: { year: number; quarter: number; activityType: string; today: string; rule?: ComplianceRule },
 ): QuarterLog {
   const { year, quarter, activityType, today } = opts;
+  const rule = opts.rule ?? DEFAULT_COMPLIANCE_RULE;
   const scoped = rows.filter((r) => inScope(r, activityType) && yearOf(r.plannedDate) === year);
 
   const quarters = [1, 2, 3, 4].map((q) => ({ quarter: q, tally: emptyTally() }));
@@ -142,7 +166,7 @@ export function buildQuarterLog(
 
   for (const r of scoped) {
     const q = quarterOf(r.plannedDate);
-    const o = outcomeOf(r, today);
+    const o = outcomeOf(r, today, rule);
     add(quarters[q - 1].tally, o.outcome);
     if (q !== quarter) continue;
     add(total, o.outcome);
@@ -168,6 +192,16 @@ export function buildQuarterLog(
   };
 }
 
+/**
+ * Compliance of any set of planned activities under the counting rule. The
+ * KPI page and the schedule header use this, so they give the Log's figure.
+ */
+export function complianceTally(rows: LogActivity[], today: string, rule: ComplianceRule = DEFAULT_COMPLIANCE_RULE): LogTally {
+  const t = emptyTally();
+  for (const r of rows) add(t, outcomeOf(r, today, rule).outcome);
+  return settle(t);
+}
+
 /** Several tallies as one, for the year to date. */
 export function sumTallies(tallies: LogTally[]): LogTally {
   const t = emptyTally();
@@ -178,6 +212,7 @@ export function sumTallies(tallies: LogTally[]): LogTally {
     t.outsideWindow += x.outsideWindow;
     t.outstanding += x.outstanding;
     t.deferred += x.deferred;
+    t.open += x.open;
     t.notDue += x.notDue;
   }
   return settle(t);

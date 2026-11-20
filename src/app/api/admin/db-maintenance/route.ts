@@ -96,6 +96,30 @@ const INDEXES: [string, string][] = [
   ["work_order_time_logs_wo_idx", "CREATE INDEX IF NOT EXISTS work_order_time_logs_wo_idx ON work_order_time_logs (work_order_id)"],
   ["app_settings.notification_routing", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS notification_routing text"],
   ["app_settings.escalation_policy", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS escalation_policy text"],
+  ["app_settings.compliance_rule", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS compliance_rule text"],
+  ["maintenance_schedule.recorded_date", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS recorded_date text"],
+  ["maintenance_schedule.work_date_correction_id", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS work_date_correction_id text"],
+  [
+    "work_date_corrections",
+    `CREATE TABLE IF NOT EXISTS work_date_corrections (
+      id text PRIMARY KEY,
+      correction_number text NOT NULL UNIQUE,
+      batch_id text,
+      schedule_ids text NOT NULL,
+      work_date text NOT NULL,
+      previous_dates text,
+      evidence text NOT NULL,
+      reason text NOT NULL,
+      status text NOT NULL DEFAULT 'PENDING_APPROVAL',
+      requested_by_id text,
+      requested_by_name text,
+      approved_by_id text,
+      approved_by_name text,
+      applied_at text,
+      rows_affected integer,
+      created_at text NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    )`,
+  ],
   [
     "escalation_digests",
     `CREATE TABLE IF NOT EXISTS escalation_digests (

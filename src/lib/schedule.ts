@@ -7,7 +7,7 @@
 // nextPlannedDate() is pure and covered by the frequency table below.
 import { db } from "@/lib/db";
 import { maintenanceSchedule, equipment } from "@/lib/db/schema";
-import { and, eq, inArray, lt, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, isNull, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { nextCategoryDate } from "@/lib/maintenance/plan-sync";
@@ -143,6 +143,26 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date(),
   if (!next) return null;
 
   const today = now.toISOString().slice(0, 10);
+
+  // The series already has a visit still to come: there is nothing to add.
+  // Completing a long-overdue PM used to roll forward to a date a day away
+  // from the round already on the plan and enter it again, which is how the
+  // cranes came to be planned on 19 and 20 November 2026.
+  const ahead = await dbc
+    .select({ id: maintenanceSchedule.id })
+    .from(maintenanceSchedule)
+    .where(
+      and(
+        eq(maintenanceSchedule.equipmentId, row.equipmentId),
+        eq(maintenanceSchedule.activityType, row.activityType),
+        ne(maintenanceSchedule.id, row.id),
+        ne(maintenanceSchedule.status, "COMPLETED"),
+        gte(maintenanceSchedule.plannedDate, today),
+      ),
+    )
+    .limit(1);
+  if (ahead.length) return null;
+
   let guard = 0;
   while (next < today && guard++ < 120) {
     const n = nextPlannedDate(next, row.maintenanceFrequency);

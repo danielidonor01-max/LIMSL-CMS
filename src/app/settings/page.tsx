@@ -1,6 +1,7 @@
 // src/app/settings/page.tsx
 "use client";
 
+import ComplianceRuleSettings from "@/components/ComplianceRuleSettings";
 import DateTimeField from "@/components/DateTimeField";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import TimeField from "@/components/TimeField";
@@ -691,6 +692,8 @@ export default function AppSettingsPage() {
           <span className="text-xs text-ink-600">Count weekend (Sat/Sun) hours as production time when worked (overtime)</span>
         </div>
       </section>
+
+      <ComplianceRuleSettings />
 
       {/* Live downtime preview */}
       <section className="bg-surface border border-line rounded-xl shadow-card p-5 space-y-4">

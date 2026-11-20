@@ -33,6 +33,7 @@ import {
   type LogOutcome,
   type LogTally,
 } from "@/lib/maintenance/compliance-log";
+import { DEFAULT_COMPLIANCE_RULE, describeRule, type ComplianceRule } from "@/lib/maintenance/compliance-rule";
 
 const EXACT = { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" } as React.CSSProperties;
 
@@ -43,6 +44,7 @@ const SEGMENTS: { key: keyof LogTally; outcome: LogOutcome; bar: string }[] = [
   { key: "outsideWindow", outcome: "OUTSIDE_WINDOW", bar: "bg-danger-300" },
   { key: "outstanding", outcome: "OUTSTANDING", bar: "bg-danger-500" },
   { key: "deferred", outcome: "DEFERRED", bar: "bg-info-500" },
+  { key: "open", outcome: "OPEN", bar: "bg-warn-200" },
   { key: "notDue", outcome: "NOT_DUE", bar: "bg-ink-200" },
 ];
 
@@ -52,6 +54,7 @@ const OUTCOME_BADGE: Record<LogOutcome, string> = {
   OUTSIDE_WINDOW: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   OUTSTANDING: "bg-danger-500/10 text-danger-700 border-danger-500/20",
   DEFERRED: "bg-info-500/10 text-info-700 border-info-500/20",
+  OPEN: "bg-warn-500/10 text-warn-700 border-warn-500/20",
   NOT_DUE: "bg-ink-500/10 text-ink-600 border-ink-500/20",
 };
 
@@ -81,10 +84,13 @@ export default function ScheduleComplianceLog({
   rows,
   categoryLabels,
   printedBy,
+  rule = DEFAULT_COMPLIANCE_RULE,
 }: {
   rows: LogActivity[];
   categoryLabels: Record<string, string>;
   printedBy?: string | null;
+  /** The counting rule set in Settings. */
+  rule?: ComplianceRule;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const years = useMemo(() => {
@@ -98,15 +104,15 @@ export default function ScheduleComplianceLog({
 
   const shownYear = years.includes(year) ? year : years[0];
   const log = useMemo(
-    () => buildQuarterLog(rows, { year: shownYear, quarter, activityType, today }),
-    [rows, shownYear, quarter, activityType, today],
+    () => buildQuarterLog(rows, { year: shownYear, quarter, activityType, today, rule }),
+    [rows, shownYear, quarter, activityType, today, rule],
   );
 
   const noun = activityType === "PM" ? "PMs" : "inspections";
   // The printed record covers the year, whichever quarter is on screen.
   const year4 = useMemo(
-    () => [1, 2, 3, 4].map((q) => buildQuarterLog(rows, { year: shownYear, quarter: q, activityType, today })),
-    [rows, shownYear, activityType, today],
+    () => [1, 2, 3, 4].map((q) => buildQuarterLog(rows, { year: shownYear, quarter: q, activityType, today, rule })),
+    [rows, shownYear, activityType, today, rule],
   );
   const t = log.total;
   const label = (code: string) => (code === "UNCATEGORISED" ? "No category" : (categoryLabels[code] ?? code));
@@ -163,7 +169,7 @@ export default function ScheduleComplianceLog({
         generatedBy={printedBy}
       />
 
-      <YearPrint logs={year4} year={shownYear} today={today} noun={noun} label={label} />
+      <YearPrint logs={year4} year={shownYear} today={today} noun={noun} label={label} rule={rule} />
 
       <div className="screen-only space-y-6">
       {t.planned === 0 ? (
@@ -188,6 +194,9 @@ export default function ScheduleComplianceLog({
                   : t.compliancePct >= COMPLIANCE_TARGET_PCT
                     ? `That meets the ${COMPLIANCE_TARGET_PCT}% target.`
                     : `That is below the ${COMPLIANCE_TARGET_PCT}% target: ${notDone} ${notDone === 1 ? "activity was" : "activities were"} not done in time.`}{" "}
+                {t.open > 0
+                  ? `${t.open} ${t.open === 1 ? "is" : "are"} due with the window still open, and not yet counted. `
+                  : ""}
                 {quarterOpen
                   ? `The quarter is still open, and ${t.notDue} planned ${t.notDue === 1 ? "activity is" : "activities are"} not yet due.`
                   : ""}
@@ -219,7 +228,7 @@ export default function ScheduleComplianceLog({
                     value: String(t.due),
                     status: "plain",
                     icon: Clock,
-                    description: `Of ${t.planned} planned in the quarter`,
+                    description: t.open > 0 ? `Of ${t.planned} planned; ${t.open} due, window open` : `Of ${t.planned} planned in the quarter`,
                   },
                   {
                     key: "done",
@@ -389,6 +398,9 @@ export default function ScheduleComplianceLog({
                       <td className="py-2.5 px-5 text-ink-700">{label(e.category ?? "UNCATEGORISED")}</td>
                       <td className="py-2.5 px-5 tabular-nums text-ink-700 whitespace-nowrap">
                         {e.completedDate ? formatDate(e.completedDate.slice(0, 10)) : "-"}
+                        {e.recordedDate && e.recordedDate.slice(0, 10) !== e.completedDate?.slice(0, 10) && (
+                          <div className="text-ink-500">recorded {formatDate(e.recordedDate.slice(0, 10))}</div>
+                        )}
                       </td>
                       <td className="py-2.5 px-5">
                         <Badge className={OUTCOME_BADGE[e.outcome]}>{LOG_OUTCOME_LABELS[e.outcome]}</Badge>
@@ -410,9 +422,8 @@ export default function ScheduleComplianceLog({
           </section>
 
           <p className="text-xs text-ink-600 max-w-3xl">
-            An activity counts as done in time when it was completed on or before its planned date, or inside the
-            window allowed for its frequency (14 days for a quarterly PM). Deferred and overdue work counts against
-            the quarter. Work not yet due is left out until its date arrives.
+            {describeRule(rule)} Deferred work counts against the quarter. Work not yet due is left out until its
+            date arrives. The rule is set by the Super Admin in Settings.
           </p>
         </>
       )}
@@ -433,12 +444,14 @@ function YearPrint({
   today,
   noun,
   label,
+  rule,
 }: {
   logs: QuarterLog[];
   year: number;
   today: string;
   noun: string;
   label: (code: string) => string;
+  rule: ComplianceRule;
 }) {
   const ytd = sumTallies(logs.map((l) => l.total));
   const current = logs.find((l) => quarterStanding(year, l.quarter, today) === "CURRENT") ?? null;
@@ -475,6 +488,7 @@ function YearPrint({
                   ? ` Target of ${COMPLIANCE_TARGET_PCT}% met.`
                   : ` Below the ${COMPLIANCE_TARGET_PCT}% target.`
                 : ""}
+              {t.open > 0 ? ` ${t.open} due with the window still open.` : ""}
               {t.notDue > 0 ? ` ${t.notDue} still to come.` : ""}
             </p>
             {t.planned > 0 && (
@@ -486,6 +500,7 @@ function YearPrint({
                     <th className="text-right">Due</th>
                     <th className="text-right">Done in time</th>
                     <th className="text-right">Not done in time</th>
+                    <th className="text-right">Due, window open</th>
                     <th className="text-right">Still to come</th>
                     <th className="text-right">Compliance</th>
                   </tr>
@@ -498,6 +513,7 @@ function YearPrint({
                       <td className="text-right">{tally.due}</td>
                       <td className="text-right">{tally.compliant}</td>
                       <td className="text-right">{missedOf(tally)}</td>
+                      <td className="text-right">{tally.open}</td>
                       <td className="text-right">{tally.notDue}</td>
                       <td className="text-right font-bold">{pct(tally.compliancePct)}</td>
                     </tr>
@@ -508,6 +524,7 @@ function YearPrint({
                     <td className="text-right">{t.due}</td>
                     <td className="text-right">{t.compliant}</td>
                     <td className="text-right">{missedOf(t)}</td>
+                    <td className="text-right">{t.open}</td>
                     <td className="text-right">{t.notDue}</td>
                     <td className="text-right">{pct(t.compliancePct)}</td>
                   </tr>
@@ -527,7 +544,7 @@ function YearPrint({
             ? `Year to date: ${ytd.compliant} of ${ytd.due} ${noun} due were done in time, ${ytd.compliancePct}% against a target of ${COMPLIANCE_TARGET_PCT}%.`
             : `No ${noun} have fallen due yet this year.`}
           {current
-            ? ` The current quarter, Q${current.quarter}, stands at ${pct(current.total.compliancePct)} (${current.total.compliant} of ${current.total.due} due), with ${current.total.notDue} scheduled ${noun} still to come before it closes.`
+            ? ` The current quarter, Q${current.quarter}, stands at ${pct(current.total.compliancePct)} (${current.total.compliant} of ${current.total.due} counted)${current.total.open > 0 ? `, ${current.total.open} due with the window still open` : ""}, with ${current.total.notDue} scheduled ${noun} still to come before it closes.`
             : ""}
         </p>
 
@@ -590,6 +607,7 @@ function YearPrint({
               <th className="text-right">Due</th>
               <th className="text-right">Done in time</th>
               <th className="text-right">Not done in time</th>
+              <th className="text-right">Due, window open</th>
               <th className="text-right">Still to come</th>
               <th className="text-right">Compliance</th>
             </tr>
@@ -603,6 +621,7 @@ function YearPrint({
                 <td className="text-right">{l.total.due}</td>
                 <td className="text-right">{l.total.compliant}</td>
                 <td className="text-right">{missedOf(l.total)}</td>
+                <td className="text-right">{l.total.open}</td>
                 <td className="text-right">{l.total.notDue}</td>
                 <td className="text-right font-bold">{pct(l.total.compliancePct)}</td>
               </tr>
@@ -613,6 +632,7 @@ function YearPrint({
               <td className="text-right">{ytd.due}</td>
               <td className="text-right">{ytd.compliant}</td>
               <td className="text-right">{missedOf(ytd)}</td>
+              <td className="text-right">{ytd.open}</td>
               <td className="text-right">{ytd.notDue}</td>
               <td className="text-right">{pct(ytd.compliancePct)}</td>
             </tr>
@@ -620,9 +640,8 @@ function YearPrint({
         </table>
 
         <p className="text-xs text-ink-700 mt-3">
-          Done in time means completed on or before the planned date, or inside the window allowed for its frequency
-          (14 days for a quarterly PM). Deferred and overdue work counts against its quarter. Work still to come is
-          not counted until its date arrives. The machine-by-machine list is in the system, under Schedule, Log.
+          {describeRule(rule)} Deferred work counts against its quarter. Work still to come is not counted until
+          its date arrives. The machine-by-machine list is in the system, under Schedule, Log.
         </p>
 
         <PrintSignoff labels={["Prepared by (Maintenance)", "Reviewed by", "Approved by (Management)"]} />

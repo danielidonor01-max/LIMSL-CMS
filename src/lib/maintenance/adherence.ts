@@ -46,9 +46,11 @@ export function adherenceOf(
   plannedDate: string,
   completedDate: string,
   frequency: string | null | undefined,
+  /** The window in force, when the organisation has set its own (compliance-rule.ts). */
+  windowDays?: number,
 ): { daysLate: number; verdict: AdherenceVerdict; compliant: boolean } {
   const daysLate = daysBetween(plannedDate, completedDate);
-  const window = adherenceWindowFor(frequency);
+  const window = windowDays ?? adherenceWindowFor(frequency);
   if (daysLate <= 0) return { daysLate, verdict: "ON_TIME", compliant: true };
   if (daysLate <= window) return { daysLate, verdict: "LATE_WITHIN_WINDOW", compliant: true };
   return { daysLate, verdict: "MISSED", compliant: false };

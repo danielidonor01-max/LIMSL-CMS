@@ -19,6 +19,7 @@ import {
   pmChecklists,
   assetCategoryChanges,
   pmBatches,
+  workDateCorrections,
 } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { entityHref } from "./inbox";
@@ -105,6 +106,12 @@ export async function describeEntities(
     })),
     // Says what the change actually does, so it can be judged from the list,
     // and opens straight onto that change rather than the whole page.
+    load("WORK_DATE", workDateCorrections, (r: any) => ({
+      title: `Work date correction: work done on ${r.workDate}`,
+      code: r.correctionNumber,
+      href: r.batchId ? `/pm-batches/${r.batchId}#work-date` : "/pm-batches",
+      subtitle: r.evidence ?? null,
+    })),
     load("ASSET_CATEGORY", assetCategoryChanges, (r: any) => ({
       title:
         r.kind === "CREATE"

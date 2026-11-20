@@ -202,7 +202,20 @@ export const ASSET_CATEGORY_CHAIN: ChainStep[] = [
   { role: "QA_QC", roleLabel: "Approved by (QA/QC Supervisor)", required: true },
 ];
 
+// Moving the date work was done changes the compliance record, so it is the
+// Maintenance Manager's decision alone: no senior cover and no Super Admin
+// stand-in. The request carries who asked and on what evidence.
+export const WORK_DATE_CHAIN: ChainStep[] = [
+  {
+    role: "MAINTENANCE_MANAGER",
+    roleLabel: "Approved by (Maintenance Manager)",
+    required: true,
+    signableBy: ["MAINTENANCE_MANAGER"],
+  },
+];
+
 export const CHAINS: Record<string, ChainStep[]> = {
+  WORK_DATE: WORK_DATE_CHAIN,
   ASSET_CATEGORY: ASSET_CATEGORY_CHAIN,
   NON_CONFORMITY: NC_CHAIN,
   SAFETY_INCIDENT: SAFETY_INCIDENT_CHAIN,

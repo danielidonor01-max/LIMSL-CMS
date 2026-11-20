@@ -27,6 +27,7 @@ import FlowRail, { type FlowLink } from "@/components/FlowRail";
 import SignoffChain from "@/components/SignoffChain";
 import PermitValidityPanel from "@/components/PermitValidityPanel";
 import TableSkeleton from "@/components/TableSkeleton";
+import WorkDateCorrections from "@/components/WorkDateCorrections";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { WO_STATUS_BADGE } from "@/lib/constants";
 import type { FlowState } from "@/lib/maintenance/flow";
@@ -729,6 +730,8 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
             <FlowRail flow={batch.flow} role={role} links={links} className="xl:sticky xl:top-4" />
           </div>
         )}
+
+        {allDone && <WorkDateCorrections batchId={batch.id} canRequest={canAssign && role !== "MAINTENANCE_MANAGER"} />}
       </main>
     </div>
   );

@@ -57,6 +57,8 @@ import { CalendarDays, List } from "lucide-react";
 import LoadError from "@/components/LoadError";
 import SegmentedControl from "@/components/SegmentedControl";
 import ScheduleComplianceLog from "@/components/ScheduleComplianceLog";
+import { complianceTally } from "@/lib/maintenance/compliance-log";
+import { DEFAULT_COMPLIANCE_RULE, normaliseComplianceRule } from "@/lib/maintenance/compliance-rule";
 
 const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "One-off (no recurrence)" },
@@ -83,6 +85,7 @@ type ScheduleRow = {
   assistantIds: string | null;
   status: string;
   completedDate: string | null;
+  recordedDate?: string | null;
   workOrderId: string | null;
   workOrderNumber: string | null;
   workOrderStatus: string | null;
@@ -130,6 +133,9 @@ function SchedulePageView() {
   // Names as the register holds them, including categories added in Settings.
   const EQUIPMENT_CATEGORY_LABELS = useCategoryLabels();
   const rows = Array.isArray(rowsData) ? rowsData : [];
+  // The counting rule set in Settings: the header figure and the Log both use it.
+  const { data: ruleData } = useApi<{ rule?: unknown }>("/api/settings/compliance-rule", {});
+  const rule = useMemo(() => (ruleData?.rule ? normaliseComplianceRule(ruleData.rule) : DEFAULT_COMPLIANCE_RULE), [ruleData]);
 
   // The session resolves client-side only; anything role-dependent has to wait
   // past mount or the server HTML and the first paint disagree (AGENTS.md §7).
@@ -368,17 +374,15 @@ function SchedulePageView() {
   // ── KPI summary (PM only) ──────────────────────────────────────────────
   const summary = useMemo(() => {
     const pm = rows.filter((r) => r.activityType === "PM");
-    const duePM = pm.filter((r) => r.plannedDate <= TODAY);
     const completed = pm.filter((r) => r.status === "COMPLETED").length;
     const overdue = rows.filter((r) => r.status === "OVERDUE").length;
     const upcoming = rows.filter(
       (r) => r.status === "SCHEDULED" && r.plannedDate >= TODAY,
     ).length;
-    const compliance = duePM.length
-      ? Math.round((duePM.filter((r) => r.status === "COMPLETED").length / duePM.length) * 100)
-      : 0;
+    // The Log's own figure: done in time over what the rule counts as due.
+    const compliance = complianceTally(pm, TODAY, rule).compliancePct ?? 0;
     return { compliance, overdue, upcoming, completed };
-  }, [rows]);
+  }, [rows, rule]);
 
   // Five controls of three different colours used to sit in this cell, and
   // which of them appeared depended on the row's status, so the column changed
@@ -660,7 +664,7 @@ function SchedulePageView() {
               target: "95%",
               status: summary.compliance >= 95 ? "plain" : summary.compliance >= 50 ? "warning" : "danger",
               icon: ShieldCheck,
-              description: "Completed against due, this year",
+              description: "Done in time, of those due",
             },
             {
               key: "overdue",
@@ -742,6 +746,7 @@ function SchedulePageView() {
                 rows={rows}
                 categoryLabels={EQUIPMENT_CATEGORY_LABELS}
                 printedBy={mounted ? session?.user?.name : null}
+                rule={rule}
               />
             )}
           </div>

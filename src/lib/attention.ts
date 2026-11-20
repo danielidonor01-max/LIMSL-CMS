@@ -21,6 +21,7 @@ export const SIGNOFF_MODULE: Record<string, string> = {
   NON_CONFORMITY: "/audit/non-conformity",
   SAFETY_INCIDENT: "/incidents",
   ASSET_CATEGORY: "/asset-categories",
+  WORK_DATE: "/pm-batches",
 };
 
 export type AttentionFacts = {

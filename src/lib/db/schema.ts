@@ -253,7 +253,34 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   // The batch this row was rolled into, once a PM batch was raised from it.
   batchId: text("batch_id"),
+  // completedDate is the day the work was DONE, and what compliance is
+  // measured on. recordedDate is the day the system was told, kept once an
+  // approved correction (work_date_corrections) has moved the work date.
+  recordedDate: text("recorded_date"),
+  workDateCorrectionId: text("work_date_correction_id"),
 }, (t) => [index("maintenance_schedule_equipment_idx").on(t.equipmentId)]);
+
+// ─── Work date corrections ──────────────────────────────────────────────────
+// A request to move the date work was done, with its evidence. Approved by the
+// Maintenance Manager (WORK_DATE chain); applied by that signature only.
+export const workDateCorrections = pgTable("work_date_corrections", {
+  id: text("id").primaryKey(),
+  correctionNumber: text("correction_number").notNull().unique(), // WDC-2026-XXXX
+  batchId: text("batch_id"),
+  scheduleIds: text("schedule_ids").notNull(), // JSON string[]
+  workDate: text("work_date").notNull(),
+  previousDates: text("previous_dates"), // JSON [{scheduleId, date}] as they stood when requested
+  evidence: text("evidence").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("PENDING_APPROVAL"), // PENDING_APPROVAL | APPLIED
+  requestedById: text("requested_by_id"),
+  requestedByName: text("requested_by_name"),
+  approvedById: text("approved_by_id"),
+  approvedByName: text("approved_by_name"),
+  appliedAt: text("applied_at"),
+  rowsAffected: integer("rows_affected"),
+  createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
+});
 
 // ─── Work Orders ────────────────────────────────────────────────────────────
 export const workOrders = pgTable("work_orders", {
@@ -1490,6 +1517,8 @@ export const appSettings = pgTable("app_settings", {
   // null/absent event = code defaults (see lib/notifications/routing.ts).
   notificationRouting: text("notification_routing"),
   escalationPolicy: text("escalation_policy"),
+  // JSON: how PM compliance is counted (lib/maintenance/compliance-rule.ts).
+  complianceRule: text("compliance_rule"),
   updatedById: text("updated_by_id"),
   updatedByName: text("updated_by_name"),
   updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
