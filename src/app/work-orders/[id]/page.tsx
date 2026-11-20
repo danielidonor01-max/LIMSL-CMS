@@ -41,7 +41,7 @@ import {
 import { procedureLabel } from "@/lib/maintenance/governing-procedure";
 import { formatHours } from "@/lib/maintenance/time-log";
 import { formatDate, formatDateTime } from "@/lib/utils";
-import { isPaperRecord, paperRecordText } from "@/lib/maintenance/backfill";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 import {
   WO_STATUS_BADGE,
   WO_STATUS_LABELS,
@@ -499,12 +499,11 @@ export default function WorkOrderDetailPage() {
         {checklist && isPaperRecord(checklist.observations) && (
           <div className="bg-surface border border-line rounded-xl shadow-card p-6 space-y-3">
             <h3 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-600" /> PM checklist, recorded on paper
+              <ShieldCheck className="w-4 h-4 text-brand-600" /> PM checklist
             </h3>
             <p className="text-sm text-ink-700">
               The safety checks, readings and findings for this job are on the paper record held by Maintenance.
             </p>
-            <p className="text-sm text-ink-600">{paperRecordText(checklist.observations)}</p>
             <p className="pt-3 border-t border-ink-200 text-sm text-ink-700">
               Carried out by <span className="font-medium text-ink-900">{checklist.technicianName ?? "-"}</span>
             </p>

@@ -438,6 +438,11 @@ select[size]:not([size="1"]) {
   .print-avoid-break {
     break-inside: avoid;
   }
+  /* A page whose record is printed on its own (the schedule and earthing
+     logs): everything beside the record stays off the paper. */
+  [data-print-solo] > :not([data-print-keep]) {
+    display: none !important;
+  }
   @page {
     size: A4 portrait;
     margin: 10mm;

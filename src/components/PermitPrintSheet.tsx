@@ -9,6 +9,7 @@
 "use client";
 
 import DocumentSeal from "@/components/DocumentSeal";
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 import {
   PERMIT_WORK_TYPES,
   REQUIRED_DOCUMENTS,
@@ -444,7 +445,11 @@ export default function PermitPrintSheet({
       </table>
 
       {permit.closureNote && (
-        <p style={{ fontSize: "7.5pt", marginTop: "3pt" }}>{permit.closureNote}</p>
+        <p style={{ fontSize: "7.5pt", marginTop: "3pt" }}>
+          {isPaperRecord(permit.closureNote)
+            ? "The work type, precautions, PPE, daily validity record and handback of this permit are on the paper copy held by Maintenance."
+            : permit.closureNote}
+        </p>
       )}
 
       <p style={{ fontSize: "7pt", marginTop: "4pt" }}>

@@ -271,7 +271,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
         ? `${total} machine${total === 1 ? "" : "s"} to service`
         : "Nobody is on this batch yet";
   const supporting = onPaper
-    ? `Entered from the paper record. Work date ${formatDate(batch.plannedDate)}, from the annual schedule. Results and any defects are on the paper record.`
+    ? `Work date ${formatDate(batch.plannedDate)}. Results and any defects are on the paper record.`
     : allDone
     ? `Finished ${lastFinished ? formatDateTime(lastFinished) : ""}. ${
         openCount > 0

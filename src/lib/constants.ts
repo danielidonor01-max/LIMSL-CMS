@@ -140,7 +140,7 @@ export const PERMIT_STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Active",
   CLOSED: "Closed",
   CLOSED_LATE: "Closed after expiry",
-  BACKFILLED: "Backfilled, awaiting signatures",
+  BACKFILLED: "Awaiting signatures",
   CLOSED_WORK_ONGOING: "Closed, work ongoing",
   EXPIRED: "Expired, not closed",
   CANCELLED: "Cancelled",

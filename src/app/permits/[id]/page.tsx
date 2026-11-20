@@ -565,8 +565,8 @@ export default function PermitDetail() {
 
         {onPaper && (
           <p className="rounded-xl border border-info-200 bg-info-50 px-4 py-3 text-sm text-info-900">
-            Entered from the paper permit. Its work type, precautions, PPE, daily validity record and handback are on
-            the paper copy held by Maintenance.
+            The work type, precautions, PPE, daily validity record and handback of this permit are on the paper copy
+            held by Maintenance.
           </p>
         )}
 

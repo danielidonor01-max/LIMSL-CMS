@@ -354,6 +354,19 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   (`BackfillSignPanel`, through the normal signature route). A permit in status
   `BACKFILLED` is outside the validity clock in `reconcilePermits` and closes
   when both of its chains are signed. CNC Heavy Duty is excluded.
+- **The backfill is signed and no longer labelled** (20 Nov 2026). Every
+  backfilled step is signed and every permit closed, so screens and printouts
+  stopped saying "backfilled" or "entered from the paper record". The stored
+  notes keep their `BACKFILL-2026` tag (signed records are not edited), and
+  `isPaperRecord` still makes blank results read "on the paper record".
+- **The schedule's tabs are All activities (default), Upcoming, Deferred,
+  Log** (20 Nov 2026). Log is the quarterly compliance record
+  (`components/ScheduleComplianceLog.tsx`, rules in
+  `lib/maintenance/compliance-log.ts`): compliant means completed inside the
+  adherence window, the KPI's rule; work not yet due is left out; the
+  percentage is rounded down; EARTHING rows are excluded. It prints alone
+  under the letterhead (`components/PrintLetterhead.tsx`): a page sets
+  `data-print-solo` on `main` and `data-print-keep` on the record.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.
@@ -384,6 +397,11 @@ the trend helpers are pure in `src/lib/earthing/earthing.ts`.
   the legacy register import skips it (`isEarthingSystemRow`), and
   `MachineSelect` hides every removed asset.
 - Writing (pits, tests) is `MAINTENANCE_WRITE_ROLES`; every role can read.
+- **The page leads with the next measurement date** (20 Nov 2026), then the
+  number of measurements on record and the integrity (pits within limit).
+  Earthing has no PM on the annual schedule; its **Log** tab
+  (`components/EarthingLog.tsx`, after Trends) is its maintenance record and
+  prints under the letterhead.
 - Tables and data steps: `src/lib/db/apply-earthing.ts` (see §8). Until it
   runs, the page shows a setup notice and saving returns 503.
 

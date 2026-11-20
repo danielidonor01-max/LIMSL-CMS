@@ -55,6 +55,7 @@ import TableSkeleton from "@/components/TableSkeleton";
 import KebabMenu, { type KebabItem } from "@/components/KebabMenu";
 import { Badge } from "@/components/Badge";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
+import EarthingLog from "@/components/EarthingLog";
 import {
   DEFAULT_LIMIT_OHMS,
   ELECTRODE_LABELS,
@@ -125,7 +126,7 @@ type Instrument = {
 
 type PitsPayload = { pits: Pit[]; setupRequired: boolean };
 type TestsPayload = { tests: EarthTest[]; setupRequired: boolean };
-type TabKey = "pits" | "history" | "trends";
+type TabKey = "pits" | "history" | "trends" | "log";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const ohms = (n: number | null | undefined) => (n === null || n === undefined ? "-" : `${Number(n).toFixed(2)} Ω`);
@@ -442,11 +443,11 @@ function PitsTable({
         <thead>
           <tr className="border-b border-ink-200 text-ink-500">
             <th className="py-3 px-5 font-medium">Pit</th>
+            <th className="py-3 px-5 font-medium">Next measurement</th>
             <th className="py-3 px-5 font-medium">Location</th>
             <th className="py-3 px-5 font-medium text-right">Limit</th>
             <th className="py-3 px-5 font-medium">Latest reading</th>
-            <th className="py-3 px-5 font-medium">Last tested</th>
-            <th className="py-3 px-5 font-medium">Next test</th>
+            <th className="py-3 px-5 font-medium">Last measured</th>
             <th className="py-3 px-5 font-medium">Trend</th>
             <th className="py-3 px-5 font-medium w-14">
               <span className="sr-only">Actions</span>
@@ -481,6 +482,18 @@ function PitsTable({
                   )}
                   {!pit.active && <Badge className="mt-1 bg-ink-500/10 text-ink-600 border-ink-500/20">Out of use</Badge>}
                 </td>
+                <td className="py-3 px-5 whitespace-nowrap">
+                  {pit.active ? (
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="font-semibold text-ink-900 tabular-nums">
+                        {due.nextDue ? formatDate(due.nextDue) : "Now"}
+                      </span>
+                      <DueBadge state={due.state} />
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td className="py-3 px-5 text-ink-700">{pit.location || "-"}</td>
                 <td className="py-3 px-5 text-right tabular-nums text-ink-700 whitespace-nowrap">
                   {canWrite ? (
@@ -508,16 +521,6 @@ function PitsTable({
                   )}
                 </td>
                 <td className="py-3 px-5 tabular-nums text-ink-700 whitespace-nowrap">{latest ? formatDate(latest.testDate) : "-"}</td>
-                <td className="py-3 px-5 whitespace-nowrap">
-                  {pit.active ? (
-                    <div className="flex flex-col items-start gap-1">
-                      <DueBadge state={due.state} />
-                      {due.nextDue && <span className="text-ink-500 tabular-nums">{formatDate(due.nextDue)}</span>}
-                    </div>
-                  ) : (
-                    "-"
-                  )}
-                </td>
                 <td className="py-3 px-5">
                   <div className="flex items-center gap-2">
                     <Sparkline values={values} colour={colour} />
@@ -1138,7 +1141,24 @@ export default function EarthingPage() {
     const dueOrOver = active.filter((r) => r.due.state === "OVERDUE" || r.due.state === "DUE_SOON" || r.due.state === "NEVER").length;
     const overdue = active.filter((r) => r.due.state === "OVERDUE" || r.due.state === "NEVER").length;
     const lastTest = tests[0]?.testDate ?? null;
-    return { total: active.length, passing, failing, dueOrOver, overdue, lastTest };
+    const never = active.filter((r) => r.due.state === "NEVER");
+    // The pit due soonest sets the module's next date; a pit never measured is due now.
+    const dated = active.filter((r) => r.due.nextDue).sort((a, b) => a.due.nextDue!.localeCompare(b.due.nextDue!));
+    const next = dated[0] ?? null;
+    const nextPits = next ? dated.filter((r) => r.due.nextDue === next.due.nextDue).map((r) => r.pit.code) : [];
+    return {
+      total: active.length,
+      passing,
+      failing,
+      dueOrOver,
+      overdue,
+      lastTest,
+      never: never.map((r) => r.pit.code),
+      nextDue: next?.due.nextDue ?? null,
+      nextDays: next?.due.days ?? null,
+      nextPits,
+      measurements: tests.length,
+    };
   }, [rows, tests]);
 
   const historyRows = historyPit === "ALL" ? tests : tests.filter((t) => t.pitId === historyPit);
@@ -1159,25 +1179,57 @@ export default function EarthingPage() {
 
   const writable = canWrite && !setupRequired;
 
+  // What the page is for, in the order it is asked: when is the next
+  // measurement, how many have been taken, and is the earthing sound.
+  const list = (codes: string[]) => (codes.length <= 3 ? codes.join(", ") : `${codes.length} pits`);
+  const days = summary.nextDays;
+  const integrity =
+    summary.failing > 0
+      ? `${summary.failing === 1 ? "One pit reads" : `${summary.failing} pits read`} above the limit: improve the electrode and measure again.`
+      : summary.passing === summary.total
+        ? `${summary.total === 1 ? "The pit read" : `All ${summary.total} pits read`} inside the limit at the last measurement.`
+        : `${summary.passing} of ${summary.total} pits read inside the limit at the last measurement.`;
   const headline =
     summary.total === 0
       ? "No earth pits are registered yet."
-      : `${summary.passing} of ${summary.total} earth pit${summary.total === 1 ? "" : "s"} within limit.`;
+      : summary.never.length > 0
+        ? summary.measurements === 0
+          ? "The first earth measurement is due now."
+          : `${list(summary.never)} ${summary.never.length === 1 ? "has" : "have"} never been measured.`
+        : days !== null && days < 0
+          ? `The earth measurement was due on ${formatDate(summary.nextDue)}.`
+          : `Next earth measurement is due on ${formatDate(summary.nextDue)}.`;
+  const dueText =
+    days === null
+      ? ""
+      : days < 0
+        ? `${-days} day${days === -1 ? "" : "s"} overdue`
+        : days === 0
+          ? "Due today"
+          : `In ${days} day${days === 1 ? "" : "s"}`;
   const supporting =
     summary.total === 0
-      ? "Register each earth pit with its resistance limit, then record its fall-of-potential test. The trend builds from there."
-      : summary.failing > 0
-        ? `${summary.failing === 1 ? "One pit reads" : `${summary.failing} pits read`} above the limit at the last test. An earth above its limit is not protecting anybody: improve the electrode and retest.`
-        : summary.overdue > 0
-          ? `${summary.overdue === 1 ? "One pit has" : `${summary.overdue} pits have`} not been tested in the last year. Earthing is tested annually.`
-          : "Every pit read inside its limit at its last test. Earthing is tested annually, and the trend shows a pit drifting long before it fails.";
+      ? "Register each earth pit with its resistance limit, then record its first measurement. That sets the next date."
+      : summary.measurements === 0
+        ? "Nothing has been measured yet. The first measurement of each pit sets its next date, one year on."
+        : summary.never.length > 0
+          ? `Measure ${summary.never.length === 1 ? "it" : "them"} to set the next date. ${integrity}`
+          : `${dueText}, for ${list(summary.nextPits)}. Earthing is measured once a year. ${integrity}`;
+  const nextFigure: { value: string; unit?: string; tone: "good" | "warn" | "bad" } =
+    summary.total === 0
+      ? { value: "-", tone: "warn" }
+      : summary.never.length > 0 || days === null
+        ? { value: "Now", tone: "bad" }
+        : days < 0
+          ? { value: String(-days), unit: `day${days === -1 ? "" : "s"} overdue`, tone: "bad" }
+          : { value: String(days), unit: `day${days === 1 ? "" : "s"} to go`, tone: days <= 30 ? "warn" : "good" };
 
   return (
     <div className={PAGE_ROOT}>
-      <main className={PAGE_MAIN.register}>
+      <main className={PAGE_MAIN.register} data-print-solo={tab === "log" ? "" : undefined}>
         <PageHeader
           title="Earthing"
-          subtitle="The resistance of every earth pit on site, tested by the fall-of-potential method, with its history and trend"
+          subtitle="When each earth pit is next due a measurement, every measurement taken, and whether the earthing is sound"
           backHref="/"
           backLabel="Dashboard"
           actions={
@@ -1225,33 +1277,34 @@ export default function EarthingPage() {
               headingId="earthing-lead"
               headline={headline}
               supporting={supporting}
-              figure={{
-                label: "Pits within limit",
-                value: String(summary.passing),
-                unit: `of ${summary.total}`,
-                progress: summary.total ? (summary.passing / summary.total) * 100 : 0,
-                tone: summary.failing > 0 ? "bad" : summary.dueOrOver > 0 ? "warn" : "good",
-              }}
+              figure={{ label: "Next measurement", value: nextFigure.value, unit: nextFigure.unit, tone: nextFigure.tone }}
               stats={[
-                { label: "above limit", value: summary.failing, tone: "bad" },
-                { label: "due or overdue", value: summary.dueOrOver, tone: "warn" },
-                { label: "last test", value: summary.lastTest ? formatDate(summary.lastTest) : "None" },
+                { label: "measurements on record", value: summary.measurements },
+                {
+                  label: "pits within limit",
+                  value: `${summary.passing} of ${summary.total}`,
+                  tone: summary.failing > 0 ? "bad" : "plain",
+                },
+                { label: "last measured", value: summary.lastTest ? formatDate(summary.lastTest) : "Never" },
               ]}
             />
 
             <InstrumentCard instruments={instruments} loading={instApi.loading} />
 
-            <div className="space-y-4">
-              <Tabs<TabKey>
-                ariaLabel="Earthing views"
-                value={tab}
-                onChange={setTab}
-                items={[
-                  { value: "pits", label: "Earth pits", count: pits.length },
-                  { value: "history", label: "Test history", count: tests.length },
-                  { value: "trends", label: "Trends" },
-                ]}
-              />
+            <div className="space-y-4" data-print-keep="">
+              <div className="no-print">
+                <Tabs<TabKey>
+                  ariaLabel="Earthing views"
+                  value={tab}
+                  onChange={setTab}
+                  items={[
+                    { value: "pits", label: "Earth pits", count: pits.length },
+                    { value: "history", label: "Test history", count: tests.length },
+                    { value: "trends", label: "Trends" },
+                    { value: "log", label: "Log" },
+                  ]}
+                />
+              </div>
 
               {tab === "pits" && (
                 <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
@@ -1306,6 +1359,8 @@ export default function EarthingPage() {
               )}
 
               {tab === "trends" && <TrendsPanel pits={pits} tests={tests} />}
+
+              {tab === "log" && <EarthingLog pits={pits} tests={tests} printedBy={mounted ? session?.user?.name : null} />}
             </div>
           </>
         )}

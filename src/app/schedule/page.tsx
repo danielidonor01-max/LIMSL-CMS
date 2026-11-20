@@ -56,6 +56,7 @@ import {
 import { CalendarDays, List } from "lucide-react";
 import LoadError from "@/components/LoadError";
 import SegmentedControl from "@/components/SegmentedControl";
+import ScheduleComplianceLog from "@/components/ScheduleComplianceLog";
 
 const FREQUENCY_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "One-off (no recurrence)" },
@@ -145,7 +146,9 @@ function SchedulePageView() {
   // than no control.
   const canWrite = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
   const canSchedule = mounted && SCHEDULE_WRITE_ROLES.includes(role ?? "");
-  const [tab, setTab] = useState<"upcoming" | "all" | "deferred">("upcoming");
+  // The whole plan first: it is what people open the schedule to see. The log
+  // is the compliance record of a quarter, read and printed for management.
+  const [tab, setTab] = useState<"all" | "upcoming" | "deferred" | "log">("all");
   const [view, setView] = useState<"list" | "calendar">("list");
   // Arriving from a category page or a machine's menu, the URL names what to
   // narrow to, so the first screen is already the one they came for.
@@ -605,7 +608,7 @@ function SchedulePageView() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink-900 flex flex-col font-sans">
-      <main className={PAGE_MAIN.register}>
+      <main className={PAGE_MAIN.register} data-print-solo={view === "list" && tab === "log" ? "" : undefined}>
         <PageHeader
           title="Annual Maintenance Schedule"
           subtitle={`Planned preventive work for ${new Date().getFullYear()}, with due dates and adherence`}
@@ -703,11 +706,13 @@ function SchedulePageView() {
             value={tab}
             onChange={setTab}
             items={[
-              { value: "upcoming", label: "Upcoming, 60 days" },
               { value: "all", label: "All activities" },
+              { value: "upcoming", label: "Upcoming, 60 days" },
               { value: "deferred", label: "Deferred", count: deferredCount || undefined },
+              { value: "log", label: "Log" },
             ]}
           />
+          {tab !== "log" && (
           <div className="pb-2 shrink-0">
             <SegmentedControl
               ariaLabel="Schedule view grouping"
@@ -719,8 +724,31 @@ function SchedulePageView() {
               ]}
             />
           </div>
+          )}
         </div>
 
+        {tab === "log" && (
+          <div data-print-keep="">
+            {error && !loading ? (
+              <div className="bg-surface border border-line rounded-xl shadow-card">
+                <LoadError what="the maintenance schedule" onRetry={refresh} />
+              </div>
+            ) : loading ? (
+              <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
+                <TableSkeleton rows={7} cols={6} />
+              </div>
+            ) : (
+              <ScheduleComplianceLog
+                rows={rows}
+                categoryLabels={EQUIPMENT_CATEGORY_LABELS}
+                printedBy={mounted ? session?.user?.name : null}
+              />
+            )}
+          </div>
+        )}
+
+        {tab !== "log" && (
+        <>
         {/* Table */}
         <div className="bg-surface border border-line rounded-xl shadow-card overflow-hidden">
           <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-line">
@@ -1038,6 +1066,8 @@ function SchedulePageView() {
         <p className="text-xs text-ink-500">
           Showing {filtered.length} of {rows.length} scheduled activities.
         </p>
+        </>
+        )}
         </>
         )}
 
