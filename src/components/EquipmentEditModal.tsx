@@ -55,7 +55,12 @@ export default function EquipmentEditModal({
       .then(([asset, cats]) => {
         setForm(asset);
         setOriginal(asset);
-        setCategories(Array.isArray(cats?.categories) ? cats.categories : []);
+        // A retired category is not offered; the machine's own, if it is one, still shows.
+        setCategories(
+          Array.isArray(cats?.categories)
+            ? cats.categories.filter((c: { code: string; isActive?: boolean }) => c.isActive !== false || c.code === asset?.category)
+            : [],
+        );
       })
       .finally(() => setLoading(false));
   }, [open, assetKey]);

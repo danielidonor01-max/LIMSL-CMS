@@ -25,6 +25,9 @@ async function resolveCategory(code: unknown): Promise<
   if (!c) return { ok: false, error: "Choose the category this machine belongs to." };
   try {
     const cat = await getCategory(c);
+    if (cat && cat.isActive === false) {
+      return { ok: false, error: `${cat.label} has been retired. Choose a category that is in use.` };
+    }
     if (cat) return { ok: true, frequency: cat.maintenanceFrequency };
     const managed = (await listCategories()).length > 0;
     if (managed) {

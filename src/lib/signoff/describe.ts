@@ -114,7 +114,11 @@ export async function describeEntities(
     })),
     load("ASSET_CATEGORY", assetCategoryChanges, (r: any) => ({
       title:
-        r.kind === "CREATE"
+        r.kind === "RETIRE"
+          ? `Retire category: ${r.proposedLabel}`
+          : r.kind === "REINSTATE"
+            ? `Bring back category: ${r.proposedLabel}`
+            : r.kind === "CREATE"
           ? `New category: ${r.proposedLabel}, serviced ${FREQ[r.proposedFrequency] ?? r.proposedFrequency}`
           : r.previousFrequency !== r.proposedFrequency
             ? `${r.previousLabel}: ${FREQ[r.previousFrequency] ?? r.previousFrequency} to ${FREQ[r.proposedFrequency] ?? r.proposedFrequency}`

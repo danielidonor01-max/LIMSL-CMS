@@ -8,6 +8,22 @@ import { requireRoles } from "@/lib/authz";
 import { SETTINGS_WRITE_ROLES } from "@/lib/roles";
 import { runEscalations } from "@/lib/escalations";
 
+// The scheduler calls with GET. Only the secret opens it: a signed-in person
+// uses the button, which is POST, so nobody triggers a scan by opening a link.
+export async function GET(request: Request) {
+  const secret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization") ?? "";
+  if (!secret || authHeader !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    return NextResponse.json(await runEscalations(new Date(), "scheduled"));
+  } catch (error) {
+    console.error("Scheduled escalation run failed:", error);
+    return NextResponse.json({ error: "Escalation run failed" }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const secret = process.env.CRON_SECRET;

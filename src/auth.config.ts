@@ -19,6 +19,9 @@ const PUBLIC_PREFIXES = [
   "/forgot-password",
   "/reset-password",
   "/account/confirm-email",
+  // The daily scheduler has no session. The route itself lets in only a
+  // request carrying CRON_SECRET, or a signed-in Super Admin.
+  "/api/escalations/run",
 ];
 
 export const authConfig = {

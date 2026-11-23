@@ -427,6 +427,15 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   reference the page margins print), `report-table` tables and
   `<ReportSignoff />`. The permit prints as its paper form and the QR label as
   a label; WMS, JHA and Procedure keep their controlled-document header.
+- **Reminders run on their own every morning** (23 Nov 2026). `vercel.json`
+  calls `GET /api/escalations/run` daily at 06:00 UTC; it needs `CRON_SECRET`
+  set in Vercel (the route is public to the middleware and opens only to that
+  secret; the Settings button is the POST, for a signed-in Super Admin).
+- **A round coming up with nobody assigned is announced to the people who
+  assign** (`lib/maintenance/round-reminders.ts`): the Foreman and the
+  Maintenance Manager get one notice, one line per category round, seven days
+  before and then daily from two days before, until it is assigned (which
+  raises its batch). Past its date the overdue digest takes over.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.
@@ -528,6 +537,17 @@ then the QA/QC Supervisor (`ASSET_CATEGORY_CHAIN`). Nothing moves until the
 second signature; then `applyCategoryChange()` runs once, from the sign route,
 and every machine in the category takes the new interval. One pending change
 per category.
+
+**A category is retired, never deleted** (23 Nov 2026,
+`lib/maintenance/category-retire.ts`). `RETIRE` and `REINSTATE` are kinds of
+the same change request, signed by the same two people. Retiring is refused
+while the category has a machine in service, an open batch or an open visit
+(`retireBlocker`, asked when the request is raised and again when the last
+signature lands; a request that can no longer be applied is marked REJECTED).
+It sets `is_active` false: `listCategories()` then leaves it out, so it holds
+no calendar days and no picker offers it, while `listCategories({
+includeRetired: true })` and the label map keep its name for history. A
+machine cannot be added or moved into a retired category.
 
 **Machines move between categories from that page** (23 Nov 2026): "Move
 equipment" (`components/MoveEquipmentModal.tsx`, `POST

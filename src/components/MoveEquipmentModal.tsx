@@ -16,13 +16,13 @@ import Select from "@/components/Select";
 import { FIELD_CLASS, LABEL_CLASS } from "@/components/Field";
 import { FREQUENCY_LABELS } from "@/lib/constants";
 
-type Category = { code: string; label: string; maintenanceFrequency: string };
+type Category = { code: string; label: string; maintenanceFrequency: string; isActive?: boolean };
 type Machine = { id: string; assetId: string; name: string | null; category: string; status: string | null; removedAt?: string | null };
 type Refusal = { id: string; name: string | null; why: string };
 
 export default function MoveEquipmentModal({
   open,
-  categories,
+  categories: allCategories,
   initialFrom = "ALL",
   onClose,
   onMoved,
@@ -34,6 +34,8 @@ export default function MoveEquipmentModal({
   onClose: () => void;
   onMoved: () => void;
 }) {
+  // Nothing moves into a retired category, and nothing is left in one.
+  const categories = useMemo(() => allCategories.filter((c) => c.isActive !== false), [allCategories]);
   const [machines, setMachines] = useState<Machine[] | null>(null);
   const [to, setTo] = useState("");
   const [from, setFrom] = useState(initialFrom);
@@ -65,7 +67,7 @@ export default function MoveEquipmentModal({
       .catch(() => setMachines([]));
   }, [open]);
 
-  const labelOf = (code: string) => categories.find((c) => c.code === code)?.label ?? code;
+  const labelOf = (code: string) => allCategories.find((c) => c.code === code)?.label ?? code;
   const target = categories.find((c) => c.code === to) ?? null;
 
   const listed = useMemo(() => {

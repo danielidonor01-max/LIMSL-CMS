@@ -7,6 +7,8 @@
 // when both have — at which point every machine in the category moves to the
 // new interval and its future plan is rebuilt. Until then the register and the
 // schedule are exactly as they were.
+import { changeKindOf, retireBlocker } from "@/lib/maintenance/category-retire";
+import { retireFacts } from "@/lib/maintenance/asset-categories";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { assetCategoryChanges, auditLog } from "@/lib/db/schema";
@@ -74,13 +76,86 @@ export async function GET() {
   }
 }
 
+// Retiring a category, or bringing one back. It carries no new name or
+// interval: the category is as it stands, and the question is only whether it
+// is in use.
+async function proposeRetirement(
+  kind: "RETIRE" | "REINSTATE",
+  body: Record<string, unknown>,
+  actor: { id?: string | null; name?: string | null } | undefined,
+) {
+  const code = String(body.categoryCode ?? "");
+  const reason = String(body.reason ?? "").trim();
+  const existing = code ? await getCategory(code) : null;
+  if (!existing) return NextResponse.json({ error: "That category is not on the register." }, { status: 404 });
+  if (reason.length < 10) {
+    return NextResponse.json({ error: "Say why, so the people signing it know what prompted it." }, { status: 400 });
+  }
+  if (kind === "RETIRE") {
+    if (existing.isActive === false) return NextResponse.json({ error: `${existing.label} is already retired.` }, { status: 400 });
+    const blocker = retireBlocker(await retireFacts(code));
+    if (blocker) return NextResponse.json({ error: blocker }, { status: 409 });
+  } else {
+    if (existing.isActive !== false) return NextResponse.json({ error: `${existing.label} is already in use.` }, { status: 400 });
+    // Its days may have been taken by another category while it was retired.
+    if (existing.defaultStartDate) {
+      const collision = await checkCategoryScheduleCollision({
+        categoryCode: code,
+        label: existing.label,
+        frequency: existing.maintenanceFrequency,
+        startDate: existing.defaultStartDate,
+      });
+      if (collision.collides) {
+        return NextResponse.json(
+          { error: `${collision.message} Propose a change to its start date after bringing another day free.` },
+          { status: 400 },
+        );
+      }
+    }
+  }
+  const waiting = await pendingChangeFor(code);
+  if (waiting) {
+    return NextResponse.json({ error: `${waiting.changeNumber} is already waiting for signatures on this category.` }, { status: 409 });
+  }
+
+  const id = nanoid();
+  const changeNumber = await nextDocNumber("ACC");
+  await db.insert(assetCategoryChanges).values({
+    id,
+    changeNumber,
+    kind,
+    categoryCode: code,
+    proposedLabel: existing.label,
+    proposedFrequency: existing.maintenanceFrequency,
+    proposedStartDate: existing.defaultStartDate,
+    previousLabel: existing.label,
+    previousFrequency: existing.maintenanceFrequency,
+    previousStartDate: existing.defaultStartDate,
+    reason: reason.slice(0, 1000),
+    proposedById: actor?.id ?? null,
+    proposedByName: actor?.name ?? null,
+  });
+  await ensureSignoffChain("ASSET_CATEGORY", id, changeNumber);
+  await db.insert(auditLog).values({
+    id: nanoid(),
+    userId: actor?.id ?? null,
+    userName: actor?.name || "System",
+    action: "CREATE",
+    entityType: "asset_category",
+    entityId: code,
+    entityDescription: `${changeNumber} proposed: ${kind === "RETIRE" ? "retire" : "bring back"} ${existing.label}. Waiting for the Maintenance Manager and QA/QC Supervisor. Reason: ${reason.slice(0, 200)}`,
+  });
+  return NextResponse.json({ id, changeNumber }, { status: 201 });
+}
+
 export async function POST(request: Request) {
   try {
     const gate = await requireRoles(ASSET_CATEGORY_ROLES);
     if (gate.res) return gate.res;
 
     const body = await request.json();
-    const kind = String(body.kind ?? "UPDATE").toUpperCase() === "CREATE" ? "CREATE" : "UPDATE";
+    const kind = changeKindOf(body.kind);
+    if (kind === "RETIRE" || kind === "REINSTATE") return proposeRetirement(kind, body, gate.actor);
     const label = String(body.label ?? "").trim();
     const frequency = String(body.frequency ?? "").toUpperCase();
     const startDate = body.startDate ? String(body.startDate).slice(0, 10) : (body.proposedStartDate ? String(body.proposedStartDate).slice(0, 10) : null);

@@ -87,6 +87,12 @@ export async function PATCH(
           { status: 400 },
         );
       }
+      if (cat && cat.isActive === false) {
+        return NextResponse.json(
+          { error: `${cat.label} has been retired. Choose a category that is in use.` },
+          { status: 400 },
+        );
+      }
       if (cat) updates.maintenanceFrequency = cat.maintenanceFrequency;
     }
 

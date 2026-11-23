@@ -89,7 +89,11 @@ export default function NewEquipmentPage() {
   useEffect(() => {
     fetch("/api/asset-categories")
       .then((r) => (r.ok ? r.json() : { categories: [] }))
-      .then((d) => setRegisterCategories(Array.isArray(d?.categories) ? d.categories : []))
+      .then((d) =>
+        setRegisterCategories(
+          Array.isArray(d?.categories) ? d.categories.filter((c: { isActive?: boolean }) => c.isActive !== false) : [],
+        ),
+      )
       .catch(() => {});
   }, []);
 

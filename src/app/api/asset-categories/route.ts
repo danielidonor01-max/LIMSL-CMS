@@ -17,10 +17,14 @@ export async function GET() {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const categories = await listCategories();
-    let machines: { category: string; status: string }[] = [];
+    // Retired ones too, marked: a screen showing history needs their names,
+    // and the categories page lists them so they can be brought back.
+    const categories = await listCategories({ includeRetired: true });
+    let machines: { category: string; status: string; removedAt: string | null }[] = [];
     try {
-      machines = await db.select({ category: equipment.category, status: equipment.status }).from(equipment);
+      machines = await db
+        .select({ category: equipment.category, status: equipment.status, removedAt: equipment.removedAt })
+        .from(equipment);
     } catch (e) {
       console.warn("Could not query equipment for category machine counts:", e);
     }
@@ -42,7 +46,10 @@ export async function GET() {
     const rows = categories
       .map((c) => ({
         ...c,
-        machineCount: machines.filter((m) => m.category === c.code && m.status !== "DECOMMISSIONED").length,
+        // Machines in service. One removed from the register is not in the
+        // category any more, and counting it kept an emptied category from
+        // being retired.
+        machineCount: machines.filter((m) => m.category === c.code && m.status !== "DECOMMISSIONED" && !m.removedAt).length,
         pendingChange: pending.find((p) => p.categoryCode === c.code) ?? null,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));

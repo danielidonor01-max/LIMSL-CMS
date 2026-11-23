@@ -18,6 +18,7 @@ import {
   equipment,
   maintenanceSchedule,
   auditLog,
+  pmBatches,
 } from "@/lib/db/schema";
 import { and, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -29,6 +30,7 @@ import {
 import { FREQUENCY_MONTHS } from "./plan-generation";
 import { syncPlanForEquipment } from "./plan-sync";
 import { checkCategoryScheduleCollision } from "./category-collision";
+import { retireBlocker, type RetireFacts } from "./category-retire";
 
 export type Category = typeof assetCategories.$inferSelect;
 
@@ -44,7 +46,17 @@ export function categoryCodeFrom(label: string): string {
     .slice(0, 40);
 }
 
-export async function listCategories(): Promise<Category[]> {
+/**
+ * The categories in force. A retired category is left out, so it holds no days
+ * on the calendar and is offered nowhere; pass `includeRetired` where a name
+ * is needed for history.
+ */
+export async function listCategories(opts: { includeRetired?: boolean } = {}): Promise<Category[]> {
+  const all = await everyCategory();
+  return opts.includeRetired ? all : all.filter((c) => c.isActive !== false);
+}
+
+async function everyCategory(): Promise<Category[]> {
   const defaults: Category[] = Object.entries(EQUIPMENT_CATEGORY_LABELS).map(([code, label]) => ({
     code,
     label,
@@ -165,7 +177,7 @@ export async function getCategory(code: string | null | undefined): Promise<Cate
  * category that predates the table.
  */
 export async function categoryLabelMap(): Promise<Record<string, string>> {
-  const rows = await listCategories();
+  const rows = await listCategories({ includeRetired: true });
   const map: Record<string, string> = { ...EQUIPMENT_CATEGORY_LABELS };
   for (const r of rows) map[r.code] = r.label;
   return map;
@@ -263,6 +275,71 @@ export async function carryPlanOnMove(equipmentId: string, from: string | null, 
     .where(and(eq(maintenanceSchedule.equipmentId, equipmentId), ne(maintenanceSchedule.status, "COMPLETED")));
 }
 
+// ─── Retiring ───────────────────────────────────────────────────────────────
+
+/** What still depends on a category, for the retire rule. */
+export async function retireFacts(code: string): Promise<RetireFacts> {
+  const machines = await db
+    .select({ id: equipment.id, status: equipment.status, removedAt: equipment.removedAt })
+    .from(equipment)
+    .where(eq(equipment.category, code));
+  const visits = await db
+    .select({ id: maintenanceSchedule.id })
+    .from(maintenanceSchedule)
+    .where(and(eq(maintenanceSchedule.plannedCategory, code), ne(maintenanceSchedule.status, "COMPLETED")));
+  const batches = await db.select({ status: pmBatches.status }).from(pmBatches).where(eq(pmBatches.category, code));
+  return {
+    machines: machines.filter((m: { status: string; removedAt: string | null }) => !m.removedAt && m.status !== "DECOMMISSIONED").length,
+    openVisits: visits.length,
+    openBatches: batches.filter((b: { status: string }) => b.status !== "COMPLETED" && b.status !== "CANCELLED").length,
+  };
+}
+
+async function applyRetirement(
+  change: typeof assetCategoryChanges.$inferSelect,
+  actor?: { id?: string | null; name?: string | null },
+): Promise<{ applied: boolean; machines: number; replaced: number }> {
+  const now = new Date().toISOString();
+  const retiring = change.kind === "RETIRE";
+  // Asked again at the moment of the last signature: a machine may have been
+  // moved in since the request was raised.
+  const blocker = retiring ? retireBlocker(await retireFacts(change.categoryCode)) : null;
+  if (blocker) {
+    await db.update(assetCategoryChanges).set({ status: "REJECTED", appliedAt: now }).where(eq(assetCategoryChanges.id, change.id));
+    await db.insert(auditLog).values({
+      id: nanoid(),
+      userId: actor?.id ?? null,
+      userName: actor?.name || "System",
+      action: "REJECT",
+      entityType: "asset_category",
+      entityId: change.categoryCode,
+      entityDescription: `${change.changeNumber} could not be applied, ${change.proposedLabel} was not retired: ${blocker}`,
+    });
+    return { applied: false, machines: 0, replaced: 0 };
+  }
+
+  await db
+    .update(assetCategories)
+    .set({ isActive: !retiring, updatedAt: now })
+    .where(eq(assetCategories.code, change.categoryCode));
+  await db
+    .update(assetCategoryChanges)
+    .set({ status: "APPLIED", appliedAt: now, machinesAffected: 0, planRowsReplaced: 0 })
+    .where(eq(assetCategoryChanges.id, change.id));
+  await db.insert(auditLog).values({
+    id: nanoid(),
+    userId: actor?.id ?? null,
+    userName: actor?.name || "System",
+    action: "UPDATE",
+    entityType: "asset_category",
+    entityId: change.categoryCode,
+    entityDescription: retiring
+      ? `${change.changeNumber} applied: ${change.proposedLabel} retired. Its records are kept; it is off the calendar and no longer offered.`
+      : `${change.changeNumber} applied: ${change.proposedLabel} brought back into use.`,
+  });
+  return { applied: true, machines: 0, replaced: 0 };
+}
+
 // ─── Applying an approved change ────────────────────────────────────────────
 
 export async function applyCategoryChange(
@@ -277,6 +354,7 @@ export async function applyCategoryChange(
   // Applied exactly once. A second completion signal — a re-sign, a retry —
   // must not replan the category a second time.
   if (!change || change.status !== "PENDING_APPROVAL") return { applied: false, machines: 0, replaced: 0 };
+  if (change.kind === "RETIRE" || change.kind === "REINSTATE") return applyRetirement(change, actor);
 
   const now = new Date().toISOString();
   const existing = await getCategory(change.categoryCode);

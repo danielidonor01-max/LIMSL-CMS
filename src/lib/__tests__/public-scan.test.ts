@@ -99,7 +99,14 @@ test("only the scan surfaces are public, and the rest of the app is not", () => 
     "/forgot-password",
     "/reset-password",
     "/account/confirm-email",
+    // The daily reminder scheduler has no session. The route opens only to a
+    // request carrying CRON_SECRET or to a signed-in Super Admin, and the
+    // assertion below holds it to that.
+    "/api/escalations/run",
   ];
+  const run = readFileSync(join(process.cwd(), "src/app/api/escalations/run/route.ts"), "utf8");
+  assert.ok(/!secret \|\| authHeader !== `Bearer \$\{secret\}`/.test(run), "the scheduled reminder run no longer requires the secret");
+  assert.ok(/requireRoles\(SETTINGS_WRITE_ROLES\)/.test(run), "the manual reminder run no longer requires a Super Admin");
   for (const prefix of [...list.matchAll(/"([^"]+)"/g)].map((m) => m[1])) {
     if (prefix === "PUBLIC_PREFIXES") continue;
     assert.ok(allowed.includes(prefix), `"${prefix}" was made public without being considered`);

@@ -144,6 +144,11 @@ export const ASSET_CATEGORY_ROLES = [
   "QA_QC",
 ];
 
+// Who is told that a category's round is coming up with nobody assigned: the
+// two who assign it day to day. The Factory Manager hears through the overdue
+// digest if it is then missed.
+export const ROUND_ASSIGN_NOTICE_ROLES = ["FOREMAN", "MAINTENANCE_MANAGER"];
+
 // Who may move machines between categories. A move changes how often a
 // machine is serviced, so it sits with the managers who own the maintenance
 // regime. QA/QC reads and signs category changes but does not move machines.

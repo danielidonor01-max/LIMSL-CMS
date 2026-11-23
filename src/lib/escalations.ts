@@ -7,6 +7,8 @@
 // single summary of their overdue work, and managers get one plant-wide summary,
 // so a backlog of 70 items doesn't mean 70 messages. A per-day dedup guard makes
 // the scan safe to run repeatedly (manual button or a daily cron).
+import { roundLine, roundsToAnnounce } from "@/lib/maintenance/round-reminders";
+import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
 import { db } from "@/lib/db";
 import {
   maintenanceSchedule,
@@ -25,6 +27,7 @@ import {
   PERMIT_ISSUE_ROLES,
   MAINTENANCE_ESCALATION_ROLES,
   COMPLIANCE_ESCALATION_ROLES,
+  ROUND_ASSIGN_NOTICE_ROLES,
 } from "@/lib/roles";
 import {
   assessReadiness,
@@ -45,6 +48,8 @@ const REMINDER_LEAD_DAYS = Number(process.env.REMINDER_LEAD_DAYS || 3);
 export type EscalationSummary = {
   overdueActivities: number;
   upcomingActivities: number;
+  /** Category rounds due a notice today because nobody is assigned. */
+  unassignedRounds: number;
   lapsedPermits: number;
   calibrationDue: number;
   emergencyEquipmentDue: number;
@@ -96,6 +101,7 @@ export async function runEscalations(now = new Date(), trigger: "manual" | "sche
   const summary: EscalationSummary = {
     overdueActivities: 0,
     upcomingActivities: 0,
+    unassignedRounds: 0,
     lapsedPermits: 0,
     calibrationDue: 0,
     emergencyEquipmentDue: 0,
@@ -258,6 +264,40 @@ Oldest outstanding: ${oldest} day(s).`,
       userIds: [personId],
     });
     if (sent.length) summary.notificationsSent += sent.length;
+  }
+
+  // ── Rounds coming up with nobody assigned ──────────────────────────────────
+  // Nobody is named ahead of time, so the reminder above reaches no one for a
+  // round still unassigned. The people who assign are told instead: once seven
+  // days out, then daily from two days out, one line per category round.
+  const categoryOf = new Map(equip.map((e) => [e.id, e.category]));
+  const rounds = roundsToAnnounce(
+    sched.map((s) => ({ ...s, category: s.plannedCategory ?? categoryOf.get(s.equipmentId) ?? null })),
+    today,
+  );
+  summary.unassignedRounds = rounds.length;
+  if (rounds.length) {
+    if (await recentlyEscalated("escalation:rounds-unassigned", "ALL", now)) {
+      summary.skippedDuplicate++;
+    } else {
+      const labels = await categoryLabelMap().catch(() => ({}) as Record<string, string>);
+      const soonest = rounds[0];
+      const sent = await notify({
+        event: "ESCALATION",
+        title:
+          rounds.length === 1
+            ? `${labels[soonest.category] ?? soonest.category} ${soonest.activityType === "INS" ? "inspection" : "PM"} is due ${soonest.daysToGo === 0 ? "today" : soonest.daysToGo === 1 ? "tomorrow" : `in ${soonest.daysToGo} days`}, not yet assigned`
+            : `${rounds.length} maintenance rounds are coming up with nobody assigned`,
+        body:
+          `${fmtList(rounds.map((r) => roundLine(r, labels[r.category] ?? r.category, r.plannedDate)))}\n\n` +
+          "Assign each one on the schedule. Assigning raises its PM batch, so the method statement, hazard analysis and permit can be put in place before the day.",
+        linkPath: "/schedule",
+        relatedEntityType: "escalation:rounds-unassigned",
+        relatedEntityId: "ALL",
+        roles: ROUND_ASSIGN_NOTICE_ROLES,
+      });
+      if (sent.length) summary.notificationsSent += sent.length;
+    }
   }
 
   // ── Lapsed permits ─────────────────────────────────────────────────────────

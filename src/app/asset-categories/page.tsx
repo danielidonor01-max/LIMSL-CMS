@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, ArrowRightLeft, Calendar, Eye, AlertTriangle, FileSignature } from "lucide-react";
+import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, ArrowRightLeft, Archive, Undo2, Calendar, Eye, AlertTriangle, FileSignature } from "lucide-react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
@@ -40,13 +40,15 @@ type Category = {
   maintenanceFrequency: string;
   defaultStartDate: string | null;
   machineCount: number;
+  /** False once the category has been retired. */
+  isActive?: boolean;
   pendingChange: { id: string; changeNumber: string } | null;
 };
 
 type Change = {
   id: string;
   changeNumber: string;
-  kind: "CREATE" | "UPDATE";
+  kind: "CREATE" | "UPDATE" | "RETIRE" | "REINSTATE";
   categoryCode: string;
   proposedLabel: string;
   proposedFrequency: string;
@@ -114,6 +116,35 @@ function AssetCategoriesView() {
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
+  // Retiring a category, or bringing one back: only a reason is asked for.
+  const [retiring, setRetiring] = useState<{ category: Category; kind: "RETIRE" | "REINSTATE"; reason: string } | null>(null);
+  // A retired category holds no days, so it is not part of the collision check.
+  const inUse = useMemo(() => categories.filter((c) => c.isActive !== false), [categories]);
+
+  const submitRetirement = async () => {
+    if (!retiring) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/asset-categories/changes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: retiring.kind, categoryCode: retiring.category.code, reason: retiring.reason }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not raise the request.");
+        return;
+      }
+      toast.success(
+        `${d.changeNumber} proposed. ${retiring.category.label} is ${retiring.kind === "RETIRE" ? "retired" : "brought back"} once the Maintenance Manager and QA/QC Supervisor have signed it.`,
+      );
+      setRetiring(null);
+      setOpenChange(d.id);
+      refreshAll();
+    } finally {
+      setSaving(false);
+    }
+  };
   // Arriving from a notification or from My Approvals, the change is named in
   // the URL. It is opened and brought into view, rather than leaving the
   // signer to find which of several pending changes is theirs.
@@ -145,14 +176,14 @@ function AssetCategoriesView() {
     };
     const thisYear = new Date().getFullYear();
     for (const year of [thisYear, thisYear + 1]) {
-      const hit = calendarCollision(categories, proposal, year);
+      const hit = calendarCollision(inUse, proposal, year);
       if (hit) {
-        const other = categories.find((c) => c.code === hit.code)?.label ?? hit.code;
+        const other = inUse.find((c) => c.code === hit.code)?.label ?? hit.code;
         return `Schedule collision with ${other} on ${hit.dates.map((d) => formatDate(d)).join(", ")}. Weekend dates move to the next free working day, and different categories cannot share a maintenance day.`;
       }
     }
     return null;
-  }, [draft?.startDate, draft?.frequency, draft?.categoryCode, categories]);
+  }, [draft?.startDate, draft?.frequency, draft?.categoryCode, inUse]);
 
   const submit = async () => {
     if (!draft) return;
@@ -274,7 +305,7 @@ function AssetCategoriesView() {
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {categories.map((c) => (
-                    <tr key={c.code} className="hover:bg-ink-50 transition-colors">
+                    <tr key={c.code} className={`hover:bg-ink-50 transition-colors ${c.isActive === false ? "text-ink-500" : ""}`}>
                       <td className="py-3 px-4">
                         <Link
                           href={`/asset-categories/${encodeURIComponent(c.code)}`}
@@ -310,6 +341,8 @@ function AssetCategoriesView() {
                               {c.pendingChange.changeNumber} awaiting
                             </Badge>
                           </button>
+                        ) : c.isActive === false ? (
+                          <Badge className="bg-ink-500/10 text-ink-600 border-ink-500/20">Retired</Badge>
                         ) : (
                           <span className="text-xs text-ink-500">In force</span>
                         )}
@@ -334,8 +367,21 @@ function AssetCategoriesView() {
                                     onClick: () => setOpenChange(c.pendingChange!.id),
                                   },
                                 ]
-                              : canPropose
+                              : canPropose && c.isActive === false
                                 ? [
+                                    {
+                                      label: "Bring back into use",
+                                      icon: Undo2,
+                                      onClick: () => setRetiring({ category: c, kind: "REINSTATE", reason: "" }),
+                                    },
+                                  ]
+                                : canPropose
+                                ? [
+                                    {
+                                      label: "Retire category",
+                                      icon: Archive,
+                                      onClick: () => setRetiring({ category: c, kind: "RETIRE", reason: "" }),
+                                    },
                                     {
                                       label: "Propose a change",
                                       icon: Pencil,
@@ -408,7 +454,12 @@ function AssetCategoriesView() {
                           )}
                         </div>
                         <p className="text-sm text-ink-700 mt-1 flex items-center gap-1.5 flex-wrap">
-                          {ch.kind === "CREATE" ? (
+                          {ch.kind === "RETIRE" || ch.kind === "REINSTATE" ? (
+                            <>
+                              {ch.kind === "RETIRE" ? "Retire" : "Bring back"}{" "}
+                              <span className="font-medium">{ch.proposedLabel}</span>
+                            </>
+                          ) : ch.kind === "CREATE" ? (
                             <>
                               New category <span className="font-medium">{ch.proposedLabel}</span>, serviced{" "}
                               {freq(ch.proposedFrequency).toLowerCase()}
@@ -442,7 +493,9 @@ function AssetCategoriesView() {
                         <p className="text-xs text-ink-500 mt-1">
                           {ch.proposedByName ?? "Unknown"} · {formatDate(ch.createdAt)}
                           {ch.status === "APPLIED" &&
-                            ` · applied ${ch.appliedAt ? formatDate(ch.appliedAt) : ""}, ${ch.machinesAffected ?? 0} machine${ch.machinesAffected === 1 ? "" : "s"}, ${ch.planRowsReplaced ?? 0} plan row${ch.planRowsReplaced === 1 ? "" : "s"} rebuilt`}
+                            (ch.kind === "RETIRE" || ch.kind === "REINSTATE"
+                              ? ` · applied ${ch.appliedAt ? formatDate(ch.appliedAt) : ""}`
+                              : ` · applied ${ch.appliedAt ? formatDate(ch.appliedAt) : ""}, ${ch.machinesAffected ?? 0} machine${ch.machinesAffected === 1 ? "" : "s"}, ${ch.planRowsReplaced ?? 0} plan row${ch.planRowsReplaced === 1 ? "" : "s"} rebuilt`)}
                         </p>
                       </div>
                     </button>
@@ -462,6 +515,66 @@ function AssetCategoriesView() {
           )}
         </section>
       </main>
+
+      {/* ── Retire, or bring back ───────────────────────────────────────── */}
+      <Modal
+        open={!!retiring}
+        onClose={() => setRetiring(null)}
+        title={retiring?.kind === "REINSTATE" ? "Bring this category back" : "Retire this category"}
+        subtitle={retiring ? `${retiring.category.label} · takes effect once the Maintenance Manager and QA/QC Supervisor sign it` : ""}
+      >
+        {retiring && (
+          <div className="space-y-4">
+            {retiring.kind === "RETIRE" ? (
+              retiring.category.machineCount > 0 ? (
+                <p className="rounded-lg border border-warn-200 bg-warn-50 px-3 py-2 text-sm text-warn-800">
+                  {retiring.category.machineCount} machine{retiring.category.machineCount === 1 ? " is" : "s are"} still in
+                  this category. Move {retiring.category.machineCount === 1 ? "it" : "them"} to another category first,
+                  with Move equipment.
+                </p>
+              ) : (
+                <p className="text-sm text-ink-700">
+                  A retired category is no longer offered when a machine is added or moved, and its days on the
+                  maintenance calendar become free for other categories. Nothing is deleted: its past PMs, batches,
+                  method statement and hazard analysis stay on record, and it can be brought back later.
+                </p>
+              )
+            ) : (
+              <p className="text-sm text-ink-700">
+                The category is offered again and takes back its days on the maintenance calendar, at{" "}
+                {freq(retiring.category.maintenanceFrequency).toLowerCase()}
+                {retiring.category.defaultStartDate ? ` from ${formatDate(retiring.category.defaultStartDate)}` : ""}.
+              </p>
+            )}
+            <Field label="Why" htmlFor="retire-reason">
+              <textarea
+                id="retire-reason"
+                rows={3}
+                value={retiring.reason}
+                onChange={(e) => setRetiring({ ...retiring, reason: e.target.value })}
+                placeholder={
+                  retiring.kind === "RETIRE"
+                    ? "e.g. Its machines were moved to Press / Threading / Drilling / Lathe"
+                    : "e.g. New machines of this kind are being commissioned"
+                }
+                className={FIELD_CLASS}
+              />
+            </Field>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setRetiring(null)}>
+                Cancel
+              </Button>
+              <Button
+                loading={saving}
+                disabled={retiring.kind === "RETIRE" && retiring.category.machineCount > 0}
+                onClick={submitRetirement}
+              >
+                Propose for sign-off
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* ── Propose ─────────────────────────────────────────────────────── */}
       <Modal
