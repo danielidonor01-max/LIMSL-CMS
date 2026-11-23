@@ -13,6 +13,7 @@ import { ArrowLeft, Download, Loader2, Printer, Wrench } from "lucide-react";
 import Button from "@/components/Button";
 import { downloadCSV } from "@/lib/export";
 import { formatDate } from "@/lib/utils";
+import { ReportHead, ReportSignoff, useReportPage } from "@/components/ReportParts";
 import {
   EQUIPMENT_CATEGORY_LABELS,
   EQUIPMENT_STATUS_LABELS,
@@ -160,9 +161,17 @@ function AssetHistoryDossier() {
       </div>
 
       <main className="max-w-5xl w-full mx-auto p-6 print:p-0 print:max-w-none">
-        <div className="bg-surface border border-line rounded-xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-8">
+        <div className="bg-surface border border-line rounded-xl shadow-card p-8 print:border-0 print:rounded-none print:p-0 space-y-8 report plain report-flat">
+          <ReportTitle name={String(eq.name || eq.assetId || "")} />
+          <ReportHead
+            title={`Maintenance Dossier, ${String(eq.name || eq.assetId || "")}`}
+            period={`${formatDate(data.range.from)} to ${formatDate(data.range.to)}, ${data.events.length} record${data.events.length === 1 ? "" : "s"}`}
+            reference="LIMSL-RPT-ASSET"
+            generatedBy={session?.user?.name ?? null}
+          />
+
           {/* Letterhead */}
-          <div className="flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
+          <div className="screen-only flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-ink-900 flex items-center justify-center">
                 <Wrench className="w-5 h-5 text-white" />
@@ -183,7 +192,7 @@ function AssetHistoryDossier() {
           </div>
 
           {/* Title + generated stamp */}
-          <div>
+          <div className="screen-only">
             <h2 className="text-xl font-bold tracking-tight text-ink-900">
               Maintenance Dossier, {String(eq.name || eq.assetId || "")}
             </h2>
@@ -240,7 +249,7 @@ function AssetHistoryDossier() {
               Chronological maintenance record
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse report-table">
                 <thead>
                   <tr className="border-b border-ink-300 text-ink-600">
                     <th className="py-2 pr-3 font-semibold whitespace-nowrap">Date</th>
@@ -278,8 +287,10 @@ function AssetHistoryDossier() {
             </div>
           </div>
 
+          <ReportSignoff labels={["Prepared by", "Reviewed by (QA/QC)", "Approved by"]} />
+
           {/* Auditor sign-off block */}
-          <div className="grid grid-cols-3 gap-6 pt-10 text-xs">
+          <div className="screen-only grid grid-cols-3 gap-6 pt-10 text-xs">
             {["Prepared by", "Reviewed by (QA/QC)", "Approved by"].map((label) => (
               <div key={label}>
                 <div className="border-b border-ink-400 h-8" />
@@ -306,4 +317,11 @@ export default function AssetHistoryPrintPage() {
       <AssetHistoryDossier />
     </Suspense>
   );
+}
+
+// The running header carries the machine's name. Its own component, because
+// the page returns early while it loads and a hook may not sit after that.
+function ReportTitle({ name }: { name: string }) {
+  useReportPage(`Maintenance Dossier, ${name}`, "LIMSL-RPT-ASSET");
+  return null;
 }

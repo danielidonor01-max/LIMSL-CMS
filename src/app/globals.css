@@ -455,14 +455,18 @@ select[size]:not([size="1"]) {
   /* The whole document goes on the report's page, so no blank sheet is left
      where the record ends and the page's own wrappers close; and the wrappers
      print as paper, whatever "background graphics" is set to. */
-  html:has([data-print-solo] .report) {
+  html:has(.report) {
     page: report;
   }
-  html:has([data-print-solo] .report) body,
-  html:has([data-print-solo] .report) body * {
+  html:has(.report.plain) {
+    page: report-plain;
+  }
+  html:has(.report) body,
+  html:has(.report) body * {
     min-height: 0 !important;
   }
-  html:has([data-print-solo] .report) .bg-canvas {
+  html:has(.report) .bg-canvas,
+  html:has(.report) .bg-ink-50 {
     background: #ffffff !important;
   }
   .report {
@@ -474,8 +478,56 @@ select[size]:not([size="1"]) {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .report.plain {
+    page: report-plain;
+  }
   .report p {
     margin: 0;
+  }
+  /* The head of a record with no cover page. */
+  .report-head {
+    margin-bottom: 14pt;
+  }
+  .report-head-title {
+    margin-top: 12pt;
+  }
+  .report-head-title h1 {
+    font-size: 17pt;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+  }
+  .report-head-period {
+    font-size: 10.5pt;
+    color: #3b3f3a;
+    margin-top: 3pt !important;
+  }
+  .report-head-meta {
+    font-size: 8.5pt;
+    color: #4b4e4a;
+    margin-top: 3pt !important;
+  }
+  /* A screen card laid flat on paper: no frame, shadow, corners or gutters. */
+  .report .report-flat,
+  .report.report-flat {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  .report .report-flat > div {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-color: #9ca39b !important;
+  }
+  .report .report-flat h2 {
+    font-size: 11pt;
+    font-weight: 700;
+  }
+  .report-signoff-block {
+    break-inside: avoid;
   }
   .report-cover {
     break-after: page;
@@ -649,10 +701,27 @@ select[size]:not([size="1"]) {
   }
   /* The name column takes the room, so a category stays on one line and two
      quarters fit a page. */
-  .report-table th:first-child,
-  .report-table td:first-child {
+  .report-table.categories th:first-child,
+  .report-table.categories td:first-child {
     width: 34%;
-    white-space: nowrap;
+    white-space: nowrap !important;
+  }
+  /* A screen table is allowed to scroll sideways and keeps its cells on one
+     line. Paper cannot scroll: the cells wrap and the table fits the page. */
+  .report .overflow-x-auto {
+    overflow: visible !important;
+  }
+  .report-table th,
+  .report-table td {
+    white-space: normal !important;
+    overflow-wrap: break-word;
+    vertical-align: top;
+  }
+  .report-table tr {
+    break-inside: avoid;
+  }
+  .report-table thead {
+    display: table-header-group;
   }
   /* The comparison of quarters: a short first column, and the standing kept
      on one line. */
@@ -661,7 +730,7 @@ select[size]:not([size="1"]) {
     width: 12%;
   }
   .report-table.compare td:nth-child(2) {
-    white-space: nowrap;
+    white-space: nowrap !important;
   }
   .report-table .num {
     text-align: right;
@@ -717,6 +786,7 @@ select[size]:not([size="1"]) {
     color: #4b4e4a;
   }
 
+  /* With a cover: the cover carries no header or footer. */
   @page report {
     size: A4 portrait;
     margin: 22mm 16mm 20mm 16mm;
@@ -729,7 +799,7 @@ select[size]:not([size="1"]) {
       padding-bottom: 3pt;
     }
     @top-right {
-      content: "Maintenance Compliance Record";
+      content: var(--report-title, "Maintenance record");
       font-size: 8pt;
       color: #4b4e4a;
       border-bottom: 0.5pt solid #9ca39b;
@@ -737,7 +807,7 @@ select[size]:not([size="1"]) {
       padding-bottom: 3pt;
     }
     @bottom-left {
-      content: "LIMSL-MAIN-PLN-013  ·  Controlled record, printed from LIMSL CMS";
+      content: var(--report-foot, "Controlled record, printed from LIMSL CMS");
       font-size: 8pt;
       color: #4b4e4a;
       border-top: 0.5pt solid #9ca39b;
@@ -767,6 +837,55 @@ select[size]:not([size="1"]) {
       border: none;
     }
     @bottom-right {
+      content: none;
+      border: none;
+    }
+  }
+  /* Without a cover: the first page has the record's own head instead of the
+     running one, and keeps the footer. */
+  @page report-plain {
+    size: A4 portrait;
+    margin: 22mm 16mm 20mm 16mm;
+    @top-left {
+      content: "LEE International Machinery and Services Limited";
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-bottom: 0.5pt solid #9ca39b;
+      vertical-align: bottom;
+      padding-bottom: 3pt;
+    }
+    @top-right {
+      content: var(--report-title, "Maintenance record");
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-bottom: 0.5pt solid #9ca39b;
+      vertical-align: bottom;
+      padding-bottom: 3pt;
+    }
+    @bottom-left {
+      content: var(--report-foot, "Controlled record, printed from LIMSL CMS");
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-top: 0.5pt solid #9ca39b;
+      vertical-align: top;
+      padding-top: 3pt;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #4b4e4a;
+      border-top: 0.5pt solid #9ca39b;
+      vertical-align: top;
+      padding-top: 3pt;
+    }
+  }
+  @page report-plain:first {
+    margin-top: 14mm;
+    @top-left {
+      content: none;
+      border: none;
+    }
+    @top-right {
       content: none;
       border: none;
     }

@@ -13,7 +13,7 @@ import Button from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import EmptyState from "@/components/EmptyState";
 import Select from "@/components/Select";
-import { PrintLetterhead, PrintSignoff } from "@/components/PrintLetterhead";
+import { ReportHead, ReportSignoff, useReportPage } from "@/components/ReportParts";
 import { formatDate } from "@/lib/utils";
 import { currentVerdict, dueStatus, latestPerPit, newestFirst, parseReadings } from "@/lib/earthing/earthing";
 
@@ -50,6 +50,7 @@ const CAL_TEXT: Record<string, string> = {
 
 const DUE_TEXT = { CURRENT: "In date", DUE_SOON: "Due soon", OVERDUE: "Overdue", NEVER: "Never measured" } as const;
 
+const TITLE = "Earth Pit Measurement Log";
 const PASS = "bg-brand-500/10 text-brand-700 border-brand-500/20";
 const FAIL = "bg-danger-500/10 text-danger-700 border-danger-500/20";
 const ohms = (n: number | null | undefined) => (n === null || n === undefined ? "-" : `${Number(n).toFixed(2)} Ω`);
@@ -85,9 +86,11 @@ export default function EarthingLog({
   );
   const latest = useMemo(() => latestPerPit(tests), [tests]);
   const single = pitId === "ALL" ? null : (pits.find((p) => p.id === pitId) ?? null);
+  const period = `${single ? `${single.code}, ${single.name}` : "All earth pits"}. Measurements recorded up to ${formatDate(today)}.`;
+  useReportPage(TITLE);
 
   return (
-    <div className="space-y-6 print-sheet">
+    <div className="space-y-6 report plain">
       <div className="no-print flex flex-wrap items-center gap-3">
         <Select value={pitId} onChange={setPitId} className="w-full sm:w-64" ariaLabel="Pit to show" searchable={pits.length > 8}>
           <option value="ALL">All pits</option>
@@ -104,13 +107,9 @@ export default function EarthingLog({
         </div>
       </div>
 
-      <PrintLetterhead
-        title="Earth Pit Measurement Log"
-        period={`${single ? `${single.code}, ${single.name}` : "All earth pits"}. Measurements recorded up to ${formatDate(today)}.`}
-        generatedBy={printedBy}
-      />
+      <ReportHead title={TITLE} period={period} generatedBy={printedBy} />
 
-      <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden" aria-labelledby="earth-log-pits">
+      <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden report-flat report-section" aria-labelledby="earth-log-pits">
         <div className="px-6 py-4 border-b border-line">
           <h2 id="earth-log-pits" className="text-base font-semibold text-ink-900">
             Where each pit stands
@@ -120,7 +119,7 @@ export default function EarthingLog({
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs report-table">
             <thead>
               <tr className="border-b border-ink-200 text-ink-500">
                 <th className="py-3 px-5 font-medium">Pit</th>
@@ -177,7 +176,7 @@ export default function EarthingLog({
         </div>
       </section>
 
-      <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden" aria-labelledby="earth-log-tests">
+      <section className="bg-surface border border-line rounded-xl shadow-card overflow-hidden report-flat report-section" aria-labelledby="earth-log-tests">
         <div className="px-6 py-4 border-b border-line">
           <h2 id="earth-log-tests" className="text-base font-semibold text-ink-900">
             Measurements and readings
@@ -195,7 +194,7 @@ export default function EarthingLog({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs report-table">
               <thead>
                 <tr className="border-b border-ink-200 text-ink-500">
                   <th className="py-3 px-5 font-medium">Test</th>
@@ -249,7 +248,7 @@ export default function EarthingLog({
         )}
       </section>
 
-      <PrintSignoff labels={["Prepared by (Maintenance)", "Reviewed by", "Approved by (Management)"]} />
+      <ReportSignoff />
     </div>
   );
 }

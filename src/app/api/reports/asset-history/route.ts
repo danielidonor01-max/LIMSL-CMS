@@ -10,6 +10,7 @@
 // de-duplication key (a source that already wrote an AUTO log entry is not
 // listed twice), but it is unbounded, so everything here is range-filtered and
 // the source records are re-read to carry the detail a dossier needs.
+import { isPaperRecord } from "@/lib/maintenance/backfill";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
@@ -170,12 +171,17 @@ export async function GET(request: Request) {
         c.technicianSignature ? `technician signed${c.technicianName ? ` (${c.technicianName})` : ""}` : "technician unsigned",
         c.supervisorSignature ? `supervisor signed${c.supervisorName ? ` (${c.supervisorName})` : ""}` : "supervisor unsigned",
       ].join(", ");
+      const onPaper = isPaperRecord(c.observations);
       events.push({
         date: day(c.date),
         category: "PM checklist",
         reference: woNumber.get(c.workOrderId) ?? c.workOrderId,
         title: "Preventive maintenance checklist",
-        detail: joinDetail([
+        // A checklist entered from the paper file says where its results are.
+        // Its blank safety marks are not an answer, so they are not printed.
+        detail: onPaper
+          ? "Readings and results are on the paper record."
+          : joinDetail([
           c.observations,
           c.correctiveActionRequired ? `corrective action raised: ${c.actionDescription ?? "see record"}` : null,
           c.sparePartsNeeded && `spares: ${c.sparePartsNeeded}`,
@@ -190,7 +196,7 @@ export async function GET(request: Request) {
         performedBy: c.technicianName ?? "-",
         state: joinDetail([
           c.pmCompleted ? "completed" : "not completed",
-          signatures,
+          onPaper ? null : signatures,
           chainFor("PM_CHECKLIST", c.id),
         ]),
         href: `/work-orders/${c.workOrderId}/pm-checklist`,

@@ -9,8 +9,14 @@ import { ArrowLeft, Printer, Download } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
 import Button from "@/components/Button";
 import Image from "next/image";
+import { ReportHead, ReportSignoff, useReportPage } from "@/components/ReportParts";
 
 export type Column = { key: string; label: string };
+
+// A stored code such as NOT_CALIBRATED reads as words on the page. The CSV
+// keeps the code, because a spreadsheet filters on it.
+const readable = (v: string) =>
+  /^[A-Z]+(_[A-Z]+)+$/.test(v) ? v.charAt(0) + v.slice(1).toLowerCase().replace(/_/g, " ") : v;
 
 export default function PrintableReport({
   title,
@@ -31,6 +37,7 @@ export default function PrintableReport({
   csvName: string;
   summary?: React.ReactNode;
 }) {
+  useReportPage(title, reference);
   return (
     <div className="min-h-screen bg-ink-50 text-ink-900 font-sans print:bg-white">
       {/* Toolbar (hidden on print) */}
@@ -49,9 +56,16 @@ export default function PrintableReport({
       </div>
 
       <main className="max-w-5xl w-full mx-auto p-6 print:p-0 print:max-w-none">
-        <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:rounded-none print:p-0 space-y-6">
+        <div className="bg-white border border-ink-200 rounded-xl p-8 print:border-0 print:rounded-none print:p-0 space-y-6 report plain report-flat">
+          <ReportHead
+            title={title}
+            period={`${rows.length} record${rows.length === 1 ? "" : "s"}`}
+            reference={reference}
+            generatedBy={generatedBy}
+          />
+
           {/* Letterhead */}
-          <div className="flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
+          <div className="screen-only flex items-start justify-between gap-4 border-b-2 border-ink-800 pb-4">
             <div className="flex items-center gap-3">
               {/* Printed records carry the company mark, these go into audit
                   packs and to insurers. */}
@@ -72,7 +86,7 @@ export default function PrintableReport({
           </div>
 
           {/* Title + generated stamp */}
-          <div>
+          <div className="screen-only">
             <h2 className="text-xl font-bold tracking-tight text-ink-900">{title}</h2>
             <p className="text-[11px] text-ink-500 font-mono mt-1">
               Generated {generatedAt} · by {generatedBy} · {rows.length} record{rows.length === 1 ? "" : "s"}
@@ -83,7 +97,7 @@ export default function PrintableReport({
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[11px] border-collapse">
+            <table className="w-full text-left text-[11px] border-collapse report-table">
               <thead>
                 <tr className="border-b border-ink-300 text-ink-600">
                   {columns.map((c) => (
@@ -105,7 +119,7 @@ export default function PrintableReport({
                     <tr key={i} className="text-ink-800 break-inside-avoid">
                       {columns.map((c) => (
                         <td key={c.key} className="py-1.5 pr-3 align-top">
-                          {r[c.key] == null || r[c.key] === "" ? "\u2014" : String(r[c.key])}
+                          {r[c.key] == null || r[c.key] === "" ? "\u2014" : readable(String(r[c.key]))}
                         </td>
                       ))}
                     </tr>
@@ -115,8 +129,10 @@ export default function PrintableReport({
             </table>
           </div>
 
+          <ReportSignoff labels={["Prepared by", "Reviewed by (QA/QC)", "Approved by"]} />
+
           {/* Auditor sign-off block */}
-          <div className="grid grid-cols-3 gap-6 pt-10 text-[11px]">
+          <div className="screen-only grid grid-cols-3 gap-6 pt-10 text-[11px]">
             {["Prepared by", "Reviewed by (QA/QC)", "Approved by"].map((label) => (
               <div key={label}>
                 <div className="border-b border-ink-400 h-8" />

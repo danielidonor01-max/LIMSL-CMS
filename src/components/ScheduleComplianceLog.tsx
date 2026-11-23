@@ -16,6 +16,7 @@ import EmptyState from "@/components/EmptyState";
 import MetricPanel from "@/components/MetricPanel";
 import SegmentedControl from "@/components/SegmentedControl";
 import Select from "@/components/Select";
+import { useReportPage } from "@/components/ReportParts";
 import { formatDate } from "@/lib/utils";
 import {
   COMPLIANCE_TARGET_PCT,
@@ -463,6 +464,7 @@ function YearPrint({
   rule: ComplianceRule;
   printedBy?: string | null;
 }) {
+  useReportPage(`${kind} Compliance Record ${year}`, DOC_NUMBER);
   const ytd = sumTallies(logs.map((l) => l.total));
   const current = logs.find((l) => quarterStanding(year, l.quarter, today) === "CURRENT") ?? null;
   const missedOf = (x: LogTally) => x.outstanding + x.outsideWindow + x.deferred;
@@ -577,7 +579,7 @@ function YearPrint({
                     </p>
                   </div>
                 </div>
-                <table className="report-table">
+                <table className="report-table categories">
                   <thead>
                     <tr>
                       <th>Category</th>

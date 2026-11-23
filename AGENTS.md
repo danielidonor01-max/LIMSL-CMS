@@ -418,6 +418,15 @@ marks the pass; segregation (one person, one step) applies **per pass**.
   not raise it himself; the signature applies it (`applyWorkDateCorrection`),
   keeps the recorded date, and writes the before and after to the audit log.
   Do not add any other way to change a completed date.
+- **One print style for management records** (20 Nov 2026): the `report`
+  rules in globals.css and `components/ReportParts.tsx`. A record with a cover
+  is `className="report"` (the schedule Log); one without is `"report plain"`
+  and starts with `<ReportHead />` (Earthing Log, the five registers in
+  `PrintableReport`, the asset dossier). All get the running header, the
+  footer with reference and "Page x of y" (`useReportPage` sets the title and
+  reference the page margins print), `report-table` tables and
+  `<ReportSignoff />`. The permit prints as its paper form and the QR label as
+  a label; WMS, JHA and Procedure keep their controlled-document header.
 - **Equipment names stand alone** (17 Nov 2026): outside the equipment module
   a machine is shown by its name, never "LEE/PE/0161 · Name". Keep the tag
   searchable as hidden keywords.

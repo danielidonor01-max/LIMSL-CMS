@@ -118,7 +118,8 @@ test("both logs print alone, under the company letterhead", () => {
   const css = readFileSync("src/app/globals.css", "utf8");
   assert.match(css, /\[data-print-solo\] > :not\(\[data-print-keep\]\)/);
   const earthingLog = readFileSync("src/components/EarthingLog.tsx", "utf8");
-  assert.match(earthingLog, /<PrintLetterhead/);
+  assert.match(earthingLog, /<ReportHead/);
+  assert.match(earthingLog, /className="space-y-6 report plain"/);
   assert.match(earthingLog, /window\.print\(\)/);
   // The schedule record is a document of its own: cover, running header, numbered footer.
   const scheduleLog = readFileSync("src/components/ScheduleComplianceLog.tsx", "utf8");
@@ -127,7 +128,17 @@ test("both logs print alone, under the company letterhead", () => {
   assert.match(scheduleLog, /\/brand\/logo-80\.png/);
   assert.match(css, /@page report \{[\s\S]*counter\(page\) " of " counter\(pages\)/);
   assert.match(css, /@page report:first/);
-  assert.match(readFileSync("src/components/PrintLetterhead.tsx", "utf8"), /\/brand\/logo-80\.png/);
+  assert.match(readFileSync("src/components/ReportParts.tsx", "utf8"), /\/brand\/logo-80\.png/);
+  // Every management record shares the one document style.
+  for (const f of ["src/components/PrintableReport.tsx", "src/app/reports/print/asset-history/page.tsx"]) {
+    const src = readFileSync(f, "utf8");
+    assert.match(src, /report plain/, f);
+    assert.match(src, /<ReportHead/, f);
+    assert.match(src, /<ReportSignoff/, f);
+    assert.match(src, /report-table/, f);
+  }
+  assert.match(css, /@page report-plain \{/);
+  assert.match(css, /content: var\(--report-title,/);
   const earthing = readFileSync("src/app/earthing/page.tsx", "utf8");
   assert.match(earthing, /\{ value: "trends", label: "Trends" \},\s+\{ value: "log", label: "Log" \}/);
   assert.match(earthing, /label: "Next measurement"/);
