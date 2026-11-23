@@ -173,6 +173,25 @@ export function categoryCalendar(categories: CalendarCategory[], year: number): 
   };
 }
 
+/**
+ * The PM days a machine of this category still has ahead of it: what is left
+ * of this year's calendar from `today`, and the first day of next year's.
+ *
+ * The category decides the days and nothing else does (LIMSL, 23 Nov 2026).
+ * Every machine in a category is planned on these same dates, whenever it
+ * joined and whatever it was last serviced; a machine with a date of its own
+ * is a machine serviced on a day nobody planned for the category. The first
+ * day of next year is always included so no machine is ever left with nothing
+ * ahead of it once the year's last round has passed.
+ */
+export function upcomingCategoryDates(categories: CalendarCategory[], code: string, today: string): string[] {
+  const day = today.slice(0, 10);
+  const year = Number(day.slice(0, 4));
+  const rest = (categoryCalendar(categories, year).dates.get(code) ?? []).filter((d) => d >= day);
+  const next = (categoryCalendar(categories, year + 1).dates.get(code) ?? [])[0];
+  return next ? [...rest, next] : rest;
+}
+
 export type CalendarCollision = {
   /** The category whose days the proposal would share or displace. */
   code: string;

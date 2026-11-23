@@ -10,7 +10,8 @@ import { maintenanceSchedule, equipment } from "@/lib/db/schema";
 import { and, eq, gte, inArray, lt, isNull, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
-import { nextCategoryDate } from "@/lib/maintenance/plan-sync";
+import { nextCategoryDate, syncPlanForEquipment } from "@/lib/maintenance/plan-sync";
+import { fillPlannedCategories } from "@/lib/maintenance/asset-categories";
 
 // Frequency → interval. Keys match equipment.maintenanceFrequency plus common aliases.
 const FREQ_MONTHS: Record<string, number> = {
@@ -106,20 +107,39 @@ export async function reconcileSchedule(now = new Date()): Promise<void> {
 // dated occurrence, whether or not the last one was done. Idempotent.
 export async function ensureFutureOccurrences(now = new Date()): Promise<number> {
   const today = now.toISOString().slice(0, 10);
-  const all = await db.select().from(maintenanceSchedule);
+  let created = 0;
+  // Visits entered by an import carry no category of their own until this runs.
+  await fillPlannedCategories().catch((err) => console.warn("ensureFutureOccurrences: could not fill categories", err));
 
-  // One series per machine + activity type. Non-recurring one-offs are skipped.
+  // Every machine in service is on its category's calendar: what is left of
+  // this year and the first day of next. This is what plans a machine that was
+  // never on the plan at all, which a series-by-series roll-forward could not
+  // do, because a machine with no row has no series to roll. It only adds
+  // missing days; it never moves or removes anything.
+  const machines = await db.select().from(equipment);
+  const onCalendar = new Set<string>();
+  for (const m of machines) {
+    if (m.removedAt || m.status === "DECOMMISSIONED" || !m.category) continue;
+    try {
+      const r = await syncPlanForEquipment(m, { notBefore: today });
+      created += r.added;
+      if (r.added > 0 || r.skipped > 0) onCalendar.add(m.id);
+    } catch (err) {
+      console.warn("ensureFutureOccurrences: could not plan", m.assetId, err);
+    }
+  }
+
+  // What is left is work with no category calendar behind it: it rolls forward
+  // from its own last date, as before.
+  const all = await db.select().from(maintenanceSchedule);
   const series = new Map<string, ScheduleRow[]>();
   for (const row of all) {
-    if (!row.maintenanceFrequency) continue;
+    if (!row.maintenanceFrequency || onCalendar.has(row.equipmentId)) continue;
     const key = `${row.equipmentId}|${row.activityType}`;
     series.set(key, [...(series.get(key) ?? []), row]);
   }
-
-  let created = 0;
   for (const rows of series.values()) {
     if (rows.some((r) => r.plannedDate >= today && r.status !== "COMPLETED")) continue;
-    // Roll forward from the most recent planned date in the series.
     const latest = [...rows].sort((a, b) => b.plannedDate.localeCompare(a.plannedDate))[0];
     try {
       if (await generateNextOccurrence(latest, now)) created++;
@@ -205,6 +225,7 @@ export async function generateNextOccurrence(row: ScheduleRow, now = new Date(),
     activityType: row.activityType,
     taskDescription: row.taskDescription,
     maintenanceFrequency: row.maintenanceFrequency,
+    plannedCategory: machine?.category ?? null,
     // Nobody is carried forward. Staff change between one occurrence and the
     // next, so the next one is assigned when it comes round, which is also
     // what raises its batch (LIMSL, November 2026).

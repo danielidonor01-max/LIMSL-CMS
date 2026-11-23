@@ -99,6 +99,7 @@ const INDEXES: [string, string][] = [
   ["app_settings.compliance_rule", "ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS compliance_rule text"],
   ["maintenance_schedule.recorded_date", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS recorded_date text"],
   ["maintenance_schedule.work_date_correction_id", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS work_date_correction_id text"],
+  ["maintenance_schedule.planned_category", "ALTER TABLE maintenance_schedule ADD COLUMN IF NOT EXISTS planned_category text"],
   [
     "work_date_corrections",
     `CREATE TABLE IF NOT EXISTS work_date_corrections (

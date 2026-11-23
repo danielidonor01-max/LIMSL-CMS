@@ -258,6 +258,11 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   // approved correction (work_date_corrections) has moved the work date.
   recordedDate: text("recorded_date"),
   workDateCorrectionId: text("work_date_correction_id"),
+  // The category this visit was planned under. A machine can move to another
+  // category, and its past PMs must stay in the figures of the category they
+  // were done under, so the Log groups by this and not by where the machine
+  // is today. Open visits travel with the machine (carryPlanOnMove).
+  plannedCategory: text("planned_category"),
 }, (t) => [index("maintenance_schedule_equipment_idx").on(t.equipmentId)]);
 
 // ─── Work date corrections ──────────────────────────────────────────────────

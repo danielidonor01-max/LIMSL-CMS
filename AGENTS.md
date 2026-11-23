@@ -529,11 +529,44 @@ second signature; then `applyCategoryChange()` runs once, from the sign route,
 and every machine in the category takes the new interval. One pending change
 per category.
 
+**Machines move between categories from that page** (23 Nov 2026): "Move
+equipment" (`components/MoveEquipmentModal.tsx`, `POST
+/api/asset-categories/move`, `EQUIPMENT_MOVE_ROLES`: Super Admin, Factory
+Manager, Maintenance Manager) moves one or many. Each takes the new category's
+interval and is replanned on its calendar (`replanMachine`), with an audit
+line and a history line per machine. A machine on an open PM batch is refused
+(`lib/maintenance/category-move.ts`). A single machine edited in the register
+is replanned on a category change too, even when the interval is the same.
+
 The page is `/asset-categories`, under Assets in the sidebar — NOT under
 /settings (it moved out in November 2026; `/settings/categories` only
 redirects, for notifications already sent). `ASSET_CATEGORY_ROLES` can open
 it, because the two approvers have to be able to read the change they are
 asked to sign.
+
+### The category decides the days, for every machine (LIMSL, 23 Nov 2026)
+
+A machine's upcoming PM dates are its category's calendar and nothing else:
+what is left of this year and the first day of next
+(`upcomingCategoryDates`, `plan-generation.ts`). Nothing about the machine is
+an input, so two machines of one category cannot be given different days.
+`syncPlanForEquipment` plans forward on those dates, and the daily
+`ensureFutureOccurrences` runs it for every machine in service, which is what
+plans a machine that was never on the plan (19 of the 20 AC units had no row;
+the old roll-forward only extended a machine that already had one).
+
+- `src/lib/db/align-plan-to-categories.ts` (report by default, `--apply`
+  writes) removes untouched future visits that are off their category's days
+  and adds the missing category days. It keeps one catch-up visit where the
+  category has no round left this year and the machine would outrun its
+  interval. It never adds a visit in the past: a round nobody planned is not a
+  round that was missed.
+- **A visit records the category it was planned under**
+  (`maintenance_schedule.planned_category`). The schedule API, and so the Log
+  and its printout, group by it. When a machine moves, `carryPlanOnMove`
+  leaves completed visits under the old category and gives open ones the new
+  one, so past quarters read as they were reported. Do not group schedule
+  history by `equipment.category`.
 
 ### No PM on a weekend (the category calendar)
 

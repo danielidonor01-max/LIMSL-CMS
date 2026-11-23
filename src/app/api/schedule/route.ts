@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { maintenanceSchedule, equipment, workOrders, auditLog, pmBatches } from "@/lib/db/schema";
-import { and, eq, desc, ne } from "drizzle-orm";
+import { and, eq, desc, ne, sql } from "drizzle-orm";
 import { toWorkingDay } from "@/lib/maintenance/working-days";
 import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
@@ -47,7 +47,9 @@ export async function GET() {
         deferredReviewDate: maintenanceSchedule.deferredReviewDate,
         equipmentName: equipment.name,
         assetId: equipment.assetId,
-        category: equipment.category,
+        // The category the visit was planned under, so a machine that has
+        // since moved leaves its past PMs where they were reported.
+        category: sql<string | null>`coalesce(${maintenanceSchedule.plannedCategory}, ${equipment.category})`,
         // Whether this row has already been rolled into a PM batch, so the
         // schedule can offer to raise one exactly once.
         batchId: maintenanceSchedule.batchId,
@@ -136,6 +138,7 @@ export async function POST(request: Request) {
         body.maintenanceFrequency || eq0.maintenanceFrequency || suggestedPmFrequency(eq0.criticality),
       responsiblePersonId: body.responsiblePersonId || null,
       responsiblePersonName: body.responsiblePersonName || null,
+      plannedCategory: eq0.category ?? null,
       status: "SCHEDULED",
     };
     await db.insert(maintenanceSchedule).values(row);

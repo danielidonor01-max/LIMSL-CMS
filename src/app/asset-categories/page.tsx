@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, Calendar, Eye, AlertTriangle, FileSignature } from "lucide-react";
+import { Plus, Pencil, Tags, ChevronDown, ChevronRight, ArrowRight, ArrowRightLeft, Calendar, Eye, AlertTriangle, FileSignature } from "lucide-react";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import { useApi } from "@/lib/api-cache";
 import { formatDate } from "@/lib/utils";
@@ -29,7 +29,8 @@ import KebabMenu from "@/components/KebabMenu";
 import EmptyState from "@/components/EmptyState";
 import TableSkeleton from "@/components/TableSkeleton";
 import SignoffChain from "@/components/SignoffChain";
-import { ASSET_CATEGORY_ROLES } from "@/lib/roles";
+import { ASSET_CATEGORY_ROLES, EQUIPMENT_MOVE_ROLES } from "@/lib/roles";
+import MoveEquipmentModal from "@/components/MoveEquipmentModal";
 import { FREQUENCY_LABELS } from "@/lib/constants";
 import { FREQUENCY_MONTHS, calendarCollision } from "@/lib/maintenance/plan-generation";
 
@@ -97,6 +98,8 @@ function AssetCategoriesView() {
   useEffect(() => setMounted(true), []);
 
   const canPropose = mounted && ASSET_CATEGORY_ROLES.includes(role ?? "");
+  const canMove = mounted && EQUIPMENT_MOVE_ROLES.includes(role ?? "");
+  const [moving, setMoving] = useState(false);
 
   const { data: catData, loading, refresh: refreshCats } = useApi<{ categories: Category[] }>(
     "/api/asset-categories",
@@ -201,23 +204,39 @@ function AssetCategoriesView() {
           backHref="/equipment"
           backLabel="Asset Register"
           actions={
-            canPropose ? (
-              <Button
-                icon={Plus}
-                onClick={() =>
-                  setDraft({
-                    kind: "CREATE",
-                    label: "",
-                    frequency: "QUARTERLY",
-                    startDate: new Date().toISOString().slice(0, 10),
-                    reason: "",
-                  })
-                }
-              >
-                Add a category
-              </Button>
+            canPropose || canMove ? (
+              <>
+                {canMove && (
+                  <Button variant="secondary" icon={ArrowRightLeft} onClick={() => setMoving(true)}>
+                    Move equipment
+                  </Button>
+                )}
+                {canPropose && (
+                  <Button
+                    icon={Plus}
+                    onClick={() =>
+                      setDraft({
+                        kind: "CREATE",
+                        label: "",
+                        frequency: "QUARTERLY",
+                        startDate: new Date().toISOString().slice(0, 10),
+                        reason: "",
+                      })
+                    }
+                  >
+                    Add a category
+                  </Button>
+                )}
+              </>
             ) : undefined
           }
+        />
+
+        <MoveEquipmentModal
+          open={moving}
+          categories={catData?.categories ?? []}
+          onClose={() => setMoving(false)}
+          onMoved={refreshAll}
         />
 
         {pending.length > 0 && (

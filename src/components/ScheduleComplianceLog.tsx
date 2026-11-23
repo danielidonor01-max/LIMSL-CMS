@@ -109,6 +109,11 @@ export default function ScheduleComplianceLog({
   );
 
   const noun = activityType === "PM" ? "PMs" : "inspections";
+  // "Planned 15" is fifteen visits, not fifteen machines, and never both kinds of work.
+  const countNote =
+    activityType === "PM"
+      ? "Every figure counts PM visits: one for each machine on each planned date. Inspections are not included; they have their own record under Inspections."
+      : "Every figure counts inspection visits: one for each machine on each planned date. PMs are not included; they have their own record under Preventive maintenance.";
   // The printed record covers the year, whichever quarter is on screen.
   const year4 = useMemo(
     () => [1, 2, 3, 4].map((q) => buildQuarterLog(rows, { year: shownYear, quarter: q, activityType, today, rule })),
@@ -171,6 +176,7 @@ export default function ScheduleComplianceLog({
         label={label}
         rule={rule}
         printedBy={printedBy}
+        countNote={countNote}
       />
 
       <div className="screen-only space-y-6">
@@ -424,8 +430,8 @@ export default function ScheduleComplianceLog({
           </section>
 
           <p className="text-xs text-ink-600 max-w-3xl">
-            {describeRule(rule)} Deferred work counts against the quarter. Work not yet due is left out until its
-            date arrives. The rule is set by the Super Admin in Settings.
+            {countNote} {describeRule(rule)} Deferred work counts against the quarter. Work not yet due is left out
+            until its date arrives. The rule is set by the Super Admin in Settings.
           </p>
         </>
       )}
@@ -454,6 +460,7 @@ function YearPrint({
   label,
   rule,
   printedBy,
+  countNote,
 }: {
   logs: QuarterLog[];
   year: number;
@@ -463,6 +470,7 @@ function YearPrint({
   label: (code: string) => string;
   rule: ComplianceRule;
   printedBy?: string | null;
+  countNote: string;
 }) {
   useReportPage(`${kind} Compliance Record ${year}`, DOC_NUMBER);
   const ytd = sumTallies(logs.map((l) => l.total));
@@ -744,7 +752,7 @@ function YearPrint({
         <div className="report-note">
           <p className="report-note-title">How this is counted</p>
           <p>
-            {describeRule(rule)} Deferred work counts against its quarter. Work still to come is not counted until its
+            {countNote} {describeRule(rule)} Deferred work counts against its quarter. Work still to come is not counted until its
             date arrives. The machine-by-machine list is held in the system under Schedule, Log.
           </p>
         </div>

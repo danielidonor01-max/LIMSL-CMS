@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { equipment } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
 import { requireRoles } from "@/lib/authz";
-import { getCategory, listCategories, replanMachine } from "@/lib/maintenance/asset-categories";
+import { carryPlanOnMove, getCategory, listCategories, replanMachine } from "@/lib/maintenance/asset-categories";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 
@@ -122,6 +122,16 @@ export async function PATCH(
       updates.decommissionedByName = null;
     }
 
+    // Its past PMs stay under the category they were done in; what it still
+    // owes goes with it.
+    if (typeof body.category === "string" && body.category && body.category !== before.category) {
+      try {
+        await carryPlanOnMove(before.id, before.category, body.category);
+      } catch (err) {
+        console.warn("equipment update: could not carry the plan to the new category", err);
+      }
+    }
+
     const updated = await db
       .update(equipment)
       .set(updates)
@@ -133,7 +143,9 @@ export async function PATCH(
     // rescheduled, deferred or done is somebody's decision and stays.
     // A decommissioned machine gets nothing new: it is not being serviced.
     const nowFrequency = updated[0]?.maintenanceFrequency ?? before.maintenanceFrequency;
-    if (nowFrequency !== before.maintenanceFrequency) {
+    // The same interval in another category still means that category's days.
+    const nowCategory = updated[0]?.category ?? before.category;
+    if (nowFrequency !== before.maintenanceFrequency || nowCategory !== before.category) {
       try {
         // Future activities nobody has touched are replaced; overdue, deferred,
         // batched and started ones are decisions and stay.

@@ -19,6 +19,7 @@ import {
   plannedDatesFor,
   missingDates,
   categoryCalendar,
+  upcomingCategoryDates,
   type CalendarCategory,
   type PlannedActivity,
 } from "./plan-generation";
@@ -67,9 +68,13 @@ export async function syncPlanForEquipment(
       byCategory = true;
       // The category owns the interval as well as the start date, so the
       // machine's own copy of the interval is not consulted here.
-      const calendar = categoryCalendar(categories, year);
-      wanted = (calendar.dates.get(own.code) ?? [])
-        .filter((d) => !notBefore || d >= notBefore.slice(0, 10))
+      // Planning forward takes what is left of the year and the first day of
+      // the next, so a machine added after the year's last round still has a
+      // visit ahead of it. Planning a whole year (notBefore null) takes that year.
+      const days = notBefore
+        ? upcomingCategoryDates(categories, own.code, notBefore)
+        : (categoryCalendar(categories, year).dates.get(own.code) ?? []);
+      wanted = days
         .map((plannedDate) => {
           const month = Number(plannedDate.slice(5, 7));
           return { plannedDate, month, quarter: Math.floor((month - 1) / 3) + 1, activityType: "PM" as const };
@@ -96,7 +101,7 @@ export async function syncPlanForEquipment(
       and(
         eq(maintenanceSchedule.equipmentId, machine.id),
         gte(maintenanceSchedule.plannedDate, `${year}-01-01`),
-        lte(maintenanceSchedule.plannedDate, `${year}-12-31`),
+        lte(maintenanceSchedule.plannedDate, `${year + 1}-12-31`),
       ),
     );
 
@@ -107,12 +112,13 @@ export async function syncPlanForEquipment(
     gaps.map((g) => ({
       id: nanoid(),
       equipmentId: machine.id,
-      year,
+      year: Number(g.plannedDate.slice(0, 4)),
       quarter: g.quarter,
       month: g.month,
       plannedDate: g.plannedDate,
       activityType: g.activityType,
       maintenanceFrequency: machine.maintenanceFrequency ?? null,
+      plannedCategory: machine.category ?? null,
       status: "SCHEDULED",
     })),
   );
@@ -126,7 +132,7 @@ export async function syncPlanForEquipment(
     entityType: "maintenance_schedule",
     entityId: machine.id,
     entityDescription:
-      `${label} added to the ${year} plan, ${gaps.length} PM activit${gaps.length === 1 ? "y" : "ies"} ` +
+      `${label} added to the plan, ${gaps.length} PM activit${gaps.length === 1 ? "y" : "ies"} ` +
       `at ${String(machine.maintenanceFrequency ?? "").toLowerCase().replace(/_/g, " ")}: ` +
       gaps.map((g) => g.plannedDate).join(", "),
   });

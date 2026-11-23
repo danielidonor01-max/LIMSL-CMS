@@ -19,7 +19,7 @@ import {
   maintenanceSchedule,
   auditLog,
 } from "@/lib/db/schema";
-import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import {
   EQUIPMENT_CATEGORY_LABELS,
@@ -230,6 +230,37 @@ export async function replanMachine(
 
   const synced = await syncPlanForEquipment(machine, { actor, notBefore: today });
   return { removed: doomed.length, added: synced.added };
+}
+
+// ─── A visit's category ─────────────────────────────────────────────────────
+
+/** Any visit with no category recorded takes its machine's. Idempotent. */
+export async function fillPlannedCategories(): Promise<void> {
+  await db.execute(sql`
+    UPDATE maintenance_schedule s
+    SET planned_category = e.category
+    FROM equipment e
+    WHERE e.id = s.equipment_id AND s.planned_category IS NULL
+  `);
+}
+
+/**
+ * A machine is moving from one category to another. What it has DONE stays
+ * under the category it was done in, so past quarters read as they were
+ * reported. What it still OWES goes with it, because the new category's
+ * people will be the ones doing it.
+ */
+export async function carryPlanOnMove(equipmentId: string, from: string | null, to: string): Promise<void> {
+  if (from) {
+    await db
+      .update(maintenanceSchedule)
+      .set({ plannedCategory: from })
+      .where(and(eq(maintenanceSchedule.equipmentId, equipmentId), isNull(maintenanceSchedule.plannedCategory)));
+  }
+  await db
+    .update(maintenanceSchedule)
+    .set({ plannedCategory: to })
+    .where(and(eq(maintenanceSchedule.equipmentId, equipmentId), ne(maintenanceSchedule.status, "COMPLETED")));
 }
 
 // ─── Applying an approved change ────────────────────────────────────────────

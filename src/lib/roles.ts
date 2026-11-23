@@ -144,6 +144,11 @@ export const ASSET_CATEGORY_ROLES = [
   "QA_QC",
 ];
 
+// Who may move machines between categories. A move changes how often a
+// machine is serviced, so it sits with the managers who own the maintenance
+// regime. QA/QC reads and signs category changes but does not move machines.
+export const EQUIPMENT_MOVE_ROLES = ["SUPER_ADMIN", "FACTORY_MANAGER", "MAINTENANCE_MANAGER"];
+
 const isUnder = (pathname: string, base: string) => pathname === base || pathname.startsWith(`${base}/`);
 
 export function canAccessPath(role: string | null | undefined, pathname: string): boolean {
