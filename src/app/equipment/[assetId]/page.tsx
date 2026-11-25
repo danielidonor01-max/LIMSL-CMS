@@ -570,7 +570,7 @@ export default function EquipmentDetail({ params }: { params: Promise<{ assetId:
         )}
 
         {/* Per-machine document register (live) */}
-        {activeTab !== "history" && <EquipmentDocuments assetId={assetIdKey} />}
+        {activeTab !== "history" && <EquipmentDocuments assetId={assetIdKey} equipmentId={eq.id} />}
         <EquipmentEditModal
           assetKey={assetIdKey}
           open={editOpen}
