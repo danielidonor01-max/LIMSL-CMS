@@ -22,15 +22,17 @@ export async function POST(
       return NextResponse.json({ error: "Work order not found" }, { status: 404 });
     }
 
-    if (wo.status !== "REJECTED" && wo.status !== "PENDING_APPROVAL") {
+    // Only a rejected work order goes back for approval. Resubmitting one that
+    // is still being signed would throw away signatures that were given to it
+    // as it stands, the Factory Manager's included.
+    if (wo.status !== "REJECTED") {
       return NextResponse.json(
-        { error: "Only rejected or pending work orders can be resubmitted for approval." },
-        { status: 400 },
+        { error: "Only a rejected work order can be resubmitted for approval." },
+        { status: 409 },
       );
     }
 
-    // Reset the sign-off chain to step 1 and notify the first signer
-    await resetSignoffChain("WORK_ORDER", id, wo.workOrderNumber);
+    const { voided } = await resetSignoffChain("WORK_ORDER", id, wo.workOrderNumber);
 
     await db
       .update(workOrders)
@@ -48,6 +50,16 @@ export async function POST(
       entityType: "work_order",
       entityId: id,
       entityDescription: `${wo.workOrderNumber} resubmitted for approval by ${gate.actor?.name ?? "User"}`,
+      changes: JSON.stringify({
+        voidedSignatures: voided.map((s) => ({
+          step: s.roleLabel,
+          status: s.status,
+          by: s.signedByName,
+          role: s.signedByRole,
+          at: s.signedAt,
+          comments: s.comments,
+        })),
+      }),
     });
 
     const [updated] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);

@@ -2,10 +2,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, auditLog } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { canManageUsers, ROLES } from "@/lib/roles";
+import { isActiveSuperAdmin, leavesNoSuperAdmin } from "@/lib/super-admin-guard";
 import { hashPassword } from "@/lib/password";
 
 // PATCH /api/users/[id], update role, activation, or reset password. Super Admin only.
@@ -45,6 +46,28 @@ export async function PATCH(
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No changes provided." }, { status: 400 });
+    }
+
+    const [target] = await db.select({ role: users.role, isActive: users.isActive }).from(users).where(eq(users.id, id)).limit(1);
+    if (!target) return NextResponse.json({ error: "User not found." }, { status: 404 });
+    if (updates.role !== undefined || updates.isActive !== undefined) {
+      const others = (
+        await db
+          .select({ id: users.id, role: users.role, isActive: users.isActive })
+          .from(users)
+          .where(and(ne(users.id, id), inArray(users.role, ["SUPER_ADMIN", "ADMIN"])))
+      ).filter(isActiveSuperAdmin).length;
+      const edit = { role: updates.role as string | undefined, isActive: updates.isActive as boolean | undefined };
+      if (leavesNoSuperAdmin(target, edit, others)) {
+        return NextResponse.json(
+          {
+            error:
+              "This is the only active Super Admin. Make another account a Super Admin first, " +
+              "otherwise nobody could manage accounts or reset passwords.",
+          },
+          { status: 409 },
+        );
+      }
     }
 
     await db.update(users).set(updates).where(eq(users.id, id));

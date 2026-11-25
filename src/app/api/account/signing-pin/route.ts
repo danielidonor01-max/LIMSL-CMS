@@ -20,6 +20,25 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { validatePin, hasSigningPin } from "@/lib/signing-pin";
+import { LOCK_MINUTES, isLockedOut, recentFailures, recordFailure } from "@/lib/auth/guess-limit";
+
+// Changing or removing a PIN asks for the current one, which makes these two
+// routes a second place to guess it. They share the signing route's limit and
+// its count, so guessing here brings the same lock.
+async function refuseWrongCurrentPin(
+  row: { id: string; name: string; signingPinHash: string | null },
+  current: unknown,
+): Promise<NextResponse | null> {
+  const failures = await recentFailures(row.id, "PIN_FAILED");
+  if (isLockedOut(failures)) {
+    return NextResponse.json({ error: `Too many wrong PINs. Try again in ${LOCK_MINUTES} minutes.` }, { status: 429 });
+  }
+  if (typeof current !== "string" || !verifyPassword(current, row.signingPinHash)) {
+    await recordFailure(row, "PIN_FAILED", failures + 1);
+    return NextResponse.json({ error: "That is not your current signing PIN." }, { status: 403 });
+  }
+  return null;
+}
 
 export async function GET() {
   const session = await auth();
@@ -47,10 +66,8 @@ export async function POST(request: Request) {
     // anyone who found a tablet left logged in could quietly take ownership of
     // that person's signature.
     if (!first) {
-      const current = body.currentPin;
-      if (typeof current !== "string" || !verifyPassword(current, row.signingPinHash)) {
-        return NextResponse.json({ error: "That is not your current signing PIN." }, { status: 403 });
-      }
+      const refused = await refuseWrongCurrentPin(row, body.currentPin);
+      if (refused) return refused;
     }
 
     const check = validatePin(body.pin);
@@ -99,10 +116,8 @@ export async function DELETE(request: Request) {
     if (!hasSigningPin(row.signingPinHash)) {
       return NextResponse.json({ ok: true, alreadyOff: true });
     }
-    const current = (body as { currentPin?: unknown }).currentPin;
-    if (typeof current !== "string" || !verifyPassword(current, row.signingPinHash)) {
-      return NextResponse.json({ error: "That is not your current signing PIN." }, { status: 403 });
-    }
+    const refused = await refuseWrongCurrentPin(row, (body as { currentPin?: unknown }).currentPin);
+    if (refused) return refused;
 
     await db.update(users).set({ signingPinHash: null }).where(eq(users.id, actor.id));
 

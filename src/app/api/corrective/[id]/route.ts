@@ -1,8 +1,11 @@
 // src/app/api/corrective/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { correctiveMaintenance, equipment } from "@/lib/db/schema";
+import { correctiveMaintenance, equipment, auditLog } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { fieldChanges } from "@/lib/audit-diff";
+import { cmFieldLabel, cmLockedChanges, cmLockMessage } from "@/lib/maintenance/cm-lock";
 import { requireRoles } from "@/lib/authz";
 import { cmNeedsAuthorisation } from "@/lib/maintenance/flow";
 import { permitWasIssued } from "@/lib/maintenance/work-readiness-db";
@@ -58,6 +61,16 @@ export async function PATCH(
     }
 
     const record = currentRecord[0];
+
+    // The record closes through its sign-off chain. Status is never typed in:
+    // the only value accepted here is the older callers' close-out request,
+    // which still has to pass every check below.
+    if (body.status !== undefined && body.status !== record.status && body.status !== "CLOSED") {
+      return NextResponse.json(
+        { error: "A breakdown record's status follows its repair and sign-off. It cannot be set directly." },
+        { status: 409 },
+      );
+    }
 
     // ── Assignment gate ───────────────────────────────────────────────────
     // MAINTENANCE_WRITE_ROLES includes TECHNICIAN so a technician can record
@@ -258,6 +271,17 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
+    const changes = fieldChanges(record as unknown as Record<string, unknown>, updateFields);
+    const cmChain = await getSignoffChain("CORRECTIVE", record.id);
+    const lockState = { signed: cmChain.some((s) => s.status === "SIGNED"), closed: record.status === "CLOSED" };
+    const locked = cmLockedChanges(changes, lockState);
+    if (locked.length) {
+      return NextResponse.json(
+        { error: cmLockMessage(locked, { closed: lockState.closed, reference: record.cmrfNumber }), locked },
+        { status: 409 },
+      );
+    }
+
     // Closing out advances the machine's service date; its STATUS is derived
     // after the record itself is closed (see below) so the derivation sees the
     // true set of open faults.
@@ -295,6 +319,19 @@ export async function PATCH(
       .set(updateFields)
       .where(eq(correctiveMaintenance.id, resolvedParams.id))
       .returning();
+
+    if (Object.keys(changes).length) {
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? null,
+        action: closingOut ? "CLOSE" : "UPDATE",
+        entityType: "corrective_maintenance",
+        entityId: record.id,
+        entityDescription: `${record.cmrfNumber} ${closingOut ? "closed" : "updated"}: ${Object.keys(changes).map(cmFieldLabel).join(", ")}`.slice(0, 500),
+        changes: JSON.stringify(changes),
+      });
+    }
 
     // Now that this record's own state is persisted, let the single writer
     // recompute the machine's status from every open fault and job.

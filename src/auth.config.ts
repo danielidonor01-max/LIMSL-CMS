@@ -26,7 +26,10 @@ const PUBLIC_PREFIXES = [
 
 export const authConfig = {
   pages: { signIn: "/login" },
-  session: { strategy: "jwt" },
+  // Twelve hours, a working day, instead of the library's thirty days. Each
+  // request also re-reads the account (auth.ts), so this bounds a session on a
+  // shared workshop tablet rather than standing in for revoking access.
+  session: { strategy: "jwt", maxAge: 12 * 60 * 60 },
   trustHost: true,
   providers: [],
   callbacks: {

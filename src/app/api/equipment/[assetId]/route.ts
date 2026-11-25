@@ -1,8 +1,10 @@
 // src/app/api/equipment/[assetId]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { equipment } from "@/lib/db/schema";
+import { equipment, auditLog } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { fieldChanges } from "@/lib/audit-diff";
 import { requireRoles } from "@/lib/authz";
 import { carryPlanOnMove, getCategory, listCategories, replanMachine } from "@/lib/maintenance/asset-categories";
 import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
@@ -143,6 +145,23 @@ export async function PATCH(
       .set(updates)
       .where(eq(equipment.id, before.id))
       .returning();
+
+    // Status, criticality and the asset ID decide what is counted, who may
+    // authorise a repair and which sticker leads where, so each edit is kept
+    // with its before and after.
+    const changes = fieldChanges(before as unknown as Record<string, unknown>, updates);
+    if (Object.keys(changes).length) {
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? null,
+        action: "UPDATE",
+        entityType: "equipment",
+        entityId: before.id,
+        entityDescription: `${before.assetId} ${before.name} edited: ${Object.keys(changes).join(", ")}`.slice(0, 500),
+        changes: JSON.stringify(changes),
+      });
+    }
 
     // Changing how often a machine is serviced changes what it is due, so the
     // plan follows. Only the missing dates are added — anything already

@@ -23,6 +23,7 @@ import { logEquipmentEvent } from "@/lib/equipment-log";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { clockEveryoneOff } from "@/lib/maintenance/time-log-db";
 import { reconcileWorkOrderApprovals, approvalBlockMessage } from "@/lib/work-order-approval";
+import { workOrderMoveError } from "@/lib/maintenance/work-order-status";
 
 // Fetch a single work order with its equipment, linked schedule and PM checklist.
 export async function GET(
@@ -103,6 +104,20 @@ export async function PATCH(
 
     const [current] = await db.select().from(workOrders).where(eq(workOrders.id, id)).limit(1);
     if (!current) return NextResponse.json({ error: "Work order not found" }, { status: 404 });
+
+    if (body.status !== undefined) {
+      const refused = workOrderMoveError(current.status, String(body.status), current.workOrderNumber);
+      if (refused) return NextResponse.json({ error: refused }, { status: 409 });
+    }
+    // A finished job's assignment is part of its record.
+    const touchesAssignment =
+      body.technicianId !== undefined || body.technicianName !== undefined || body.assistantIds !== undefined;
+    if (touchesAssignment && (current.status === "COMPLETED" || current.status === "CANCELLED")) {
+      return NextResponse.json(
+        { error: `${current.workOrderNumber} is ${current.status.toLowerCase()}. Its assignment cannot change.` },
+        { status: 409 },
+      );
+    }
 
     // Preventive/inspection work orders complete ONLY through the PM checklist,     // that's where the safety attestations, signatures and schedule roll live.
     // Every other type (corrective, emergency, calibration) completes here with

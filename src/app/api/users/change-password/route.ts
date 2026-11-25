@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
 import { verifyPassword, hashPassword } from "@/lib/password";
 import { validatePassword } from "@/lib/password-policy";
+import { LOCK_MINUTES, isLockedOut, recentFailures, recordFailure } from "@/lib/auth/guess-limit";
 
 export async function POST(request: Request) {
   try {
@@ -46,8 +47,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
+    // Asking for the current password makes this a second place to guess it,
+    // so it shares the sign-in limit and its count.
+    const failures = await recentFailures(user.id, "LOGIN_FAILED");
+    if (isLockedOut(failures)) {
+      return NextResponse.json(
+        { error: `Too many wrong passwords. Try again in ${LOCK_MINUTES} minutes.` },
+        { status: 429 },
+      );
+    }
     const currentIsValid = verifyPassword(currentPassword, user.passwordHash);
     if (!currentIsValid) {
+      await recordFailure(user, "LOGIN_FAILED", failures + 1);
       return NextResponse.json(
         { error: "Current password is incorrect." },
         { status: 400 },

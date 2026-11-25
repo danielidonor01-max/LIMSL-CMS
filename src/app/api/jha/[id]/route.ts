@@ -1,12 +1,9 @@
 // src/app/api/jha/[id]/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { jhaDocuments, wmsDocuments, workOrders, equipment, auditLog } from "@/lib/db/schema";
+import { jhaDocuments, wmsDocuments, workOrders, equipment } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import { requireRoles } from "@/lib/authz";
-import { JHA_WRITE_ROLES } from "@/lib/roles";
-import { getSignoffChain, resetSignoffChain } from "@/lib/signoff/service";
+import { getSignoffChain } from "@/lib/signoff/service";
 import { chainSummary } from "@/lib/signoff/chains";
 import { reconcileJha } from "../route";
 
@@ -79,78 +76,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 }
 
-type StepRow = { step?: string; hazards?: string; controls?: string; residualRisk?: string; responsible?: string };
-
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const gate = await requireRoles(JHA_WRITE_ROLES);
-    if (gate.res) return gate.res;
-
-    const { id } = await params;
-    const body = await request.json();
-
-    const [row] = await db.select().from(jhaDocuments).where(eq(jhaDocuments.id, id)).limit(1);
-    if (!row) return NextResponse.json({ error: "Job hazard analysis not found" }, { status: 404 });
-
-    // An approved analysis is the document a permit was issued against. Editing
-    // it in place would change what the signatures attested to, so it is revised
-    // instead: revision up, status back to review, signatures cleared.
-    const isApproved = row.status === "APPROVED";
-
-    const set: Partial<typeof jhaDocuments.$inferInsert> = {};
-    if (typeof body.title === "string" && body.title.trim()) set.title = body.title.trim();
-    if (body.workArea !== undefined) set.workArea = body.workArea || null;
-    if (body.emergencyArrangements !== undefined) {
-      set.emergencyArrangements = body.emergencyArrangements || null;
-    }
-    if (body.equipmentId !== undefined) set.equipmentId = body.equipmentId || null;
-    if (Array.isArray(body.ppeRequired)) set.ppeRequired = JSON.stringify(body.ppeRequired);
-
-    if (Array.isArray(body.steps)) {
-      const steps: StepRow[] = body.steps.filter(
-        (r: StepRow) => r?.step?.trim() && r?.hazards?.trim() && r?.controls?.trim(),
-      );
-      if (steps.length === 0) {
-        return NextResponse.json(
-          { error: "Keep at least one job step with its hazards and controls." },
-          { status: 400 },
-        );
-      }
-      set.steps = JSON.stringify(steps);
-    }
-
-    if (Object.keys(set).length === 0) {
-      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
-    }
-
-    if (isApproved) {
-      set.revision = (row.revision ?? 0) + 1;
-      set.status = "UNDER_REVIEW";
-      set.approvedAt = null;
-    }
-
-    await db.update(jhaDocuments).set(set).where(eq(jhaDocuments.id, id));
-
-    if (isApproved) {
-      await resetSignoffChain("JHA", id, row.jhaNumber);
-    }
-
-    await db.insert(auditLog).values({
-      id: nanoid(),
-      userId: gate.actor?.id ?? null,
-      userName: gate.actor?.name || "System",
-      action: "UPDATE",
-      entityType: "jha",
-      entityId: id,
-      entityDescription: isApproved
-        ? `${row.jhaNumber} revised to rev ${set.revision}, approvals cleared and re-issued for signature`
-        : `${row.jhaNumber} updated`,
-    });
-
-    const [updated] = await db.select().from(jhaDocuments).where(eq(jhaDocuments.id, id)).limit(1);
-    return NextResponse.json(updated);
-  } catch (error) {
-    console.error("Failed to update JHA:", error);
-    return NextResponse.json({ error: "Failed to update the job hazard analysis" }, { status: 500 });
-  }
-}
+// There is deliberately no PATCH. A hazard analysis is revised by a new JHA
+// naming the one it replaces (supersedesId, with what changed), which keeps
+// the approved one and its signatures intact. The old edit route reset the
+// chain in place, deleting the signatures already given, and no screen used it.

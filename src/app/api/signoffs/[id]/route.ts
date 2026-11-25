@@ -6,6 +6,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { auth } from "@/auth";
 import { verifyPassword } from "@/lib/password";
+import { GUESS_LIMIT, LOCK_MINUTES, isLockedOut, recentFailures, recordFailure } from "@/lib/auth/guess-limit";
 import { hasSigningPin } from "@/lib/signing-pin";
 import { getSignoffChain, isStepUnlocked } from "@/lib/signoff/service";
 import { chainSummary, canSignChainStep, isOverrideSignature, passOf } from "@/lib/signoff/chains";
@@ -126,10 +127,27 @@ export async function POST(
       const [signer] = await db.select().from(users).where(eq(users.id, user.id ?? "")).limit(1);
       signedWithPin = hasSigningPin(signer?.signingPinHash);
 
-      if (signedWithPin && !verifyPassword(String(body.signingPin ?? ""), signer?.signingPinHash)) {
+      // Wrong PINs are limited (lib/auth/guess-limit.ts). Locked means locked:
+      // the right PIN is refused too until the window passes.
+      const pinFailures = signedWithPin && signer ? await recentFailures(signer.id, "PIN_FAILED") : 0;
+      if (isLockedOut(pinFailures)) {
         return NextResponse.json(
-          { error: "That is not your signing PIN.", requiresPin: true },
-          { status: 403 },
+          { error: `Too many wrong PINs. Signing is locked for ${LOCK_MINUTES} minutes.`, requiresPin: true },
+          { status: 429 },
+        );
+      }
+      if (signedWithPin && !verifyPassword(String(body.signingPin ?? ""), signer?.signingPinHash)) {
+        if (signer) await recordFailure(signer, "PIN_FAILED", pinFailures + 1);
+        const left = GUESS_LIMIT - (pinFailures + 1);
+        return NextResponse.json(
+          {
+            error:
+              left > 0
+                ? `That is not your signing PIN. ${left} ${left === 1 ? "try" : "tries"} left before signing is locked for ${LOCK_MINUTES} minutes.`
+                : `That is not your signing PIN. Signing is now locked for ${LOCK_MINUTES} minutes.`,
+            requiresPin: true,
+          },
+          { status: left > 0 ? 403 : 429 },
         );
       }
     }

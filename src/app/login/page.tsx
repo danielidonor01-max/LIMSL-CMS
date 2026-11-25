@@ -32,7 +32,11 @@ function LoginForm() {
     const res = await signIn("credentials", { email: email.trim(), password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      setError("Invalid email or password. Check your details and try again.");
+      setError(
+        res.code === "locked"
+          ? "Too many wrong passwords. This account is locked for 15 minutes. Try again later, or ask a Super Admin to reset the password."
+          : "Invalid email or password. Check your details and try again.",
+      );
       return;
     }
     router.push(callbackUrl);

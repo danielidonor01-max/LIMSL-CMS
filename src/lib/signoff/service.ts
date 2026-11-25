@@ -1,7 +1,7 @@
 // src/lib/signoff/service.ts
 import { db } from "@/lib/db";
 import { signoffs, jhaDocuments, wmsDocuments } from "@/lib/db/schema";
-import { and, eq, asc } from "drizzle-orm";
+import { and, eq, asc, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { chainFor, isStepUnlocked } from "./chains";
 import { notifyNextSigner } from "@/lib/notifications";
@@ -116,18 +116,43 @@ export async function getSignoffChain(entityType: string, entityId: string) {
     .orderBy(asc(signoffs.stepOrder));
 }
 
-// Rework path: after a rejection (or a content change to an already-signed
-// document) the old signatures no longer attest to anything, drop the chain and
-// start a fresh one so every step must sign the CURRENT content. The old steps'
-// audit-log entries remain; only the live chain resets.
+// A signature that has been given is never deleted. When a chain has to start
+// again (a rejected work order resubmitted), its signed and rejected steps are
+// moved out of the live chain under VOID:<type>, keyed by the record and the
+// moment it was voided, so they still say who signed what and when. Every
+// reader looks chains up by type and id, so a voided step can never count
+// towards the new chain. Steps nobody signed are simply removed.
+export const VOID_PREFIX = "VOID:";
+
+export function voidedKey(entityType: string, entityId: string, at: string) {
+  return { entityType: `${VOID_PREFIX}${entityType}`, entityId: `${entityId}@${at}` };
+}
+
+export async function voidSignoffChain(entityType: string, entityId: string) {
+  const chain = await getSignoffChain(entityType, entityId);
+  const given = chain.filter((s) => s.status !== "PENDING");
+  if (given.length) {
+    await db
+      .update(signoffs)
+      .set(voidedKey(entityType, entityId, new Date().toISOString()))
+      .where(inArray(signoffs.id, given.map((s) => s.id)));
+  }
+  await db
+    .delete(signoffs)
+    .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId), eq(signoffs.status, "PENDING")));
+  return given;
+}
+
+// Rework path: after a rejection the old signatures no longer attest to the
+// record as it will be resubmitted, so the chain starts again and every step
+// signs the current version. The old signatures are voided, not deleted.
 export async function resetSignoffChain(
   entityType: string,
   entityId: string,
   reference?: string,
   boundSigners?: BoundSigners,
 ) {
-  await db
-    .delete(signoffs)
-    .where(and(eq(signoffs.entityType, entityType), eq(signoffs.entityId, entityId)));
-  return ensureSignoffChain(entityType, entityId, reference, boundSigners);
+  const voided = await voidSignoffChain(entityType, entityId);
+  const chain = await ensureSignoffChain(entityType, entityId, reference, boundSigners);
+  return { chain, voided };
 }
