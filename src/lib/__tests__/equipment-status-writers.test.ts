@@ -17,7 +17,9 @@ const read = (...p: string[]) => strip(readFileSync(join(API, ...p), "utf8"));
 
 const WRITERS: Array<[string, string[]]> = [
   ["work order status changes", ["work-orders", "[id]", "route.ts"]],
-  ["fault create", ["corrective", "route.ts"]],
+  // A fault is recorded by one function, from the form and from the end of a
+  // troubleshooting session alike (27 Nov 2026); the call lives there.
+  ["fault create", ["..", "..", "lib", "maintenance", "report-breakdown.ts"]],
   ["fault update and close-out", ["corrective", "[id]", "route.ts"]],
   ["PM checklist completion", ["pm-checklists", "route.ts"]],
 ];

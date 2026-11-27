@@ -118,11 +118,11 @@ export const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
   // /wms: QA/QC no longer sign method statements (WMS_CHAIN is Originator →
   // Factory Supervisor/Maintenance Manager → Factory Coordinator), but they
   // keep read access to the library for quality reference.
-  QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/earthing", "/contractors"],
+  QA_QC: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/documents", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/troubleshooting", "/wms", "/jha", "/audit", "/kpi", "/reports", "/training", "/spares", "/emergency", "/earthing", "/contractors"],
   // /pm-batches: HSE is the permit applicant (17 Nov 2026), and a PM permit is
   // raised for a batch from the batch's own page. Without it HSE was refused
   // the very page that asks them to raise the permit.
-  HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/wms", "/jha", "/audit", "/calibration", "/permits", "/pm-batches", "/training", "/emergency", "/earthing", "/contractors"],
+  HSE: ["/", "/my-tasks", "/incidents", "/approvals", "/equipment", "/document-control", "/procedure", "/schedule", "/work-orders", "/corrective", "/troubleshooting", "/wms", "/jha", "/audit", "/calibration", "/permits", "/pm-batches", "/training", "/emergency", "/earthing", "/contractors"],
   // /earthing: reading the earth-resistance record is open to every scoped role
   // for the same reason as /emergency. Writing a test stays with
   // MAINTENANCE_WRITE_ROLES in the API.
@@ -277,6 +277,18 @@ export const WORK_ASSIGN_ROLES = [
   "FACTORY_MANAGER",
   "MAINTENANCE_MANAGER",
   "FOREMAN",
+];
+
+// Who may start, continue and close a troubleshooting session (LIMSL, 27 Nov
+// 2026): everyone who works on or runs the machines. Not HSE or QA/QC, who read
+// the history; not VIEWER, the read-only role for contractors and visitors.
+export const TROUBLESHOOT_ROLES = [
+  "SUPER_ADMIN",
+  "COO",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+  "TECHNICIAN",
 ];
 
 // Who may delete a machine's document (manual, schematic, datasheet...).

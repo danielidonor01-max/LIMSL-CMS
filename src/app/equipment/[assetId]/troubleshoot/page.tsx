@@ -6,6 +6,8 @@ import { PAGE_MAIN } from "@/lib/page-shell";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { TROUBLESHOOT_ROLES } from "@/lib/roles";
 import SchematicViewer from "@/components/SchematicViewer";
 import DiagnosisChat from "@/components/DiagnosisChat";
 import PageHeader from "@/components/PageHeader";
@@ -179,6 +181,30 @@ export default function TroubleshootPage() {
     }
   }, []);
 
+  // Troubleshooting an open breakdown (?cm=…, from the Troubleshooting module
+  // or the breakdown record): the session belongs to it from the start, and
+  // its fault description is the symptom to work from.
+  const [breakdown, setBreakdown] = useState<{ id: string; cmrfNumber: string; faultDescription: string | null; status: string } | null>(null);
+  useEffect(() => {
+    const cm = new URLSearchParams(window.location.search).get("cm");
+    if (!cm) return;
+    fetch(`/api/corrective/${cm}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.id || d.status === "CLOSED") return;
+        setBreakdown({ id: d.id, cmrfNumber: d.cmrfNumber, faultDescription: d.faultDescription ?? null, status: d.status });
+        setPanel("ai");
+        const fault = String(d.faultDescription || d.observedFault || "").trim();
+        if (fault) setSymptom((s) => s || fault);
+      })
+      .catch(() => {});
+  }, []);
+
+  const { data: authSession } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const canWrite = mounted && TROUBLESHOOT_ROLES.includes((authSession?.user as { role?: string } | undefined)?.role ?? "");
+
   // This machine's past AI diagnoses (for the sidebar list).
   useEffect(() => {
     fetch(`/api/equipment/${assetId}/diagnose/chat`)
@@ -290,12 +316,25 @@ export default function TroubleshootPage() {
   return (
     <div className={PAGE_MAIN.register}>
       <PageHeader
-        title="Diagnostic engine"
-        subtitle={`${eq.name}. ${learnedFrom(meta.guideCount, meta.historyCount)}`}
+        title={`Troubleshoot ${eq.name}`}
+        subtitle={learnedFrom(meta.guideCount, meta.historyCount)}
         code={eq.assetId}
-        backHref={`/equipment/${assetId}`}
-        backLabel="Back to the digital twin"
+        backHref="/troubleshooting"
+        backLabel="Troubleshooting"
       />
+
+      {breakdown && (
+        <div className="bg-warn-50 border border-warn-200 rounded-xl px-5 py-3 text-sm text-warn-900 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>
+            Diagnosing{" "}
+            <Link href={`/corrective/${breakdown.id}`} className="font-semibold hover:underline">
+              {breakdown.cmrfNumber}
+            </Link>
+            {breakdown.faultDescription ? `: ${breakdown.faultDescription}` : ""}.
+          </span>
+          <span className="text-warn-800">A session started here belongs to that breakdown.</span>
+        </div>
+      )}
 
       {/* What the page is for, so it leads rather than sitting in a card among
           cards. The symptom is the only thing that has to be entered, and
@@ -534,11 +573,14 @@ export default function TroubleshootPage() {
                 <Badge className="bg-warn-500/10 text-warn-700 border-warn-500/20">Verify before acting</Badge>
               </div>
               <DiagnosisChat
-                key={searchedSymptom || resumeSession || "chat"}
+                key={`${searchedSymptom || resumeSession || "chat"}:${breakdown?.id ?? ""}`}
                 assetId={assetId}
+                equipmentId={eq.id}
                 symptom={searchedSymptom || symptom}
                 resumeSessionId={resumeSession}
                 checksRail={checksRail}
+                breakdown={resumeSession ? null : breakdown ? { id: breakdown.id, cmrfNumber: breakdown.cmrfNumber } : null}
+                canWrite={canWrite}
               />
             </div>
           ) : (

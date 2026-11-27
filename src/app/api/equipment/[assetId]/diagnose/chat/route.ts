@@ -7,13 +7,29 @@
 //   GET  ?session=<id>  → load a session transcript (resume / deep-link)
 //   GET  (no param)     → list this machine's past sessions
 //   POST { action: "start" | "message" | "resolve" | "abandon", ... }
+//
+// Reading is open to every signed-in role (the history is the record); doing
+// is TROUBLESHOOT_ROLES. A session may belong to a breakdown from the start
+// (correctiveId on "start"), and ends by the rules in
+// lib/maintenance/troubleshooting.ts: a cause that needs a repair lands on a
+// breakdown, attached or raised here.
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { equipment, diagnosisSessions, equipmentLog, auditLog, diagnosticGuides } from "@/lib/db/schema";
+import {
+  equipment,
+  diagnosisSessions,
+  equipmentLog,
+  auditLog,
+  diagnosticGuides,
+  correctiveMaintenance,
+} from "@/lib/db/schema";
 import { and, desc, eq, gte, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { auth } from "@/auth";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { TROUBLESHOOT_ROLES } from "@/lib/roles";
+import { closeError, isOutcome, OUTCOMES, outcomeNeedsBreakdown, statusFor, type Outcome } from "@/lib/maintenance/troubleshooting";
+import { reportBreakdown } from "@/lib/maintenance/report-breakdown";
 import { aiChatTurn, type ChatMessage } from "@/lib/diagnostics/ai-assist";
 import { logEquipmentEvent } from "@/lib/equipment-log";
 import { GeminiError, type GeminiImage } from "@/lib/diagnostics/gemini";
@@ -118,10 +134,23 @@ async function learnFromResolution(
   return { learned: "created" as const, guideId: guide.id };
 }
 
+// The breakdown a session may belong to: on this machine and not closed.
+async function openBreakdownOn(correctiveId: string, equipmentId: string) {
+  const [cm] = await db
+    .select()
+    .from(correctiveMaintenance)
+    .where(eq(correctiveMaintenance.id, correctiveId))
+    .limit(1);
+  if (!cm) return { error: "That breakdown record was not found." } as const;
+  if (cm.equipmentId !== equipmentId) return { error: `${cm.cmrfNumber} is on another machine.` } as const;
+  if (cm.status === "CLOSED") return { error: `${cm.cmrfNumber} is closed. Raise a new breakdown instead.` } as const;
+  return { cm } as const;
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
-    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
-    if (gate.res) return gate.res;
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { assetId } = await params;
     const e = await resolveEquipment(assetId);
     if (!e) return NextResponse.json({ error: "Equipment not found" }, { status: 404 });
@@ -137,10 +166,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ asse
           symptom: diagnosisSessions.symptom,
           status: diagnosisSessions.status,
           resolvedCause: diagnosisSessions.resolvedCause,
+          outcome: diagnosisSessions.outcome,
+          correctiveId: diagnosisSessions.correctiveId,
+          cmrfNumber: correctiveMaintenance.cmrfNumber,
           startedByName: diagnosisSessions.startedByName,
           createdAt: diagnosisSessions.createdAt,
         })
         .from(diagnosisSessions)
+        .leftJoin(correctiveMaintenance, eq(diagnosisSessions.correctiveId, correctiveMaintenance.id))
         .where(eq(diagnosisSessions.equipmentId, e.id))
         .orderBy(desc(diagnosisSessions.createdAt))
         .limit(20);
@@ -149,12 +182,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ asse
 
     const [s] = await db.select().from(diagnosisSessions).where(eq(diagnosisSessions.id, sessionId)).limit(1);
     if (!s || s.equipmentId !== e.id) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    const [cm] = s.correctiveId
+      ? await db
+          .select({ id: correctiveMaintenance.id, cmrfNumber: correctiveMaintenance.cmrfNumber, status: correctiveMaintenance.status })
+          .from(correctiveMaintenance)
+          .where(eq(correctiveMaintenance.id, s.correctiveId))
+          .limit(1)
+      : [];
 
     return NextResponse.json({
       sessionId: s.id,
       symptom: s.symptom,
       status: s.status,
+      outcome: s.outcome,
       resolvedCause: s.resolvedCause,
+      resolutionNote: s.resolutionNote,
+      breakdown: cm ?? null,
       messages: parseMessages(s.messages),
     });
   } catch (error) {
@@ -175,7 +218,7 @@ async function underRateLimit(userId: string | null | undefined): Promise<boolea
 
 export async function POST(request: Request, { params }: { params: Promise<{ assetId: string }> }) {
   try {
-    const gate = await requireRoles(MAINTENANCE_WRITE_ROLES);
+    const gate = await requireRoles(TROUBLESHOOT_ROLES);
     if (gate.res) return gate.res;
 
     const { assetId } = await params;
@@ -185,27 +228,80 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
     const body = await request.json();
     const action = String(body.action || "message");
 
-    // ── Resolve / abandon: close the session, annotate the history entry ──────
+    // ── Close: resolve (with an outcome) or abandon ───────────────────────────
     if (action === "resolve" || action === "abandon") {
       const [s] = await db.select().from(diagnosisSessions).where(eq(diagnosisSessions.id, String(body.sessionId))).limit(1);
       if (!s || s.equipmentId !== e.id) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      if (s.status !== "OPEN") return NextResponse.json({ error: "This session is already closed." }, { status: 409 });
 
-      const resolvedCause = action === "resolve" ? String(body.resolvedCause || "").trim() : null;
-      const resolutionNote = body.resolutionNote ? String(body.resolutionNote).trim() : null;
+      // Older callers send "resolve" with a cause and no outcome: that is a cause found.
+      const outcome: Outcome = action === "abandon" ? "ABANDONED" : isOutcome(body.outcome) ? body.outcome : "CAUSE_FOUND";
+      const resolvedCause = outcome === "CAUSE_FOUND" ? String(body.resolvedCause || "").trim() : null;
+      const resolutionNote = String(body.resolutionNote || "").trim() || null;
+      const attachId = typeof body.attachCorrectiveId === "string" && body.attachCorrectiveId ? body.attachCorrectiveId : null;
+      const raise = outcomeNeedsBreakdown(outcome) && body.raiseBreakdown === true && !s.correctiveId;
+
+      const refused = closeError({
+        outcome,
+        resolvedCause,
+        note: resolutionNote,
+        linkedCorrectiveId: s.correctiveId,
+        attachCorrectiveId: s.correctiveId ? null : attachId,
+        raiseBreakdown: raise,
+      });
+      if (refused) return NextResponse.json({ error: refused }, { status: 400 });
+
+      // The breakdown it lands on: already linked, attached now, or raised now.
+      let correctiveId = s.correctiveId ?? null;
+      let breakdown: { id: string; cmrfNumber: string } | null = null;
+      if (!correctiveId && attachId && outcomeNeedsBreakdown(outcome)) {
+        const found = await openBreakdownOn(attachId, e.id);
+        if ("error" in found) return NextResponse.json({ error: found.error }, { status: 409 });
+        correctiveId = found.cm.id;
+        breakdown = { id: found.cm.id, cmrfNumber: found.cm.cmrfNumber };
+      }
+      if (!correctiveId && raise) {
+        const urgency = ["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(String(body.urgency)) ? String(body.urgency) : "MEDIUM";
+        const raised = await reportBreakdown(
+          {
+            equipmentId: e.id,
+            faultDescription: s.symptom,
+            urgency,
+            observedFault: outcome === "SPECIALIST" ? (resolutionNote ?? "") : "",
+          },
+          gate.actor ?? {},
+        );
+        correctiveId = raised.id;
+        breakdown = { id: raised.id, cmrfNumber: raised.cmrfNumber };
+      }
+      if (correctiveId && !breakdown) {
+        const [cm] = await db
+          .select({ id: correctiveMaintenance.id, cmrfNumber: correctiveMaintenance.cmrfNumber })
+          .from(correctiveMaintenance)
+          .where(eq(correctiveMaintenance.id, correctiveId))
+          .limit(1);
+        breakdown = cm ?? null;
+      }
+
+      const now = new Date().toISOString();
       await db
         .update(diagnosisSessions)
         .set({
-          status: action === "resolve" ? "RESOLVED" : "ABANDONED",
+          status: statusFor(outcome),
+          outcome,
           resolvedCause,
           resolutionNote,
-          updatedAt: new Date().toISOString(),
+          correctiveId,
+          closedAt: now,
+          closedByName: gate.actor?.name ?? null,
+          updatedAt: now,
         })
         .where(eq(diagnosisSessions.id, s.id));
 
-      // Close the learning loop: a confirmed resolution teaches the
-      // deterministic engine, exactly like the one-shot path. Best-effort.
+      // Close the learning loop: a confirmed cause teaches the deterministic
+      // engine, exactly like the one-shot path. Best-effort.
       let learned: { learned: string; guideId: string } | null = null;
-      if (action === "resolve" && resolvedCause) {
+      if (outcome === "CAUSE_FOUND" && resolvedCause) {
         try {
           learned = await learnFromResolution(e.id, s.symptom, resolvedCause, resolutionNote, parseMessages(s.messages));
         } catch (err) {
@@ -213,24 +309,42 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
         }
       }
 
+      const label = OUTCOMES[outcome].label.toLowerCase();
       if (s.logId) {
         await db
           .update(equipmentLog)
           .set({
-            title:
-              action === "resolve"
-                ? `AI diagnosis, resolved · "${s.symptom.slice(0, 100)}"`
-                : `AI diagnosis, closed · "${s.symptom.slice(0, 100)}"`,
+            title: `Troubleshooting, ${label} · "${s.symptom.slice(0, 100)}"`,
             detail:
-              action === "resolve"
-                ? `Root cause: ${resolvedCause}${resolutionNote ? `, ${resolutionNote}` : ""}`
-                : "Diagnosis session closed without a confirmed cause.",
+              outcome === "CAUSE_FOUND"
+                ? `Cause: ${resolvedCause}${resolutionNote ? `, ${resolutionNote}` : ""}${breakdown ? ` (${breakdown.cmrfNumber})` : ""}`
+                : outcome === "ABANDONED"
+                  ? "Session closed without a confirmed cause."
+                  : `${resolutionNote ?? ""}${breakdown ? ` (${breakdown.cmrfNumber})` : ""}`,
           })
           .where(eq(equipmentLog.id, s.logId));
       }
+
+      await db.insert(auditLog).values({
+        id: nanoid(),
+        userId: gate.actor?.id ?? null,
+        userName: gate.actor?.name ?? null,
+        action: "CLOSE",
+        entityType: "diagnosis_session",
+        entityId: s.id,
+        entityDescription:
+          `Troubleshooting on ${e.assetId} closed: ${label}` +
+          (breakdown ? `, ${raise ? "raised" : "on"} ${breakdown.cmrfNumber}` : "") +
+          (resolvedCause ? `. Cause: ${resolvedCause.slice(0, 120)}` : ""),
+        changes: JSON.stringify({ outcome, resolvedCause, resolutionNote, correctiveId, raisedBreakdown: raise }),
+      });
+
       return NextResponse.json({
         ok: true,
-        status: action === "resolve" ? "RESOLVED" : "ABANDONED",
+        status: statusFor(outcome),
+        outcome,
+        breakdown,
+        raisedBreakdown: raise,
         learned: learned?.learned ?? null,
       });
     }
@@ -249,6 +363,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
     if (action === "start") {
       const symptom = String(body.symptom || "").trim();
       if (symptom.length < 3) return NextResponse.json({ error: "Describe the symptom first." }, { status: 400 });
+
+      // Troubleshooting an open breakdown: the session belongs to it from the start.
+      let correctiveId: string | null = null;
+      if (typeof body.correctiveId === "string" && body.correctiveId) {
+        const found = await openBreakdownOn(body.correctiveId, e.id);
+        if ("error" in found) return NextResponse.json({ error: found.error }, { status: 409 });
+        correctiveId = found.cm.id;
+      }
 
       const sessionId = nanoid();
       const logId = await logEquipmentEvent({
@@ -286,6 +408,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ass
         equipmentId: e.id,
         logId,
         symptom,
+        correctiveId,
         status: "OPEN",
         messages: JSON.stringify(messages),
         startedById: gate.actor?.id ?? null,

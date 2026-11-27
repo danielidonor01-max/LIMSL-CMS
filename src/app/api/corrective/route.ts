@@ -2,13 +2,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { correctiveMaintenance, equipment } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { requireRoles } from "@/lib/authz";
-import { MAINTENANCE_WRITE_ROLES, BREAKDOWN_NOTIFY_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
-import { nextDocNumber } from "@/lib/doc-number";
-import { applyDerivedStatus } from "@/lib/equipment-status";
-import { notify } from "@/lib/notifications";
+import { MAINTENANCE_WRITE_ROLES, WORK_ASSIGN_ROLES } from "@/lib/roles";
+import { reportBreakdown } from "@/lib/maintenance/report-breakdown";
 
 export async function GET() {
   try {
@@ -59,61 +55,24 @@ export async function POST(request: Request) {
       }
     }
 
-    const cmrfNumber = await nextDocNumber("CMRF");
-
-    const newCorrective = {
-      id: nanoid(),
-      cmrfNumber,
-      breakdownId: body.breakdownId || `BD-${nanoid(6).toUpperCase()}`,
-      equipmentId: body.equipmentId,
-      reportedById: gate.actor?.id ?? null,
-      reportedByName: gate.actor?.name || "Unknown",
-      reportedDate: body.reportedDate || new Date().toISOString().split("T")[0],
-      downStartAt: occurred || null,
-      faultType: body.faultType || "UNKNOWN",
-      urgency: body.urgency || "MEDIUM",
-      origin: scheduled ? "SCHEDULED" : "REPORTED",
-      plannedDate: scheduled ? (body.plannedDate || null) : null,
-      scheduledById: scheduled ? (gate.actor?.id ?? null) : null,
-      scheduledByName: scheduled ? (gate.actor?.name ?? null) : null,
-      faultDescription: body.faultDescription || "",
-      operatingStatusAtFailure: body.operatingStatusAtFailure || "RUNNING",
-      observedFault: body.observedFault || "",
-      errorCodes: body.errorCodes || "",
-      environmentalCondition: body.environmentalCondition || "",
-      status: "OPEN",
-    };
-
-    await db.insert(correctiveMaintenance).values(newCorrective);
-
-    // Status is DERIVED from the machine's open work, never flipped here, see
-    // lib/equipment-status.ts (the single writer). Best-effort: a derivation
-    // failure must not fail the fault report.
-    if (body.equipmentId) {
-      try {
-        await applyDerivedStatus(body.equipmentId);
-      } catch (err) {
-        console.warn("corrective create: status derivation failed (non-fatal)", err);
-      }
-    }
-
-    // Alert the maintenance leadership + HSE that a breakdown was logged.
-    // Best-effort, never let a notification failure fail the record.
-    try {
-      const [eqRow] = await db.select().from(equipment).where(eq(equipment.id, body.equipmentId)).limit(1);
-      const machine = eqRow ? eqRow.name || eqRow.assetId : "a machine";
-      await notify({
-        event: "BREAKDOWN",
-        title: `Breakdown logged: ${machine}`,
-        body: `${newCorrective.cmrfNumber} (${newCorrective.urgency}), ${newCorrective.faultDescription || "fault reported"}. Reported by ${newCorrective.reportedByName}.`,
-        linkPath: `/corrective/${newCorrective.id}`,
-        relatedEntityType: "corrective_maintenance",
-        relatedEntityId: newCorrective.id,
-        roles: BREAKDOWN_NOTIFY_ROLES,
-      });
-    } catch (err) {
-      console.warn("corrective: breakdown notify failed", err);
-    }
+    const newCorrective = await reportBreakdown(
+      {
+        equipmentId: body.equipmentId,
+        faultDescription: body.faultDescription,
+        urgency: body.urgency,
+        faultType: body.faultType,
+        downStartAt: occurred || null,
+        reportedDate: body.reportedDate,
+        scheduled,
+        plannedDate: body.plannedDate,
+        breakdownId: body.breakdownId,
+        operatingStatusAtFailure: body.operatingStatusAtFailure,
+        observedFault: body.observedFault,
+        errorCodes: body.errorCodes,
+        environmentalCondition: body.environmentalCondition,
+      },
+      gate.actor ?? {},
+    );
 
     return NextResponse.json(newCorrective, { status: 201 });
   } catch (error: any) {

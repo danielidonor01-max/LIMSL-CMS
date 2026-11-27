@@ -20,8 +20,10 @@ import {
   Sparkles, Paperclip, X, ShieldAlert, CheckCircle2,
   CircleHelp, ClipboardCheck, ImageIcon, ListChecks,
 } from "lucide-react";
+import Link from "next/link";
 import Button from "@/components/Button";
-import Field, { FIELD_CLASS } from "@/components/Field";
+import SessionClose, { type CloseResult } from "@/components/SessionClose";
+import { isOutcome, OUTCOMES } from "@/lib/maintenance/troubleshooting";
 import { useUserPrefs } from "@/components/PreferencesProvider";
 import AiStatus, { type AiStatusState } from "@/components/ai/AiStatus";
 import PromptBox from "@/components/ai/PromptBox";
@@ -82,19 +84,30 @@ async function fileToAttachment(file: File): Promise<Attachment> {
 
 export default function DiagnosisChat({
   assetId,
+  equipmentId,
   symptom,
   resumeSessionId,
   checksRail,
+  breakdown: startBreakdown = null,
+  canWrite = true,
 }: {
   assetId: string;
+  equipmentId: string;
   symptom: string;
   resumeSessionId?: string | null;
   // Desktop only: an element in the page's side column the checks render into.
   checksRail?: HTMLElement | null;
+  /** The open breakdown being troubleshot, when the session starts from one. */
+  breakdown?: { id: string; cmrfNumber: string } | null;
+  /** Whether this person may start, continue and close sessions (TROUBLESHOOT_ROLES). */
+  canWrite?: boolean;
 }) {
   const { prefs } = useUserPrefs();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<"OPEN" | "RESOLVED" | "ABANDONED">("OPEN");
+  const [breakdown, setBreakdown] = useState<{ id: string; cmrfNumber: string } | null>(startBreakdown);
+  const [closed, setClosed] = useState<CloseResult | null>(null);
+  const [outcome, setOutcome] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [starting, setStarting] = useState(false);
   const [sending, setSending] = useState(false);
@@ -102,7 +115,6 @@ export default function DiagnosisChat({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [stepChecks, setStepChecks] = useState<Record<number, boolean>>({});
   const [resolving, setResolving] = useState(false);
-  const [resolveCause, setResolveCause] = useState("");
   // Replies from this index on arrived while the page was open, so they are
   // revealed word by word. Anything loaded from history shows at once.
   const [freshFrom, setFreshFrom] = useState(Number.POSITIVE_INFINITY);
@@ -123,6 +135,8 @@ export default function DiagnosisChat({
         if (!d || d.error) return;
         setSessionId(d.sessionId);
         setStatus(d.status);
+        setOutcome(d.outcome ?? null);
+        if (d.breakdown) setBreakdown(d.breakdown);
         setMessages(d.messages ?? []);
       });
   }, [assetId, resumeSessionId]);
@@ -175,6 +189,7 @@ export default function DiagnosisChat({
         body: JSON.stringify({
           action: "start",
           symptom,
+          correctiveId: breakdown?.id,
           images: attachments.map(({ mimeType, dataBase64 }) => ({ mimeType, dataBase64 })),
         }),
       });
@@ -252,33 +267,56 @@ export default function DiagnosisChat({
     setStepChecks((c) => ({ ...c, [idx]: done }));
   }, []);
 
-  const resolve = async () => {
-    if (!sessionId || !resolveCause.trim()) return;
-    const res = await fetch(`/api/equipment/${assetId}/diagnose/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "resolve", sessionId, resolvedCause: resolveCause.trim() }),
-    });
-    const d = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      toast.error(d.error || "Could not close the session.");
-      return;
-    }
-    setStatus("RESOLVED");
+  const onClosed = (r: CloseResult) => {
+    setStatus(r.status);
+    setOutcome(r.outcome);
+    setClosed(r);
+    if (r.breakdown) setBreakdown(r.breakdown);
     setResolving(false);
+    const where = r.breakdown ? (r.raisedBreakdown ? ` ${r.breakdown.cmrfNumber} raised.` : ` Added to ${r.breakdown.cmrfNumber}.`) : "";
     toast.success(
-      d.learned === "created"
-        ? "Resolved, logged to history, and learned as a new diagnostic guide."
-        : d.learned === "reinforced"
-          ? "Resolved, logged to history, known cause reinforced in the engine."
-          : "Diagnosis resolved and logged to machine history.",
+      (r.outcome === "CAUSE_FOUND"
+        ? r.learned === "created"
+          ? "Cause recorded and learned as a new guide."
+          : "Cause recorded."
+        : r.outcome === "ABANDONED"
+          ? "Session stopped."
+          : "Session closed.") + where,
     );
   };
 
+  const abandon = async () => {
+    if (!sessionId) return;
+    const res = await fetch(`/api/equipment/${assetId}/diagnose/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "abandon", sessionId }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return toast.error(d.error || "Could not stop the session.");
+    onClosed(d as CloseResult);
+  };
+
   // ── Pre-session gate ────────────────────────────────────────────────────────
+  if (!sessionId && !canWrite) {
+    return (
+      <div className="px-6 py-6">
+        <p className="text-sm text-ink-600 leading-relaxed">
+          Troubleshooting is started by the maintenance team and management. You can read every past session from the
+          Troubleshooting page.
+        </p>
+      </div>
+    );
+  }
   if (!sessionId) {
     return (
       <div className="px-6 py-6 space-y-4">
+        {breakdown && (
+          <p className="text-sm text-ink-800">
+            Troubleshooting <span className="font-semibold">{breakdown.cmrfNumber}</span>. The session and whatever it
+            finds go on that breakdown.
+          </p>
+        )}
         <p className="text-sm text-ink-700 leading-relaxed">
           Work the fault through with the assistant, one step at a time. Every reply is grounded in this
           machine&apos;s guides, history, manuals and component registry, and you can attach photos of the panel
@@ -358,9 +396,26 @@ export default function DiagnosisChat({
       </div>
 
       {!open ? (
-        <div className="border-t border-line px-5 py-4 bg-brand-50 text-sm text-brand-900 flex items-center gap-2">
+        <div className="border-t border-line px-5 py-4 bg-brand-50 text-sm text-brand-900 flex items-center gap-2 flex-wrap">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-600" />
-          {status === "RESOLVED" ? "Resolved, and logged to the machine's history." : "This session is closed."}
+          <span>
+            {outcome && isOutcome(outcome)
+              ? `${OUTCOMES[outcome].label}. Logged to the machine's history.`
+              : status === "RESOLVED"
+                ? "Resolved, and logged to the machine's history."
+                : "This session is closed."}
+          </span>
+          {breakdown && (
+            <Link href={`/corrective/${breakdown.id}`} className="font-semibold text-brand-800 hover:underline">
+              {outcome === "CAUSE_FOUND" || closed?.outcome === "CAUSE_FOUND"
+                ? `Open ${breakdown.cmrfNumber} to verify the root cause`
+                : `Open ${breakdown.cmrfNumber}`}
+            </Link>
+          )}
+        </div>
+      ) : !canWrite ? (
+        <div className="border-t border-line px-5 py-4 text-sm text-ink-600">
+          This session is still open. It is continued by the maintenance team.
         </div>
       ) : (
         <div className="border-t border-line px-4 sm:px-5 py-4 space-y-3 bg-surface">
@@ -379,35 +434,34 @@ export default function DiagnosisChat({
               </Button>
             )}
             {!resolving && (
-              <Button size="sm" variant="subtle" icon={CheckCircle2} onClick={() => setResolving(true)}>
-                This resolved the fault
-              </Button>
+              <>
+                <Button size="sm" variant="subtle" icon={CheckCircle2} onClick={() => setResolving(true)}>
+                  Finish troubleshooting
+                </Button>
+                <Button size="sm" variant="ghost" onClick={abandon}>
+                  Stop without an answer
+                </Button>
+              </>
+            )}
+            {breakdown && (
+              <span className="text-xs text-ink-500 ml-auto">
+                On <Link href={`/corrective/${breakdown.id}`} className="font-semibold text-ink-700 hover:underline">{breakdown.cmrfNumber}</Link>
+              </span>
             )}
           </div>
 
-          {/* Closing the session writes the confirmed cause to the machine's
-              history and teaches the engine, so it asks for the cause in a
-              labelled field rather than a placeholder. */}
-          {resolving && (
-            <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 space-y-3">
-              <Field label="Confirmed root cause" htmlFor="resolve-cause" required>
-                <input
-                  id="resolve-cause"
-                  value={resolveCause}
-                  onChange={(e) => setResolveCause(e.target.value)}
-                  placeholder="What it actually turned out to be"
-                  className={`${FIELD_CLASS} bg-surface`}
-                />
-              </Field>
-              <div className="flex justify-end gap-2">
-                <Button size="sm" variant="ghost" onClick={() => setResolving(false)}>
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={resolve} disabled={!resolveCause.trim()} icon={CheckCircle2}>
-                  Mark resolved
-                </Button>
-              </div>
-            </div>
+          {/* How it ended. A cause that needs a repair goes on a breakdown:
+              this one's, an open one on the machine, or a new one. */}
+          {resolving && sessionId && (
+            <SessionClose
+              assetId={assetId}
+              equipmentId={equipmentId}
+              sessionId={sessionId}
+              breakdown={breakdown}
+              suggestedCause={lastAssistantIdx >= 0 ? messages[lastAssistantIdx].likelyCause ?? null : null}
+              onCancel={() => setResolving(false)}
+              onClosed={onClosed}
+            />
           )}
 
           <PromptBox

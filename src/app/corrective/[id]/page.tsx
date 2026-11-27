@@ -14,7 +14,9 @@ import SignoffChain from "@/components/SignoffChain";
 import CorrectiveFlow from "@/components/CorrectiveFlow";
 import WorkReadiness from "@/components/WorkReadiness";
 import WorkOrderParts from "@/components/WorkOrderParts";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { MAINTENANCE_WRITE_ROLES, TROUBLESHOOT_ROLES } from "@/lib/roles";
+import TroubleshootingTrail from "@/components/TroubleshootingTrail";
+import { formatDate } from "@/lib/utils";
 import Select from "@/components/Select";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "sonner";
@@ -40,6 +42,7 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const canBookParts = mounted && MAINTENANCE_WRITE_ROLES.includes(currentUserRole ?? "");
+  const canTroubleshoot = mounted && TROUBLESHOOT_ROLES.includes(currentUserRole ?? "");
   const [equipment, setEquipment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,6 +78,11 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
   const [workSettings, setWorkSettings] = useState<WorkSettings>(DEFAULT_WORK_SETTINGS);
   // What was last saved, so the page can say whether anything is unsaved.
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  // A cause found by troubleshooting, offered for a blank root cause once the
+  // record has loaded and its saved state is snapshotted, so the form shows it
+  // as an unsaved change: the technician's Save is the verification.
+  const [causeSuggestion, setCauseSuggestion] = useState<{ cause: string; at: string } | null>(null);
+  const [suggestionApplied, setSuggestionApplied] = useState<string | null>(null);
   const [loadedAt, setLoadedAt] = useState(0);
   // The sign-off chain, read here too so the close-out checklist can count it.
   const [chain, setChain] = useState<{ required: boolean | null; status: string }[]>([]);
@@ -255,6 +263,14 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
     if (loadedAt) setSavedKey(formKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedAt]);
+  // Only into a blank field, and only once: whatever the technician has typed,
+  // or what is already saved, always wins over a suggestion.
+  useEffect(() => {
+    if (!causeSuggestion || suggestionApplied || savedKey === null) return;
+    if (record?.verifiedRootCause || verifiedRootCause.trim()) return;
+    setVerifiedRootCause(causeSuggestion.cause);
+    setSuggestionApplied(causeSuggestion.at);
+  }, [causeSuggestion, suggestionApplied, savedKey, record, verifiedRootCause]);
 
   const handleSave = async () => {
     if (downStartAt && downEndAt && new Date(downEndAt).getTime() <= new Date(downStartAt).getTime()) {
@@ -542,6 +558,12 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
                   placeholder="Detailed summary statement of root cause..."
                   className="w-full bg-ink-100 border border-ink-200 focus:border-ink-300 rounded-lg p-2.5 text-xs focus:outline-none"
                 />
+                {suggestionApplied && !record?.verifiedRootCause && (
+                  <p className="text-xs text-warn-800 bg-warn-50 border border-warn-200 rounded-lg px-2.5 py-1.5">
+                    Filled in from troubleshooting on {formatDate(suggestionApplied)}. Check it, correct it if needed, and
+                    Save to record it as the verified root cause.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -687,6 +709,13 @@ export default function CorrectiveDetail({ params }: { params: Promise<{ id: str
 
         {/* Right Side: Corrective Actions & Signoff */}
         <div className="space-y-8">
+          <TroubleshootingTrail
+            correctiveId={recordId}
+            assetId={equipment?.assetId ?? null}
+            isClosed={isClosed}
+            canStart={canTroubleshoot}
+            onSuggestCause={setCauseSuggestion}
+          />
           {/* Parts fitted during the repair. Booking them here is what takes
               them off the shelf, so the critical spares register reflects what
               the repair actually consumed rather than what somebody remembered

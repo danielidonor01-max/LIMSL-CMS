@@ -37,6 +37,7 @@ import {
   ChevronLeft,
   PenLine,
   ClipboardCheck,
+  Stethoscope,
   LifeBuoy,
   FileSearch,
   Zap,
@@ -75,6 +76,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/pm-batches", label: "PM Batches", icon: CalendarCheck },
       { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
       { href: "/corrective", label: "Corrective / RCA", icon: AlertTriangle },
+      { href: "/troubleshooting", label: "Troubleshooting", icon: Stethoscope },
       { href: "/spares", label: "Critical Spares", icon: Package },
       { href: "/earthing", label: "Earthing", icon: Zap },
     ],
@@ -203,8 +205,17 @@ export default function Sidebar({
   }
 
   const reduced = useReducedMotion() ?? false;
+  // A machine's troubleshooting workspace lives under /equipment but belongs to
+  // the Troubleshooting module, so that is what is lit while you are in it.
+  const inTroubleshooting = pathname.startsWith("/troubleshooting") || /^\/equipment\/[^/]+\/troubleshoot/.test(pathname);
   const isActive = (item: { href: string; exact?: boolean }) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href);
+    item.href === "/troubleshooting"
+      ? inTroubleshooting
+      : item.href === "/equipment" && inTroubleshooting
+        ? false
+        : item.exact
+          ? pathname === item.href
+          : pathname.startsWith(item.href);
 
   return (
     <>

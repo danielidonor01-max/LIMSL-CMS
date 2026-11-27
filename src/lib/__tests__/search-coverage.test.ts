@@ -83,6 +83,10 @@ test("no page-level module has appeared without being considered for search", ()
     // search must not fail on a database that has not run it. Add it to the
     // search route, guarded by isMissingTable, if the pit count grows.
     "earthing",
+    // Diagnosis sessions (27 Nov 2026). Each belongs to a breakdown or a
+    // machine, both searchable, and its page lists them; a session has no
+    // number anybody would type into the search bar.
+    "troubleshooting",
     // Reference and admin surfaces, nothing to look up by name.
     "api", "login", "change-password", "account", "notifications", "settings",
     "reports", "kpi", "audit", "documents", "procedure", "oem", "schedule", "offline",

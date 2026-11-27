@@ -1649,12 +1649,23 @@ export const diagnosisSessions = pgTable(
     messages: text("messages").notNull().default("[]"), // JSON [{role,content,steps?,images?,ts}]
     resolvedCause: text("resolved_cause"),
     resolutionNote: text("resolution_note"),
+    // The breakdown this session diagnoses (LIMSL, 27 Nov 2026). Set at start
+    // when troubleshooting an open breakdown, or at the end, when a session
+    // that began on a machine finds a cause: it attaches to an open breakdown
+    // or raises one. Only "no fault found" may end without one.
+    correctiveId: text("corrective_id"),
+    outcome: text("outcome"), // CAUSE_FOUND | NO_FAULT | SPECIALIST | ABANDONED (null while open)
+    closedAt: text("closed_at"),
+    closedByName: text("closed_by_name"),
     startedById: text("started_by_id"),
     startedByName: text("started_by_name"),
     createdAt: text("created_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
     updatedAt: text("updated_at").notNull().default(sql`to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`),
   },
-  (t) => [index("diagnosis_sessions_equipment_idx").on(t.equipmentId)],
+  (t) => [
+    index("diagnosis_sessions_equipment_idx").on(t.equipmentId),
+    index("diagnosis_sessions_corrective_idx").on(t.correctiveId),
+  ],
 );
 
 // Type exports

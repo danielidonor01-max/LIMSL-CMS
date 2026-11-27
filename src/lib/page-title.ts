@@ -26,6 +26,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/pm-batches": "PM Batches",
   "/work-orders": "Work Orders",
   "/corrective": "Corrective / RCA",
+  "/troubleshooting": "Troubleshooting",
   "/spares": "Critical Spares",
   "/wms": "WMS",
   "/jha": "Job Hazard Analysis",
