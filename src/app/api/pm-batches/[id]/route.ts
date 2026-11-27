@@ -27,6 +27,7 @@ import { pmFlowState } from "@/lib/maintenance/flow";
 import { standingPairFor, latestWmsForCategory } from "@/lib/hse/standing-documents";
 import { categoryLabelMap } from "@/lib/maintenance/asset-categories";
 import { batchAuthorisation } from "@/lib/work-order-approval";
+import { jobTime, totalLoggedHours } from "@/lib/maintenance/time-log";
 
 async function loadBatch(id: string) {
   const [batch] = await db.select().from(pmBatches).where(eq(pmBatches.id, id)).limit(1);
@@ -70,7 +71,10 @@ async function loadBatch(id: string) {
     woIds.length > 0
       ? db
           .select({
+            id: workOrderTimeLogs.id,
             workOrderId: workOrderTimeLogs.workOrderId,
+            userId: workOrderTimeLogs.userId,
+            userName: workOrderTimeLogs.userName,
             startedAt: workOrderTimeLogs.startedAt,
             endedAt: workOrderTimeLogs.endedAt,
           })
@@ -100,8 +104,19 @@ async function loadBatch(id: string) {
         : null,
       startedAt: earliestStart,
       completedAt: latestEnd,
+      manHours: totalLoggedHours(logs),
     };
   });
+
+  // The batch's labour and how long it ran, across every machine. Cancelled
+  // lines are not part of the job.
+  const live = wos.filter((w) => w.status !== "CANCELLED");
+  const liveIds = new Set(live.map((w) => w.id));
+  const allDone = live.length > 0 && live.every((w) => w.status === "COMPLETED" || w.checklist?.completed);
+  const finished = allDone
+    ? (live.map((w) => w.checklist?.signedAt ?? w.completedAt).filter((d): d is string => !!d).sort().at(-1) ?? null)
+    : null;
+  const time = jobTime(timeLogs.filter((l) => liveIds.has(l.workOrderId)), finished);
 
   // The method statement and hazard analysis belong to the CATEGORY, not to
   // this batch. A crane WMS approved in March is the crane WMS in October; the
@@ -152,6 +167,7 @@ async function loadBatch(id: string) {
     ...batch,
     categoryLabel: (await categoryLabelMap())[batch.category] ?? batch.category,
     workOrders: wos,
+    time,
     wms: wms ?? null,
     wmsInReview: inReview ? { id: inReview.id, wmsNumber: inReview.wmsNumber, revision: inReview.revision, status: inReview.status } : null,
     jha: jha ?? null,

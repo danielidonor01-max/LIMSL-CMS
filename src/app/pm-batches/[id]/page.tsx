@@ -31,6 +31,16 @@ import WorkDateCorrections from "@/components/WorkDateCorrections";
 import { WORK_ASSIGN_ROLES, WORK_ORDER_ASSIGNEE_ROLES, JHA_WRITE_ROLES, PERMIT_ISSUE_ROLES } from "@/lib/roles";
 import { WO_STATUS_BADGE } from "@/lib/constants";
 import type { FlowState } from "@/lib/maintenance/flow";
+import { formatHours } from "@/lib/maintenance/time-log";
+
+// Elapsed time runs over days, where "75h" is harder to read than "3d 3h".
+function formatElapsed(hours: number): string {
+  if (hours < 24) return formatHours(hours);
+  const totalH = Math.round(hours);
+  const d = Math.floor(totalH / 24);
+  const h = totalH % 24;
+  return h ? `${d}d ${h}h` : `${d}d`;
+}
 import {
   UserCheck,
   CheckCircle2,
@@ -52,6 +62,7 @@ type BatchWo = {
   technicianName?: string | null;
   startedAt?: string | null;
   completedAt?: string | null;
+  manHours?: number;
   checklist?: {
     completed: boolean;
     observations?: string | null;
@@ -76,6 +87,15 @@ type Batch = {
   assignedByName?: string | null;
   assignedAt?: string | null;
   workOrders: BatchWo[];
+  /** Labour and duration across every machine (lib/maintenance/time-log.ts, jobTime). */
+  time?: {
+    manHours: number;
+    people: number;
+    running: number;
+    startedAt: string | null;
+    finishedAt: string | null;
+    elapsedHours: number | null;
+  };
   wms: { id: string; wmsNumber: string; status: string; revision?: number | null } | null;
   jha: { id: string; jhaNumber: string; status: string; revision?: number | null } | null;
   previousJha: { id: string; jhaNumber: string; wmsRevision?: number | null } | null;
@@ -258,6 +278,17 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
       .filter((d): d is string => !!d)
       .sort()
       .at(-1) ?? null;
+  // Man-hours are labour (two people for three hours is six); elapsed is how
+  // long the machines were tied up, nights included. Nothing is shown for
+  // either when nobody clocked on, rather than a zero that reads as "no work".
+  const time = batch.time;
+  const clocked = !!time && (time.manHours > 0 || time.running > 0);
+  const manHoursText = clocked
+    ? `${formatHours(time!.manHours)}${time!.people > 1 ? `, ${time!.people} people` : ""}`
+    : onPaper
+      ? "On the paper record"
+      : "Nobody clocked on";
+  const elapsedText = time?.elapsedHours != null ? formatElapsed(time.elapsedHours) : "-";
   // Still to do first, in the batch's own order; the first of them is next.
   const ordered = [...live.filter((w) => !isDone(w)), ...live.filter(isDone)];
   const nextUp = ordered.find((w) => !isDone(w)) ?? null;
@@ -350,6 +381,7 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                   <tr className="border-b border-line text-ink-500 text-xs">
                     <th className="py-2.5 pl-5 pr-3 font-medium">Machine</th>
                     <th className="py-2.5 px-3 font-medium whitespace-nowrap">Done</th>
+                    <th className="py-2.5 px-3 font-medium whitespace-nowrap">Man-hours</th>
                     <th className="py-2.5 px-3 font-medium">Findings</th>
                     <th className="py-2.5 pl-3 pr-5 font-medium text-right">
                       <span className="sr-only">Actions</span>
@@ -409,6 +441,9 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                               {w.status === "IN_PROGRESS" ? "In progress" : "Not started"}
                             </Badge>
                           )}
+                        </td>
+                        <td className="py-3 px-3 align-top whitespace-nowrap text-ink-700">
+                          {w.manHours ? formatHours(w.manHours) : <span className="text-ink-400">-</span>}
                         </td>
                         <td className="py-3 px-3 align-top min-w-48">
                           {!done ? (
@@ -628,7 +663,10 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
                 </div>
                 <dl className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-1 divide-y sm:divide-y-0 2xl:divide-y divide-line text-sm">
                   {[
+                    ...(time?.startedAt ? [["Started", formatDateTime(time.startedAt)]] : []),
                     [onPaper ? "Work date" : "Finished", lastFinished ? whenDone(lastFinished) : "-"],
+                    ...(time?.elapsedHours != null ? [["Elapsed", elapsedText]] : []),
+                    ["Man-hours", manHoursText],
                     ["Machines", `${doneCount} of ${total}`],
                     ["Carried out by", batch.assignedToName ?? "-"],
                     ["Permit", batch.permit ? `${batch.permit.permitNumber} (${(DOC_LABEL[batch.permit.status] ?? batch.permit.status).toLowerCase()})` : "-"],
@@ -660,6 +698,9 @@ export default function PmBatchDetail({ params }: { params: Promise<{ id: string
               { label: "need a repair", value: openCount, tone: "bad" },
               { label: "fixed in the PM", value: fixedCount },
               { label: "to do", value: total - doneCount, tone: "warn" },
+              ...(clocked
+                ? [{ label: time!.running > 0 ? `man-hours, ${time!.running} on now` : "man-hours so far", value: formatHours(time!.manHours) }]
+                : []),
             ]}
             meta={
               <>

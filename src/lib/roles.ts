@@ -276,6 +276,17 @@ export const WORK_ASSIGN_ROLES = [
   "FOREMAN",
 ];
 
+// Who may delete a machine's document (manual, schematic, datasheet...).
+// Narrower than MAINTENANCE_WRITE_ROLES: a technician may upload, and may
+// remove a file they uploaded by mistake (checked by the route), but taking the
+// OEM manual off a machine is the Foreman's call and above.
+export const DOCUMENT_DELETE_ROLES = [
+  "SUPER_ADMIN",
+  "FACTORY_MANAGER",
+  "MAINTENANCE_MANAGER",
+  "FOREMAN",
+];
+
 // Who may be named as the supervisor verifying a completed PM checklist. The
 // technician performs, somebody above him verifies, which is the whole point of
 // the second signature.

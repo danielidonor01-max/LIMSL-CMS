@@ -59,13 +59,19 @@ export async function serveFile(key: string): Promise<ServeResult> {
   return { kind: "redirect", url: `${config.supabaseUrl}/storage/v1${data.signedURL}` };
 }
 
+// Throws when Supabase refuses, so the caller can record that the file is
+// still there. A file that is already gone counts as deleted.
 export async function deleteFile(key: string): Promise<void> {
   ensureReady();
-  await fetch(objectUrl(key), {
+  const res = await fetch(objectUrl(key), {
     method: "DELETE",
     headers: {
       apikey: config.supabaseServiceKey,
       Authorization: `Bearer ${config.supabaseServiceKey}`,
     },
-  }).catch(() => {});
+  });
+  if (!res.ok && res.status !== 404) {
+    const detail = await res.text().catch(() => "");
+    if (!/not.?found/i.test(detail)) throw new Error(`Supabase delete failed (${res.status}): ${detail}`);
+  }
 }

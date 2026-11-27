@@ -5,12 +5,13 @@ import Button from "@/components/Button";
 import DateField from "@/components/DateField";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { FileText, Download, FileWarning, Upload, Loader2, Plus, FolderOpen } from "lucide-react";
+import { FileText, Download, FileWarning, Upload, Loader2, Plus, FolderOpen, Trash2 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Select from "@/components/Select";
 import EmptyState from "@/components/EmptyState";
+import Modal from "@/components/Modal";
 import { formatDate } from "@/lib/utils";
-import { MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
+import { DOCUMENT_DELETE_ROLES, MAINTENANCE_WRITE_ROLES } from "@/lib/roles";
 import { toast } from "sonner";
 
 type Doc = {
@@ -23,6 +24,8 @@ type Doc = {
   status: string;
   expiryDate: string | null;
   revision: string | null;
+  uploadedBy?: string | null;
+  createdAt?: string | null;
 };
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -52,7 +55,37 @@ export default function EquipmentDocuments({
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const role = (session?.user as { role?: string })?.role;
+  const myName = (session?.user as { name?: string | null })?.name ?? null;
   const canUpload = mounted && MAINTENANCE_WRITE_ROLES.includes(role ?? "");
+  // The route has the final say; this only decides whether to offer it.
+  const canDelete = (d: Doc) =>
+    mounted && (DOCUMENT_DELETE_ROLES.includes(role ?? "") || (canUpload && !!d.uploadedBy && d.uploadedBy === myName));
+  const [deleting, setDeleting] = useState<Doc | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    setDeleteBusy(true);
+    try {
+      const res = await fetch(`/api/documents/${deleting.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: deleteReason.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(d.error || "Could not delete the document.");
+        return;
+      }
+      toast.success(`${DOC_TYPE_LABELS[deleting.docType] ?? "Document"} deleted.`);
+      setDeleting(null);
+      setDeleteReason("");
+      await load();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,11 +274,57 @@ export default function EquipmentDocuments({
                     <Download className="w-3.5 h-3.5" />
                   </a>
                 )}
+                {canDelete(d) && (
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteReason(""); setDeleting(d); }}
+                    className="text-ink-400 hover:text-danger-600"
+                    title="Delete document"
+                    aria-label={`Delete ${d.fileName ?? d.title}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <Modal
+        open={!!deleting}
+        onClose={() => !deleteBusy && setDeleting(null)}
+        title="Delete this document?"
+        subtitle={deleting ? `${DOC_TYPE_LABELS[deleting.docType] ?? deleting.docType} · ${deleting.fileName ?? deleting.title}` : undefined}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-ink-600">
+            The file is removed from storage and can&apos;t be opened again. The audit log keeps a record of what it
+            was, who uploaded it and who deleted it.
+          </p>
+          <div className="space-y-1">
+            <label htmlFor="doc-delete-reason" className="text-sm font-medium text-ink-700">
+              Reason (optional)
+            </label>
+            <input
+              id="doc-delete-reason"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              className={inputCls}
+              placeholder="e.g. wrong file uploaded, replaced by Rev C"
+              maxLength={500}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeleting(null)} disabled={deleteBusy}>
+              Cancel
+            </Button>
+            <Button variant="danger" icon={Trash2} loading={deleteBusy} onClick={confirmDelete}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -124,6 +124,46 @@ export function hoursByPerson(
     .sort((a, b) => b.hours - a.hours);
 }
 
+/**
+ * The time a job of several machines took, two ways.
+ *
+ * Man-hours: every closed stretch by everyone on every machine, added up. Two
+ * technicians on one machine for three hours is six man-hours. This is what
+ * the job cost in labour.
+ *
+ * Elapsed: from the first clock-on to the last machine finished, nights and
+ * weekends included. This is how long the machines were tied up.
+ *
+ * Elapsed needs a real start time, so it is only given when somebody clocked
+ * on; a paper record or a job nobody clocked carries a date, not a time.
+ */
+export function jobTime(
+  sessions: TimeSession[],
+  finishedAt: string | null,
+): {
+  manHours: number;
+  people: number;
+  running: number;
+  startedAt: string | null;
+  finishedAt: string | null;
+  elapsedHours: number | null;
+} {
+  const starts = sessions.map((s) => s.startedAt).filter((v) => !Number.isNaN(Date.parse(v))).sort();
+  const startedAt = starts[0] ?? null;
+  // Only a finished job has an elapsed time. The last clock-off of one still
+  // under way is a pause, not the end.
+  const end = finishedAt && !Number.isNaN(Date.parse(finishedAt)) ? finishedAt : null;
+  const elapsedMs = startedAt && end ? msBetween(startedAt, end) : null;
+  return {
+    manHours: totalLoggedHours(sessions),
+    people: hoursByPerson(sessions).length,
+    running: runningSessions(sessions).length,
+    startedAt,
+    finishedAt: end,
+    elapsedHours: elapsedMs !== null && elapsedMs >= 0 ? Math.round((elapsedMs / HOUR) * 100) / 100 : null,
+  };
+}
+
 /** How a duration reads on screen: "3h 20m", "45m", "2h". */
 export function formatHours(hours: number | null | undefined): string {
   if (hours === null || hours === undefined || !Number.isFinite(hours) || hours < 0) return "—";
