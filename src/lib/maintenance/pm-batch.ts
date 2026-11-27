@@ -41,6 +41,11 @@ export type RaisedBatch = {
 
 export type Failure = { ok: false; status: number; error: string };
 
+/** The number series a batch draws from: INS for an inspection round, PMB otherwise. */
+export function batchSeries(activityType: string): "INS" | "PMB" {
+  return activityType === "INS" ? "INS" : "PMB";
+}
+
 export async function raisePmBatch(input: {
   category: string;
   plannedDate: string;
@@ -85,10 +90,12 @@ export async function raisePmBatch(input: {
 
   const categoryLabel = (await categoryLabelMap())[category] ?? category;
   const id = nanoid();
-  const batchNumber = await nextDocNumber("PMB");
+  const activityType = machines.every((m) => m.activityType === "INS") ? "INS" : "PM";
+  // An inspection round is numbered as one (INS-2026-0001), a PM round as a
+  // PM batch, so the document ID says which it is.
+  const batchNumber = await nextDocNumber(batchSeries(activityType));
   // One work order for the batch. Each machine's line is numbered under it.
   const workOrderNumber = await nextDocNumber("WO");
-  const activityType = machines.every((m) => m.activityType === "INS") ? "INS" : "PM";
   const title = `${activityType === "INS" ? "Inspection" : "PM"}, ${categoryLabel}, ${plannedDate}`;
 
   await db.insert(pmBatches).values({

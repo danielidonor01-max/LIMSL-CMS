@@ -38,6 +38,7 @@ import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { chainFor } from "@/lib/signoff/chains";
 import { governingProcedure } from "@/lib/maintenance/governing-procedure";
+import { batchSeries } from "@/lib/maintenance/pm-batch";
 import { expiryDateOf } from "@/lib/hse/permit-validity";
 import { applyDerivedStatus } from "@/lib/equipment-status";
 import { notify } from "@/lib/notifications";
@@ -302,7 +303,7 @@ async function main() {
         const label = labels.get(b.category) ?? b.category;
         const batchId = nanoid();
         const permitId = nanoid();
-        const batchNumber = await nextNumber(tx, "PMB");
+        const batchNumber = await nextNumber(tx, batchSeries(b.activityType));
         const workOrderNumber = await nextNumber(tx, "WO");
         const permitNumber = await nextNumber(tx, "PTW");
         const governing = governingProcedure(revisions, date);

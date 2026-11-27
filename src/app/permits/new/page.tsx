@@ -7,7 +7,7 @@
 import DateField from "@/components/DateField";
 import { PAGE_MAIN } from "@/lib/page-shell";
 import TimeField from "@/components/TimeField";
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ShieldCheck, Loader2, FileText, ShieldAlert, ClipboardList } from "lucide-react";
@@ -163,11 +163,19 @@ function NewPermitForm() {
 
   // The analysis already names the machine, the area, PPE, and control measures.
   // Auto-populating them onto the permit ensures safety alignment and reduces data re-entry.
+  //
+  // ONCE per analysis. This used to re-run whenever the description or work
+  // area changed, so every keystroke ticked LOTO, barricading and hot work
+  // back on after the issuer had decided they did not apply, and LOTO then
+  // demanded isolation points the job did not have. The issuer's decision is
+  // the permit; the analysis only suggests a starting point.
+  const prefilledFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!selectedJha) return;
-    if (selectedJha.equipmentId && !equipmentId) setEquipmentId(selectedJha.equipmentId);
-    if (selectedJha.workArea && !workArea) setWorkArea(selectedJha.workArea);
-    if (!workDescription && selectedJha.title) setWorkDescription(selectedJha.title);
+    if (!selectedJha || prefilledFor.current === selectedJha.id) return;
+    prefilledFor.current = selectedJha.id;
+    if (selectedJha.equipmentId) setEquipmentId((prev) => prev || selectedJha.equipmentId);
+    if (selectedJha.workArea) setWorkArea((prev) => prev || selectedJha.workArea);
+    if (selectedJha.title) setWorkDescription((prev) => prev || selectedJha.title);
 
     // Auto-populate documents checklist
     setDocumentMarks((prev) => ({
@@ -261,7 +269,7 @@ function NewPermitForm() {
     }
 
     setPrecautionMarks((prev) => ({ ...nextPrec, ...prev }));
-  }, [selectedJha, equipmentId, workArea, workDescription]);
+  }, [selectedJha]);
 
   const mandatory = useMemo(() => mandatoryPrecautionsFor(workTypes).map((m) => m.key), [workTypes]);
   const missing = useMemo(
